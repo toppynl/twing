@@ -1,0 +1,9 @@
+import "./block_names_unicity";
+import "./combined_debug_info";
+import "./empty_token";
+import "./issue_360";
+import "./issue_twigphp_1143";
+import "./js_interpolation";
+import "./multi_word_tests";
+import "./simple_xml_element";
+import "./strings_like_numbers";

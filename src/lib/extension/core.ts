@@ -1,62 +1,57 @@
 import {TwingExtension} from "../extension";
-import {TwingTokenParserFor} from "../token-parser/for";
-import {TwingNodeExpressionBinaryAnd} from "../node/expression/binary/and";
-import {TwingTokenParserExtends} from "../token-parser/extends";
+import {ForTokenParser} from "../token-parser/for";
+import {createAndNode} from "../node/expression/binary/and";
+import {ExtendsTokenParser} from "../token-parser/extends";
 import {TwingTokenParserFrom} from "../token-parser/from";
-import {TwingTokenParserMacro} from "../token-parser/macro";
-import {TwingNode} from "../node";
-import {TwingNodeExpressionBinaryIn} from "../node/expression/binary/in";
+import {MacroTokenParser} from "../token-parser/macro";
+import {getChildren, getChildrenCount, Node} from "../node";
+import {createInNode} from "../node/expression/binary/in";
 import {TwingTokenParserIf} from "../token-parser/if";
-import {TwingTokenParserSet} from "../token-parser/set";
-import {TwingTokenParserBlock} from "../token-parser/block";
-import {TwingNodeExpressionBinaryGreater} from "../node/expression/binary/greater";
-import {TwingNodeExpressionBinaryLess} from "../node/expression/binary/less";
+import {SetTokenParser} from "../token-parser/set";
+import {BlockTokenParser} from "../token-parser/block";
+import {createGreaterThanNode} from "../node/expression/binary/greater";
+import {createLessThanNode} from "../node/expression/binary/less";
 import {TwingTokenParserInclude} from "../token-parser/include";
 import {TwingTokenParserWith} from "../token-parser/with";
-import {TwingNodeExpressionUnaryNot} from "../node/expression/unary/not";
-import {TwingNodeExpressionUnaryNeg} from "../node/expression/unary/neg";
-import {TwingNodeExpressionUnaryPos} from "../node/expression/unary/pos";
+import {createNotNode} from "../node/expression/unary/not";
+import {createNegativeNode} from "../node/expression/unary/neg";
+import {createPositiveNode} from "../node/expression/unary/pos";
 import {TwingFunction} from "../function";
 import {TwingTokenParserSpaceless} from "../token-parser/spaceless";
-import {TwingNodeExpressionBinaryConcat} from "../node/expression/binary/concat";
-import {TwingNodeExpressionBinaryMul} from "../node/expression/binary/mul";
-import {TwingNodeExpressionBinaryDiv} from "../node/expression/binary/div";
-import {TwingNodeExpressionBinaryFloorDiv} from "../node/expression/binary/floor-div";
-import {TwingNodeExpressionBinaryMod} from "../node/expression/binary/mod";
-import {TwingNodeExpressionBinarySub} from "../node/expression/binary/sub";
-import {TwingNodeExpressionBinaryAdd} from "../node/expression/binary/add";
-import {TwingTokenParserUse} from "../token-parser/use";
+import {createConcatNode} from "../node/expression/binary/concat";
+import {createMultiplyNode} from "../node/expression/binary/mul";
+import {createDivNode} from "../node/expression/binary/div";
+import {createFloorDivNode} from "../node/expression/binary/floor-div";
+import {createModuloNode} from "../node/expression/binary/mod";
+import {createSubtractNode} from "../node/expression/binary/sub";
+import {createAddNode} from "../node/expression/binary/add";
+import {UseTokenParser} from "../token-parser/use";
 import {TwingTokenParserEmbed} from "../token-parser/embed";
 import {TwingTokenParserFilter} from "../token-parser/filter";
-import {TwingNodeExpressionBinaryRange} from "../node/expression/binary/range";
+import {createRangeNode} from "../node/expression/binary/range";
 import {TwingTokenParserImport} from "../token-parser/import";
-import {TwingTokenParserDo} from "../token-parser/do";
+import {DoTokenParser} from "../token-parser/do";
 import {TwingTokenParserFlush} from "../token-parser/flush";
-import {TwingNodeExpressionBinaryEqual} from "../node/expression/binary/equal";
-import {TwingNodeExpressionBinaryNotEqual} from "../node/expression/binary/not-equal";
-import {TwingNodeExpressionBinaryOr} from "../node/expression/binary/or";
-import {TwingNodeExpressionBinaryBitwiseOr} from "../node/expression/binary/bitwise-or";
-import {TwingNodeExpressionBinaryBitwiseXor} from "../node/expression/binary/bitwise-xor";
-import {TwingNodeExpressionBinaryBitwiseAnd} from "../node/expression/binary/bitwise-and";
-import {TwingNodeExpressionBinaryGreaterEqual} from "../node/expression/binary/greater-equal";
-import {TwingNodeExpressionBinaryLessEqual} from "../node/expression/binary/less-equal";
-import {TwingNodeExpressionBinaryNotIn} from "../node/expression/binary/not-in";
-import {TwingNodeExpressionNullCoalesce} from "../node/expression/null-coalesce";
-import {TwingNodeExpression} from "../node/expression";
-import {TwingNodeExpressionBinaryPower} from "../node/expression/binary/power";
-import {TwingNodeExpressionTestDefined} from "../node/expression/test/defined";
+import {createEqualNode} from "../node/expression/binary/equal";
+import {createNotEqualToNode} from "../node/expression/binary/not-equal";
+import {createOrNode} from "../node/expression/binary/or";
+import {createBitwiseOrNode} from "../node/expression/binary/bitwise-or";
+import {createBitwiseXorNode} from "../node/expression/binary/bitwise-xor";
+import {createBitwiseAndNode} from "../node/expression/binary/bitwise-and";
+import {createGreaterThanOrEqualToNode} from "../node/expression/binary/greater-equal";
+import {createLessThanOrEqualToNode} from "../node/expression/binary/less-equal";
+import {createNotInNode} from "../node/expression/binary/not-in";
+import {createNullishCoalescingNode} from "../node/expression/nullish-coalescing";
+import {ExpressionNode} from "../node/expression";
+import {createPowerNode} from "../node/expression/binary/power";
+import {createDefinedTestNode} from "../node/expression/call/test/defined";
 import {TwingTest} from "../test";
-import {TwingNodeExpressionBinaryMatches} from "../node/expression/binary/matches";
-import {TwingNodeExpressionBinaryStartsWith} from "../node/expression/binary/starts-with";
-import {TwingNodeExpressionBinaryEndsWith} from "../node/expression/binary/ends-with";
+import {createMatchesNode} from "../node/expression/binary/matches";
+import {createStartsWithNode} from "../node/expression/binary/starts-with";
+import {createEndsWithNode} from "../node/expression/binary/ends-with";
 import {TwingFilter} from "../filter";
 import {Settings as DateTimeSettings} from 'luxon';
-import {TwingNodeExpressionConstant} from "../node/expression/constant";
-import {TwingNodeExpressionFilterDefault} from "../node/expression/filter/default";
-import {merge} from "../helpers/merge";
-import {slice} from "../helpers/slice";
-import {reverse} from "../helpers/reverse";
-import {first} from "../helpers/first";
+import {createDefaultFilterNode} from "../node/expression/call/filter/default";
 import {TwingTokenParserDeprecated} from "../token-parser/deprecated";
 import {TwingTokenParserApply} from "../token-parser/apply";
 import {TwingOperator, TwingOperatorAssociativity, TwingOperatorType} from "../operator";
@@ -67,7 +62,7 @@ import {nullTest} from "./core/tests/null";
 import {divisibleBy} from "./core/tests/divisible-by";
 import {min} from "./core/functions/min";
 import {max} from "./core/functions/max";
-import {TwingTokenParserVerbatim} from "../token-parser/verbatim";
+import {VerbatimTokenParser} from "../token-parser/verbatim";
 import {date} from "./core/filters/date";
 import {dateModify} from "./core/filters/date-modify";
 import {format} from "./core/filters/format";
@@ -105,7 +100,7 @@ import {column} from "./core/filters/column";
 import {filter} from "./core/filters/filter";
 import {map} from "./core/filters/map";
 import {reduce} from "./core/filters/reduce";
-import {TwingTokenParserAutoEscape} from "../token-parser/auto-escape";
+import {AutoEscapeTokenParser} from "../token-parser/auto-escape";
 import {TwingTokenParserSandbox} from "../token-parser/sandbox";
 import {TwingBaseNodeVisitor} from "../base-node-visitor";
 import {TwingNodeVisitorEscaper} from "../node-visitor/escaper";
@@ -122,23 +117,26 @@ import {iterable} from "./core/tests/iterable";
 import {date as dateFunction} from "./core/functions/date";
 import {TwingSourceMapNodeFactorySpaceless} from "../source-map/node-factory/spaceless";
 import {TwingSourceMapNodeFactory} from "../source-map/node-factory";
-import {TwingNodeExpressionTestConstant} from "../node/expression/test/constant";
+import {createConstantTestNode} from "../node/expression/call/test/constant";
 import {TwingNodeVisitorMacroAutoImport} from "../node-visitor/macro-auto-import";
 import {TwingTokenParserLine} from "../token-parser/line";
 import {extname, basename} from "path";
-import {TwingEscapingStrategyResolver} from "../environment";
+import {PrimitiveEscapingStrategyResolver} from "../environment";
+import {ArgumentsNode} from "../node/expression/arguments";
 
 export class TwingExtensionCore extends TwingExtension {
-    private dateFormats: Array<string> = ['F j, Y H:i', '%d days'];
-    private numberFormat: Array<number | string> = [0, '.', ','];
+    private dateFormats: [string, string] = ['F j, Y H:i', '%d days'];
+    private numberFormat: [number, string, string] = [0, '.', ','];
+    // @ts-ignore
     private timezone: string = null;
     private escapers: Map<string, Function> = new Map();
-    private defaultStrategy: string | false | TwingEscapingStrategyResolver;
+    // @ts-ignore
+    private defaultStrategy: string | false | PrimitiveEscapingStrategyResolver;
 
     /**
-     * @param {string | false | TwingEscapingStrategyResolver} defaultStrategy An escaping strategy
+     * @param {string | false | PrimitiveEscapingStrategyResolver} defaultStrategy An escaping strategy
      */
-    constructor(defaultStrategy: string | false | TwingEscapingStrategyResolver = 'html') {
+    constructor(defaultStrategy: string | false | PrimitiveEscapingStrategyResolver = 'html') {
         super();
 
         this.setDefaultStrategy(defaultStrategy);
@@ -147,9 +145,9 @@ export class TwingExtensionCore extends TwingExtension {
     /**
      * Sets the default strategy to use when not defined by the user.
      *
-     * @param {string | false | TwingEscapingStrategyResolver} defaultStrategy An escaping strategy
+     * @param {string | false | PrimitiveEscapingStrategyResolver} defaultStrategy An escaping strategy
      */
-    setDefaultStrategy(defaultStrategy: string | false | TwingEscapingStrategyResolver) {
+    setDefaultStrategy(defaultStrategy: string | false | PrimitiveEscapingStrategyResolver) {
         if (defaultStrategy === 'name') {
             defaultStrategy = (name: string) => {
                 let extension = extname(name);
@@ -219,14 +217,13 @@ export class TwingExtensionCore extends TwingExtension {
      * @param {string} format The default date format string
      * @param {string} dateIntervalFormat The default date interval format string
      */
-    setDateFormat(format: string = null, dateIntervalFormat: string = null) {
-        if (format !== null) {
-            this.dateFormats[0] = format;
-        }
+    // @ts-ignore
+    setDateFormat(format: string) {
+        this.dateFormats[0] = format;
+    }
 
-        if (dateIntervalFormat !== null) {
-            this.dateFormats[1] = dateIntervalFormat;
-        }
+    setDateIntervalFormat(format: string) {
+        this.dateFormats[1] = format;
     }
 
     /**
@@ -234,7 +231,7 @@ export class TwingExtensionCore extends TwingExtension {
      *
      * @return array The default date format string and the default date interval format string
      */
-    getDateFormat() {
+    getDateFormats() {
         return this.dateFormats;
     }
 
@@ -276,35 +273,35 @@ export class TwingExtensionCore extends TwingExtension {
      *
      * @return array The arguments for number_format()
      */
-    getNumberFormat() {
+    getNumberFormat(): [number, string, string] {
         return this.numberFormat;
     }
 
     getTokenParsers() {
         return [
             new TwingTokenParserApply(),
-            new TwingTokenParserAutoEscape(),
-            new TwingTokenParserBlock(),
+            new AutoEscapeTokenParser(),
+            new BlockTokenParser(),
             new TwingTokenParserDeprecated(),
-            new TwingTokenParserDo(),
+            new DoTokenParser(),
             new TwingTokenParserEmbed(),
-            new TwingTokenParserExtends(),
+            new ExtendsTokenParser(),
             new TwingTokenParserFilter(),
             new TwingTokenParserFlush(),
-            new TwingTokenParserFor(),
+            new ForTokenParser(),
             new TwingTokenParserFrom(),
             new TwingTokenParserIf(),
             new TwingTokenParserImport(),
             new TwingTokenParserInclude(),
             new TwingTokenParserLine(),
-            new TwingTokenParserMacro(),
+            new MacroTokenParser(),
             new TwingTokenParserSandbox(),
-            new TwingTokenParserSet(),
+            new SetTokenParser(),
             new TwingTokenParserSpaceless(),
-            new TwingTokenParserUse(),
-            new TwingTokenParserVerbatim(),
+            new UseTokenParser(),
+            new VerbatimTokenParser(),
             new TwingTokenParserWith(),
-        ];
+        ] as any; //todo
     }
 
     getSourceMapNodeFactories(): TwingSourceMapNodeFactory[] {
@@ -356,8 +353,8 @@ export class TwingExtensionCore extends TwingExtension {
             new TwingFilter('default', defaultFilter, [
                 {name: 'default'}
             ], {
-                expression_factory: function (node: TwingNode, filterName: TwingNodeExpressionConstant, methodArguments: TwingNode, lineno: number, columnno: number, tag: string) {
-                    return new TwingNodeExpressionFilterDefault(node, filterName, methodArguments, lineno, columnno, tag);
+                expression_factory: (node, _filterName, argumentsNode, line, column, tag) => {
+                    return createDefaultFilterNode(node, argumentsNode, line, column, tag);
                 }
             }),
             new TwingFilter('e', escape, [
@@ -459,7 +456,7 @@ export class TwingExtensionCore extends TwingExtension {
                 {name: 'name'},
                 {name: 'object', defaultValue: null}
             ], {
-                needs_template: true
+                needs_context: true
             }),
             new TwingFunction('cycle', cycle, [
                 {name: 'values'},
@@ -519,14 +516,14 @@ export class TwingExtensionCore extends TwingExtension {
     getTests(): Array<TwingTest> {
         return [
             new TwingTest('constant', null, [], {
-                expression_factory: function (node: TwingNodeExpression, name: string, nodeArguments: TwingNode, lineno: number, columnno: number) {
-                    return new TwingNodeExpressionTestConstant(node, name, nodeArguments, lineno, columnno);
+                expression_factory: (node, _name, argumentsNode, line, column) => {
+                    return createConstantTestNode(node, argumentsNode, line, column);
                 }
             }),
             new TwingTest('divisible by', divisibleBy, []),
             new TwingTest('defined', null, [], {
-                expression_factory: function (node: TwingNodeExpression, name: string, nodeArguments: TwingNode, lineno: number, columnno: number) {
-                    return new TwingNodeExpressionTestDefined(node, name, nodeArguments, lineno, columnno);
+                expression_factory: (node, _name, argumentsNode, line, column) => {
+                    return createDefinedTestNode(node, argumentsNode, line, column);
                 }
             }),
             new TwingTest('empty', empty, []),
@@ -541,94 +538,96 @@ export class TwingExtensionCore extends TwingExtension {
 
     getOperators(): TwingOperator[] {
         return [
-            new TwingOperator('not', TwingOperatorType.UNARY, 50, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionUnaryNot(operands[0], lineno, columnno);
+            new TwingOperator('not', TwingOperatorType.UNARY, 50, (operands: [Node, Node], line: number, column: number) => {
+                return createNotNode(operands[0], line, column);
             }),
-            new TwingOperator('-', TwingOperatorType.UNARY, 500, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionUnaryNeg(operands[0], lineno, columnno);
+            new TwingOperator('-', TwingOperatorType.UNARY, 500, (operands: [Node, Node], line: number, column: number) => {
+                return createNegativeNode(operands[0], line, column);
             }),
-            new TwingOperator('+', TwingOperatorType.UNARY, 500, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionUnaryPos(operands[0], lineno, columnno);
+            new TwingOperator('+', TwingOperatorType.UNARY, 500, (operands: [Node, Node], line: number, column: number) => {
+                return createPositiveNode(operands[0], line, column);
             }),
-            new TwingOperator('or', TwingOperatorType.BINARY, 10, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryOr(operands, lineno, columnno);
+            new TwingOperator('or', TwingOperatorType.BINARY, 10, (operands: [Node, Node], line: number, column: number) => {
+                return createOrNode(operands, line, column);
             }),
-            new TwingOperator('and', TwingOperatorType.BINARY, 15, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryAnd(operands, lineno, columnno);
+            new TwingOperator('and', TwingOperatorType.BINARY, 15, (operands: [Node, Node], line: number, column: number) => {
+                return createAndNode(operands, line, column);
             }),
-            new TwingOperator('b-or', TwingOperatorType.BINARY, 16, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryBitwiseOr(operands, lineno, columnno);
+            new TwingOperator('b-or', TwingOperatorType.BINARY, 16, (operands: [Node, Node], line: number, column: number) => {
+                return createBitwiseOrNode(operands, line, column);
             }),
-            new TwingOperator('b-xor', TwingOperatorType.BINARY, 17, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryBitwiseXor(operands, lineno, columnno);
+            new TwingOperator('b-xor', TwingOperatorType.BINARY, 17, (operands: [Node, Node], line: number, column: number) => {
+                return createBitwiseXorNode(operands, line, column);
             }),
-            new TwingOperator('b-and', TwingOperatorType.BINARY, 18, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryBitwiseAnd(operands, lineno, columnno);
+            new TwingOperator('b-and', TwingOperatorType.BINARY, 18, (operands: [Node, Node], line: number, column: number) => {
+                return createBitwiseAndNode(operands, line, column);
             }),
-            new TwingOperator('==', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryEqual(operands, lineno, columnno);
+            new TwingOperator('==', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createEqualNode(operands, line, column);
             }),
-            new TwingOperator('!=', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryNotEqual(operands, lineno, columnno);
+            new TwingOperator('!=', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createNotEqualToNode(operands, line, column);
             }),
-            new TwingOperator('<', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryLess(operands, lineno, columnno);
+            new TwingOperator('<', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createLessThanNode(operands, line, column);
             }),
-            new TwingOperator('<=', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryLessEqual(operands, lineno, columnno);
+            new TwingOperator('<=', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createLessThanOrEqualToNode(operands, line, column);
             }),
-            new TwingOperator('>', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryGreater(operands, lineno, columnno);
+            new TwingOperator('>', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createGreaterThanNode(operands, line, column);
             }),
-            new TwingOperator('>=', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryGreaterEqual(operands, lineno, columnno);
+            new TwingOperator('>=', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createGreaterThanOrEqualToNode(operands, line, column);
             }),
-            new TwingOperator('not in', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryNotIn(operands, lineno, columnno);
+            new TwingOperator('not in', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createNotInNode(operands, line, column);
             }),
-            new TwingOperator('in', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryIn(operands, lineno, columnno);
+            new TwingOperator('in', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createInNode(operands, line, column);
             }),
-            new TwingOperator('matches', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryMatches(operands, lineno, columnno);
+            new TwingOperator('matches', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createMatchesNode(operands, line, column);
             }),
-            new TwingOperator('starts with', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryStartsWith(operands, lineno, columnno);
+            new TwingOperator('starts with', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createStartsWithNode(operands, line, column);
             }),
-            new TwingOperator('ends with', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryEndsWith(operands, lineno, columnno);
+            new TwingOperator('ends with', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+                return createEndsWithNode(operands, line, column);
             }),
-            new TwingOperator('..', TwingOperatorType.BINARY, 25, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryRange(operands, lineno, columnno);
+            new TwingOperator('..', TwingOperatorType.BINARY, 25, (operands: [Node, Node], line: number, column: number) => {
+                return createRangeNode(operands, line, column);
             }),
-            new TwingOperator('+', TwingOperatorType.BINARY, 30, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryAdd(operands, lineno, columnno);
+            new TwingOperator('+', TwingOperatorType.BINARY, 30, (operands: [Node, Node], line: number, column: number) => {
+                return createAddNode(operands, line, column);
             }),
-            new TwingOperator('-', TwingOperatorType.BINARY, 30, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinarySub(operands, lineno, columnno);
+            new TwingOperator('-', TwingOperatorType.BINARY, 30, (operands: [Node, Node], line: number, column: number) => {
+                return createSubtractNode(operands, line, column);
             }),
-            new TwingOperator('~', TwingOperatorType.BINARY, 40, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryConcat(operands, lineno, columnno);
+            new TwingOperator('~', TwingOperatorType.BINARY, 40, (operands: [Node, Node], line: number, column: number) => {
+                return createConcatNode(operands, line, column);
             }),
-            new TwingOperator('*', TwingOperatorType.BINARY, 60, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryMul(operands, lineno, columnno);
+            new TwingOperator('*', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+                return createMultiplyNode(operands, line, column);
             }),
-            new TwingOperator('/', TwingOperatorType.BINARY, 60, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryDiv(operands, lineno, columnno);
+            new TwingOperator('/', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+                return createDivNode(operands, line, column);
             }),
-            new TwingOperator('//', TwingOperatorType.BINARY, 60, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryFloorDiv(operands, lineno, columnno);
+            new TwingOperator('//', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+                return createFloorDivNode(operands, line, column);
             }),
-            new TwingOperator('%', TwingOperatorType.BINARY, 60, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryMod(operands, lineno, columnno);
+            new TwingOperator('%', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+                return createModuloNode(operands, line, column);
             }),
+            // @ts-ignore
             new TwingOperator('is', TwingOperatorType.BINARY, 100, null),
+            // @ts-ignore
             new TwingOperator('is not', TwingOperatorType.BINARY, 100, null),
-            new TwingOperator('**', TwingOperatorType.BINARY, 200, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionBinaryPower(operands, lineno, columnno);
+            new TwingOperator('**', TwingOperatorType.BINARY, 200, (operands: [Node, Node], line: number, column: number) => {
+                return createPowerNode(operands, line, column);
             }, TwingOperatorAssociativity.RIGHT),
-            new TwingOperator('??', TwingOperatorType.BINARY, 300, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
-                return new TwingNodeExpressionNullCoalesce(operands, lineno, columnno);
+            new TwingOperator('??', TwingOperatorType.BINARY, 300, (operands: [ExpressionNode, ExpressionNode], line: number, column: number) => {
+                return createNullishCoalescingNode(operands, line, column);
             }, TwingOperatorAssociativity.RIGHT)
         ];
     }
@@ -636,13 +635,13 @@ export class TwingExtensionCore extends TwingExtension {
     /**
      * @internal
      */
-    private escapeFilterIsSafe(filterArgs: TwingNode) {
-        if (filterArgs.getNodes().size > 0) {
+    private escapeFilterIsSafe(filterArgs: ArgumentsNode) {
+        if (getChildrenCount(filterArgs) > 0) {
             let result: Array<string> = [];
-
-            filterArgs.getNodes().forEach(function (arg) {
-                if (arg instanceof TwingNodeExpressionConstant) {
-                    result = [arg.getAttribute('value')];
+            
+            getChildren(filterArgs).forEach(([, arg]) => {
+                if (arg.is("expression_constant")) {
+                    result = [arg.attributes.value as string];
                 }
             });
 

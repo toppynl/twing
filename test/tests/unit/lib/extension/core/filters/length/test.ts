@@ -1,10 +1,10 @@
 import * as tape from 'tape';
 import {TwingLoaderArray} from "../../../../../../../../src/lib/loader/array";
 import {length} from "../../../../../../../../src/lib/extension/core/filters/length";
-import {TwingEnvironmentNode} from "../../../../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../../../../src/lib/environment/filesystem-environment";
 
 tape('length', async (test) => {
-    let env = new TwingEnvironmentNode(new TwingLoaderArray({}));
+    let env = new FilesystemEnvironment(new TwingLoaderArray({}));
 
     test.equal(await length(env, 5), 1);
     test.equal(await length(env, 55), 2);

@@ -1,19 +1,25 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('comment');
+export type CommentNodeAttributes = BaseNodeAttributes & {
+    data: string;
+};
 
-export class TwingNodeComment extends TwingNode {
-    constructor(data: string, lineno: number, columnno: number) {
-        super(new Map(), new Map([['data', data]]), lineno, columnno);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        // noop
-    }
+export interface CommentNode extends BaseNode<"comment", CommentNodeAttributes> {
 }
+
+export const createCommentNode = (
+    data: string,
+    line: number,
+    column: number
+): CommentNode => {
+    const baseNode = createBaseNode("comment", {
+        data
+    }, {}, line, column);
+
+    return {
+        ...baseNode,
+        compile: () => {
+            // noop
+        }
+    }
+};

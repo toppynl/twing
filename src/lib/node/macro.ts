@@ -1,126 +1,128 @@
-/**
- * Represents a macro node.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-import {TwingNode} from "../node";
-import {TwingErrorSyntax} from "../error/syntax";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode, getChildren, getChildrenCount} from "../node";
+import {ArgumentsNode} from "./expression/arguments";
+import {BodyNode} from "./body";
 
-export const type = new TwingNodeType('macro');
+export const VARARGS_NAME = 'varargs';
 
-export class TwingNodeMacro extends TwingNode {
-    static VARARGS_NAME = 'varargs';
+export type MacroNodeAttributes = BaseNodeAttributes & {
+    name: string;
+};
 
-    constructor(name: string, body: TwingNode, macroArguments: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        for (let [argumentName, macroArgument] of macroArguments.getNodes()) {
-            if (argumentName === TwingNodeMacro.VARARGS_NAME) {
-                throw new TwingErrorSyntax(`The argument "${TwingNodeMacro.VARARGS_NAME}" in macro "${name}" cannot be defined because the variable "${TwingNodeMacro.VARARGS_NAME}" is reserved for arbitrary arguments.`, macroArgument.getTemplateLine());
-            }
-        }
+export interface MacroNode extends BaseNode<"macro", MacroNodeAttributes, {
+    body: BodyNode;
+    arguments: ArgumentsNode;
+}> {
+}
 
-        let nodes = new Map();
+export const createMacroNode = (
+    name: string,
+    body: BodyNode,
+    macroArguments: ArgumentsNode,
+    line: number,
+    column: number,
+    tag: string | null = null
+): MacroNode => {
+    const baseNode = createBaseNode("macro", {
+        name
+    }, {
+        body,
+        arguments: macroArguments
+    }, line, column, tag);
 
-        nodes.set('body', body);
-        nodes.set('arguments', macroArguments);
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            const {body, arguments: macroArguments} = baseNode.children;
 
-        super(nodes, new Map([['name', name]]), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw(`async (`)
-            .raw('outputBuffer, ')
-        ;
-
-        let count = this.getNode('arguments').getNodes().size;
-        let pos = 0;
-
-        for (let [name, defaultValue] of this.getNode('arguments').getNodes()) {
             compiler
-                .raw('__' + name + '__ = ')
-                .subcompile(defaultValue)
+                .raw(`async (`)
+                .raw('outputBuffer, ')
             ;
 
-            if (++pos < count) {
+            let count = getChildrenCount(macroArguments);
+            let pos = 0;
+
+            for (let [name, defaultValue] of Object.entries(macroArguments.children)) {
+                compiler
+                    .raw('__' + name + '__ = ')
+                    .subCompile(defaultValue)
+                ;
+
+                if (++pos < count) {
+                    compiler.raw(', ');
+                }
+            }
+
+            if (count) {
                 compiler.raw(', ');
             }
-        }
 
-        if (count) {
-            compiler.raw(', ');
-        }
+            compiler
+                .raw('...__varargs__')
+                .raw(") => {\n")
+                .indent()
+                .write('let aliases = template.aliases.clone();\n')
+                .write("let context = runtime.createContext(runtime.mergeGlobals(new Map([\n")
+                .indent()
+            ;
 
-        compiler
-            .raw('...__varargs__')
-            .raw(") => {\n")
-            .indent()
-            .write('let aliases = this.aliases.clone();\n')
-            .write("let context = new this.Context(this.environment.mergeGlobals(new Map([\n")
-            .indent()
-        ;
+            let first = true;
 
-        let first = true;
+            for (let [name] of getChildren(macroArguments)) {
+                if (!first) {
+                    compiler.raw(',\n');
+                }
 
-        for (let [name, default_] of this.getNode('arguments').getNodes()) {
+                first = false;
+
+                compiler
+                    .write('[')
+                    .string(name)
+                    .raw(', __' + name + '__]')
+                ;
+            }
+
             if (!first) {
                 compiler.raw(',\n');
             }
 
-            first = false;
-
             compiler
                 .write('[')
-                .string(name as string)
-                .raw(', __' + name + '__]')
+                .string(VARARGS_NAME)
+                .raw(', ')
+            ;
+
+            compiler
+                .raw("\__varargs__]\n")
+                .outdent()
+                .write("])));\n\n")
+                .write("let blocks = new Map();\n")
+                .write('let result;\n')
+                .write('let error;\n\n')
+                .write("outputBuffer.start();\n")
+                .write("try {\n")
+                .indent()
+                .subCompile(body)
+                .raw("\n")
+                .write('let tmp = outputBuffer.getContents();\n')
+                .write("result = (tmp === '') ? '' : runtime.createMarkup(tmp, runtime.getCharset());\n")
+                .outdent()
+                .write("}\n")
+                .write('catch (e) {\n')
+                .indent()
+                .write('error = e;\n')
+                .outdent()
+                .write('}\n\n')
+                .write("outputBuffer.endAndClean();\n\n")
+                .write('if (error) {\n')
+                .indent()
+                .write('throw error;\n')
+                .outdent()
+                .write('}\n')
+                .write('return result;\n')
+                .outdent()
+                .write("}")
             ;
         }
-
-        if (!first) {
-            compiler.raw(',\n');
-        }
-
-        compiler
-            .write('[')
-            .string(TwingNodeMacro.VARARGS_NAME)
-            .raw(', ')
-        ;
-
-        compiler
-            .raw("\__varargs__]\n")
-            .outdent()
-            .write("])));\n\n")
-            .write("let blocks = new Map();\n")
-            .write('let result;\n')
-            .write('let error;\n\n')
-            .write("outputBuffer.start();\n")
-            .write("try {\n")
-            .indent()
-            .subcompile(this.getNode('body'))
-            .raw("\n")
-            .write('let tmp = outputBuffer.getContents();\n')
-            .write("result = (tmp === '') ? '' : new this.Markup(tmp, this.environment.getCharset());\n")
-            .outdent()
-            .write("}\n")
-            .write('catch (e) {\n')
-            .indent()
-            .write('error = e;\n')
-            .outdent()
-            .write('}\n\n')
-            .write("outputBuffer.endAndClean();\n\n")
-            .write('if (error) {\n')
-            .indent()
-            .write('throw error;\n')
-            .outdent()
-            .write('}\n')
-            .write('return result;\n')
-            .outdent()
-            .write("}")
-        ;
     }
-}
+};

@@ -1,8 +1,6 @@
-/* istanbul ignore next */
-
-import {TwingParser} from "./parser";
-import {TwingNode} from "./node";
-import {Token} from "twig-lexer";
+import type {TwingParser} from "./parser";
+import type {Node} from "./node";
+import type {Token} from "twig-lexer";
 
 /**
  * Interface implemented by token parsers.
@@ -19,12 +17,8 @@ export interface TwingTokenParserInterface {
 
     /**
      * Parses a token and returns a node.
-     *
-     * @return TwingNode A TwingNode instance
-     *
-     * @throws TwingErrorSyntax
      */
-    parse(token: Token): TwingNode;
+    parse(token: Token): Node | null;
 
     /**
      * Gets the tag name associated with this token parser.

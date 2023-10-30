@@ -1,15 +1,16 @@
 import * as tape from 'tape';
 import {TwingNodeVisitorSafeAnalysis} from "../../../../../../src/lib/node-visitor/safe-analysis";
-import {TwingEnvironmentNode} from "../../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../../src/lib/environment/filesystem-environment";
 import {TwingLoaderArray} from "../../../../../../src/lib/loader/array";
-import {TwingNodeExpressionFilter} from "../../../../../../src/lib/node/expression/filter";
+import {TwingNodeExpressionFilter} from "../../../../../../src/lib/node/expression/call/filter";
 import {TwingNode} from "../../../../../../src/lib/node";
-import {TwingNodeExpressionConstant} from "../../../../../../src/lib/node/expression/constant";
-import {TwingNodeExpressionFunction} from "../../../../../../src/lib/node/expression/function";
-import {TwingNodeExpressionMethodCall} from "../../../../../../src/lib/node/expression/method-call";
-import {TwingNodeExpressionGetAttribute} from "../../../../../../src/lib/node/expression/get-attribute";
-import {TwingNodeExpressionName} from "../../../../../../src/lib/node/expression/name";
-import {TwingTemplate} from "../../../../../../src/lib/template";
+import {createConstantNode} from "../../../../../../src/lib/node/expression/constant";
+import {TwingNodeExpressionFunction} from "../../../../../../src/lib/node/expression/call/function";
+import {
+    createMethodCallNode
+} from "../../../../../../src/lib/node/expression/method-call";
+import {createGetAttributeNode} from "../../../../../../src/lib/node/expression/get-attribute";
+import {createNameNode} from "../../../../../../src/lib/node/expression/name";
 
 const sinon = require('sinon');
 
@@ -18,8 +19,9 @@ tape('node-visitor/safe-analysis', (test) => {
         test.test('support not registered filter', function(test) {
             let visitor = new TwingNodeVisitorSafeAnalysis();
             let doLeaveNode = Reflect.get(visitor, 'doLeaveNode').bind(visitor);
-            let env = new TwingEnvironmentNode(new TwingLoaderArray({}));
-            let filterNode = new TwingNodeExpressionFilter(new TwingNode(), new TwingNodeExpressionConstant('foo', 1, 1), new TwingNode(), 1, 1);
+            let env = new FilesystemEnvironment(new TwingLoaderArray({}));
+            let filterNode = new TwingNodeExpressionFilter(new TwingNode(),
+                createConstantNode('foo', 1, 1), new TwingNode(), 1, 1);
 
             let setSafeStub = sinon.stub(visitor, 'setSafe');
 
@@ -33,7 +35,7 @@ tape('node-visitor/safe-analysis', (test) => {
         test.test('support not registered function', function(test) {
             let visitor = new TwingNodeVisitorSafeAnalysis();
             let doLeaveNode = Reflect.get(visitor, 'doLeaveNode').bind(visitor);
-            let env = new TwingEnvironmentNode(new TwingLoaderArray({}));
+            let env = new FilesystemEnvironment(new TwingLoaderArray({}));
             let filterNode = new TwingNodeExpressionFunction('foo', new TwingNode(), 1, 1);
 
             let setSafeStub = sinon.stub(visitor, 'setSafe');
@@ -48,8 +50,8 @@ tape('node-visitor/safe-analysis', (test) => {
         test.test('support not registered macro', function(test) {
             let visitor = new TwingNodeVisitorSafeAnalysis();
             let doLeaveNode = Reflect.get(visitor, 'doLeaveNode').bind(visitor);
-            let env = new TwingEnvironmentNode(new TwingLoaderArray({}));
-            let filterNode = new TwingNodeExpressionMethodCall(new TwingNodeExpressionConstant('foo', 1, 1), 'foo', null, 1, 1);
+            let env = new FilesystemEnvironment(new TwingLoaderArray({}));
+            let filterNode = createMethodCallNode(createNameNode('foo', 1, 1), 'foo', null, 1, 1);
 
             let setSafeStub = sinon.stub(visitor, 'setSafe');
 
@@ -63,8 +65,8 @@ tape('node-visitor/safe-analysis', (test) => {
         test.test('support safe "EXPRESSION_GET_ATTR" nodes', function(test) {
             let visitor = new TwingNodeVisitorSafeAnalysis();
             let doLeaveNode = Reflect.get(visitor, 'doLeaveNode').bind(visitor);
-            let env = new TwingEnvironmentNode(new TwingLoaderArray({}));
-            let filterNode = new TwingNodeExpressionGetAttribute(new TwingNodeExpressionName('foo', 1, 1), null, null, TwingTemplate.ANY_CALL, 1, 1);
+            let env = new FilesystemEnvironment(new TwingLoaderArray({}));
+            let filterNode = createGetAttributeNode(createNameNode('foo', 1, 1), null, null, "any", 1, 1);
 
             let setSafeStub = sinon.stub(visitor, 'setSafe');
 

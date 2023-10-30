@@ -19,18 +19,22 @@ import {TwingTemplate} from "../../../template";
  *
  * @returns {Promise<DateTime | Duration>}
  */
-export function date(template: TwingTemplate, date: Date | DateTime | Duration | number | string, timezone: string | null | false = null): Promise<DateTime | Duration> {
+export function date(
+    template: TwingTemplate, date: Date | DateTime | Duration | number | string,
+    timezone: string | null | false = null
+): Promise<DateTime | Duration> {
+    const defaultTimezone = template.environment.getTimezone();
+    
     let _do = (): DateTime | Duration => {
         let result: DateTime;
-        let core = template.environment.getCoreExtension();
 
         // determine the timezone
         if (timezone !== false) {
             if (timezone === null) {
-                timezone = core.getTimezone();
+                timezone = defaultTimezone;
             }
         }
-
+        
         if (date instanceof DateTime) {
             if (timezone !== false) {
                 date = date.setZone(timezone);
@@ -53,14 +57,23 @@ export function date(template: TwingTemplate, date: Date | DateTime | Duration |
             if (date === 'now') {
                 result = DateTime.local();
             } else {
-                result = DateTime.fromISO(date, {setZone: true});
+                result = DateTime.fromISO(date, {
+                    zone: defaultTimezone || undefined,
+                    setZone: true
+                });
 
                 if (!result.isValid) {
-                    result = DateTime.fromRFC2822(date, {setZone: true});
+                    result = DateTime.fromRFC2822(date, {
+                        zone: defaultTimezone || undefined,
+                        setZone: true
+                    });
                 }
 
                 if (!result.isValid) {
-                    result = DateTime.fromSQL(date, {setZone: true});
+                    result = DateTime.fromSQL(date, {
+                        zone: defaultTimezone || undefined,
+                        setZone: true
+                    });
                 }
 
                 if (result.isValid) {
@@ -92,7 +105,7 @@ export function date(template: TwingTemplate, date: Date | DateTime | Duration |
             }
         }
 
-        Reflect.set(result, 'format', function (format: string) {
+        Reflect.set(result, 'format', (format: string) => {
             return formatDateTime(this, format);
         });
 

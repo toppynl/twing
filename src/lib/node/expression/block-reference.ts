@@ -1,76 +1,89 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingNode} from "../../node";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
+import {Node} from "../../node";
+import {Compiler} from "../../compiler";
 
-export const type = new TwingNodeType('expression_block_reference');
+type BlockReferenceExpressionNodeAttributes = BaseExpressionNodeAttributes & {
+    is_defined_test: boolean;
+    output: boolean;
+};
 
-export class TwingNodeExpressionBlockReference extends TwingNodeExpression {
-    constructor(name: TwingNode, template: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
+type BlockReferenceExpressionNodeChildren = {
+    name: Node;
+    template?: Node;
+};
 
-        nodes.set('name', name);
+export interface BlockReferenceExpressionNode extends BaseExpressionNode<"block_reference_expression", BlockReferenceExpressionNodeAttributes, BlockReferenceExpressionNodeChildren> {
+}
 
-        if (template) {
-            nodes.set('template', template);
-        }
+export const createBlockReferenceExpressionNode = (
+    name: Node,
+    template: Node | null,
+    line: number,
+    column: number,
+    tag?: string
+): BlockReferenceExpressionNode => {
+    const children: BlockReferenceExpressionNodeChildren = {
+        name
+    };
 
-        let attributes = new Map([
-            ['is_defined_test', false],
-            ['output', false]
-        ]);
-
-        super(nodes, attributes, lineno, columnno, tag);
+    if (template) {
+        children.template = template;
     }
 
-    get type() {
-        return type;
-    }
+    const baseNode = createBaseExpressionNode("block_reference_expression", {
+        is_defined_test: false,
+        output: false
+    }, children, line, column, tag);
 
-    compile(compiler: TwingCompiler) {
-        if (this.getAttribute('is_defined_test')) {
-            this.compileTemplateCall(compiler, 'traceableHasBlock', false);
-        } else {
-            this.compileTemplateCall(compiler, 'traceableRenderBlock', true);
-        }
-    }
-
-    compileTemplateCall(compiler: TwingCompiler, method: string, needsOutputBuffer: boolean): TwingCompiler {
+    const compileTemplateCall = (compiler: Compiler, method: string, needsOutputBuffer: boolean): Compiler => {
         compiler.write('await ');
 
-        if (!this.hasNode('template')) {
-            compiler.raw('this');
+        if (!node.children.template) {
+            compiler.raw('template');
         } else {
             compiler
-                .raw('(await this.loadTemplate(')
-                .subcompile(this.getNode('template'))
+                .raw('(await template.loadTemplate(')
+                .subCompile(node.children.template)
                 .raw(', ')
-                .repr(this.getTemplateLine())
+                .render(node.line)
                 .raw('))')
             ;
         }
 
-        compiler.raw(`.${method}(${this.getTemplateLine()}, this.source)`);
+        compiler.raw(`.${method}(${node.line}, template.source)`);
 
-        this.compileBlockArguments(compiler, needsOutputBuffer);
+        compileBlockArguments(compiler, needsOutputBuffer);
 
         return compiler;
     }
 
-    compileBlockArguments(compiler: TwingCompiler, needsOutputBuffer: boolean) {
+    const compileBlockArguments = (compiler: Compiler, needsOutputBuffer: boolean) => {
         compiler
             .raw('(')
-            .subcompile(this.getNode('name'))
+            .subCompile(node.children.name)
             .raw(', context.clone()');
 
         if (needsOutputBuffer) {
             compiler.raw(', outputBuffer');
         }
 
-        if (!this.hasNode('template')) {
+        if (!baseNode.children.template) {
             compiler.raw(', blocks');
         }
 
         return compiler.raw(')');
     }
-}
+
+    const node: BlockReferenceExpressionNode = {
+        ...baseNode,
+        compile: (compiler) => {
+            if (node.attributes.is_defined_test) {
+                compileTemplateCall(compiler, 'traceableHasBlock', false);
+            } else {
+                compileTemplateCall(compiler, 'traceableRenderBlock', true);
+            }
+        }
+    };
+    
+    return node;
+};

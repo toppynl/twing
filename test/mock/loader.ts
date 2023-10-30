@@ -2,19 +2,19 @@ import {TwingSource} from "../../src/lib/source";
 import {TwingLoaderNull} from "../../src/lib/loader/null";
 
 export class MockLoader extends TwingLoaderNull {
-    getSourceContext(name: string) {
+    getSourceContext() {
         return Promise.resolve(new TwingSource('', ''));
     }
 
-    getCacheKey(name: string) {
+    getCacheKey() {
         return Promise.resolve('');
     }
 
-    isFresh(name: string, time: number) {
+    isFresh() {
         return Promise.resolve(true);
     }
 
-    exists(name: string) {
+    exists() {
         return Promise.resolve(true);
     }
 }

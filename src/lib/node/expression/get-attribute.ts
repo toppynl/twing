@@ -1,76 +1,96 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingTemplate} from "../../template";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {
+    BaseExpressionNode,
+    BaseExpressionNodeAttributes,
+    createBaseExpressionNode,
+    ExpressionNode
+} from "../expression";
 
-export const type = new TwingNodeType('expression_get_attribute');
+export type GetAttributeCallType = "any" | "array" | "method";
 
-export class TwingNodeExpressionGetAttribute extends TwingNodeExpression {
-    constructor(node: TwingNodeExpression, attribute: TwingNodeExpression, methodArguments: TwingNodeExpression, type: string, lineno: number, columnno: number) {
-        let nodes = new Map();
+export type GetAttributeNodeAttributes = BaseExpressionNodeAttributes & {
+    is_defined_test: boolean;
+    type: GetAttributeCallType;
+};
 
-        nodes.set('node', node);
-        nodes.set('attribute', attribute);
+export interface GetAttributeNode extends BaseExpressionNode<"get_attribute", GetAttributeNodeAttributes, {
+    target: ExpressionNode;
+    attribute: ExpressionNode;
+    arguments: ExpressionNode;
+}> {
+}
 
-        if (methodArguments) {
-            nodes.set('arguments', methodArguments);
-        }
+export const createGetAttributeNode = (
+    target: ExpressionNode,
+    attribute: ExpressionNode,
+    methodArguments: ExpressionNode,
+    type: GetAttributeCallType,
+    line: number,
+    column: number
+): GetAttributeNode => {
+    const baseNode = createBaseExpressionNode("get_attribute", {
+        type,
+        is_defined_test: false,
+        ignore_strict_check: false,
+        optimizable: true
+    }, {
+        target,
+        attribute,
+        arguments: methodArguments
+    }, line, column);
 
-        let nodeAttributes = new Map();
+    const node: GetAttributeNode = {
+        ...baseNode,
+        clone: () => {
+            const {attributes, children, line, column} = node;
+            const {target, attribute, arguments: methodArguments} = children;
+            const {type} = attributes;
 
-        nodeAttributes.set('type', type);
-        nodeAttributes.set('is_defined_test', false);
-        nodeAttributes.set('ignore_strict_check', false);
-        nodeAttributes.set('optimizable', true);
+            return createGetAttributeNode(
+                target.clone(),
+                attribute.clone(),
+                methodArguments.clone(),
+                type,
+                line,
+                column
+            )
+        },
+        compile: (compiler) => {
+            const {environment, options} = compiler;
+            const {target, attribute, arguments: methodArguments} = node.children;
+            const {optimizable, ignore_strict_check, type, is_defined_test} = node.attributes;
 
-        super(nodes, nodeAttributes, lineno, columnno);
-    }
+            // optimize array, hash and Map calls
+            if (optimizable && (!options.strictVariables || ignore_strict_check) && !is_defined_test && (type === "array")) {
+                compiler
+                    .raw('await (async () => {let object = ')
+                    .subCompile(target)
+                    .raw('; return runtime.get(object, ')
+                    .subCompile(attribute)
+                    .raw(');})()')
+                ;
 
-    get type() {
-        return type;
-    }
+                return;
+            }
 
-    compile(compiler: TwingCompiler) {
-        let env = compiler.getEnvironment();
+            compiler.raw(`await template.traceableMethod(runtime.getAttribute, ${node.line}, template.source)(runtime, `);
 
-        // optimize array, hash and Map calls
-        if (this.getAttribute('optimizable')
-            && (!env.isStrictVariables() || this.getAttribute('ignore_strict_check'))
-            && !this.getAttribute('is_defined_test')
-            && this.getAttribute('type') === TwingTemplate.ARRAY_CALL) {
+            if (ignore_strict_check) {
+                target.attributes.ignore_strict_check = true;
+            }
+
+            compiler.subCompile(target);
+
+            compiler.raw(', ').subCompile(attribute);
+            compiler.raw(', ').subCompile(methodArguments);
 
             compiler
-                .raw('await (async () => {let object = ')
-                .subcompile(this.getNode('node'))
-                .raw('; return this.get(object, ')
-                .subcompile(this.getNode('attribute'))
-                .raw(');})()')
-            ;
-
-            return;
+                .raw(', ').render(type)
+                .raw(', ').render(is_defined_test)
+                .raw(', ').render(ignore_strict_check)
+                .raw(', ').render(environment.isSandboxed())
+                .raw(')');
         }
+    };
 
-        compiler.raw(`await this.traceableMethod(this.getAttribute, ${this.getTemplateLine()}, this.source)(this.environment, `);
-
-        if (this.getAttribute('ignore_strict_check')) {
-            this.getNode('node').setAttribute('ignore_strict_check', true);
-        }
-
-        compiler.subcompile(this.getNode('node'));
-
-        compiler.raw(', ').subcompile(this.getNode('attribute'));
-
-        if (this.hasNode('arguments')) {
-            compiler.raw(', ').subcompile(this.getNode('arguments'));
-        } else {
-            compiler.raw(', new Map()');
-        }
-
-        compiler
-            .raw(', ').repr(this.getAttribute('type'))
-            .raw(', ').repr(this.getAttribute('is_defined_test'))
-            .raw(', ').repr(this.getAttribute('ignore_strict_check'))
-            .raw(', ').repr(env.isSandboxed())
-            .raw(')');
-    }
-}
+    return node;
+};

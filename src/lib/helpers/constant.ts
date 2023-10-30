@@ -9,16 +9,12 @@
  *
  * @returns {any}
  */
-import {TwingTemplate} from "../template";
+import {TwingContext} from "../context";
 
-export function constant(template: TwingTemplate, name: string, object: any = null): any {
-    let candidate: any;
-
+export const constant = (context: TwingContext<any, any>, name: string, object: any = null): any => {
     if (object) {
-        candidate = object;
+        return object[name];
     } else {
-        candidate = template.environment;
+        return context.get(name);
     }
-
-    return candidate.constructor[name];
-}
+};

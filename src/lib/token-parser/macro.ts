@@ -7,31 +7,35 @@
  * {% endmacro %}
  * </pre>
  */
-import {TwingTokenParser} from "../token-parser";
+import {TokenParser} from "../token-parser";
 import {TwingErrorSyntax} from "../error/syntax";
-import {TwingNodeBody} from "../node/body";
-
-import {TwingNodeMacro} from "../node/macro";
-import {TwingNode} from "../node";
+import {createBodyNode} from "../node/body";
+import {createMacroNode, VARARGS_NAME} from "../node/macro";
 import {Token, TokenType} from "twig-lexer";
+import {getChildren} from "../node";
 
-export class TwingTokenParserMacro extends TwingTokenParser {
-    parse(token: Token): TwingNode {
-        let lineno = token.line;
-        let columnno = token.column;
-        let stream = this.parser.getStream();
-        let name = stream.expect(TokenType.NAME).value;
-        let macroArguments = this.parser.parseArguments(true, true);
+export class MacroTokenParser extends TokenParser {
+    parse(token: Token) {
+        const {line, column} = token;
+        const stream = this.parser.getStream();
+        const name = stream.expect(TokenType.NAME).value;
+        const macroArguments = this.parser.parseArguments(true, true);
+
+        for (const [argumentName, macroArgument] of getChildren(macroArguments)) {
+            if (argumentName === VARARGS_NAME) {
+                throw new TwingErrorSyntax(`The argument "${VARARGS_NAME}" in macro "${name}" cannot be defined because the variable "${VARARGS_NAME}" is reserved for arbitrary arguments.`, macroArgument.line);
+            }
+        }
 
         stream.expect(TokenType.TAG_END);
 
         this.parser.pushLocalScope();
 
-        let body = this.parser.subparse([this, this.decideBlockEnd], true);
-        let nextToken = stream.nextIf(TokenType.NAME);
+        const body = this.parser.subparse([this, this.decideBlockEnd], true);
+        const nextToken = stream.nextIf(TokenType.NAME);
 
         if (nextToken) {
-            let value = nextToken.value;
+            const value = nextToken.value;
 
             if (value != name) {
                 throw new TwingErrorSyntax(`Expected endmacro for macro "${name}" (but "${value}" given).`, stream.getCurrent().line, stream.getSourceContext());
@@ -42,11 +46,7 @@ export class TwingTokenParserMacro extends TwingTokenParser {
 
         stream.expect(TokenType.TAG_END);
 
-        let nodes = new Map([
-            [0, body]
-        ]);
-
-        this.parser.setMacro(name, new TwingNodeMacro(name, new TwingNodeBody(nodes), macroArguments, lineno, columnno, this.getTag()));
+        this.parser.setMacro(name, createMacroNode(name, createBodyNode(body, line, column), macroArguments, line, column, this.getTag()));
 
         return null;
     }

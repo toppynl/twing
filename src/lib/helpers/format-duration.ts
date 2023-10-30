@@ -19,7 +19,7 @@ const padStart = function (value: number, length: number, padString: string): st
 export function formatDuration(duration: Duration, format: string): string {
     let result: string;
 
-    result = format.replace(/%([YyMmDdaHhIiSsFfRr])/g, function (match, token) {
+    result = format.replace(/%([YyMmDdaHhIiSsFfRr])/g, function (_match, token) {
         let result: any;
         let isNegative: boolean = false;
 

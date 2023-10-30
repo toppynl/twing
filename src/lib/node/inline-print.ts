@@ -1,23 +1,28 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode, Node} from "../node";
 
-export const type = new TwingNodeType('inline_print');
-
-export class TwingNodeInlinePrint extends TwingNode {
-    constructor(node: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        super(new Map([['node', node]]), new Map(), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('outputBuffer.echo(')
-            .subcompile(this.getNode('node'))
-            .raw(')')
-        ;
-    }
+export interface InlinePrintNode extends BaseNode<"inline_print", BaseNodeAttributes, {
+    node: Node
+}> {
 }
+
+export const createInlinePrintNode = (
+    node: Node,
+    line: number,
+    column: number,
+    tag: string | null = null
+): InlinePrintNode => {
+    const baseNode = createBaseNode("inline_print", {}, {
+        node
+    }, line, column, tag);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .raw('outputBuffer.echo(')
+                .subCompile(baseNode.children.node)
+                .raw(')')
+            ;
+        }
+    };
+};

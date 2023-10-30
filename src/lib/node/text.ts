@@ -1,30 +1,49 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeOutputInterface} from "../node-output-interface";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('text');
+export const textNodeType = "text";
 
-export class TwingNodeText extends TwingNode implements TwingNodeOutputInterface {
-    TwingNodeOutputInterfaceImpl: TwingNodeOutputInterface;
+export type BaseTextNodeAttributes = BaseNodeAttributes & {
+    data: string;
+};
 
-    constructor(data: string, lineno: number, columnno: number, tag: string = null) {
-        super(new Map(), new Map([['data', data]]), lineno, columnno, tag);
-
-        this.TwingNodeOutputInterfaceImpl = this;
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .addSourceMapEnter(this)
-            .write('outputBuffer.echo(')
-            .string(this.getAttribute('data'))
-            .raw(");\n")
-            .addSourceMapLeave()
-        ;
-    }
+export interface BaseTextNode<Type extends string> extends BaseNode<Type, BaseTextNodeAttributes> {
 }
+
+export interface TextNode extends BaseTextNode<typeof textNodeType> {
+}
+
+export const createBaseTextNode = <Type extends string>(
+    type: Type,
+    data: string,
+    line: number,
+    column: number,
+    tag: string | null = null
+): BaseTextNode<Type> => {
+    const baseNode = createBaseNode(type,{
+        data
+    }, {}, line, column, tag);
+
+    const node: BaseTextNode<Type> = {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .addSourceMapEnter(node)
+                .write('outputBuffer.echo(')
+                .string(node.attributes.data)
+                .raw(");\n")
+                .addSourceMapLeave()
+            ;
+        },
+        isAnOutputNode: true,
+        clone: () => createBaseTextNode(type, data, line, column, tag)
+    };
+
+    return node;
+};
+
+export const createTextNode = (
+    data: string,
+    line: number,
+    column: number,
+    tag: string | null = null
+): TextNode => createBaseTextNode(textNodeType, data, line, column, tag);

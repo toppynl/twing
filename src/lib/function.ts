@@ -1,14 +1,16 @@
-import {TwingNodeExpressionFunction} from "./node/expression/function";
-import {TwingNode} from "./node";
+import {createFunctionNode, FunctionNode} from "./node/expression/call/function";
 import {
     TwingCallableWrapperOptions,
     TwingCallableWrapper,
     TwingCallableArgument,
     TwingCallable
 } from "./callable-wrapper";
+import type {ArgumentsNode} from "./node/expression/arguments";
 
-export class TwingFunction extends TwingCallableWrapper<any> {
-    readonly options: TwingCallableWrapperOptions;
+type Factory = (name: string, argumentsNode: ArgumentsNode, line: number, column: number) => FunctionNode;
+
+export class TwingFunction extends TwingCallableWrapper<any, Factory> {
+    readonly options: TwingCallableWrapperOptions<Factory>;
 
     /**
      * Creates a template function.
@@ -18,11 +20,11 @@ export class TwingFunction extends TwingCallableWrapper<any> {
      * @param {TwingCallableArgument[]} acceptedArguments
      * @param {TwingCallableWrapperOptions} options Options
      */
-    constructor(name: string, callable: TwingCallable<any>, acceptedArguments: TwingCallableArgument[], options: TwingCallableWrapperOptions = {}) {
+    constructor(name: string, callable: TwingCallable<any>, acceptedArguments: TwingCallableArgument[], options: TwingCallableWrapperOptions<Factory> = {}) {
         super (name, callable, acceptedArguments);
 
-        this.options.expression_factory = function (name: string, functionArguments: TwingNode, line: number, columnno: number) {
-            return new TwingNodeExpressionFunction(name, functionArguments, line, columnno);
+        this.options.expression_factory = (name, argumentsNode, line, column) => {
+            return createFunctionNode(name, argumentsNode, line, column);
         };
 
         this.options = Object.assign({}, this.options, options);

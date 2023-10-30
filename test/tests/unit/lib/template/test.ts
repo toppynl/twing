@@ -1,13 +1,13 @@
 import * as tape from 'tape';
 import {TwingOutputBuffer} from "../../../../../src/lib/output-buffer";
 import {TwingTemplate, TwingTemplateBlocksMap} from "../../../../../src/lib/template";
-import {TwingEnvironmentNode} from "../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../src/lib/environment/filesystem-environment";
 import {TwingLoaderArray} from "../../../../../src/lib/loader/array";
 import {TwingLoaderChain} from "../../../../../src/lib/loader/chain";
 import {TwingSource} from "../../../../../src/lib/source";
 import {TwingErrorRuntime} from "../../../../../src/lib/error/runtime";
 import {TwingErrorLoader} from "../../../../../src/lib/error/loader";
-import {TwingEnvironment} from "../../../../../src/lib/environment";
+import {AnEnvironment} from "../../../../../src/lib/environment";
 import {MockEnvironment} from "../../../../mock/environment";
 import {MockTemplate} from "../../../../mock/template";
 
@@ -16,8 +16,8 @@ const sinon = require('sinon');
 class TwingTestTemplateTemplate extends TwingTemplate {
     protected _mySource: TwingSource;
 
-    constructor(environment?: TwingEnvironment) {
-        super(environment !== undefined ? environment : new TwingEnvironmentNode(new TwingLoaderArray({
+    constructor(environment?: AnEnvironment) {
+        super(environment !== undefined ? environment : new FilesystemEnvironment(new TwingLoaderArray({
             foo: '{% block foo %}foo{% endblock %}'
         })));
 
@@ -61,7 +61,7 @@ class TwingTestTemplateTemplate extends TwingTemplate {
 
 class TwingTestTemplateTemplateWithInvalidLoadTemplate extends TwingTemplate {
     constructor() {
-        super(new TwingEnvironmentNode(new TwingLoaderChain([
+        super(new FilesystemEnvironment(new TwingLoaderChain([
             new TwingLoaderArray({})
         ])));
     }

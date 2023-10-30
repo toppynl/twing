@@ -15,7 +15,13 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
     private allowedProperties: Map<ObjectConstructor, string>;
     private allowedFunctions: Array<string>;
 
-    constructor(allowedTags: Array<string> = [], allowedFilters: Array<string> = [], allowedMethods: Map<any, string> = new Map(), allowedProperties: Map<any, string> = new Map(), allowedFunctions: Array<string> = []) {
+    constructor(
+        allowedTags: Array<string> = [], 
+        allowedFilters: Array<string> = [], 
+        allowedMethods: Map<any, string> = new Map(), 
+        allowedProperties: Map<any, string> = new Map(), 
+        allowedFunctions: Array<string> = []
+    ) {
         this.TwingSandboxSecurityPolicyInterfaceImpl = this;
         this.allowedTags = allowedTags;
         this.allowedFilters = allowedFilters;
@@ -34,6 +40,7 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
 
     setAllowedMethods(methods: Map<any, string | Array<string>>) {
         this.allowedMethods = new Map();
+        
         for (let [class_, m] of methods) {
             this.allowedMethods.set(class_, (Array.isArray(m) ? m : [m]).map(function (item) {
                 return item.toLowerCase();
@@ -88,7 +95,7 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
         }
 
         if (!allowed) {
-            throw new TwingSandboxSecurityNotAllowedMethodError(`Calling "${method}" method on a "${obj.constructor.name}" is not allowed.`);
+            throw new TwingSandboxSecurityNotAllowedMethodError(`Calling "${method}" method on "${obj}" is not allowed.`);
         }
     }
 

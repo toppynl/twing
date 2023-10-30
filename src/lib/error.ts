@@ -6,18 +6,14 @@ import {TwingSource} from "./source";
  * @author Eric MORAND <eric.morand@gmail.com>
  */
 export class TwingError extends Error {
-    private lineno: number | boolean;
-    private rawMessage: string = null;
-    private source: TwingSource = null;
-    private previous: Error = null;
-
-    protected type: string;
+    private lineno: number;
+    private rawMessage: string;
+    private source: TwingSource | undefined;
 
     constructor(message: string, lineno: number = -1, source?: TwingSource, previous?: Error) {
         super(message);
 
         this.name = 'TwingError';
-        this.previous = previous;
 
         if (previous) {
             this.stack = previous.stack;
@@ -57,7 +53,7 @@ export class TwingError extends Error {
      *
      * @param {number} lineno The template line
      */
-    setTemplateLine(lineno: number | boolean) {
+    setTemplateLine(lineno: number) {
         this.lineno = lineno;
 
         this.updateRepr();

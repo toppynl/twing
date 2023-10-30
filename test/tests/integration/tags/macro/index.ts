@@ -1,0 +1,12 @@
+import "./auto_import";
+import "./auto_import_blocks";
+import "./auto_import_without_blocks";
+import "./basic";
+import "./endmacro_name";
+import "./external";
+import "./from_embed_with_global_macro";
+import "./from_nested_blocks";
+import "./global";
+import "./self_import";
+import "./special_chars";
+import "./super_globals";

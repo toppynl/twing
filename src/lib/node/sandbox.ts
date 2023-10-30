@@ -1,36 +1,41 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode, Node} from "../node";
 
-export const type = new TwingNodeType('sandbox');
-
-export class TwingNodeSandbox extends TwingNode {
-    constructor(body: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        super(new Map([['body', body]]), new Map(), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write('await (async () => {\n')
-            .indent()
-            .write('let alreadySandboxed = this.environment.isSandboxed();\n')
-            .write("if (!alreadySandboxed) {\n")
-            .indent()
-            .write("this.environment.enableSandbox();\n")
-            .outdent()
-            .write("}\n")
-            .subcompile(this.getNode('body'))
-            .write("if (!alreadySandboxed) {\n")
-            .indent()
-            .write("this.environment.disableSandbox();\n")
-            .outdent()
-            .write("}\n")
-            .outdent()
-            .write("})();\n")
-        ;
-    }
+export interface SandboxNode extends BaseNode<"sandbox", BaseNodeAttributes, {
+    body: Node;
+}> {
 }
+
+export const createSandboxNode = (
+    body: Node,
+    line: number,
+    column: number,
+    tag: string | null = null
+): SandboxNode => {
+    const baseNode = createBaseNode("sandbox", {}, {
+        body
+    }, line, column, tag);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .write('await (async () => {\n')
+                .indent()
+                .write('let alreadySandboxed = runtime.isSandboxed();\n')
+                .write("if (!alreadySandboxed) {\n")
+                .indent()
+                .write("runtime.enableSandbox();\n")
+                .outdent()
+                .write("}\n")
+                .subCompile(baseNode.children.body)
+                .write("if (!alreadySandboxed) {\n")
+                .indent()
+                .write("runtime.disableSandbox();\n")
+                .outdent()
+                .write("}\n")
+                .outdent()
+                .write("})();\n")
+            ;
+        }
+    };
+};

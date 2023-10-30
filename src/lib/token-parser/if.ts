@@ -11,12 +11,12 @@
  * {% endif %}
  * </pre>
  */
-import {TwingTokenParser} from "../token-parser";
-import {TwingNode} from "../node";
-import {TwingNodeIf} from "../node/if";
+import {TokenParser} from "../token-parser";
+import {createBaseNode} from "../node";
+import {createIfNode} from "../node/if";
 import {Token, TokenType} from "twig-lexer";
 
-export class TwingTokenParserIf extends TwingTokenParser {
+export class TwingTokenParserIf extends TokenParser {
     parse(token: Token) {
         let lineno = token.line;
         let columnno = token.column;
@@ -27,10 +27,10 @@ export class TwingTokenParserIf extends TwingTokenParser {
 
         let index = 0;
         let body = this.parser.subparse([this, this.decideIfFork]);
-        let tests = new Map([
-            [index++, expr],
-            [index++, body]
-        ]);
+        let tests = {
+            [index++]: expr,
+            [index++]: body
+        };
 
         let elseNode = null;
 
@@ -47,8 +47,8 @@ export class TwingTokenParserIf extends TwingTokenParser {
                     expr = this.parser.parseExpression();
                     stream.expect(TokenType.TAG_END);
                     body = this.parser.subparse([this, this.decideIfFork]);
-                    tests.set(index++, expr);
-                    tests.set(index++, body);
+                    tests[index++] = expr;
+                    tests[index++] = body;
                     break;
 
                 case 'endif':
@@ -59,7 +59,7 @@ export class TwingTokenParserIf extends TwingTokenParser {
 
         stream.expect(TokenType.TAG_END);
 
-        return new TwingNodeIf(new TwingNode(tests), elseNode, lineno, columnno, this.getTag());
+        return createIfNode(createBaseNode(null, {}, tests), elseNode, lineno, columnno, this.getTag());
     }
 
     decideIfFork(token: Token) {

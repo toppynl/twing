@@ -1,9 +1,10 @@
-import {TwingTokenParser} from "../token-parser";
-import {TwingNode} from "../node";
-import {TwingNodePrint} from "../node/print";
-import {TwingNodeSet} from "../node/set";
-import {TwingNodeExpressionTempName} from "../node/expression/temp-name";
+import {TokenParser} from "../token-parser";
+import {createBaseNode} from "../node";
+import {createPrintNode} from "../node/print";
+import {createTemporaryNameNode} from "../node/expression/temp-name";
 import {Token, TokenType} from "twig-lexer";
+import {createSetNode} from "../node/set";
+import {ExpressionNode} from "../node/expression";
 
 /**
  * Applies filters on a section of a template.
@@ -12,18 +13,17 @@ import {Token, TokenType} from "twig-lexer";
  *      This text becomes uppercase
  *   {% endapply %}
  */
-export class TwingTokenParserApply extends TwingTokenParser {
-    parse(token: Token): TwingNode {
+export class TwingTokenParserApply extends TokenParser {
+    parse(token: Token) {
         let lineno = token.line;
         let columno = token.column;
         let name = this.parser.getVarName();
 
-        let ref: TwingNodeExpressionTempName;
+        let reference = createTemporaryNameNode(name, false, lineno, columno);
 
-        ref = new TwingNodeExpressionTempName(name, false, lineno, columno);
-        ref.setAttribute('always_defined', true);
+        // reference._attributes.always_defined = true; // todo: was there, useful?
 
-        let filter = this.parser.parseFilterExpressionRaw(ref, this.getTag());
+        let filter = this.parser.parseFilterExpressionRaw(reference, this.getTag()) as ExpressionNode; // todo
 
         this.parser.getStream().expect(TokenType.TAG_END);
 
@@ -31,14 +31,12 @@ export class TwingTokenParserApply extends TwingTokenParser {
 
         this.parser.getStream().expect(TokenType.TAG_END);
 
-        let nodes: Map<number, TwingNode> = new Map();
+        reference = createTemporaryNameNode(name, true, lineno, columno);
 
-        ref = new TwingNodeExpressionTempName(name, true, lineno, columno);
-
-        nodes.set(0, new TwingNodeSet(true, ref, body, lineno, columno, this.getTag()));
-        nodes.set(1, new TwingNodePrint(filter, lineno, columno, this.getTag()));
-
-        return new TwingNode(nodes);
+        return createBaseNode(null, {}, {
+            0: createSetNode(true, reference, body, lineno, columno, this.getTag()),
+            1: createPrintNode(filter, lineno, columno, this.getTag())
+        });
     }
 
     decideBlockEnd(token: Token) {

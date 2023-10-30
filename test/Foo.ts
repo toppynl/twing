@@ -1,6 +1,6 @@
 export default class {
-    private array: any[];
-    private position: number;
+    public array: any[];
+    public position: number;
 
     constructor() {
         this.array = null;

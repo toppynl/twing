@@ -1,6 +1,6 @@
 import {TwingError} from "./error";
 import {TwingSource} from "./source";
-import {TwingNode} from "./node";
+import {Node} from "./node";
 
 export type TwingCallable<T> = (...args: any[]) => Promise<T>;
 
@@ -9,7 +9,7 @@ export type TwingCallableArgument = {
     defaultValue?: any
 };
 
-export type TwingCallableWrapperOptions = {
+export type TwingCallableWrapperOptions<Factory extends Function> = {
     needs_template?: boolean;
     needs_context?: boolean;
     needs_output_buffer?: boolean;
@@ -18,18 +18,18 @@ export type TwingCallableWrapperOptions = {
     is_safe_callback?: Function;
     deprecated?: boolean | string;
     alternative?: string;
-    expression_factory?: Function;
+    expression_factory?: Factory;
 }
 
-export abstract class TwingCallableWrapper<T> {
+export abstract class TwingCallableWrapper<T, Factory extends Function> {
     readonly name: string;
     readonly callable: TwingCallable<T>;
     readonly acceptedArguments: TwingCallableArgument[];
-    readonly options: TwingCallableWrapperOptions;
+    readonly options: TwingCallableWrapperOptions<Factory>;
 
     private arguments: Array<any> = [];
 
-    protected constructor(name: string, callable: TwingCallable<any>, acceptedArguments: TwingCallableArgument[], options: TwingCallableWrapperOptions = {}) {
+    protected constructor(name: string, callable: TwingCallable<any>, acceptedArguments: TwingCallableArgument[], options: TwingCallableWrapperOptions<Factory> = {}) {
         this.name = name;
         this.callable = callable;
         this.acceptedArguments = acceptedArguments;
@@ -107,7 +107,7 @@ export abstract class TwingCallableWrapper<T> {
         return this.options.needs_output_buffer;
     }
 
-    getSafe(functionArgs: TwingNode): any[] {
+    getSafe(functionArgs: Node): any[] {
         if (this.options.is_safe !== null) {
             return this.options.is_safe;
         }
@@ -135,7 +135,7 @@ export abstract class TwingCallableWrapper<T> {
         return this.arguments;
     }
 
-    getExpressionFactory(): Function {
+    getExpressionFactory() {
         return this.options.expression_factory;
     }
 }

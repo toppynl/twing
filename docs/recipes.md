@@ -200,7 +200,7 @@ This can be easily achieved with the following code::
 let someTemplateState = {};
 
 enterNode(node, env) {
-    if (node instanceof TwingNodeModule) {
+    if (node.type === "module") {
         // reset the state as we are entering a new template
         this.someTemplateState = {};
     }

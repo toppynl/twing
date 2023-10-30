@@ -1,61 +1,65 @@
-/**
- * Represents an import node.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-import {TwingNode} from "../node";
-import {TwingNodeExpression} from "./expression";
-import {TwingCompiler} from "../compiler";
-import {type as nameType} from "./expression/name";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {ExpressionNode} from "./expression";
+import type {AssignNameNode} from "./expression/assign-name";
 
-export const type = new TwingNodeType('import');
+export type ImportNodeAttributes = BaseNodeAttributes & {
+    global: boolean;
+};
 
-export class TwingNodeImport extends TwingNode {
-    constructor(expr: TwingNodeExpression, varName: TwingNodeExpression, lineno: number, columnno: number, tag: string = null, global: boolean = true) {
-        let nodes = new Map();
+export interface ImportNode extends BaseNode<"import", ImportNodeAttributes, {
+    expr: ExpressionNode;
+    var: AssignNameNode;
+}> {
+}
 
-        nodes.set('expr', expr);
-        nodes.set('var', varName);
+export const createImportNode = (
+    expr: ExpressionNode,
+    varName: AssignNameNode,
+    global: boolean,
+    line: number,
+    column: number,
+    tag: string | null = null
+): ImportNode => {
+    const baseNode = createBaseNode("import", {
+        global
+    }, {
+        expr,
+        var: varName
+    }, line, column, tag);
 
-        let attributes = new Map();
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            const {var: varName, expr} = baseNode.children;
+            const {global} = baseNode.attributes;
 
-        attributes.set('global', global);
-
-        super(nodes, attributes, lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write('aliases.proxy[')
-            .repr(this.getNode('var').getAttribute('name'))
-            .raw('] = ')
-        ;
-
-        if (this.getAttribute('global')) {
             compiler
-                .raw('this.aliases.proxy[')
-                .repr(this.getNode('var').getAttribute('name'))
+                .write('aliases.proxy[')
+                .render(varName.attributes.name)
                 .raw('] = ')
             ;
-        }
 
-        if (this.getNode('expr').is(nameType) && this.getNode('expr').getAttribute('name') === '_self') {
-            compiler.raw('this');
-        } else {
-            compiler
-                .raw('await this.loadTemplate(')
-                .subcompile(this.getNode('expr'))
-                .raw(', ')
-                .repr(this.getTemplateLine())
-                .raw(')')
-            ;
-        }
+            if (global) {
+                compiler
+                    .raw('template.aliases.proxy[')
+                    .render(varName.attributes.name)
+                    .raw('] = ')
+                ;
+            }
 
-        compiler.raw(";\n");
-    }
-}
+            if (expr.type === "name" && expr.attributes.name === '_self') {
+                compiler.raw('template');
+            } else {
+                compiler
+                    .raw('await template.loadTemplate(')
+                    .subCompile(expr)
+                    .raw(', ')
+                    .render(baseNode.line)
+                    .raw(')')
+                ;
+            }
+
+            compiler.raw(";\n");
+        }
+    };
+};

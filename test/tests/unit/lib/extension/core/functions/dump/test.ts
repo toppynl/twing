@@ -1,7 +1,7 @@
 import * as tape from 'tape';
 import {dump} from "../../../../../../../../src/lib/extension/core/functions/dump";
 import {TwingTemplate} from "../../../../../../../../src/lib/template";
-import {TwingEnvironmentNode} from "../../../../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../../../../src/lib/environment/filesystem-environment";
 import {TwingLoaderArray} from "../../../../../../../../src/lib/loader/array";
 import {TwingOutputBuffer} from "../../../../../../../../src/lib/output-buffer";
 

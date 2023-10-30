@@ -1,9 +1,5 @@
-import {TwingNode} from "../node";
-import {TwingNodeExpression} from "./expression";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
-
-export const type = new TwingNodeType('check_to_string');
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {ExpressionNode} from "./expression";
 
 /**
  * Checks if casting an expression to toString() is allowed by the sandbox.
@@ -13,21 +9,28 @@ export const type = new TwingNodeType('check_to_string');
  * method is allowed if 'article' is an object. The same goes for {{ article|upper }}
  * or {{ random(article) }}.
  */
-export class TwingNodeCheckToString extends TwingNode {
-    constructor(expression: TwingNodeExpression) {
-        super(new Map([['expr', expression]]), new Map(), expression.getTemplateLine(), expression.getTemplateColumn());
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('this.environment.ensureToStringAllowed(')
-            .subcompile(this.getNode('expr'))
-            .raw(')')
-        ;
-    }
+export interface CheckToStringNode extends BaseNode<"check_to_string", BaseNodeAttributes, {
+    expr: ExpressionNode;
+}> {
 }
 
+export const createCheckToStringNode = (
+    expression: ExpressionNode,
+    line: number,
+    column: number
+): CheckToStringNode => {
+    const baseNode = createBaseNode("check_to_string", {}, {
+        expr: expression
+    }, line, column);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .raw('runtime.ensureToStringAllowed(')
+                .subCompile(baseNode.children.expr)
+                .raw(')')
+            ;
+        }
+    }
+};

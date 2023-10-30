@@ -7,27 +7,27 @@
  */
 import {TwingEnvironment} from "./environment";
 import {TwingNodeVisitorInterface} from "./node-visitor-interface";
-import {TwingNode} from "./node";
+import {getChildren, Node} from "./node";
 
 import {ksort} from "./helpers/ksort";
 import {push} from "./helpers/push";
 
 export class TwingNodeTraverser {
-    private env: TwingEnvironment;
     private visitors: Map<number, Map<string, TwingNodeVisitorInterface>> = new Map();
 
     /**
      *
-     * @param {TwingEnvironment} env
+     * @param {AnEnvironment} env
      * @param {Array<TwingNodeVisitorInterface>} visitors
      */
-    constructor(env: TwingEnvironment, visitors: Array<TwingNodeVisitorInterface> = []) {
-        let self = this;
-
+    constructor(
+        private readonly env: TwingEnvironment,
+        visitors: Array<TwingNodeVisitorInterface> = []
+    ) {
         this.env = env;
 
         for (let visitor of visitors) {
-            self.addVisitor(visitor);
+            this.addVisitor(visitor);
         }
     }
 
@@ -41,43 +41,37 @@ export class TwingNodeTraverser {
 
     /**
      * Traverses a node and calls the registered visitors.
-     *
-     * @return TwingNode
      */
-    traverse(node: TwingNode): TwingNode {
-        let self = this;
-        let result: TwingNode | false = node;
+    traverse(node: Node): Node {
+        let result: Node | false = node;
 
         ksort(this.visitors);
 
-        for (let [index, visitors] of this.visitors) {
-            for (let [index, visitor] of visitors) {
-                result = self.traverseForVisitor(visitor, node);
+        for (const [, visitors] of this.visitors) {
+            for (const [, visitor] of visitors) {
+                result = this.traverseWithVisitor(visitor, node);
             }
         }
 
         return result;
     }
 
-    traverseForVisitor(visitor: TwingNodeVisitorInterface, node: TwingNode): TwingNode {
-        let self = this;
+    traverseWithVisitor(visitor: TwingNodeVisitorInterface, node: Node): Node {
+        node = visitor.enterNode(node, this.env);
+        
+        for (const [key, child] of getChildren(node)) {
+            const newChild = this.traverseWithVisitor(visitor, child);
 
-        node = visitor.TwingNodeVisitorInterfaceImpl.enterNode(node, this.env);
-
-        for (let [k, n] of node.getNodes()) {
-            let m = self.traverseForVisitor(visitor, n);
-
-            if (m) {
-                if (m !== n) {
-                    node.setNode(k, m);
+            if (newChild) {
+                if (newChild !== child) {
+                    node.children[key] = newChild;
                 }
             }
             else {
-
-                node.removeNode(k);
+                delete child.children[key];
             }
         }
 
-        return visitor.TwingNodeVisitorInterfaceImpl.leaveNode(node, this.env);
+        return visitor.leaveNode(node, this.env);
     }
 }

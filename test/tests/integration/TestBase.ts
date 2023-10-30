@@ -1,11 +1,11 @@
 import * as tape from 'tape';
 import * as sinon from 'sinon';
 
-import {Token, TokenType} from "twig-lexer";
-import {TwingEnvironment} from "../../../src/lib/environment";
-import {TwingTokenParser} from "../../../src/lib/token-parser";
-import {TwingNodePrint} from "../../../src/lib/node/print";
-import {TwingNodeExpressionConstant} from "../../../src/lib/node/expression/constant";
+import {TokenType} from "twig-lexer";
+import {createEnvironment, TwingEnvironmentOptions} from "../../../src/lib/environment";
+import {TokenParser} from "../../../src/lib/token-parser";
+import {createPrintNode} from "../../../src/lib/node/print";
+import {createConstantNode} from "../../../src/lib/node/expression/constant";
 import {TwingExtension} from "../../../src/lib/extension";
 import {TwingFilter} from "../../../src/lib/filter";
 import {TwingFunction} from "../../../src/lib/function";
@@ -13,16 +13,15 @@ import {TwingTest} from "../../../src/lib/test";
 import {TwingSandboxSecurityPolicy} from "../../../src/lib/sandbox/security-policy";
 import {TwingLoaderArray} from "../../../src/lib/loader/array";
 import {escape} from "../../../src/lib/extension/core/filters/escape";
-import {TwingEnvironmentOptions} from "../../../src/lib/environment-options";
-import {TwingLoaderInterface} from "../../../src/lib/loader-interface";
 import {TwingTemplate} from "../../../src/lib/template";
 import {TwingOutputBuffer} from "../../../src/lib/output-buffer";
+import {IntegrationTest} from "./test";
 
-class TwingTestTokenParserSection extends TwingTokenParser {
-    parse(token: Token) {
+class TwingTestTokenParserSection extends TokenParser {
+    parse() {
         this.parser.getStream().expect(TokenType.TAG_END);
 
-        return new TwingNodePrint(new TwingNodeExpressionConstant('§', -1, -1), -1, -1);
+        return createPrintNode(createConstantNode('§', -1, -1), -1, -1);
     }
 
     getTag() {
@@ -89,7 +88,7 @@ class TwingTestExtension extends TwingExtension {
                 return Promise.resolve('*' + name + '*');
             }, []),
             new TwingFunction('createObject', function (attributes: Map<string, any>) {
-                const object: {[p: string]: any} = {};
+                const object: { [p: string]: any } = {};
 
                 for (let [key, value] of attributes) {
                     object[key] = value;
@@ -136,26 +135,7 @@ class TwingTestExtension extends TwingExtension {
     }
 }
 
-type EnvironmentConstructor = new (l: TwingLoaderInterface, o: TwingEnvironmentOptions) => TwingEnvironment;
-
 export default abstract class {
-    private _env: TwingEnvironment;
-    private readonly _environmentConstructor: EnvironmentConstructor;
-    private readonly _name: string;
-
-    constructor(environmentConstructor: EnvironmentConstructor, name: string) {
-        this._environmentConstructor = environmentConstructor;
-        this._name = name;
-    }
-
-    protected get env() {
-        return this._env;
-    }
-
-    setEnvironment(env: TwingEnvironment) {
-        this._env = env;
-    }
-
     getSandboxSecurityPolicyFilters(): string[] {
         return [];
     }
@@ -199,76 +179,6 @@ export default abstract class {
     getExpectedDeprecationMessages(): string[] {
         return null;
     }
-
-    async run(): Promise<void> {
-        tape(`${this._name}`, async (test) => {
-            // templates
-            let templates = this.getTemplates();
-
-            // options
-            let loader = new TwingLoaderArray(templates);
-            let environment = new this._environmentConstructor(loader, Object.assign({}, {
-                cache: false,
-                debug: false,
-                sandbox_policy: new TwingSandboxSecurityPolicy(this.getSandboxSecurityPolicyTags(), this.getSandboxSecurityPolicyFilters(), new Map(), new Map(), this.getSandboxSecurityPolicyFunctions()),
-                strict_variables: true
-            } as TwingEnvironmentOptions, this.getEnvironmentOptions()));
-
-            environment.addExtension(new TwingTestExtension(), 'TwingTestExtension');
-
-            this.setEnvironment(environment);
-
-            // globals
-            let globals = this.getGlobals();
-
-            for (let key in this.getGlobals()) {
-                this.env.addGlobal(key, globals[key]);
-            }
-
-            this.env.addGlobal('global', 'global');
-
-            let context = await this.getContext();
-            let expected = this.getExpected();
-            let expectedErrorMessage = this.getExpectedErrorMessage();
-            let expectedDeprecationMessages = this.getExpectedDeprecationMessages();
-            let consoleStub = null;
-            let consoleData: string[] = [];
-
-            if (expectedDeprecationMessages) {
-                consoleStub = sinon.stub(console, 'warn').callsFake((data: string, ...args: any[]) => {
-                    consoleData.push(data);
-                });
-            }
-
-            if (!expectedErrorMessage) {
-                try {
-                    let actual = await this.env.render('index.twig', context);
-
-                    test.same(actual.trim(), expected.trim(), `${this.getDescription()} renders as expected`);
-
-                    if (consoleStub) {
-                        consoleStub.restore();
-
-                        test.same(consoleData, expectedDeprecationMessages, `${this.getDescription()} outputs deprecation warnings`);
-                    }
-                } catch (e) {
-                    console.error(e);
-
-                    test.fail(`${this.getDescription()} should not throw an error (${e})`);
-                }
-            } else {
-                try {
-                    await this.env.render('index.twig', context);
-
-                    test.fail(`${this.getDescription()} should throw an error`);
-                } catch (e) {
-                    test.same(e.toString(), expectedErrorMessage, `${this.getDescription()} throws error`);
-                }
-            }
-
-            test.end();
-        });
-    }
 }
 
 /**
@@ -302,3 +212,71 @@ function dynamic_path(element: string, item: string) {
 function dynamic_foo(foo: string, bar: string, item: string) {
     return Promise.resolve(foo + '/' + bar + '/' + item);
 }
+
+export const runTest = async (
+    test: IntegrationTest
+) => {
+    const {description, context, globals, templates, environmentOptions, expectation, expectedErrorMessage, expectedDeprecationMessages, sandboxSecurityPolicyFilters, sandboxSecurityPolicyTags, sandboxSecurityPolicyFunctions} = test;
+
+    tape(description, async ({fail, same, end}) => {
+        let loader = new TwingLoaderArray(templates);
+        let environment = createEnvironment(loader, Object.assign({}, <TwingEnvironmentOptions>{
+            cache: false,
+            sandbox_policy: new TwingSandboxSecurityPolicy(sandboxSecurityPolicyTags, sandboxSecurityPolicyFilters, new Map(), new Map(), sandboxSecurityPolicyFunctions),
+            strict_variables: true
+        }, environmentOptions || {}));
+        
+        environment.addExtension(new TwingTestExtension(), 'TwingTestExtension');
+
+        if (globals) {
+            for (let key in globals) {
+                environment.setGlobal(key, globals[key]);
+            }
+        }
+
+        environment.setGlobal('global', 'global');
+
+        let consoleStub = null;
+        let consoleData: string[] = [];
+
+        if (expectedDeprecationMessages) {
+            consoleStub = sinon.stub(console, 'warn').callsFake((data: string) => {
+                consoleData.push(data);
+            });
+        }
+
+        return context.then(async (context) => {
+            if (!expectedErrorMessage) {
+                try {
+                    console.time(description);
+
+                    let actual = await environment.render('index.twig', context);
+
+                    console.timeEnd(description);
+
+                    same(actual.trim(), expectation.trim(), `${description}: renders as expected`);
+
+                    if (consoleStub) {
+                        consoleStub.restore();
+
+                        same(consoleData, expectedDeprecationMessages, `${description}: outputs deprecation warnings`);
+                    }
+                } catch (e) {
+                    console.error(e);
+
+                    fail(`${description}: should not throw an error (${e})`);
+                }
+            } else {
+                try {
+                    await environment.render('index.twig', context);
+
+                    fail(`${description}: should throw an error`);
+                } catch (e) {
+                    same(e.toString(), expectedErrorMessage, `${description}: throws error`);
+                }
+            }
+            
+            end();
+        });
+    });
+};

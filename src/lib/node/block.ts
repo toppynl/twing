@@ -1,29 +1,39 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('auto_escape');
+export type BlockNodeAttributes = BaseNodeAttributes & {
+    name: string;
+};
 
-export class TwingNodeBlock extends TwingNode {
-    constructor(name: string, body: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        super(new Map([['body', body]]), new Map([['name', name]]), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw(`async (context, outputBuffer, blocks = new Map()) => {\n`)
-            .indent()
-            .write('let aliases = this.aliases.clone();\n')
-        ;
-
-        compiler
-            .subcompile(this.getNode('body'))
-            .outdent()
-            .write("}")
-        ;
-    }
+export interface BlockNode extends BaseNode<"block", BlockNodeAttributes, {
+    body: BaseNode<any>;
+}> {
 }
+
+export const createBlockNode = (
+    name: string,
+    body: BaseNode<any>,
+    line: number,
+    column: number,
+    tag: string | null = null
+): BlockNode => {
+    const baseNode = createBaseNode("block", {name}, {body}, line, column, tag);
+
+    const node: BlockNode = {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .raw(`async (context, outputBuffer, blocks = new Map()) => {\n`)
+                .indent()
+                .write('const aliases = template.aliases.clone();\n')
+            ;
+
+            compiler
+                .subCompile(baseNode.children.body)
+                .outdent()
+                .write("}")
+            ;
+        }
+    };
+
+    return node;
+};

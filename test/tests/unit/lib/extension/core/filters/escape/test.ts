@@ -2,10 +2,10 @@ import * as tape from 'tape';
 import {MockEnvironment} from "../../../../../../../mock/environment";
 import {MockLoader} from "../../../../../../../mock/loader";
 import {escape} from "../../../../../../../../src/lib/extension/core/filters/escape";
-import {TwingEnvironment} from "../../../../../../../../src/lib/environment";
+import {AnEnvironment} from "../../../../../../../../src/lib/environment";
 import {MockTemplate} from "../../../../../../../mock/template";
 
-function foo_escaper_for_test(env: TwingEnvironment, string: string, charset: string) {
+function foo_escaper_for_test(env: AnEnvironment, string: string, charset: string) {
     return (string ? string : '') + charset;
 }
 

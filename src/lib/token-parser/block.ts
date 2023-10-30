@@ -1,10 +1,10 @@
-import {TwingTokenParser} from "../token-parser";
-import {TwingNode} from "../node";
+import {TokenParser} from "../token-parser";
+import {createBaseNode, Node} from "../node";
 import {TwingErrorSyntax} from "../error/syntax";
 
-import {TwingNodeBlock} from "../node/block";
-import {TwingNodePrint} from "../node/print";
-import {TwingNodeBlockReference} from "../node/block-reference";
+import {createBlockNode} from "../node/block";
+import {createPrintNode} from "../node/print";
+import {createBlockReferenceNode} from "../node/block-reference";
 import {Token, TokenType} from "twig-lexer";
 
 /**
@@ -17,18 +17,17 @@ import {Token, TokenType} from "twig-lexer";
  *  {% endblock %}
  * </pre>
  */
-export class TwingTokenParserBlock extends TwingTokenParser {
-    parse(token: Token): TwingNode {
-        let lineno = token.line;
-        let columnno = token.column;
-        let stream = this.parser.getStream();
-        let name = stream.expect(TokenType.NAME).value;
+export class BlockTokenParser extends TokenParser {
+    parse(token: Token): Node {
+        const {line, column} = token;
+        const stream = this.parser.getStream();
+        const name = stream.expect(TokenType.NAME).value;
 
         if (this.parser.hasBlock(name)) {
-            throw new TwingErrorSyntax(`The block '${name}' has already been defined line ${this.parser.getBlock(name).getTemplateLine()}.`, stream.getCurrent().line, stream.getSourceContext());
+            throw new TwingErrorSyntax(`The block '${name}' has already been defined line ${this.parser.getBlock(name).line}.`, stream.getCurrent().line, stream.getSourceContext());
         }
 
-        let block = new TwingNodeBlock(name, new TwingNode(new Map()), lineno, columnno);
+        let block = createBlockNode(name, createBaseNode(null), line, column);
 
         this.parser.setBlock(name, block);
         this.parser.pushLocalScope();
@@ -50,21 +49,19 @@ export class TwingTokenParserBlock extends TwingTokenParser {
             }
         }
         else {
-            let nodes = new Map();
-
-            nodes.set(0, new TwingNodePrint(this.parser.parseExpression(), lineno, columnno));
-
-            body = new TwingNode(nodes);
+            body = createBaseNode(null, {}, {
+                0: createPrintNode(this.parser.parseExpression(), line, column)
+            });
         }
 
         stream.expect(TokenType.TAG_END);
 
-        block.setNode('body', body);
+        block.children.body = body;
 
         this.parser.popBlockStack();
         this.parser.popLocalScope();
 
-        return new TwingNodeBlockReference(name, lineno, columnno, this.getTag());
+        return createBlockReferenceNode(name, line, column, this.getTag());
     }
 
     decideBlockEnd(token: Token) {

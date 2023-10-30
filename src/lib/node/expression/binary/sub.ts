@@ -1,15 +1,6 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_sub');
-
-export class TwingNodeExpressionBinarySub extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    operator(compiler: TwingCompiler): TwingCompiler {
-        return compiler.raw('-');
-    }
+export interface SubtractNode extends BaseBinaryNode<"sub"> {
 }
+
+export const createSubtractNode = createBinaryNodeFactory<SubtractNode>("sub", '-');

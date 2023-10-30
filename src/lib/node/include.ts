@@ -1,56 +1,64 @@
-import {TwingNode} from "../node";
-import {TwingNodeExpression} from "./expression";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {ExpressionNode} from "./expression";
+import {Compiler} from "../compiler";
 
-export const type = new TwingNodeType('include');
+export type BaseIncludeNodeAttributes = BaseNodeAttributes & {
+    only: boolean;
+    ignoreMissing: boolean;
+};
 
-export class TwingNodeInclude extends TwingNode {
-    constructor(expr: TwingNodeExpression, variables: TwingNodeExpression, only: boolean, ignoreMissing: boolean, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
+export type BaseIncludeNodeChildren = {
+    expression?: ExpressionNode;
+    variables: ExpressionNode;
+};
 
-        if (expr) {
-            nodes.set('expr', expr);
-        }
-
-        if (variables !== null) {
-            nodes.set('variables', variables);
-        }
-
-        super(nodes, new Map([['only', only], ['ignore_missing', ignoreMissing]]), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write('outputBuffer.echo(await this.include(context, outputBuffer, ');
-
-        this.addGetTemplate(compiler);
-
-        compiler.raw(', ');
-
-        if (this.hasNode('variables')) {
-            compiler.subcompile(this.getNode('variables'));
-        }
-        else {
-            compiler.repr(undefined)
-        }
-
-        compiler
-            .raw(', ')
-            .repr(!this.getAttribute('only'))
-            .raw(', ')
-            .repr(this.getAttribute('ignore_missing'))
-            .raw(', ')
-            .repr(this.getTemplateLine())
-            .raw(')')
-            .raw(');\n');
-    }
-
-    protected addGetTemplate(compiler: TwingCompiler) {
-        compiler.subcompile(this.getNode('expr'));
-    }
+export interface BaseIncludeNode<
+    Type extends string,
+    Attributes extends BaseIncludeNodeAttributes = BaseIncludeNodeAttributes
+> extends BaseNode<Type, Attributes, BaseIncludeNodeChildren> {
 }
+
+export const createBaseIncludeNode = <Type extends string, Attributes extends BaseIncludeNodeAttributes>(
+    type: Type,
+    attributes: Attributes,
+    children: BaseIncludeNodeChildren,
+    addGetTemplate: (compiler: Compiler, baseNode: BaseIncludeNode<Type, Attributes>) => void,
+    line: number,
+    column: number,
+    tag: string | null = null
+): BaseIncludeNode<Type, Attributes> => {
+    const baseNode = createBaseNode(type, attributes, children, line, column, tag);
+
+    const node: BaseIncludeNode<Type, Attributes> = {
+        ...baseNode,
+        compile: (compiler) => {
+            const {variables} = baseNode.children;
+            const {only, ignoreMissing} = node.attributes;
+
+            compiler
+                .write('outputBuffer.echo(await runtime.include(template, context, outputBuffer, ');
+
+            addGetTemplate(compiler, node);
+
+            compiler.raw(', ');
+
+            if (variables) {
+                compiler.subCompile(variables);
+            } else {
+                compiler.render(undefined)
+            }
+
+            compiler
+                .raw(', ')
+                .render(!only)
+                .raw(', ')
+                .render(ignoreMissing)
+                .raw(', ')
+                .render(baseNode.line)
+                .raw(')')
+                .raw(');\n');
+        }
+    };
+
+    return node;
+};

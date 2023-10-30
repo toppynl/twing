@@ -1,21 +1,13 @@
-import {TwingNodeExpressionBinaryDiv} from "./div";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import type {BaseBinaryNode} from "../binary";
+import {createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_floor_div');
+export interface FloorDivNode extends BaseBinaryNode<"floor_div"> {
+}
 
-export class TwingNodeExpressionBinaryFloorDiv extends TwingNodeExpressionBinaryDiv {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
+export const createFloorDivNode = createBinaryNodeFactory<FloorDivNode>("floor_div", '/', {
+    compile(compiler, baseNode) {
         compiler.raw('Math.floor(');
-        super.compile(compiler);
+        baseNode.compile(compiler);
         compiler.raw(')');
     }
-
-    operator(compiler: TwingCompiler) {
-        return compiler.raw('/');
-    }
-}
+});

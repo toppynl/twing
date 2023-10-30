@@ -2,7 +2,7 @@
   "extends": "../../../tsconfig",
   "include": [
     "../integration/fixtures/**/*.ts",
-    "../../../src/lib/environment/browser.ts",
+    "../../../src/lib/environment/filesystem-less-environment.ts",
     "./test.ts"
   ],
   "compilerOptions": {

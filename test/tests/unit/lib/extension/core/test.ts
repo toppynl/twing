@@ -1,7 +1,7 @@
 import * as tape from 'tape';
 import {TwingExtensionCore} from "../../../../../../src/lib/extension/core";
 import {TwingLoaderNull} from "../../../../../../src/lib/loader/null";
-import {TwingEnvironmentNode} from "../../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../../src/lib/environment/filesystem-environment";
 import {TwingFunction} from "../../../../../../src/lib/function";
 import {TwingCallableArgument} from "../../../../../../src/lib/callable-wrapper";
 import {TwingFilter} from "../../../../../../src/lib/filter";
@@ -66,7 +66,7 @@ tape('TwingExtensionCore', (test) => {
     });
 
     test.test('functions', (test) => {
-        const env = new TwingEnvironmentNode(new TwingLoaderNull(), {});
+        const env = new FilesystemEnvironment(new TwingLoaderNull(), {});
 
         /**
          * @param test
@@ -159,7 +159,7 @@ tape('TwingExtensionCore', (test) => {
     });
 
     test.test('filters', (test) => {
-        const env = new TwingEnvironmentNode(new TwingLoaderNull(), {});
+        const env = new FilesystemEnvironment(new TwingLoaderNull(), {});
 
         /**
          * @param test

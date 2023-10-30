@@ -412,7 +412,7 @@ twing.addTokenParser(new ProjectSetTokenParser());
 Now, let's see the actual code of this class:
 
 ```javascript
-class ProjectSetTokenParser extends TwingTokenParser {
+class ProjectSetTokenParser extends TokenParser {
     parse(token) {
         let parser = this.parser;
         let stream = parser.getStream();
@@ -654,8 +654,8 @@ class ProjectTwingExtension extends TwingExtension {
             new Map([
                 ['!', {
                     precedence: 50,
-                    factory: function (expr, lineno) {
-                        return new TwingNodeExpressionUnaryNot(expr, lineno);
+                    factory: (expr, lineno) => {
+                        return createNotNode(expr, lineno);
                     }
                 }]
             ]),
@@ -663,14 +663,14 @@ class ProjectTwingExtension extends TwingExtension {
                 ['||', {
                     precedence: 10,
                     factory: function (expr, lineno) {
-                        return new TwingNodeExpressionBinaryOr(expr, lineno);
+                        return createOrNode(expr, lineno);
                     },
                     associativity: TwingExpressionParser.OPERATOR_LEFT
                 }],
                 ['&&', {
                     precedence: 15,
                     factory: function (expr, lineno) {
-                        return new TwingNodeExpressionBinaryAnd(expr, lineno);
+                        return createAndNode(expr, lineno);
                     },
                     associativity: TwingExpressionParser.OPERATOR_LEFT
                 }]

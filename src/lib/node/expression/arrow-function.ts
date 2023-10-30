@@ -1,61 +1,65 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingCompiler} from "../../compiler";
-import {TwingNode} from "../../node";
-import {TwingNodeType} from "../../node-type";
+import type {BaseExpressionNode, BaseExpressionNodeAttributes, ExpressionNode} from "../expression";
+import type {BaseNode} from "../../node";
+import type {AssignNameNode} from "./assign-name";
+import {createBaseExpressionNode} from "../expression";
 
-export const type = new TwingNodeType('expression_arrow_function');
+export interface ArrowFunctionNode extends BaseExpressionNode<"arrow_function", BaseExpressionNodeAttributes, {
+    expr: ExpressionNode;
+    names: BaseNode<any, any, Record<string, AssignNameNode>>;
+}> {
 
-/**
- * Represents an arrow function.
- */
-export class TwingNodeExpressionArrowFunction extends TwingNodeExpression {
-    constructor(expr: TwingNodeExpression, names: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map([
-            ['expr', expr],
-            ['names', names]
-        ]);
+}
 
-        super(nodes, new Map(), lineno, columnno, tag);
-    }
+export const createArrowFunctionNode = (
+    expr: ExpressionNode,
+    names: BaseNode<any, any, Record<any, AssignNameNode>>,
+    line: number,
+    column: number
+): ArrowFunctionNode => {
+    const baseNode = createBaseExpressionNode("arrow_function", {}, {
+        expr,
+        names
+    }, line, column);
 
-    get type() {
-        return type;
-    }
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler.raw('async (');
 
-    compile(compiler: TwingCompiler) {
-        compiler.raw('async (');
+            let i: number = 0;
 
-        let i: number = 0;
+            const nameNodes = Object.values(baseNode.children.names.children);
 
-        for (let [k, name] of this.getNode('names').getNodes()) {
-            if (i > 0) {
-                compiler.raw(', ');
+            for (const nameNode of nameNodes) {
+                if (i > 0) {
+                    compiler.raw(', ');
+                }
+
+                compiler
+                    .raw('$__')
+                    .raw(nameNode.attributes.name)
+                    .raw('__');
+
+                i++;
             }
 
             compiler
-                .raw('$__')
-                .raw(name.getAttribute('name'))
-                .raw('__');
+                .raw(') => {')
+            ;
 
-            i++;
-        }
+            for (const nameNode of nameNodes) {
+                compiler
+                    .raw('context.proxy[\'')
+                    .raw(nameNode.attributes.name)
+                    .raw('\'] = $__')
+                    .raw(nameNode.attributes.name)
+                    .raw('__; ');
+            }
 
-        compiler
-            .raw(') => {')
-        ;
-
-        for (let [k, name] of this.getNode('names').getNodes()) {
             compiler
-                .raw('context.proxy[\'')
-                .raw(name.getAttribute('name'))
-                .raw('\'] = $__')
-                .raw(name.getAttribute('name'))
-                .raw('__; ');
+                .raw('return ')
+                .subCompile(baseNode.children.expr)
+                .raw(';}');
         }
-
-        compiler
-            .raw('return ')
-            .subcompile(this.getNode('expr'))
-            .raw(';}');
-    }
-}
+    };
+};

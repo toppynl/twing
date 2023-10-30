@@ -1,5 +1,5 @@
 import * as tape from 'tape';
-import {TwingEnvironmentNode} from "../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../src/lib/environment/filesystem-environment";
 import {TwingLoaderArray} from "../../../../../src/lib/loader/array";
 import {TwingSource} from "../../../../../src/lib/source";
 
@@ -8,7 +8,7 @@ tape('token-stream', (test) => {
         let loader = new TwingLoaderArray({
             index: ''
         });
-        let twing = new TwingEnvironmentNode(loader);
+        let twing = new FilesystemEnvironment(loader);
         let stream = twing.tokenize(new TwingSource('Hello {{ name }}', 'index'));
 
         test.same(stream.toString(), `TEXT(Hello )

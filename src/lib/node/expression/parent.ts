@@ -1,30 +1,32 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
 
-export const type = new TwingNodeType('expression_parent');
+export type ParentNodeAttributes = BaseExpressionNodeAttributes & {
+    name: string;
+};
 
-export class TwingNodeExpressionParent extends TwingNodeExpression {
-    constructor(name: string, lineno: number) {
-        let attributes = new Map();
-
-        attributes.set('output', false);
-        attributes.set('name', name);
-
-        super(new Map(), attributes, lineno);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        let name = this.getAttribute('name');
-
-        compiler
-            .raw(`await this.traceableRenderParentBlock(${this.getTemplateLine()}, this.source)(`)
-            .string(name)
-            .raw(', context, outputBuffer, blocks)')
-        ;
-    }
+export interface ParentNode extends BaseExpressionNode<"parent", ParentNodeAttributes> {
 }
+
+export const createParentNode = (
+    name: string,
+    line: number,
+    column: number
+): ParentNode => {
+    const baseNode = createBaseExpressionNode("parent", {
+        name,
+        //output: false
+    }, {}, line, column);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            const {name} = baseNode.attributes;
+
+            compiler
+                .raw(`await template.traceableRenderParentBlock(${baseNode.line}, template.source)(`)
+                .string(name)
+                .raw(', context, outputBuffer, blocks)')
+            ;
+        }
+    }
+};

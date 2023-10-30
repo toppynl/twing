@@ -9,13 +9,12 @@
  * </ul>
  * </pre>
  */
-import {TwingTokenParser} from "../token-parser";
-import {TwingNode} from "../node";
+import {TokenParser} from "../token-parser";
 import {TwingErrorSyntax} from "../error/syntax";
 import {Token, TokenType} from "twig-lexer";
 
-export class TwingTokenParserExtends extends TwingTokenParser {
-    parse(token: Token): TwingNode {
+export class ExtendsTokenParser extends TokenParser {
+    parse(token: Token) {
         let stream = this.parser.getStream();
 
         if (this.parser.peekBlockStack()) {

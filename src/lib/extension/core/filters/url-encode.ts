@@ -15,9 +15,9 @@ export function urlEncode(url: string | {}): Promise<string> {
         if (isTraversable(url)) {
             url = iteratorToHash(url);
         }
-
+        
         let builtUrl: string = http_build_query(url, '', '&');
-
+        
         return Promise.resolve(builtUrl.replace(/\+/g, '%20'));
     }
 

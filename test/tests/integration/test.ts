@@ -1,24 +1,35 @@
-import {TwingEnvironmentNode} from "../../../src/lib/environment/node";
 import TestBase from "./TestBase";
+import {TwingEnvironmentOptions} from "../../../src/lib/environment";
 
-const {resolve, relative} = require('path');
-const finder = require('fs-finder');
+export type IntegrationTest = {
+    description: string;
+    templates: Record<string, string>;
+    expectation: string;
+    context: Record<string, any> | Promise<Record<string, any>>;
+    environmentOptions?: TwingEnvironmentOptions;
+    globals?: Record<string, any>;
+    expectedErrorMessage?: string;
+    expectedDeprecationMessages?: Array<string>;
+    sandboxSecurityPolicyTags?: Array<string>;
+    sandboxSecurityPolicyFilters?: Array<string>;
+    sandboxSecurityPolicyFunctions?: Array<string>;
+};
 
-let directory = resolve('test/tests/integration/fixtures');
-
-let files = finder.from(directory).findFiles('*.ts');
-
-type Module = {
-    [key: string]: new (...args: any[]) => TestBase;
-}
-
-for (let file of files) {
-    let module: Module = require(`${file}`);
-
-    for (let key in module) {
-        let Test = module[key];
-
-        new Test(TwingEnvironmentNode, relative(directory, file)).run();
-    }
-}
+export const createIntegrationTest = (
+    testInstance: TestBase
+): IntegrationTest => {
+    return {
+        description: testInstance.getDescription(),
+        context: Promise.resolve(testInstance.getContext()),
+        expectation: testInstance.getExpected(),
+        templates: testInstance.getTemplates(),
+        expectedErrorMessage: testInstance.getExpectedErrorMessage(),
+        environmentOptions: testInstance.getEnvironmentOptions(),
+        globals: testInstance.getGlobals(),
+        sandboxSecurityPolicyTags: testInstance.getSandboxSecurityPolicyTags(),
+        sandboxSecurityPolicyFilters: testInstance.getSandboxSecurityPolicyFilters(),
+        sandboxSecurityPolicyFunctions: testInstance.getSandboxSecurityPolicyFunctions(),
+        expectedDeprecationMessages: testInstance.getExpectedDeprecationMessages()
+    };
+};
 

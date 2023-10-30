@@ -1,26 +1,30 @@
-import {TwingTokenParser} from "../token-parser";
-import {TwingNodeInclude} from "../node/include";
-import {TwingNodeExpression} from "../node/expression";
+import {TokenParser} from "../token-parser";
+import {createIncludeNode} from "../node/include/include";
+import {ExpressionNode} from "../node/expression";
 import {Token, TokenType} from "twig-lexer";
+import {Node} from "../node";
+import {createArrayNode} from "../node/expression/array";
 
-export class TwingTokenParserInclude extends TwingTokenParser {
-    parse(token: Token) {
-        let expr = this.parser.parseExpression();
+export class TwingTokenParserInclude extends TokenParser {
+    parse(token: Token): Node {
+        const {line, column} = token;
+        const expression = this.parser.parseExpression();
+        const {ignoreMissing, only, variables} = this.parseArguments(line, column);
 
-        let parsedArguments = this.parseArguments();
-
-        return new TwingNodeInclude(expr, parsedArguments.variables, parsedArguments.only, parsedArguments.ignoreMissing, token.line, token.column, this.getTag());
+        return createIncludeNode({
+            only,
+            ignoreMissing
+        }, {
+            expression,
+            variables
+        }, token.line, token.column, this.getTag());
     }
 
     getTag() {
         return 'include';
     }
 
-    /**
-     *
-     * @returns {{variables: TwingNodeExpression, only: boolean, ignoreMissing: boolean}}
-     */
-    protected parseArguments(): { variables: TwingNodeExpression; only: boolean; ignoreMissing: boolean } {
+    protected parseArguments(line: number, column: number): { variables: ExpressionNode; only: boolean; ignoreMissing: boolean } {
         let stream = this.parser.getStream();
 
         let ignoreMissing = false;
@@ -31,7 +35,7 @@ export class TwingTokenParserInclude extends TwingTokenParser {
             ignoreMissing = true;
         }
 
-        let variables = null;
+        let variables: ExpressionNode = createArrayNode({}, line, column);
 
         if (stream.nextIf(TokenType.NAME, 'with')) {
             variables = this.parser.parseExpression();
@@ -46,7 +50,7 @@ export class TwingTokenParserInclude extends TwingTokenParser {
         stream.expect(TokenType.TAG_END);
 
         return {
-            variables: variables,
+            variables,
             only: only,
             ignoreMissing: ignoreMissing
         };

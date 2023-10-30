@@ -9,18 +9,15 @@
  * </ul>
  * </pre>
  */
-import {TwingTokenParser} from "../token-parser";
-import {TwingNode} from "../node";
+import {TokenParser} from "../token-parser";
+import {getChildren, getChildrenCount, Node} from "../node";
 import {TwingErrorSyntax} from "../error/syntax";
 import {TwingTokenStream} from "../token-stream";
-import {TwingNodeExpressionAssignName} from "../node/expression/assign-name";
-import {TwingNodeFor, type as forType} from "../node/for";
+import {createAssignNameNode} from "../node/expression/assign-name";
+import {createForNode} from "../node/for";
 import {Token, TokenType} from "twig-lexer";
-import {type as nameType} from "../node/expression/name";
-import {type as getAttrType} from "../node/expression/get-attribute";
-import {type as constantType} from "../node/expression/constant";
 
-export class TwingTokenParserFor extends TwingTokenParser {
+export class ForTokenParser extends TokenParser {
     parse(token: Token) {
         let line = token.line;
         let column = token.column;
@@ -56,17 +53,17 @@ export class TwingTokenParserFor extends TwingTokenParser {
         let keyTarget;
         let valueTarget;
 
-        if ((targets.getNodes().size) > 1) {
-            keyTarget = targets.getNode(0);
-            keyTarget = new TwingNodeExpressionAssignName(keyTarget.getAttribute('name'), keyTarget.getTemplateLine(), keyTarget.getTemplateColumn());
+        if (getChildrenCount(targets) > 1) {
+            keyTarget = targets.children[0];
+            keyTarget = createAssignNameNode(keyTarget.attributes.name, keyTarget.line, keyTarget.column);
 
-            valueTarget = targets.getNode(1);
-            valueTarget = new TwingNodeExpressionAssignName(valueTarget.getAttribute('name'), valueTarget.getTemplateLine(), valueTarget.getTemplateColumn());
+            valueTarget = targets.children[1];
+            valueTarget = createAssignNameNode(valueTarget.attributes.name, valueTarget.line, valueTarget.column);
         } else {
-            keyTarget = new TwingNodeExpressionAssignName('_key', line, column);
+            keyTarget = createAssignNameNode('_key', line, column);
 
-            valueTarget = targets.getNode(0);
-            valueTarget = new TwingNodeExpressionAssignName(valueTarget.getAttribute('name'), valueTarget.getTemplateLine(), valueTarget.getTemplateColumn());
+            valueTarget = targets.children[0];
+            valueTarget = createAssignNameNode(valueTarget.attributes.name, valueTarget.line, valueTarget.column);
         }
 
         if (ifExpr) {
@@ -74,7 +71,7 @@ export class TwingTokenParserFor extends TwingTokenParser {
             this.checkLoopUsageBody(stream, body);
         }
 
-        return new TwingNodeFor(keyTarget, valueTarget, seq, ifExpr, body, elseToken, line, column, this.getTag());
+        return createForNode(keyTarget, valueTarget, seq, ifExpr, body, elseToken, line, column, this.getTag());
     }
 
     decideForFork(token: Token) {
@@ -86,16 +83,14 @@ export class TwingTokenParserFor extends TwingTokenParser {
     }
 
     // the loop variable cannot be used in the condition
-    checkLoopUsageCondition(stream: TwingTokenStream, node: TwingNode) {
-        let self = this;
-
-        if ((node.is(getAttrType)) && (node.getNode('node').is(nameType)) && (node.getNode('node').getAttribute('name') === 'loop')) {
-            throw new TwingErrorSyntax('The "loop" variable cannot be used in a looping condition.', node.getTemplateLine(), stream.getSourceContext());
+    checkLoopUsageCondition(stream: TwingTokenStream, node: Node) {
+        if ((node.is("get_attribute")) && (node.children.target.is("name")) && (node.children.target.attributes.name === 'loop')) {
+            throw new TwingErrorSyntax('The "loop" variable cannot be used in a looping condition.', node.line, stream.getSourceContext());
         }
 
-        node.getNodes().forEach(function (n) {
-            self.checkLoopUsageCondition(stream, n);
-        });
+        for (const [, child] of getChildren(node)) {
+            this.checkLoopUsageCondition(stream, child)
+        }
     }
 
     // check usage of non-defined loop-items
@@ -105,22 +100,22 @@ export class TwingTokenParserFor extends TwingTokenParser {
     }
 
     // it does not catch all problems (for instance when a for is included into another or when the variable is used in an include)
-    private checkLoopUsageBody(stream: TwingTokenStream, node: TwingNode) {
-        if ((node.is(getAttrType)) && (node.getNode('node').is(nameType)) && (node.getNode('node').getAttribute('name') === 'loop')) {
-            let attribute = node.getNode('attribute');
+    private checkLoopUsageBody(stream: TwingTokenStream, node: Node) {
+        if ((node.is("get_attribute")) && (node.children.target.is("name")) && (node.children.target.attributes.name === "loop")) {
+            let attribute = node.children.attribute;
 
-            if ((attribute.is(constantType)) && (['length', 'revindex0', 'revindex', 'last'].indexOf(attribute.getAttribute('value')) > -1)) {
-                throw new TwingErrorSyntax(`The "loop.${attribute.getAttribute('value')}" variable is not defined when looping with a condition.`, node.getTemplateLine(), stream.getSourceContext());
+            if (attribute.is("expression_constant") && (['length', 'revindex0', 'revindex', 'last'].indexOf(attribute.attributes.value as string) > -1)) {
+                throw new TwingErrorSyntax(`The "loop.${attribute.attributes.value}" variable is not defined when looping with a condition.`, node.line, stream.getSourceContext());
             }
         }
 
         // should check for parent.loop.XXX usage
-        if (node.is(forType)) {
+        if (node.is("for")) {
             return;
         }
 
-        for (let [k, n] of node.getNodes()) {
-            this.checkLoopUsageBody(stream, n);
+        for (let [, n] of getChildren(node)) {
+            this.checkLoopUsageBody(stream, n as any);
         }
     }
 }

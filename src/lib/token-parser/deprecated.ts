@@ -1,5 +1,5 @@
-import {TwingTokenParser} from "../token-parser";
-import {TwingNodeDeprecated} from "../node/deprecated";
+import {TokenParser} from "../token-parser";
+import {createDeprecatedNode} from "../node/deprecated";
 import {Token, TokenType} from "twig-lexer";
 
 /**
@@ -13,13 +13,13 @@ import {Token, TokenType} from "twig-lexer";
  *
  * @author Eric MORAND <eric.morand@gmail.com>
  */
-export class TwingTokenParserDeprecated extends TwingTokenParser {
+export class TwingTokenParserDeprecated extends TokenParser {
     parse(token: Token) {
-        let expr = this.parser.parseExpression();
+        const expression = this.parser.parseExpression();
 
         this.parser.getStream().expect(TokenType.TAG_END);
 
-        return new TwingNodeDeprecated(expr, token.line, token.column, this.getTag());
+        return createDeprecatedNode(expression, token.line, token.column, this.getTag());
     }
 
     getTag() {

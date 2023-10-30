@@ -1,22 +1,25 @@
+export type Countable = {
+    length: number;
+} | {
+    size: number;
+} | any;
+
+export const isCountable = (thing: any): thing is Countable => {
+    return typeof thing === "object";
+};
+
 /**
  * Count all elements in an object.
  *
  * @param {*} countable
  * @returns {number}
  */
-export function count(countable: any) {
-    if (typeof countable === 'object') {
-        if (Reflect.has(countable, 'length')) {
-            return countable.length;
-        }
-        else if (Reflect.has(countable, 'size')) {
-            return countable.size;
-        }
-        else
-        {
-            return Object.keys(countable).length;
-        }
+export const count = (countable: Countable) => {
+    if (countable.length !== undefined) {
+        return countable.length;
+    } else if (countable.size !== undefined) {
+        return countable.size;
     }
 
-    return 0;
+    return Object.keys(countable).length;
 }

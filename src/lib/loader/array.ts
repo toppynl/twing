@@ -12,7 +12,7 @@ import {iteratorToMap} from "../helpers/iterator-to-map";
 export class TwingLoaderArray implements TwingLoaderInterface {
     private templates: Map<string, string>;
 
-    constructor(templates: any) {
+    constructor(templates: Record<string, string>) {
         this.templates = iteratorToMap(templates);
     }
 
@@ -30,7 +30,7 @@ export class TwingLoaderArray implements TwingLoaderInterface {
         });
     }
 
-    exists(name: string, from: TwingSource): Promise<boolean> {
+    exists(name: string, _from: TwingSource): Promise<boolean> {
         return Promise.resolve(this.templates.has(name));
     }
 
@@ -44,7 +44,7 @@ export class TwingLoaderArray implements TwingLoaderInterface {
         });
     }
 
-    isFresh(name: string, time: number, from: TwingSource): Promise<boolean> {
+    isFresh(name: string, _time: number, from: TwingSource): Promise<boolean> {
         return this.exists(name, from).then((exists) => {
             if (!exists) {
                 throw new TwingErrorLoader(`Template "${name}" is not defined.`, -1, from);

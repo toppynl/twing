@@ -1,34 +1,35 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeOutputInterface} from "../node-output-interface";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('spaceless');
+export const spacelessNodeType = "spaceless";
 
-export class TwingNodeSpaceless extends TwingNode implements TwingNodeOutputInterface {
-    TwingNodeOutputInterfaceImpl: TwingNodeOutputInterface;
-
-    constructor(body: TwingNode, lineno: number, columnno: number, tag = 'spaceless') {
-        let nodes = new Map();
-
-        nodes.set('body', body);
-
-        super(nodes, new Map(), lineno, columnno, tag);
-
-        this.TwingNodeOutputInterfaceImpl = this;
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .addSourceMapEnter(this)
-            .write("outputBuffer.start();\n")
-            .subcompile(this.getNode('body'))
-            .write("outputBuffer.echo(outputBuffer.getAndClean().replace(/>\\s+</g, '><').trim());\n")
-            .addSourceMapLeave()
-        ;
-    }
+export interface SpacelessNode extends BaseNode<typeof spacelessNodeType, BaseNodeAttributes, {
+    body: BaseNode<any>;
+}> {
 }
+
+export const createSpacelessNode = (
+    body: BaseNode<any>,
+    line: number,
+    column: number,
+    tag = 'spaceless'
+): SpacelessNode => {
+    const baseNode = createBaseNode(spacelessNodeType, {}, {
+        body
+    }, line, column, tag);
+
+    const spacelessNode: SpacelessNode = {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .addSourceMapEnter(spacelessNode)
+                .write("outputBuffer.start();\n")
+                .subCompile(baseNode.children.body)
+                .write("outputBuffer.echo(outputBuffer.getAndClean().replace(/>\\s+</g, '><').trim());\n")
+                .addSourceMapLeave()
+            ;
+        },
+        isAnOutputNode: true
+    };
+
+    return spacelessNode;
+};

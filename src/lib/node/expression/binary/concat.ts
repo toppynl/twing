@@ -1,21 +1,17 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import type {BaseBinaryNode} from "../binary";
+import {createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_concat');
+export interface ConcatNode extends BaseBinaryNode<"concat"> {
+}
 
-export class TwingNodeExpressionBinaryConcat extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
+export const createConcatNode = createBinaryNodeFactory<ConcatNode>("concat", null, {
+    compile: (compiler, baseNode) => {
         compiler
-            .raw('(this.concatenate(')
-            .subcompile(this.getNode('left'))
+            .raw('(runtime.concatenate(')
+            .subCompile(baseNode.children.left)
             .raw(', ')
-            .subcompile(this.getNode('right'))
+            .subCompile(baseNode.children.right)
             .raw('))')
         ;
     }
-}
+});

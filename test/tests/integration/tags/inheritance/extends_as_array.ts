@@ -1,0 +1,24 @@
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
+
+class Test extends TestBase {
+    getTemplates() {
+        return {
+            'bar.twig': `
+{% block content %}
+    foo
+{% endblock %}`,
+            'index.twig': `
+{% extends ["foo.twig", "bar.twig"] %}`
+        };
+    }
+
+    getExpected() {
+        return `
+foo
+`;
+    }
+
+}
+
+runTest(createIntegrationTest(new Test));

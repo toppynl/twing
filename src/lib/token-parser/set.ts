@@ -9,17 +9,17 @@
  * </ul>
  * </pre>
  */
-import {TwingTokenParser} from "../token-parser";
+import {TokenParser} from "../token-parser";
 import {TwingErrorSyntax} from "../error/syntax";
-import {TwingNodeSet} from "../node/set";
+import {createSetNode} from "../node/set";
 import {Token, TokenType} from "twig-lexer";
+import {getChildrenCount} from "../node";
 
-export class TwingTokenParserSet extends TwingTokenParser {
+export class SetTokenParser extends TokenParser {
     parse(token: Token) {
-        let lineno = token.line;
-        let columnno = token.column;
-        let stream = this.parser.getStream();
-        let names = this.parser.parseAssignmentExpression();
+        const {line, column} = token;
+        const stream = this.parser.getStream();
+        const names = this.parser.parseAssignmentExpression();
 
         let capture = false;
         let values;
@@ -29,14 +29,14 @@ export class TwingTokenParserSet extends TwingTokenParser {
 
             stream.expect(TokenType.TAG_END);
 
-            if (names.getNodes().size !== values.getNodes().size) {
+            if (getChildrenCount(names) !== getChildrenCount(values)) {
                 throw new TwingErrorSyntax('When using set, you must have the same number of variables and assignments.', stream.getCurrent().line, stream.getSourceContext());
             }
         }
         else {
             capture = true;
 
-            if (names.getNodes().size > 1) {
+            if (getChildrenCount(names) > 1) {
                 throw new TwingErrorSyntax('When using set with a block, you cannot have a multi-target.', stream.getCurrent().line, stream.getSourceContext());
             }
 
@@ -47,7 +47,7 @@ export class TwingTokenParserSet extends TwingTokenParser {
             stream.expect(TokenType.TAG_END);
         }
 
-        return new TwingNodeSet(capture, names, values, lineno, columnno, this.getTag());
+        return createSetNode(capture, names, values, line, column, this.getTag());
     }
 
     decideBlockEnd(token: Token) {

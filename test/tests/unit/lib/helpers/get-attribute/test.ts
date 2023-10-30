@@ -4,9 +4,9 @@ import {MockEnvironment} from "../../../../../mock/environment";
 import {MockLoader} from "../../../../../mock/loader";
 import {TwingSource} from "../../../../../../src/lib/source";
 import {getAttribute} from "../../../../../../src/lib/helpers/get-attribute";
-import {TwingEnvironment} from "../../../../../../src/lib/environment";
+import {AnEnvironment} from "../../../../../../src/lib/environment";
 import {TwingLoaderNull} from "../../../../../../src/lib/loader/null";
-import {TwingEnvironmentNode} from "../../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../../src/lib/environment/filesystem-environment";
 import {TwingOutputBuffer} from "../../../../../../src/lib/output-buffer";
 
 class Foo {
@@ -50,7 +50,7 @@ class Foo {
 }
 
 class TwingTestExtensionCoreTemplate extends TwingTemplate {
-    constructor(env: TwingEnvironment) {
+    constructor(env: AnEnvironment) {
         super(env);
     }
 
@@ -188,7 +188,7 @@ tape('get-attribute', (test) => {
     });
 
     test.test('sandboxed with non-allowed property', async (test) => {
-        let env = new TwingEnvironmentNode(new TwingLoaderNull(), {
+        let env = new FilesystemEnvironment(new TwingLoaderNull(), {
             sandboxed: true
         });
 
@@ -212,7 +212,7 @@ tape('get-attribute', (test) => {
     });
 
     test.test('sandboxed with non-allowed method', async (test) => {
-        let env = new TwingEnvironmentNode(new TwingLoaderNull(), {
+        let env = new FilesystemEnvironment(new TwingLoaderNull(), {
             sandboxed: true
         });
 

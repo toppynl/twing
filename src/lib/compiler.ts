@@ -1,220 +1,220 @@
-import {TwingNode} from "./node";
-import {TwingEnvironment} from "./environment";
+import type {BaseNode, Node} from "./node";
 import {isNullOrUndefined} from "util";
 import {addcslashes} from "locutus/php/strings";
+import {TwingFunction} from "./function";
+import {TwingTest} from "./test";
+import {TwingFilter} from "./filter";
 
-export class TwingCompiler {
-    private readonly environment: TwingEnvironment;
-    private lastLine: number;
-    private source: string;
-    private indentation: number;
-    private varNameSalt = 0;
+export type CompilerOptions = {
+    sourceMap?: boolean;
+    strictVariables?: boolean;
+};
 
-    constructor(environment: TwingEnvironment) {
-        this.environment = environment;
-    }
+export type CompilerEnvironment = {
+    getFunction: (name: string) => TwingFunction | null;
+    getTest: (name: string) => TwingTest | null;
+    getFilter: (name: string) => TwingFilter | null;
+    isSandboxed: () => boolean;
+};
 
-    /**
-     * Returns the environment instance related to this compiler.
-     *
-     * @returns TwingEnvironment
-     */
-    getEnvironment() {
-        return this.environment;
-    }
+export interface Compiler {
+    readonly environment: CompilerEnvironment;
 
-    getSource() {
-        return this.source;
-    }
+    readonly options: CompilerOptions;
 
-    compile(node: TwingNode, indentation: number = 0): TwingCompiler {
-        this.lastLine = null;
-        this.source = '';
-        this.indentation = indentation;
-        this.varNameSalt = 0;
+    readonly source: string;
 
-        this.subcompile(node);
+    compile(node: Node, indentation?: number): this;
 
-        return this;
-    }
-
-    subcompile(node: TwingNode, raw: boolean = true): TwingCompiler {
-        if (raw === false) {
-            this.source += ' '.repeat(this.indentation * 4);
-        }
-
-        node.compile(this);
-
-        return this;
-    }
+    subCompile(node: Node, asRaw?: boolean): this;
 
     /**
-     *
-     * @param string
-     * @returns
+     * Adds the passed data to the compiled code, as-is, without indentation.
      */
-    raw(string: any): TwingCompiler {
-        this.source += string;
-
-        return this;
-    }
+    raw(data: any): this;
 
     /**
-     * Writes a string to the compiled code by adding indentation.
-     *
-     * @returns {TwingCompiler}
+     * Adds the passed data to the compiled code, as-is, with indentation.
      */
-    write(...strings: Array<string>): TwingCompiler {
-        for (let string of strings) {
-            this.source += ' '.repeat(this.indentation * 4) + string;
-        }
-
-        return this;
-    }
+    write(data: any): this;
 
     /**
-     * Adds a quoted string to the compiled code.
-     *
-     * @param {string} value The string
-     *
-     * @returns {TwingCompiler}
+     * Adds the passed data to the compiled code, as a quoted string.
      */
-    string(value: string): TwingCompiler {
-        if (!isNullOrUndefined(value)) {
-            if (typeof value === 'string') {
-                value = '`' + addcslashes(value, "\0\t\\`").replace(/\${/g, '\\${') + '`';
-            }
-        } else {
-            value = '``';
-        }
-
-        this.source += value;
-
-        return this;
-    }
-
-    repr(value: any): any {
-        if (typeof value === 'number') {
-            this.raw(value);
-        } else if (isNullOrUndefined(value)) {
-            this.raw(`${value}`);
-        } else if (typeof value === 'boolean') {
-            this.raw(value ? 'true' : 'false');
-        } else if (value instanceof Map) {
-            this.raw('new Map([');
-
-            let first = true;
-
-            for (let [k, v] of value) {
-                if (!first) {
-                    this.raw(', ');
-                }
-
-                first = false;
-
-                this
-                    .raw('[')
-                    .repr(k)
-                    .raw(', ')
-                    .repr(v)
-                    .raw(']')
-                ;
-            }
-
-            this.raw('])');
-        } else if (typeof value === 'object') {
-            this.raw('{');
-
-            let first = true;
-
-            for (let k in value) {
-                if (!first) {
-                    this.raw(', ');
-                }
-
-                first = false;
-
-                this
-                    .raw(`"${k}"`)
-                    .raw(': ')
-                    .repr(value[k])
-                ;
-            }
-
-            this.raw('}');
-        } else {
-            this.string(value);
-        }
-
-        return this;
-    }
+    string(value: any): this;
 
     /**
-     * Adds source-map enter call.
-     *
-     * @returns TwingCompiler
+     * Adds the passed data to the compiled code, using the most appropriate rendering technique based on its type.
      */
-    addSourceMapEnter(node: TwingNode) {
-        if (this.getEnvironment().isSourceMap()) {
-            this
-                .write('this.environment.enterSourceMapBlock(')
-                .raw(node.getTemplateLine())
-                .raw(', ')
-                .raw(node.getTemplateColumn())
-                .raw(', ')
-                .string(node.type.toString())
-                .raw(', ')
-                .raw('this.source, outputBuffer);\n')
-        }
+    render(data: any): this;
 
-        return this;
-    }
+    addSourceMapEnter(node: BaseNode<any>): this;
 
-    /**
-     * Adds source-map leave call.
-     *
-     * @returns TwingCompiler
-     */
-    addSourceMapLeave() {
-        if (this.getEnvironment().isSourceMap()) {
-            this
-                .write('this.environment.leaveSourceMapBlock(outputBuffer);\n')
-            ;
-        }
-
-        return this;
-    }
+    addSourceMapLeave(): this;
 
     /**
      * Indents the generated code.
-     *
-     * @param {number} step The number of indentation to add
-     *
-     * @returns TwingCompiler
      */
-    indent(step: number = 1) {
-        this.indentation += step;
-
-        return this;
-    }
+    indent(step?: number): this;
 
     /**
      * Outdents the generated code.
      *
-     * @param {number} step The number of indentation to remove
-     *
-     * @return TwingCompiler
-     *
-     * @throws Error When trying to outdent too much so the indentation would become negative
+     * @throws Error When the indentation level would become negative
      */
-    outdent(step: number = 1) {
-        // can't outdent by more steps than the current indentation level
-        if (this.indentation < step) {
-            throw new Error('Unable to call outdent() as the indentation would become negative.');
-        }
-
-        this.indentation -= step;
-
-        return this;
-    }
+    outdent(step?: number): this;
 }
+
+export const createCompiler = (
+    environment: CompilerEnvironment,
+    options?: CompilerOptions
+): Compiler => {
+    let source: string = '';
+    let currentIndentation: number = 0;
+
+    const compiler: Compiler = {
+        environment,
+        options: options || {
+            sourceMap: false,
+            strictVariables: false
+        },
+        get source() {
+            return source;
+        },
+        compile: (node, indentation = 0) => {
+            currentIndentation = indentation;
+            source = '';
+
+            compiler.subCompile(node);
+
+            return compiler;
+        },
+        subCompile: (node, asRaw = true) => {
+            if (asRaw === false) {
+                source += ' '.repeat(currentIndentation * 4);
+            }
+
+            node.compile(compiler);
+
+            return compiler;
+        },
+        raw: (data) => {
+            source += data;
+
+            return compiler;
+        },
+        write: (data) => {
+            source += ' '.repeat(currentIndentation * 4) + data;
+
+            return compiler;
+        },
+        string: (value) => {
+            if (!isNullOrUndefined(value)) {
+                if (typeof value === 'string') {
+                    value = '`' + addcslashes(value, "\0\t\\`").replace(/\${/g, '\\${') + '`';
+                }
+            } else {
+                value = '``';
+            }
+
+            source += value;
+
+            return compiler;
+        },
+        render: (data) => {
+            if (typeof data === 'number') {
+                compiler.raw(data);
+            } else if (isNullOrUndefined(data)) {
+                compiler.raw(`${data}`);
+            } else if (typeof data === 'boolean') {
+                compiler.raw(data ? 'true' : 'false');
+            } else if (data instanceof Map) {
+                compiler.raw('new Map([');
+
+                let first = true;
+
+                for (let [k, v] of data) {
+                    if (!first) {
+                        compiler.raw(', ');
+                    }
+
+                    first = false;
+
+                    compiler
+                        .raw('[')
+                        .render(k)
+                        .raw(', ')
+                        .render(v)
+                        .raw(']')
+                    ;
+                }
+
+                compiler.raw('])');
+            } else if (typeof data === 'object') {
+                compiler.raw('{');
+
+                let first = true;
+
+                for (let k in data) {
+                    if (!first) {
+                        compiler.raw(', ');
+                    }
+
+                    first = false;
+
+                    compiler
+                        .raw(`"${k}"`)
+                        .raw(': ')
+                        .render(data[k])
+                    ;
+                }
+
+                compiler.raw('}');
+            } else {
+                compiler.string(data);
+            }
+
+            return compiler;
+        },
+        addSourceMapEnter: (node) => {
+            if (options?.sourceMap) {
+                compiler
+                    .write('this.environment.enterSourceMapBlock(')
+                    .raw(node.line)
+                    .raw(', ')
+                    .raw(node.column)
+                    .raw(', ')
+                    .string(node.type || '')
+                    .raw(', ')
+                    .raw('this.source, outputBuffer);\n')
+            }
+
+            return compiler;
+        },
+        addSourceMapLeave: () => {
+            if (options?.sourceMap) {
+                compiler
+                    .write('this.environment.leaveSourceMapBlock(outputBuffer);\n')
+                ;
+            }
+
+            return compiler;
+        },
+        indent: (step: number = 1) => {
+            currentIndentation += step;
+
+            return compiler;
+        },
+        outdent: (step: number = 1) => {
+            if (currentIndentation < step) {
+                throw new Error('Unable to call outdent() as the indentation would become negative.');
+            }
+
+            currentIndentation -= step;
+
+            return compiler;
+        }
+    };
+
+    return compiler;
+};

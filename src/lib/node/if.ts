@@ -1,62 +1,74 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, createBaseNode, getChildrenCount, BaseNodeAttributes} from "../node";
 
-export const type = new TwingNodeType('if');
+type NodeIfChildren = {
+    tests: BaseNode<any>;
+    else?: BaseNode<any>;
+};
 
-export class TwingNodeIf extends TwingNode {
-    constructor(tests: TwingNode, elseNode: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
+export interface IfNode extends BaseNode<'if', BaseNodeAttributes, NodeIfChildren> {
+}
 
-        nodes.set('tests', tests);
+export const createIfNode = (
+    testNode: BaseNode<any>,
+    elseNode: BaseNode<any> | null,
+    line: number,
+    column: number,
+    tag: string | null = null
+): IfNode => {
+    const children: NodeIfChildren = {
+        tests: testNode
+    };
 
-        if (elseNode) {
-            nodes.set('else', elseNode);
-        }
-
-        super(nodes, new Map(), lineno, columnno, tag);
+    if (elseNode) {
+        children.else = elseNode;
     }
 
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        let count = this.getNode('tests').getNodes().size;
+    const compile: IfNode["compile"] = (compiler) => {
+        const count = getChildrenCount(testNode);
 
         for (let i = 0; i < count; i += 2) {
             if (i > 0) {
                 compiler
                     .outdent()
                     .write('}\n')
-                    .write('else if (this.evaluate(')
+                    .write('else if (runtime.evaluate(')
                 ;
             } else {
                 compiler
-                    .write('if (this.evaluate(')
+                    .write('if (runtime.evaluate(')
                 ;
             }
 
             compiler
-                .subcompile(this.getNode('tests').getNode(i))
+                .subCompile(testNode.children[i])
                 .raw(")) {\n")
                 .indent()
-                .subcompile(this.getNode('tests').getNode(i + 1))
+                .subCompile(testNode.children[i + 1])
             ;
         }
 
-        if (this.hasNode('else')) {
+        if (elseNode !== null) {
             compiler
                 .outdent()
                 .write("}\n")
                 .write("else {\n")
                 .indent()
-                .subcompile(this.getNode('else'))
+                .subCompile(elseNode)
             ;
         }
 
         compiler
             .outdent()
             .write("}\n");
-    }
+    };
+
+    const baseNode = createBaseNode('if', {}, children, line, column, tag);
+
+    const node: IfNode = {
+        ...baseNode,
+        clone: () => createIfNode(testNode, elseNode, line, column, tag),
+        compile
+    };
+
+    return node;
 }

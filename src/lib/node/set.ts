@@ -1,113 +1,127 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeExpressionConstant} from "./expression/constant";
-import {TwingNodeCaptureInterface} from "../node-capture-interface";
-import {type as textType} from "./text";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode, getChildrenCount} from "../node";
+import {createConstantNode} from "./expression/constant";
+import {textNodeType} from "./text";
 
-export const type = new TwingNodeType('set');
+export type SetNodeAttributes = BaseNodeAttributes & {
+    capture: boolean;
+    safe: boolean;
+};
 
-export class TwingNodeSet extends TwingNode implements TwingNodeCaptureInterface {
-    TwingNodeCaptureInterfaceImpl: TwingNodeCaptureInterface;
+export interface SetNode extends BaseNode<"set", SetNodeAttributes, {
+    names: BaseNode<any>;
+    values: BaseNode<any>;
+}> {
+}
 
-    constructor(capture: boolean, names: TwingNode, values: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
+export const createSetNode = (
+    capture: boolean,
+    names: SetNode["children"]["names"],
+    values: SetNode["children"]["values"],
+    line: number,
+    column: number,
+    tag: string | null = null
+): SetNode => {
+    const baseNode = createBaseNode("set", {
+        capture,
+        safe: false
+    }, {
+        names,
+        values
+    }, line, column, tag);
 
-        nodes.set('names', names);
-        nodes.set('values', values);
+    /*
+     * Optimizes the node when capture is used for a large block of text.
+     *
+     * {% set foo %}foo{% endset %} is compiled to $context['foo'] = new Twig_Markup("foo");
+     */
+    if (baseNode.attributes.capture) {
+        baseNode.attributes.safe = true;
 
-        let attributes = new Map();
+        const {values} = baseNode.children;
 
-        attributes.set('capture', capture);
-        attributes.set('safe', false);
-
-        super(nodes, attributes, lineno, columnno, tag);
-
-        this.TwingNodeCaptureInterfaceImpl = this;
-
-        /*
-         * Optimizes the node when capture is used for a large block of text.
-         *
-         * {% set foo %}foo{% endset %} is compiled to $context['foo'] = new Twig_Markup("foo");
-         */
-        if (this.getAttribute('capture')) {
-            this.setAttribute('safe', true);
-
-            let values = this.getNode('values');
-
-            if (values.is(textType)) {
-                this.setNode('values', new TwingNodeExpressionConstant(values.getAttribute('data'), values.getTemplateLine(), values.getTemplateColumn()));
-                this.setAttribute('capture', false);
-            }
+        if (values.is(textNodeType)) {
+            baseNode.children.values = createConstantNode(values.attributes.data, values.line, values.column);
+            baseNode.attributes.capture = false;
         }
     }
 
-    get type() {
-        return type;
-    }
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            const {names, values} = baseNode.children;
+            const {capture, safe} = baseNode.attributes;
 
-    compile(compiler: TwingCompiler) {
-        if (this.getNode('names').getNodes().size > 1) {
-            compiler.write('[');
+            if (getChildrenCount(names) > 1) {
+                compiler.write('[');
 
-            for (let [idx, node] of this.getNode('names').getNodes()) {
-                if (idx > 0) {
-                    compiler.raw(', ');
-                }
+                let index = 0;
 
-                compiler
-                    .subcompile(node)
-                ;
-            }
-
-            compiler.raw(']');
-        } else {
-            if (this.getAttribute('capture')) {
-                compiler
-                    .write("outputBuffer.start();\n")
-                    .subcompile(this.getNode('values'))
-                ;
-            }
-
-            compiler.subcompile(this.getNode('names'), false);
-
-            if (this.getAttribute('capture')) {
-                compiler
-                    .raw(" = (() => {let tmp = outputBuffer.getAndClean(); return tmp === '' ? '' : new this.Markup(tmp, this.environment.getCharset());})()")
-                ;
-            }
-        }
-
-        if (!this.getAttribute('capture')) {
-            compiler.raw(' = ');
-
-            if (this.getNode('names').getNodes().size > 1) {
-                compiler.raw('[');
-
-                for (let [idx, value] of this.getNode('values').getNodes()) {
-                    if (idx > 0) {
+                for (const [, node] of Object.entries(names.children)) {
+                    if (index > 0) {
                         compiler.raw(', ');
                     }
 
                     compiler
-                        .subcompile(value)
+                        .subCompile(node)
                     ;
+
+                    index++;
                 }
 
                 compiler.raw(']');
             } else {
-                if (this.getAttribute('safe')) {
+                if (capture) {
                     compiler
-                        .raw("await (async () => {let tmp = ")
-                        .subcompile(this.getNode('values'))
-                        .raw("; return tmp === '' ? '' : new this.Markup(tmp, this.environment.getCharset());})()")
+                        .write("outputBuffer.start();\n")
+                        .subCompile(values)
                     ;
-                } else {
-                    compiler.subcompile(this.getNode('values'));
+                }
+
+                compiler.subCompile(names, false);
+
+                if (capture) {
+                    compiler
+                        .raw(" = (() => {let tmp = outputBuffer.getAndClean(); return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.getCharset());})()")
+                    ;
                 }
             }
-        }
 
-        compiler.raw(';\n');
-    }
-}
+            if (!capture) {
+                compiler.raw(' = ');
+
+                if (getChildrenCount(values) > 1) {
+                    compiler.raw('[');
+
+                    let index = 0;
+
+                    for (const [, value] of Object.entries(values.children)) {
+                        if (index > 0) {
+                            compiler.raw(', ');
+                        }
+
+                        compiler
+                            .subCompile(value)
+                        ;
+
+                        index++;
+                    }
+
+                    compiler.raw(']');
+                } else {
+                    if (safe) {
+                        compiler
+                            .raw("await (async () => {let tmp = ")
+                            .subCompile(values)
+                            .raw("; return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.getCharset());})()")
+                        ;
+                    } else {
+                        compiler.subCompile(values);
+                    }
+                }
+            }
+
+            compiler.raw(';\n');
+        },
+        isACaptureNode: true
+    };
+};

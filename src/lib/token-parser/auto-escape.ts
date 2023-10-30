@@ -1,19 +1,18 @@
 /**
  * Marks a section of a template to be escaped or not.
  */
-import {TwingTokenParser} from "../token-parser";
-import {TwingNode} from "../node";
+import {TokenParser} from "../token-parser";
+import {Node} from "../node";
 import {TwingErrorSyntax} from "../error/syntax";
-import {TwingNodeAutoEscape} from "../node/auto-escape";
+import {createAutoEscapeNode} from "../node/auto-escape";
 import {Token, TokenType} from "twig-lexer";
-import {type as constantType} from "../node/expression/constant";
 
-export class TwingTokenParserAutoEscape extends TwingTokenParser {
-    parse(token: Token): TwingNode {
+export class AutoEscapeTokenParser extends TokenParser {
+    parse(token: Token): Node {
         let lineno = token.line;
         let columnno = token.column;
         let stream = this.parser.getStream();
-        let value: string;
+        let value: string | false;
 
         if (stream.test(TokenType.TAG_END)) {
             value = 'html';
@@ -21,11 +20,11 @@ export class TwingTokenParserAutoEscape extends TwingTokenParser {
         else {
             let expr = this.parser.parseExpression();
 
-            if (expr.type !== constantType) {
+            if (expr.type !== "expression_constant") {
                 throw new TwingErrorSyntax('An escaping strategy must be a string or false.', stream.getCurrent().line, stream.getSourceContext());
             }
 
-            value = expr.getAttribute('value');
+            value = expr.attributes.value as string | false;
         }
 
         stream.expect(TokenType.TAG_END);
@@ -34,7 +33,7 @@ export class TwingTokenParserAutoEscape extends TwingTokenParser {
 
         stream.expect(TokenType.TAG_END);
 
-        return new TwingNodeAutoEscape(value, body, lineno, columnno, this.getTag());
+        return createAutoEscapeNode(value, body, lineno, columnno, this.getTag());
     }
 
     decideBlockEnd(token: Token) {

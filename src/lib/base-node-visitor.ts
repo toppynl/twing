@@ -1,6 +1,6 @@
-import {TwingNodeVisitorInterface} from "./node-visitor-interface";
-import {TwingNode} from "./node";
-import {TwingEnvironment} from "./environment";
+import type {TwingNodeVisitorInterface} from "./node-visitor-interface";
+import type {Node} from "./node";
+import type {TwingEnvironment} from "./environment";
 
 export abstract class TwingBaseNodeVisitor implements TwingNodeVisitorInterface {
     TwingNodeVisitorInterfaceImpl: TwingNodeVisitorInterface;
@@ -14,32 +14,32 @@ export abstract class TwingBaseNodeVisitor implements TwingNodeVisitorInterface 
     /**
      * Called before child nodes are visited.
      *
-     * @returns {TwingNode} The modified node
+     * @returns The modified node
      */
-    enterNode(node: TwingNode, env: TwingEnvironment): TwingNode {
+    enterNode(node: Node, env: TwingEnvironment): Node {
         return this.doEnterNode(node, env);
     }
 
     /**
      * Called after child nodes are visited.
      *
-     * @returns {TwingNode|false} The modified node or null if the node must be removed
+     * @returns The modified node or null if the node must be removed
      */
-    leaveNode(node: TwingNode, env: TwingEnvironment): TwingNode {
+    leaveNode(node: Node, env: TwingEnvironment): Node | null {
         return this.doLeaveNode(node, env);
     }
 
     /**
      * Called before child nodes are visited.
      *
-     * @returns {TwingNode} The modified node
+     * @returns The modified node
      */
-    protected abstract doEnterNode(node: TwingNode, env: TwingEnvironment): TwingNode;
+    protected abstract doEnterNode(node: Node, env: TwingEnvironment): Node;
 
     /**
      * Called after child nodes are visited.
      *
-     * @returns {TwingNode|false} The modified node or null if the node must be removed
+     * @returns The modified node or null if the node must be removed
      */
-    protected abstract doLeaveNode(node: TwingNode, env: TwingEnvironment): TwingNode;
+    protected abstract doLeaveNode(node: Node, env: TwingEnvironment): Node | null;
 }

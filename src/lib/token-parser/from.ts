@@ -1,6 +1,6 @@
-import {TwingTokenParser} from "../token-parser";
-import {TwingNodeImport} from "../node/import";
-import {TwingNodeExpressionAssignName} from "../node/expression/assign-name";
+import {TokenParser} from "../token-parser";
+import {createImportNode} from "../node/import";
+import {createAssignNameNode} from "../node/expression/assign-name";
 import {Token, TokenType} from "twig-lexer";
 
 /**
@@ -10,7 +10,7 @@ import {Token, TokenType} from "twig-lexer";
  *   {% from 'forms.html' import forms %}
  * </pre>
  */
-export class TwingTokenParserFrom extends TwingTokenParser {
+export class TwingTokenParserFrom extends TokenParser {
     parse(token: Token) {
         let macro = this.parser.parseExpression();
         let stream = this.parser.getStream();
@@ -36,8 +36,8 @@ export class TwingTokenParserFrom extends TwingTokenParser {
 
         stream.expect(TokenType.TAG_END);
 
-        let expr = new TwingNodeExpressionAssignName(this.parser.getVarName(), token.line, token.column);
-        let node = new TwingNodeImport(macro, expr, token.line, token.column, this.getTag());
+        let expr = createAssignNameNode(this.parser.getVarName(), token.line, token.column);
+        let node = createImportNode(macro, expr, true, token.line, token.column, this.getTag());
 
         for (let [name, alias] of targets) {
             this.parser.addImportedSymbol('function', alias, name, expr);

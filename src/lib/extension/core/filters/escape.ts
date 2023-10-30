@@ -164,8 +164,7 @@ export function escape(template: TwingTemplate, string: any, strategy: string = 
             case 'url':
                 return rawurlencode(string);
             default:
-                let coreExtension = env.getCoreExtension();
-                let escapers: Map<string, Function> = coreExtension.getEscapers();
+                let escapers = env.getEscapers();
 
                 if (escapers.has(strategy)) {
                     return escapers.get(strategy)(env, string, charset);
