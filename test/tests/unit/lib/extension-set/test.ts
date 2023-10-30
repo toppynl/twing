@@ -7,11 +7,11 @@ import {TwingTest} from "../../../../../src/lib/test";
 import {TwingFilter} from "../../../../../src/lib/filter";
 import {TwingFunction} from "../../../../../src/lib/function";
 import {TwingSourceMapNodeFactory} from "../../../../../src/lib/source-map/node-factory";
-import {TwingTokenParser} from "../../../../../src/lib/token-parser";
+import {TokenParser} from "../../../../../src/lib/token-parser";
 import {Token} from "twig-lexer";
 import {TwingNode} from "../../../../../src/lib/node";
 import {TwingBaseNodeVisitor} from "../../../../../src/lib/base-node-visitor";
-import {TwingEnvironment} from "../../../../../src/lib/environment";
+import {AnEnvironment} from "../../../../../src/lib/environment";
 import {spy} from "sinon";
 
 class TwingTestExtensionSetExtension extends TwingExtension {
@@ -23,7 +23,7 @@ class TwingTestExtensionSetExtension extends TwingExtension {
     }
 }
 
-class TwingTestExtensionSetTokenParser extends TwingTokenParser {
+class TwingTestExtensionSetTokenParser extends TokenParser {
     getTag() {
         return 'foo';
     }
@@ -34,11 +34,11 @@ class TwingTestExtensionSetTokenParser extends TwingTokenParser {
 }
 
 class TwingTestExtensionSetNodeVisitor extends TwingBaseNodeVisitor {
-    protected doEnterNode(node: TwingNode, env: TwingEnvironment): TwingNode {
+    protected doEnterNode(node: TwingNode, env: AnEnvironment): TwingNode {
         return undefined;
     }
 
-    protected doLeaveNode(node: TwingNode, env: TwingEnvironment): TwingNode {
+    protected doLeaveNode(node: TwingNode, env: AnEnvironment): TwingNode {
         return undefined;
     }
 

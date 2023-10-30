@@ -13,7 +13,7 @@ export interface TwingLoaderInterface {
      *
      * @throws TwingErrorLoader When name is not found
      */
-    getSourceContext(name: string, from: TwingSource): Promise<TwingSource>;
+    getSourceContext(name: string, from: TwingSource | null): Promise<TwingSource>;
 
     /**
      * Gets the cache key to use for the cache for a given template name.
@@ -25,7 +25,7 @@ export interface TwingLoaderInterface {
      *
      * @throws TwingErrorLoader When name is not found
      */
-    getCacheKey(name: string, from: TwingSource): Promise<string>;
+    getCacheKey(name: string, from: TwingSource | null): Promise<string>;
 
     /**
      * Returns true if the template is still fresh.
@@ -38,7 +38,7 @@ export interface TwingLoaderInterface {
      *
      * @throws TwingErrorLoader When name is not found
      */
-    isFresh(name: string, time: number, from: TwingSource): Promise<boolean>;
+    isFresh(name: string, time: number, from: TwingSource | null): Promise<boolean>;
 
     /**
      * Check if we have the source code of a template, given its name.

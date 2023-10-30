@@ -1,7 +1,7 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {merge} from "../../../helpers/merge";
 import {TwingErrorLoader} from "../../../error/loader";
-import {TwingTemplate} from "../../../template";
+import type {Template} from "../../../template";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {TwingErrorRuntime} from "../../../error/runtime";
 import {isNullOrUndefined} from "util";
@@ -25,7 +25,7 @@ import {isMap} from "../../../helpers/is-map";
  *
  * @returns {Promise<string>} The rendered template
  */
-export function include(template: TwingTemplate, context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, templates: string | Map<number, string | TwingTemplate> | TwingTemplate, variables: any = {}, withContext: boolean = true, ignoreMissing: boolean = false, sandboxed: boolean = false): Promise<string> {
+export function include(template: Template, context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, templates: string | Map<number, string | Template> | Template, variables: any = {}, withContext: boolean = true, ignoreMissing: boolean = false, sandboxed: boolean = false): Promise<string> {
     let env = template.environment;
     let from = template.source;
     let alreadySandboxed = env.isSandboxed();
@@ -56,7 +56,7 @@ export function include(template: TwingTemplate, context: TwingContext<any, any>
         }
     };
 
-    let resolveTemplate = (templates: Map<number, string | TwingTemplate>): Promise<TwingTemplate> => {
+    let resolveTemplate = (templates: Map<number, string | Template>): Promise<Template> => {
         return env.resolveTemplate([...templates.values()], from).catch((e) => {
             restoreSandbox();
 

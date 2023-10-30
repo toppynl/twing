@@ -1,13 +1,10 @@
-/* istanbul ignore next */
-
 /**
  * Twig_NodeVisitorInterface is the interface the all node visitor classes must implement.
  *
  * @author Eric MORAND <eric.morand@gmail.com>
- * @author Eric MORAND <eric.morand@gmail.com>
  */
-import {TwingNode} from "./node";
-import {TwingEnvironment} from "./environment";
+import type {Node} from "./node";
+import type {TwingEnvironment} from "./environment";
 
 export interface TwingNodeVisitorInterface {
     TwingNodeVisitorInterfaceImpl: TwingNodeVisitorInterface;
@@ -17,14 +14,14 @@ export interface TwingNodeVisitorInterface {
      *
      * @return Twig_Node The modified node
      */
-    enterNode(node: TwingNode, env: TwingEnvironment): TwingNode;
+    enterNode(node: Node, env: TwingEnvironment): Node;
 
     /**
      * Called after child nodes are visited.
      *
      * @return Twig_Node The modified node or null if the node must be removed
      */
-    leaveNode(node: TwingNode, env: TwingEnvironment): TwingNode;
+    leaveNode(node: Node, env: TwingEnvironment): Node;
 
     /**
      * Returns the priority for this visitor.

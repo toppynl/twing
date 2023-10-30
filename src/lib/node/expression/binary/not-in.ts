@@ -1,21 +1,16 @@
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingNodeType} from "../../../node-type";
+import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_not_in');
+export interface NotInNode extends BaseBinaryNode<"not_in"> {
+}
 
-export class TwingNodeExpressionBinaryNotIn extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
+export const createNotInNode = createBinaryNodeFactory<NotInNode>("not_in", null, {
+    compile: (compiler, baseNode) => {
         compiler
-            .raw('!this.isIn(')
-            .subcompile(this.getNode('left'))
+            .raw('!runtime.isIn(')
+            .subCompile(baseNode.children.left)
             .raw(', ')
-            .subcompile(this.getNode('right'))
+            .subCompile(baseNode.children.right)
             .raw(')')
         ;
     }
-}
+});

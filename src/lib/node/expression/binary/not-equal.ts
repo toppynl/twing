@@ -1,21 +1,16 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_not_equal');
+export interface NotEqualToNode extends BaseBinaryNode<"not_equal"> {
+}
 
-export class TwingNodeExpressionBinaryNotEqual extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
+export const createNotEqualToNode = createBinaryNodeFactory<NotEqualToNode>("not_equal", null, {
+    compile: (compiler, baseNode) => {
         compiler
-            .raw('!this.compare(')
-            .subcompile(this.getNode('left'))
+            .raw('!runtime.compare(')
+            .subCompile(baseNode.children.left)
             .raw(', ')
-            .subcompile(this.getNode('right'))
+            .subCompile(baseNode.children.right)
             .raw(')')
         ;
     }
-}
+});

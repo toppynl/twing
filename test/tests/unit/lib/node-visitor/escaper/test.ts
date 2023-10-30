@@ -1,31 +1,30 @@
 import * as tape from 'tape';
-import {TwingEnvironmentNode} from "../../../../../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../../../../../src/lib/environment/filesystem-environment";
 import {TwingLoaderArray} from "../../../../../../src/lib/loader/array";
 import {TwingNodeVisitorEscaper} from "../../../../../../src/lib/node-visitor/escaper";
-import {TwingNodeText} from "../../../../../../src/lib/node/text";
-import {TwingNodeExpressionConstant} from "../../../../../../src/lib/node/expression/constant";
-import {TwingNode} from "../../../../../../src/lib/node";
+import {createTextNode} from "../../../../../../src/lib/node/text";
+import {createConstantNode} from "../../../../../../src/lib/node/expression/constant";
+import {createBaseNode} from "../../../../../../src/lib/node";
 import {TwingSource} from "../../../../../../src/lib/source";
-import {TwingNodeModule} from "../../../../../../src/lib/node/module";
+import {createModuleNode} from "../../../../../../src/lib/node/module";
 import {TwingNodeVisitorSafeAnalysis} from "../../../../../../src/lib/node-visitor/safe-analysis";
-import {TwingNodePrint} from "../../../../../../src/lib/node/print";
-
-const sinon = require('sinon');
+import {createPrintNode} from "../../../../../../src/lib/node/print";
+import {stub} from "sinon";
 
 tape('node-visitor/escaper', (test) => {
     test.test('doEnterNode', (test) => {
         test.test('with "module" node', function(test) {
-            let env = new TwingEnvironmentNode(new TwingLoaderArray({}));
+            let env = new FilesystemEnvironment(new TwingLoaderArray({}));
             let visitor = new TwingNodeVisitorEscaper();
-            let body = new TwingNodeText('foo', 1, 1);
-            let parent = new TwingNodeExpressionConstant('layout.twig', 1, 1);
-            let blocks = new TwingNode();
-            let macros = new TwingNode();
-            let traits = new TwingNode();
+            let body = createTextNode('foo', 1, 1);
+            let parent = createConstantNode('layout.twig', 1, 1);
+            let blocks = createBaseNode(null);
+            let macros = createBaseNode(null);
+            let traits = createBaseNode(null);
             let source = new TwingSource('{{ foo }}', 'foo.twig');
-            let module = new TwingNodeModule(body, parent, blocks, macros, traits, [], source);
+            let module = createModuleNode(body, parent, blocks, macros, traits, [], source, 1, 1);
 
-            sinon.stub(env, 'hasExtension').returns(false);
+            stub(env, 'hasExtension').returns(false);
 
             test.equals(visitor.enterNode(module, env), module, 'returns the node untouched');
 
@@ -37,14 +36,14 @@ tape('node-visitor/escaper', (test) => {
 
     test.test('doLeaveNode', (test) => {
         test.test('with safe "print" node', function(test) {
-            let env = new TwingEnvironmentNode(new TwingLoaderArray({}));
+            let env = new FilesystemEnvironment(new TwingLoaderArray({}));
             let visitor = new TwingNodeVisitorEscaper();
             let safeAnalysis = new TwingNodeVisitorSafeAnalysis();
-            let print = new TwingNodePrint(new TwingNodeExpressionConstant('foo', 1, 1), 1, 1);
+            let print = createPrintNode(createConstantNode('foo', 1, 1), 1, 1);
 
-            sinon.stub(env, 'hasExtension').returns(false);
-            sinon.stub(visitor, 'needEscaping').returns('html');
-            sinon.stub(safeAnalysis, 'getSafe').returns('html');
+            stub(env, 'hasExtension').returns(false);
+            stub(visitor, 'needEscaping' as any).returns('html');
+            stub(safeAnalysis, 'getSafe').returns('html');
 
             Reflect.set(visitor, 'safeAnalysis', safeAnalysis);
 

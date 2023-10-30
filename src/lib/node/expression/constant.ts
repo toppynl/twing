@@ -1,20 +1,28 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingNode} from "../../node";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import type {Node} from "../../node";
+import type {BaseExpressionNode} from "../expression";
+import {createBaseExpressionNode} from "../expression";
 
-export const type = new TwingNodeType('expression_constant');
+type Attributes = {
+    value: Node | string | number | boolean;
+};
 
-export class TwingNodeExpressionConstant extends TwingNodeExpression {
-    constructor(value: TwingNode | string | number | boolean, lineno: number, columnno: number) {
-        super(new Map(), new Map([['value', value]]), lineno, columnno);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler.repr(this.getAttribute('value'));
-    }
+export interface ConstantNode extends BaseExpressionNode<"expression_constant", Attributes> {
 }
+
+export const createConstantNode = (
+    value: Attributes["value"],
+    line: number,
+    column: number
+): ConstantNode => {
+    const parent = createBaseExpressionNode('expression_constant', {
+        value
+    }, {}, line, column);
+
+    return {
+        ...parent,
+        compile: (compiler) => {
+            compiler.render(parent.attributes.value);
+        },
+        clone: () => createConstantNode(value, line, column)
+    };
+};

@@ -1,12 +1,12 @@
-import {TwingEnvironment} from "../../src/lib/environment";
-import {TwingCompiler} from "../../src/lib/compiler";
+import {AnEnvironment} from "../../src/lib/environment";
+import {Compiler, createCompiler} from "../../src/lib/compiler";
 import {MockLoader} from "./loader";
-import {MockEnvironment} from "./environment";
+import {createMockedEnvironment} from "./environment";
 
-export class MockCompiler extends TwingCompiler {
-    constructor(env: TwingEnvironment = null) {
-        let loader = new MockLoader();
+export const createMockCompiler = (
+    env: AnEnvironment | null = null
+): Compiler => {
+    let loader = new MockLoader();
 
-        super(env ? env : new MockEnvironment(loader));
-    }
-}
+    return createCompiler(env ? env : createMockedEnvironment(loader));
+};

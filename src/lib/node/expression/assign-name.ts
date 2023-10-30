@@ -1,19 +1,23 @@
-import {TwingNodeExpressionName} from "./name";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {BaseNameNode, createBaseNameNode} from "./name";
 
-export const type = new TwingNodeType('expression_assign_name');
-
-export class TwingNodeExpressionAssignName extends TwingNodeExpressionName {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('context.proxy[')
-            .string(this.getAttribute('name'))
-            .raw(']')
-        ;
-    }
+export interface AssignNameNode extends BaseNameNode<"assign_name"> {
 }
+
+export const createAssignNameNode = (
+    name: string,
+    line: number,
+    column: number
+): AssignNameNode => {
+    const baseNode = createBaseNameNode("assign_name", name, line, column);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .raw('context.proxy[')
+                .string(baseNode.attributes.name)
+                .raw(']')
+            ;
+        }
+    };
+};

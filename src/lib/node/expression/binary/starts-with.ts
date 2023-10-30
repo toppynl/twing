@@ -1,25 +1,20 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_starts_with');
+export interface StartsWithNode extends BaseBinaryNode<"starts_with"> {
+}
 
-export class TwingNodeExpressionBinaryStartsWith extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
+export const createStartsWithNode = createBinaryNodeFactory<StartsWithNode>("starts_with", null, {
+    compile: (compiler, baseNode) => {
         compiler
             .raw('await (async () => {')
             .raw(`let left = `)
-            .subcompile(this.getNode('left'))
+            .subCompile(baseNode.children.left)
             .raw('; ')
             .raw(`let right = `)
-            .subcompile(this.getNode('right'))
+            .subCompile(baseNode.children.right)
             .raw('; ')
             .raw(`return typeof left === 'string' && typeof right === 'string' && (right.length < 1 || left.startsWith(right));`)
             .raw('})()')
         ;
     }
-}
+});

@@ -2,15 +2,9 @@ import {isNullOrUndefined} from "util";
 
 export class TwingOutputHandler {
     private content: string;
-    private level: number;
 
-    /**
-     * @param level
-     * @param flags Unused, kept for backward compatibility
-     */
-    constructor(level: number, flags: number) {
+    constructor() {
         this.content = '';
-        this.level = level;
     }
 
     getContent() {
@@ -50,7 +44,7 @@ export class TwingOutputBuffer {
      * @returns {boolean}
      */
     start() {
-        let handler = new TwingOutputHandler(this.getLevel() + 1, 0);
+        let handler = new TwingOutputHandler();
 
         this._handlers.push(handler);
 

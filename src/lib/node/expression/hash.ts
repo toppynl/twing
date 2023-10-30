@@ -1,46 +1,48 @@
-import {TwingNodeExpressionArray} from "./array";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {BaseArrayNode, createBaseArrayNode} from "./array";
+import type {ExpressionNode} from "../expression";
 
-export const type = new TwingNodeType('expression_hash');
+export const type = 'expression_hash'
 
-export class TwingNodeExpressionHash extends TwingNodeExpressionArray {
-    get type() {
-        return type;
-    }
+export interface HashNode extends BaseArrayNode<"hash"> {
+}
 
-    /**
-     * hash node is also an array node.
-     *
-     * @param type
-     */
-    is(type: TwingNodeType): boolean {
-        return (type === super.type) || super.is(type);
-    }
+export const createHashNode = (
+    elements: Record<number, ExpressionNode>,
+    line: number,
+    column: number
+): HashNode => {
+    const baseNode = createBaseArrayNode("hash", elements, line, column);
 
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('new Map([')
-        ;
+    return {
+        ...baseNode,
+        is: (type) => {
+            return type === "hash" || type === "array";
+        },
+        compile: (compiler) => {
+            compiler
+                .raw('new Map([')
+            ;
 
-        let first = true;
+            let first = true;
 
-        for (let pair of this.getKeyValuePairs()) {
-            if (!first) {
-                compiler.raw(', ');
+            for (let pair of baseNode.getKeyValuePairs()) {
+                if (!first) {
+                    compiler.raw(', ');
+                }
+
+                first = false;
+
+                compiler
+                    .raw('[')
+                    .subCompile(pair.key)
+                    .raw(', ')
+                    .subCompile(pair.value)
+                    .raw(']')
+                ;
             }
 
-            first = false;
-
-            compiler
-                .raw('[')
-                .subcompile(pair.key)
-                .raw(', ')
-                .subcompile(pair.value)
-                .raw(']')
-            ;
-        }
-
-        compiler.raw('])');
-    }
-}
+            compiler.raw('])');
+        },
+        clone: () => createHashNode({...baseNode.children}, line, column)
+    };
+};

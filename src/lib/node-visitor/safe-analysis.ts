@@ -1,15 +1,6 @@
 import {TwingBaseNodeVisitor} from "../base-node-visitor";
-import {TwingNode} from "../node";
+import {Node} from "../node";
 import {TwingEnvironment} from "../environment";
-import {type as nameType} from "../node/expression/name";
-import {type as filterType} from "../node/expression/filter";
-import {type as functionType} from "../node/expression/function";
-import {type as constantType} from "../node/expression/constant";
-import {type as blockReferenceType} from "../node/expression/block-reference"
-import {type as parentType} from "../node/expression/parent";
-import {type as conditionalType} from "../node/expression/conditional";
-import {type as getAttrType} from "../node/expression/get-attribute";
-import {type as callType} from "../node/expression/method-call";
 
 const objectHash = require('object-hash');
 
@@ -20,7 +11,7 @@ interface Bucket {
 
 export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
     private data: Map<string, Array<Bucket>> = new Map();
-    private safeVars: Array<any> = [];
+    private safeVars: Array<string> = [];
 
     constructor() {
         super();
@@ -28,16 +19,11 @@ export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
         this.TwingNodeVisitorInterfaceImpl = this;
     }
 
-    setSafeVars(safeVars: Array<any>) {
+    setSafeVars(safeVars: Array<string>) {
         this.safeVars = safeVars;
     }
 
-    /**
-     *
-     * @param {TwingNode} node
-     * @returns {Array<string>}
-     */
-    getSafe(node: TwingNode): Array<TwingNode | string | false> {
+    getSafe(node: Node): Array<Node | string | false> {
         let hash = objectHash(node);
 
         if (!this.data.has(hash)) {
@@ -57,7 +43,7 @@ export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
         return bucket ? bucket.value : null;
     }
 
-    private setSafe(node: TwingNode, safe: Array<string>) {
+    private setSafe(node: Node, safe: Array<string>) {
         let hash = objectHash(node);
         let bucket = null;
 
@@ -83,60 +69,66 @@ export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
         }
     }
 
-    protected doEnterNode(node: TwingNode, env: TwingEnvironment): TwingNode {
+    protected doEnterNode(node: Node, _env: TwingEnvironment): Node {
         return node;
     }
 
-    protected doLeaveNode(node: TwingNode, env: TwingEnvironment): TwingNode {
-        if (node.is(constantType)) {
+    protected doLeaveNode(node: Node, env: TwingEnvironment): Node {
+        if (node.type === "expression_constant") {
             // constants are marked safe for all
             this.setSafe(node, ['all']);
-        } else if (node.is(blockReferenceType)) {
+        } else if (node.is('block_reference')) {
             // blocks are safe by definition
             this.setSafe(node, ['all']);
-        } else if (node.is(parentType)) {
+        } else if (node.is("parent")) {
             // parent block is safe by definition
             this.setSafe(node, ['all']);
-        } else if (node.is(conditionalType)) {
+        } else if (node.type === "conditional") {
             // intersect safeness of both operands
-            let safe = this.intersectSafe(this.getSafe(node.getNode('expr2')), this.getSafe(node.getNode('expr3')));
+            const {expr2, expr3} = node.children;
+
+            let safe = this.intersectSafe(this.getSafe(expr2), this.getSafe(expr3));
             this.setSafe(node, safe);
-        } else if (node.is(filterType)) {
+        } else if (node.type === "call" && node.attributes.type === "filter") {
             // filter expression is safe when the filter is safe
-            let name = node.getNode('filter').getAttribute('value');
-            let filterArgs = node.getNode('arguments');
+            const {arguments: filterArgs, operand} = node.children;
+            const {operatorName} = node.attributes;
+
+            let name = operatorName;
             let filter = env.getFilter(name);
 
             if (filter) {
                 let safe = filter.getSafe(filterArgs);
 
                 if (safe.length < 1) {
-                    safe = this.intersectSafe(this.getSafe(node.getNode('node')), filter.getPreservesSafety());
+                    safe = this.intersectSafe(this.getSafe(operand), filter.getPreservesSafety());
                 }
 
                 this.setSafe(node, safe);
             } else {
                 this.setSafe(node, []);
             }
-        } else if (node.is(functionType)) {
+        } else if (node.type === "call" && node.attributes.type === "function") {
             // function expression is safe when the function is safe
-            let name = node.getAttribute('name');
-            let functionArgs = node.getNode('arguments');
+            const {arguments: functionArgs} = node.children;
+            const {operatorName} = node.attributes;
+
+            let name = operatorName;
             let functionNode = env.getFunction(name);
 
             if (functionNode) {
-                this.setSafe(node, functionNode.getSafe(functionArgs));
+                this.setSafe(node, functionNode.getSafe(functionArgs as any));
             } else {
                 this.setSafe(node, []);
             }
-        } else if (node.is(callType)) {
-            if (node.getAttribute('safe')) {
+        } else if (node.type === "method_call") {
+            if (node.attributes.safe) {
                 this.setSafe(node, ['all']);
             } else {
                 this.setSafe(node, []);
             }
-        } else if (node.is(getAttrType) && node.getNode('node').is(nameType)) {
-            let name = node.getNode('node').getAttribute('name');
+        } else if (node.is("get_attribute") && node.children.target.is("name")) {
+            let name = node.children.target.attributes.name;
 
             if (this.safeVars.includes(name)) {
                 this.setSafe(node, ['all']);

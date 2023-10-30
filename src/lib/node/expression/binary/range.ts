@@ -1,21 +1,16 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_range');
+export interface RangeNode extends BaseBinaryNode<"range"> {
+}
 
-export class TwingNodeExpressionBinaryRange extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
+export const createRangeNode = createBinaryNodeFactory<RangeNode>("range", null, {
+    compile: (compiler, baseNode) => {
         compiler
-            .raw('this.createRange(')
-            .subcompile(this.getNode('left'))
+            .raw('runtime.createRange(')
+            .subCompile(baseNode.children.left)
             .raw(', ')
-            .subcompile(this.getNode('right'))
+            .subCompile(baseNode.children.right)
             .raw(')')
         ;
     }
-}
+});

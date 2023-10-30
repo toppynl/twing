@@ -3,11 +3,11 @@
  *
  * @author Eric MORAND <eric.morand@gmail.com>
  */
-import {Lexer, SyntaxError, TokenType} from "twig-lexer";
-import {TwingEnvironment} from "./environment";
+import {Lexer, TokenType} from "twig-lexer";
 import {TwingSource} from "./source";
 import {TwingTokenStream} from "./token-stream";
 import {TwingErrorSyntax} from "./error/syntax";
+import {TwingOperator} from "./operator";
 
 export const typeToEnglish = (type: TokenType): string => {
     switch (type) {
@@ -56,12 +56,12 @@ type TwingLexerOptions = {
 };
 
 export class TwingLexer extends Lexer {
-    private env: TwingEnvironment;
-
-    constructor(env: TwingEnvironment, options: TwingLexerOptions = {}) {
+    constructor(
+        binaryOperators: Map<string, TwingOperator>,
+        unaryOperators: Map<string, TwingOperator>,
+        options: TwingLexerOptions = {}
+    ) {
         super();
-
-        this.env = env;
 
         if (options.interpolation_pair) {
             this.interpolationPair = options.interpolation_pair;
@@ -80,8 +80,8 @@ export class TwingLexer extends Lexer {
         }
 
         // custom operators
-        for (let operators of [env.getBinaryOperators(), env.getUnaryOperators()]) {
-            for (let [key, operator] of operators) {
+        for (let operators of [binaryOperators, unaryOperators]) {
+            for (let [key] of operators) {
                 if (!this.operators.includes(key)) {
                     this.operators.push(key);
                 }

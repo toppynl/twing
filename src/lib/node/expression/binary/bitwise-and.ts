@@ -1,15 +1,6 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_bitwise_and');
-
-export class TwingNodeExpressionBinaryBitwiseAnd extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    operator(compiler: TwingCompiler) {
-        return compiler.raw('&');
-    }
+export interface BitwiseAndNode extends BaseBinaryNode<"bitwise_and"> {
 }
+
+export const createBitwiseAndNode = createBinaryNodeFactory<BitwiseAndNode>("bitwise_and", '&');

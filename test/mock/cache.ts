@@ -2,15 +2,15 @@ import {TwingCacheNull} from "../../src/lib/cache/null";
 import {MockTemplate} from "./template";
 
 export class MockCache extends TwingCacheNull {
-    generateKey(name: string, className: string) {
+    generateKey() {
         return Promise.resolve('key');
     }
 
-    write(key: string, content: string) {
+    write() {
         return Promise.resolve();
     }
 
-    load(key: string) {
+    load() {
         let templates = new Map([
             [0, MockTemplate]
         ]);
@@ -20,7 +20,7 @@ export class MockCache extends TwingCacheNull {
         });
     }
 
-    getTimestamp(key: string) {
+    getTimestamp() {
         return Promise.resolve(0);
     }
 }

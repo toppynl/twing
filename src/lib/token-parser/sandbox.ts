@@ -1,13 +1,11 @@
-import {TwingTokenParser} from "../token-parser";
+import {TokenParser} from "../token-parser";
 import {TwingErrorSyntax} from "../error/syntax";
-import {TwingNodeSandbox} from "../node/sandbox";
-import {type as includeType} from "../node/include";
-import {type as textType} from "../node/text";
-import {TwingNode} from "../node";
-import {ctypeSpace} from "../helpers/ctype-space";
+import {createSandboxNode} from "../node/sandbox";
+import {getChildren} from "../node";
+import {isMadeOfWhitespaceOnly} from "../helpers/is-made-of-whitespace-only";
 import {Token, TokenType} from "twig-lexer";
 
-export class TwingTokenParserSandbox extends TwingTokenParser {
+export class TwingTokenParserSandbox extends TokenParser {
     parse(token: Token) {
         let stream = this.parser.getStream();
 
@@ -18,17 +16,17 @@ export class TwingTokenParserSandbox extends TwingTokenParser {
         stream.expect(TokenType.TAG_END);
 
         // in a sandbox tag, only include tags are allowed
-        if (body.type !== includeType) {
-            body.getNodes().forEach(function (node: TwingNode) {
-                if (!(node.is(textType) && ctypeSpace(node.getAttribute('data')))) {
-                    if (!node.is(includeType)) {
-                        throw new TwingErrorSyntax('Only "include" tags are allowed within a "sandbox" section.', node.getTemplateLine(), stream.getSourceContext());
+        if (!body.is("include")) {
+            for (const [, child] of getChildren(body)) {
+                if (!(child.is("text") && isMadeOfWhitespaceOnly(child.attributes.data))) {
+                    if (!child.is("include")) {
+                        throw new TwingErrorSyntax('Only "include" tags are allowed within a "sandbox" section.', child.line, stream.getSourceContext());
                     }
                 }
-            });
+            }
         }
 
-        return new TwingNodeSandbox(body, token.line, token.column, this.getTag());
+        return createSandboxNode(body, token.line, token.column, this.getTag());
     }
 
     decideBlockEnd(token: Token) {

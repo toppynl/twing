@@ -1,86 +1,102 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import type {BaseExpressionNode, BaseExpressionNodeAttributes} from "../expression";
+import {createBaseExpressionNode} from "../expression";
 
-export const type = new TwingNodeType('expression_name');
+export type BaseNameNodeAttributes = BaseExpressionNodeAttributes & {
+    name: string;
+    is_defined_test: boolean;
+    always_defined: boolean;
+};
 
-export class TwingNodeExpressionName extends TwingNodeExpression {
-    private specialVars: Map<string, string>;
-
-    constructor(name: string, lineno: number, columnno: number) {
-        let attributes = new Map();
-
-        attributes.set('name', name);
-        attributes.set('is_defined_test', false);
-        attributes.set('ignore_strict_check', false);
-        attributes.set('always_defined', false);
-
-        super(new Map(), attributes, lineno, columnno);
-
-        this.specialVars = new Map([
-            ['_self', 'this.templateName'],
-            ['_context', 'context'],
-            ['_charset', 'this.environment.getCharset()']
-        ]);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        let name: string = this.getAttribute('name');
-
-        if (this.getAttribute('is_defined_test')) {
-            if (this.isSpecial()) {
-                compiler.repr(true);
-            }
-            else {
-                compiler.raw('(context.has(').repr(name).raw('))');
-            }
-        }
-        else if (this.isSpecial()) {
-            compiler.raw(this.specialVars.get(name));
-        }
-        else if (this.getAttribute('always_defined')) {
-            compiler
-                .raw('context.get(')
-                .string(name)
-                .raw(')')
-            ;
-        }
-        else {
-            if (this.getAttribute('ignore_strict_check') || !compiler.getEnvironment().isStrictVariables()) {
-                compiler
-                    .raw('(context.has(')
-                    .string(name)
-                    .raw(') ? context.get(')
-                    .string(name)
-                    .raw(') : null)')
-                ;
-            }
-            else {
-                compiler
-                    .raw('(context.has(')
-                    .string(name)
-                    .raw(') ? context.get(')
-                    .string(name)
-                    .raw(') : (() => { throw new this.RuntimeError(\'Variable ')
-                    .string(name)
-                    .raw(' does not exist.\', ')
-                    .repr(this.lineno)
-                    .raw(', this.source); })()')
-                    .raw(')')
-                ;
-            }
-        }
-    }
-
-    isSpecial() {
-        return this.specialVars.has(this.getAttribute('name'));
-    }
-
-    isSimple() {
-        return !this.isSpecial() && !this.getAttribute('is_defined_test');
-    }
+export interface BaseNameNode<Type extends string> extends BaseExpressionNode<Type, BaseNameNodeAttributes> {
 }
+
+export interface NameNode extends BaseNameNode<'name'> {
+}
+
+export const createNameNode = (
+    name: string,
+    line: number,
+    column: number
+): NameNode => createBaseNameNode("name", name, line, column);
+
+export const createBaseNameNode = <Type extends string>(
+    type: Type,
+    name: string,
+    line: number,
+    column: number
+): BaseNameNode<Type> => {
+    const specialVars = new Map([
+        ['_self', 'template.templateName'],
+        ['_context', 'context'],
+        ['_charset', 'runtime.getCharset()']
+    ]);
+
+    const isSpecial = () => {
+        return specialVars.has(name);
+    };
+
+    const attributes: NameNode["attributes"] = {
+        name,
+        always_defined: false,
+        is_defined_test: false,
+        ignore_strict_check: false,
+        optimizable: false
+    };
+
+    const createFromAttributes = (
+        attributes: NameNode["attributes"]
+    ): BaseNameNode<Type> => {
+        const baseNode = createBaseExpressionNode(type, attributes, {}, line, column);
+
+        const node = {
+            ...baseNode,
+            compile: (compiler) => {
+                const {name, always_defined, ignore_strict_check, is_defined_test} = attributes;
+
+                if (is_defined_test) {
+                    if (isSpecial()) {
+                        compiler.render(true);
+                    } else {
+                        compiler.raw('(context.has(').render(name).raw('))');
+                    }
+                } else if (isSpecial()) {
+                    compiler.raw(specialVars.get(name));
+                } else if (always_defined) {
+                    compiler
+                        .raw('context.get(')
+                        .string(name)
+                        .raw(')')
+                    ;
+                } else {
+                    if (ignore_strict_check || !compiler.options.strictVariables) {
+                        compiler
+                            .raw('(context.has(')
+                            .string(name)
+                            .raw(') ? context.get(')
+                            .string(name)
+                            .raw(') : null)')
+                        ;
+                    } else {
+                        compiler
+                            .raw('(context.has(')
+                            .string(name)
+                            .raw(') ? context.get(')
+                            .string(name)
+                            .raw(') : (() => { throw runtime.createRuntimeError(\'Variable ')
+                            .string(name)
+                            .raw(' does not exist.\', ')
+                            .render(line)
+                            .raw(', template.source); })()')
+                            .raw(')')
+                        ;
+                    }
+                }
+            },
+            clone: () => createFromAttributes({...node.attributes})
+        };
+
+        return node;
+    }
+
+    return createFromAttributes(attributes);
+};

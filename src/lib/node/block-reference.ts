@@ -1,31 +1,33 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeOutputInterface} from "../node-output-interface";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('block_reference');
+export const blockReferenceType = "block_reference";
 
-/**
- * Represents a block call node.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-export class TwingNodeBlockReference extends TwingNode implements TwingNodeOutputInterface {
-    TwingNodeOutputInterfaceImpl: TwingNodeOutputInterface;
+export type BlockReferenceNodeAttributes = BaseNodeAttributes & {
+    is_defined_test: boolean;
+    name: string;
+};
 
-    constructor(name: string, lineno: number, columnno: number, tag: string = null) {
-        super(new Map(), new Map([['name', name]]), lineno, columnno, tag);
-
-        this.TwingNodeOutputInterfaceImpl = this;
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write(`outputBuffer.echo(await this.traceableRenderBlock(${this.getTemplateLine()}, this.source)('${this.getAttribute('name')}', context.clone(), outputBuffer, blocks));\n`)
-        ;
-    }
+export interface BlockReferenceNode extends BaseNode<typeof blockReferenceType, BlockReferenceNodeAttributes> {
 }
+
+export const createBlockReferenceNode = (
+    name: string,
+    line: number,
+    column: number,
+    tag: string = null
+): BlockReferenceNode => {
+    const baseNode = createBaseNode(blockReferenceType, {
+        name,
+        is_defined_test: false
+    }, {}, line, column, tag);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .write(`outputBuffer.echo(await template.traceableRenderBlock(${baseNode.line}, template.source)('${baseNode.attributes.name}', context.clone(), outputBuffer, blocks));\n`)
+            ;
+        },
+        isAnOutputNode: true
+    }
+};

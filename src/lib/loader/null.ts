@@ -8,11 +8,11 @@ import {TwingErrorLoader} from "../error/loader";
  * @author Eric MORAND <eric.morand@gmail.com>
  */
 export class TwingLoaderNull implements TwingLoaderInterface {
-    exists(name: string, from: TwingSource): Promise<boolean> {
+    exists(): Promise<boolean> {
         return Promise.resolve(false);
     }
 
-    getCacheKey(name: string, from: TwingSource): Promise<string> {
+    getCacheKey(name: string): Promise<string> {
         return Promise.resolve(name);
     }
 
@@ -20,7 +20,7 @@ export class TwingLoaderNull implements TwingLoaderInterface {
         throw new TwingErrorLoader(`Template "${name}" is not defined.`, -1, from);
     }
 
-    isFresh(name: string, time: number, from: TwingSource): Promise<boolean> {
+    isFresh(): Promise<boolean> {
         return Promise.resolve(true);
     }
 
@@ -29,6 +29,6 @@ export class TwingLoaderNull implements TwingLoaderInterface {
             throw new TwingErrorLoader(`Template "${name}" is not defined.`, -1, from);
         }
 
-        return Promise.resolve(null);
+        return Promise.resolve('');
     }
 }

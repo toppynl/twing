@@ -20,8 +20,7 @@ const locutusNumberFormat = require('locutus/php/strings/number_format');
  */
 export function numberFormat(template: TwingTemplate, number: any, decimal: number, decimalPoint: string, thousandSep: string): Promise<string> {
     let env = template.environment;
-    let coreExtension = env.getCoreExtension();
-    let defaults = coreExtension.getNumberFormat();
+    let defaults = env.getNumberFormat();
 
     if (isNullOrUndefined(decimal)) {
         decimal = defaults[0] as number;

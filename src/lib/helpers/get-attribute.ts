@@ -1,10 +1,10 @@
-import {TwingTemplate} from "../template";
 import {isMap} from "./is-map";
 import {TwingErrorRuntime} from "../error/runtime";
 import {examineObject} from "./examine-object";
-import {TwingEnvironment} from "../environment";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
+import type {GetAttributeCallType} from "../node/expression/get-attribute";
+import type {Runtime} from "../runtime";
 
 const isBool = require('locutus/php/var/is_bool');
 const isFloat = require('locutus/php/var/is_float');
@@ -13,9 +13,9 @@ const isObject = require('isobject');
 /**
  * Returns the attribute value for a given array/object.
  *
- * @param {TwingEnvironment} env
+ * @param {AnEnvironment} runtime
  * @param {*} object The object or array from where to get the item
- * @param {*} item The item to get from the array or object
+ * @param {*} attribute The item to get from the array or object
  * @param {Map<any, any>} _arguments A map of arguments to pass if the item is an object method
  * @param {string} type The type of attribute (@see Twig_Template constants)
  * @param {boolean} isDefinedTest Whether this is only a defined check
@@ -26,20 +26,20 @@ const isObject = require('isobject');
  *
  * @throw {TwingErrorRuntime} if the attribute does not exist and Twing is running in strict mode and isDefinedTest is false
  */
-export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arguments: Map<any, any> = new Map(), type: string = TwingTemplate.ANY_CALL, isDefinedTest: boolean = false, ignoreStrictCheck: boolean = false, sandboxed: boolean = false): Promise<any> => {
+export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arguments: Map<any, any> = new Map(), type: GetAttributeCallType = "any", isDefinedTest: boolean = false, ignoreStrictCheck: boolean = false, sandboxed: boolean = false): Promise<any> => {
     let _do = (): any => {
         let message: string;
 
         // ANY_CALL or ARRAY_CALL
-        if (type !== TwingTemplate.METHOD_CALL) {
+        if (type !== "method") {
             let arrayItem;
 
-            if (isBool(item)) {
-                arrayItem = item ? 1 : 0;
-            } else if (isFloat(item)) {
-                arrayItem = parseInt(item);
+            if (isBool(attribute)) {
+                arrayItem = attribute ? 1 : 0;
+            } else if (isFloat(attribute)) {
+                arrayItem = parseInt(attribute);
             } else {
-                arrayItem = item;
+                arrayItem = attribute;
             }
 
             if (object) {
@@ -51,13 +51,13 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
                     return get(object, arrayItem);
                 }
             }
-
-            if ((type === TwingTemplate.ARRAY_CALL) || (isMap(object)) || (object === null) || (typeof object !== 'object')) {
+            
+            if ((type === "array") || (isMap(object)) || (object === null) || (typeof object !== 'object')) {
                 if (isDefinedTest) {
                     return false;
                 }
 
-                if (ignoreStrictCheck || !env.isStrictVariables()) {
+                if (ignoreStrictCheck || !runtime.isStrictVariables) {
                     return;
                 }
 
@@ -67,19 +67,19 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
                     } else {
                         message = `Index "${arrayItem}" is out of bounds for array [${[...(object as Map<any, any>).values()]}].`;
                     }
-                } else if (type === TwingTemplate.ARRAY_CALL) {
+                } else if (type === "array") {
                     // object is another kind of object
                     if (object === null) {
-                        message = `Impossible to access a key ("${item}") on a null variable.`;
+                        message = `Impossible to access a key ("${attribute}") on a null variable.`;
                     } else {
-                        message = `Impossible to access a key ("${item}") on a ${typeof object} variable ("${object.toString()}").`;
+                        message = `Impossible to access a key ("${attribute}") on a ${typeof object} variable ("${object.toString()}").`;
                     }
                 } else if (object === null) {
                     // object is null
-                    message = `Impossible to access an attribute ("${item}") on a null variable.`;
+                    message = `Impossible to access an attribute ("${attribute}") on a null variable.`;
                 } else {
                     // object is a primitive
-                    message = `Impossible to access an attribute ("${item}") on a ${typeof object} variable ("${object}").`;
+                    message = `Impossible to access an attribute ("${attribute}") on a ${typeof object} variable ("${object}").`;
                 }
 
                 throw new TwingErrorRuntime(message);
@@ -92,33 +92,33 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
                 return false;
             }
 
-            if (ignoreStrictCheck || !env.isStrictVariables()) {
+            if (ignoreStrictCheck || !runtime.isStrictVariables) {
                 return;
             }
 
             if (object === null) {
-                message = `Impossible to invoke a method ("${item}") on a null variable.`;
+                message = `Impossible to invoke a method ("${attribute}") on a null variable.`;
             } else if (isMap(object)) {
-                message = `Impossible to invoke a method ("${item}") on an array.`;
+                message = `Impossible to invoke a method ("${attribute}") on an array.`;
             } else {
-                message = `Impossible to invoke a method ("${item}") on a ${typeof object} variable ("${object}").`;
+                message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
             }
 
             throw new TwingErrorRuntime(message);
         }
 
         // object property
-        if (type !== TwingTemplate.METHOD_CALL) {
-            if (Reflect.has(object, item) && (typeof object[item] !== 'function')) {
+        if (type !== "method") {
+            if (Reflect.has(object, attribute) && (typeof object[attribute] !== 'function')) {
                 if (isDefinedTest) {
                     return true;
                 }
 
                 if (sandboxed) {
-                    env.checkPropertyAllowed(object, item);
+                    runtime.checkPropertyAllowed(object, attribute);
                 }
 
-                return get(object, item);
+                return get(object, attribute);
             }
         }
 
@@ -180,12 +180,12 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
             }
         }
 
-        let itemAsString: string = item as string;
-        let method: string = null;
+        let itemAsString: string = attribute as string;
+        let method: string;
         let lcItem: string;
 
-        if (candidates.has(item)) {
-            method = candidates.get(item);
+        if (candidates.has(attribute)) {
+            method = candidates.get(attribute);
         } else if (candidates.has(lcItem = itemAsString.toLowerCase())) {
             method = candidates.get(lcItem);
         } else {
@@ -193,11 +193,11 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
                 return false;
             }
 
-            if (ignoreStrictCheck || !env.isStrictVariables()) {
+            if (ignoreStrictCheck || !runtime.isStrictVariables) {
                 return;
             }
 
-            throw new TwingErrorRuntime(`Neither the property "${item}" nor one of the methods ${item}()" or "get${item}()"/"is${item}()"/"has${item}()" exist and have public access in class "${object.constructor.name}".`);
+            throw new TwingErrorRuntime(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
         }
 
         if (isDefinedTest) {
@@ -205,7 +205,7 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
         }
 
         if (sandboxed) {
-            env.checkMethodAllowed(object, method);
+            runtime.checkMethodAllowed(object, method);
         }
 
         return get(object, method).apply(object, [..._arguments.values()]);

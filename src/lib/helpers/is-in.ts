@@ -16,7 +16,7 @@ export function isIn(value: any, compare: any): boolean {
     }
 
     if (isMap(compare)) {
-        for (let [key, item] of (compare as Map<number, any>)) {
+        for (let [, item] of (compare as Map<number, any>)) {
             if (compareHelper(item, value)) {
                 result = true;
                 break;

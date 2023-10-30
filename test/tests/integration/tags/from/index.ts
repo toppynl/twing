@@ -1,0 +1,11 @@
+import "./basic";
+import "./embed_with_global_macro";
+import "./in_block_is_local";
+import "./local_override";
+import "./macro_in_a_macro";
+import "./macros_in_parent";
+import "./nested_block_with_global_macro";
+import "./nested_blocks";
+import "./recursive";
+import "./self_parent";
+import "./syntax_error";

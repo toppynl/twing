@@ -1,28 +1,34 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
 
-export const type = new TwingNodeType('expression_temp_name');
+export type TemporaryNameNodeAttributes = BaseExpressionNodeAttributes & {
+    name: string;
+    declaration: boolean;
+};
 
-export class TwingNodeExpressionTempName extends TwingNodeExpression {
-    constructor(name: string, declaration: boolean, lineno: number, columno: number) {
-        let attributes = new Map();
-
-        attributes.set('name', name);
-        attributes.set('declaration', declaration);
-
-        super(new Map(), attributes, lineno, columno);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw(`${this.getAttribute('declaration') ? 'let ' : ''}$_`)
-            .raw(this.getAttribute('name'))
-            .raw('_')
-        ;
-    }
+export interface TemporaryNameNode extends BaseExpressionNode<"temp_name", TemporaryNameNodeAttributes> {
 }
+
+export const createTemporaryNameNode = (
+    name: string,
+    declaration: boolean,
+    line: number,
+    column: number
+): TemporaryNameNode => {
+    const baseNode = createBaseExpressionNode("temp_name", {
+        name,
+        declaration
+    }, {}, line, column);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            const {declaration, name} = baseNode.attributes;
+
+            compiler
+                .raw(`${declaration ? 'let ' : ''}$_`)
+                .raw(name)
+                .raw('_')
+            ;
+        }
+    }
+};

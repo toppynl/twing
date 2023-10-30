@@ -24,7 +24,7 @@ export class TwingCacheFilesystem implements TwingCacheInterface {
         this.directory = directory;
     }
 
-    generateKey(name: string, className: string): Promise<string> {
+    generateKey(_name: string, className: string): Promise<string> {
         let hash: string = hex.stringify(sha256(className));
 
         return Promise.resolve(join(
@@ -40,7 +40,7 @@ export class TwingCacheFilesystem implements TwingCacheInterface {
         return new Promise((resolve) => {
             stat(modulePath, (err) => {
                 if (err) {
-                    resolve(() => new Map);
+                    resolve(new Map());
                 } else {
                     let cache = require.cache;
 
@@ -60,7 +60,7 @@ export class TwingCacheFilesystem implements TwingCacheInterface {
                 tmpName({
                     dir: directory,
                     postfix: extname(key)
-                }, (err: any, tmpFile: string) => {
+                }, (_err: any, tmpFile: string) => {
                     writeFile(tmpFile, content, (err) => {
                         let error = new Error(`Failed to write cache file "${key}".`);
 

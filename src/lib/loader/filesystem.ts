@@ -145,7 +145,7 @@ export class TwingLoaderFilesystem implements TwingLoaderInterface {
     getSourceContext(name: string, from: TwingSource): Promise<TwingSource> {
         return this.findTemplate(name, true, from).then((path) => {
             return new Promise((resolve) => {
-                readFile(path, 'UTF-8', (err, data) => {
+                readFile(path, 'UTF-8', (_err, data) => {
                     resolve(new TwingSource(data, name, path));
                 });
             });
@@ -173,7 +173,7 @@ export class TwingLoaderFilesystem implements TwingLoaderInterface {
     isFresh(name: string, time: number, from: TwingSource): Promise<boolean> {
         return this.findTemplate(name, true, from).then((path) => {
             return new Promise((resolve) => {
-                stat(path, (err, stats) => {
+                stat(path, (_err, stats) => {
                     resolve(stats.mtime.getTime() < time);
                 });
             });
@@ -231,7 +231,7 @@ export class TwingLoaderFilesystem implements TwingLoaderInterface {
                 }
 
                 return new Promise<string>((resolve) => {
-                    stat(joinPath(path, shortname), (err, stats) => {
+                    stat(joinPath(path, shortname), (_err, stats) => {
                         if (stats && stats.isFile()) {
                             this.cache.set(name, resolvePath(joinPath(path, shortname)));
 

@@ -1,0 +1,15 @@
+import "./child_contents_outside_blocks";
+import "./multiline_array_with_undefined_variable";
+import "./multiline_array_with_undefined_variable_again";
+import "./multiline_function_with_undefined_variable";
+import "./multiline_function_with_unknown_argument";
+import "./multiline_tag_with_undefined_variable";
+import "./strict_comparison_operator_equal";
+import "./strict_comparison_operator_not_equal";
+import "./syntax_error_in_reused_template";
+import "./syntax_error_unknown_function";
+import "./syntax_error_unknown_tag";
+import "./unclosed_tag";
+import "./undefined_parent";
+import "./undefined_template_in_child_template";
+import "./undefined_trait";

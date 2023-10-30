@@ -9,10 +9,10 @@ import {TwingSource} from "../source";
 export class TwingSandboxSecurityNotAllowedFilterError extends TwingSandboxSecurityError {
     private readonly filterName: string;
 
-    constructor(message: string, filterName: string, lineno: number = -1, source: TwingSource = null) {
-        super(message, lineno, source);
+    constructor(message: string, filterName: string, line: number = -1, source: TwingSource = null) {
+        super(message, line, source);
+        
         this.filterName = filterName;
-        this.name = 'TwingSandboxSecurityNotAllowedFilterError';
     }
 
     getFilterName() {

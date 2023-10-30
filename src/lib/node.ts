@@ -1,202 +1,202 @@
-import {TwingCompiler} from "./compiler";
-import {TwingNodeType} from "./node-type";
+import type {Compiler} from "./compiler";
+import type {ExpressionNode} from "./node/expression";
+import type {PrintNode} from "./node/print";
+import type {BlockReferenceNode} from "./node/block-reference";
+import type {TextNode} from "./node/text";
+import type {AutoEscapeNode} from "./node/auto-escape";
+import type {BodyNode} from "./node/body";
+import type {CheckSecurityNode} from "./node/check-security";
+import type {CheckToStringNode} from "./node/check-to-string";
+import type {CommentNode} from "./node/comment";
+import type {DeprecatedNode} from "./node/deprecated";
+import type {DoNode} from "./node/do";
+import type {EmbedNode} from "./node/include/embed";
+import type {IncludeNode} from "./node/include/include";
+import type {FlushNode} from "./node/flush";
+import type {ForNode} from "./node/for";
+import type {ForLoopNode} from "./node/for-loop";
+import type {ImportNode} from "./node/import";
+import type {InlinePrintNode} from "./node/inline-print";
+import type {LineNode} from "./node/line";
+import type {MacroNode} from "./node/macro";
+import type {ModuleNode} from "./node/module";
+import type {BlockNode} from "./node/block";
+import type {TraitNode} from "./node/trait";
+import type {SetNode} from "./node/set";
+import type {VerbatimNode} from "./node/verbatim";
+import type {SandboxNode} from "./node/sandbox";
+import type {SandboxedPrintNode} from "./node/sandboxed-print";
+import type {SpacelessNode} from "./node/spaceless";
+import type {WithNode} from "./node/with";
+import type {IfNode} from "./node/if";
 
 const var_export = require('locutus/php/var/var_export');
 
-export class TwingNode {
-    protected nodes: Map<number | string, TwingNode>;
-    protected attributes: Map<string, any>;
-    protected lineno: number;
-    protected columnno: number;
-    protected tag: string;
-    private name: string = null;
+export type Node =
+    | AutoEscapeNode
+    | BlockNode
+    | BlockReferenceNode
+    | BodyNode
+    | CheckSecurityNode
+    | CheckToStringNode
+    | CommentNode
+    | DeprecatedNode
+    | DoNode
+    | EmbedNode
+    | ExpressionNode
+    | FlushNode
+    | ForLoopNode
+    | ForNode
+    | IfNode
+    | ImportNode
+    | IncludeNode
+    | InlinePrintNode
+    | LineNode
+    | MacroNode
+    | ModuleNode
+    | PrintNode
+    | SandboxNode
+    | SandboxedPrintNode
+    | SetNode
+    | SpacelessNode
+    | TextNode
+    | TraitNode
+    | VerbatimNode
+    | WithNode
+    ;
 
-    /**
-     * Constructor.
-     *
-     * The nodes are automatically made available as properties ($this->node).
-     * The attributes are automatically made available as array items ($this['name']).
-     *
-     * @param nodes Map<string | number, TwingNode>  A map of named nodes
-     * @param attributes Map<string, any> A map of attributes (should not be nodes)
-     * @param lineno number The line number
-     * @param columnno number The column number
-     * @param tag string The tag name associated with the Node
-     */
-    constructor(nodes: Map<string | number, TwingNode> = new Map(), attributes: Map<string, any> = new Map(), lineno: number = 0, columnno: number = 0, tag: string = null) {
-        this.nodes = nodes;
-        this.attributes = attributes;
-        this.lineno = lineno;
-        this.columnno = columnno;
-        this.tag = tag;
-    }
+export type NodeType<T> = T extends BaseNode<infer Type, any, any> ? Type : never;
+export type NodeAttributes<T> = T extends BaseNode<any, infer Attributes, any> ? Attributes : never;
+export type NodeChildren<T> = T extends BaseNode<any, any, infer Children> ? Children : never;
 
-    /**
-     * @returns {TwingNode}
-     */
-    clone(): TwingNode {
-        let result: TwingNode = Reflect.construct(this.constructor, []);
+export type BaseNodeAttributes = Record<never, never>;
+export type BaseNodeChildren = Record<string, BaseNode<any>>;
 
-        for (let [name, node] of this.getNodes()) {
-            result.setNode(name as string, node.clone());
-        }
+export interface BaseNode<
+    Type extends string | null,
+    Attributes extends BaseNodeAttributes = BaseNodeAttributes,
+    Children extends BaseNodeChildren = BaseNodeChildren,
+> {
+    readonly attributes: Attributes;
+    readonly children: Children;
+    readonly column: number;
+    readonly isACaptureNode: boolean;
+    readonly isAnOutputNode: boolean;
+    readonly line: number;
+    readonly templateName: string | null; // todo: most probably useless, except as an attribute of ModuleNode
+    readonly type: Type;
 
-        for (let [name, node] of this.attributes) {
-            if (node instanceof TwingNode) {
-                node = node.clone();
+    setTemplateName(name: string): void; // todo: most probably useless, except as an attribute of ModuleNode
+
+    compile(compiler: Compiler): void;
+
+    getNodeTag(): string | null;
+
+    clone(): this;
+
+    toString(): string;
+
+    is<Type extends string>(type: Type): this is Node & {
+        type: Type;
+    };
+}
+
+type KeysOf<T> = T extends T ? keyof T : never;
+
+export const getChildren = <
+    T extends BaseNode<any>
+>(node: T): Array<[KeysOf<NodeChildren<T>>, NodeChildren<T>[any]]> => {
+    return Object.entries(node.children) as Array<[KeysOf<NodeChildren<T>>, NodeChildren<T>[any]]>;
+};
+
+export const getChildrenCount = (
+    node: BaseNode<any>
+): number => {
+    return Object.keys(node.children).length;
+};
+
+export const createBaseNode = <
+    Type extends string | null,
+    Attributes extends BaseNodeAttributes,
+    Children extends BaseNodeChildren
+>(
+    type: Type,
+    attributes: Attributes = {} as Attributes,
+    children: Children = {} as Children,
+    line: number = 0,
+    column: number = 0,
+    tag: string | null = null
+): BaseNode<Type, Attributes, Children> => {
+    let templateName: string | null = null;
+
+    const node: BaseNode<Type, Attributes, Children> = {
+        attributes,
+        children,
+        column,
+        line,
+        isACaptureNode: false,
+        isAnOutputNode: false,
+        get templateName() {
+            return templateName;
+        },
+        setTemplateName(name: string) {
+            templateName = name;
+
+            for (const [, child] of getChildren(node)) {
+                child.setTemplateName(name);
+            }
+        },
+        getNodeTag: () => tag,
+        compile: (compiler) => {
+            for (const [, child] of getChildren(node)) {
+                child.compile(compiler);
+            }
+        },
+        is: (aType) => (aType as string) === node.type,
+        clone: () => createBaseNode(type, attributes, children, line, column, tag),
+        toString: () => {
+            const attributeRepresentations: Array<string> = [];
+
+            const isANode = (candidate: any): candidate is BaseNode<any> => {
+                return candidate &&
+                    (candidate as BaseNode<any>).type !== undefined &&
+                    (candidate as BaseNode<any>).attributes !== undefined &&
+                    (candidate as BaseNode<any>).children !== undefined;
+            };
+
+            for (const [name, value] of Object.entries(node.attributes)) {
+                const attributeRepresentation = isANode(value) ? value.toString() : String(var_export(value, true));
+                attributeRepresentations.push(`${name}: ${attributeRepresentation.replace(/\n/g, '')}`);
             }
 
-            result.setAttribute(name, node);
-        }
+            attributeRepresentations.push(`line: ${line}`);
+            attributeRepresentations.push(`column: ${column}`);
 
-        result.lineno = this.lineno;
-        result.columnno = this.columnno;
-        result.tag = this.tag;
+            const representation: Array<string> = [
+                `Node<${node.type ? '"' + node.type + '"' : 'null'}, ${attributeRepresentations.join(', ')}> (`
+            ];
 
-        return result;
-    }
+            if (getChildrenCount(node)) {
+                for (let [name, child] of getChildren(node)) {
+                    const length = ('' + name).length + 4;
+                    const nodeRepresentation: Array<string> = [];
 
-    toString() {
-        let attributes = [];
+                    for (let line of child.toString().split('\n')) {
+                        nodeRepresentation.push(' '.repeat(length) + line);
+                    }
 
-        for (let [name, value] of this.attributes) {
-            let attributeRepr: string;
-
-            if (value instanceof TwingNode) {
-                attributeRepr = '' + value.toString();
-            } else {
-                attributeRepr = '' + var_export(value, true);
-            }
-
-            attributes.push(`${name}: ${attributeRepr.replace(/\n/g, '')}`);
-        }
-
-        attributes.push(`line: ${this.getTemplateLine()}`);
-        attributes.push(`column: ${this.getTemplateColumn()}`);
-
-        let repr = [this.constructor.name + '(' + attributes.join(', ')];
-
-        if (this.nodes.size > 0) {
-            for (let [name, node] of this.nodes) {
-                let len = ('' + name).length + 4;
-                let nodeRepr = [];
-
-                for (let line of node.toString().split('\n')) {
-                    nodeRepr.push(' '.repeat(len) + line);
+                    representation.push(`  ${name}: ${nodeRepresentation.join('\n').trimLeft()}`);
                 }
 
-                repr.push(`  ${name}: ${nodeRepr.join('\n').trimLeft()}`);
+                representation.push(')');
+            } else {
+                representation[0] += ')';
             }
 
-            repr.push(')');
-        } else {
-            repr[0] += ')';
-        }
+            return representation.join('\n');
+        },
+        type
+    };
 
-        return repr.join('\n');
-    }
-
-    get type(): TwingNodeType {
-        return null;
-    }
-
-    is(type: TwingNodeType): boolean {
-        return this.type === type;
-    }
-
-    compile(compiler: TwingCompiler): void {
-        for (let node of this.nodes.values()) {
-            node.compile(compiler);
-        }
-    }
-
-    getTemplateLine() {
-        return this.lineno;
-    }
-
-    getTemplateColumn() {
-        return this.columnno;
-    }
-
-    getNodeTag() {
-        return this.tag;
-    }
-
-    /**
-     * @returns booleqn
-     */
-    hasAttribute(name: string) {
-        return this.attributes.has(name);
-    }
-
-    /**
-     *
-     * @param {string} name
-     * @returns any
-     */
-    getAttribute(name: string): any {
-        if (!this.attributes.has(name)) {
-            throw new Error(`Attribute "${name}" does not exist for Node "${this.constructor.name}".`);
-        }
-
-        return this.attributes.get(name);
-    }
-
-    /**
-     * @param {string} name
-     * @param {*} value
-     */
-    setAttribute(name: string, value: any) {
-        this.attributes.set(name, value);
-    }
-
-    removeAttribute(name: string) {
-        this.attributes.delete(name);
-    }
-
-    /**
-     * @return bool
-     */
-    hasNode(name: any) {
-        return this.nodes.has(name);
-    }
-
-    /**
-     * @return TwingNode
-     */
-    getNode(name: string | number): TwingNode {
-        if (!this.nodes.has(name)) {
-            throw new Error(`Node "${name}" does not exist for Node "${this.constructor.name}".`);
-        }
-
-        return this.nodes.get(name);
-    }
-
-    setNode(name: string | number, node: TwingNode) {
-        this.nodes.set(name, node);
-    }
-
-    removeNode(name: string | number) {
-        this.nodes.delete(name);
-    }
-
-    count() {
-        return this.nodes.size;
-    }
-
-    setTemplateName(name: string) {
-        this.name = name;
-
-        for (let node of this.nodes.values()) {
-            node.setTemplateName(name);
-        }
-    }
-
-    getTemplateName() {
-        return this.name;
-    }
-
-    getNodes() {
-        return this.nodes;
-    }
-}
+    return node;
+};

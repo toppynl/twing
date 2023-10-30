@@ -1,0 +1,28 @@
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"include" function with assignment';
+    }
+
+    getTemplates() {
+        return {
+            'index.twig': `
+{% set tmp = include("foo.twig") %}
+
+FOO{{ tmp }}BAR`,
+            'foo.twig': `
+FOOBAR`
+        };
+    }
+
+    getExpected() {
+        return `
+FOO
+FOOBARBAR
+`;
+    }
+}
+
+runTest(createIntegrationTest(new Test()));

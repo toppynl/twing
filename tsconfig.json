@@ -3,9 +3,11 @@
     "target": "es2017",
     "module": "commonjs",
     "moduleResolution": "node",
-    "noImplicitAny": true,
     "outDir": "dist",
-    "removeComments": false
+    "removeComments": false,
+    "strict": false,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true
   },
   "include": [
     "src/**/*"

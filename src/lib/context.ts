@@ -7,12 +7,12 @@ export class TwingContext<K, V> {
     constructor(container: Map<K, V> = new Map()) {
         this._container = container;
         this._proxy = new Proxy(this._container, {
-            set: (target: Map<any, any>, key: string | number | symbol, value: any, receiver: any): boolean => {
+            set: (target: Map<any, any>, key: string | number | symbol, value: any): boolean => {
                 target.set(key, value);
 
                 return true;
             },
-            get(target: Map<any, any>, key: string | number | symbol, receiver: any): any {
+            get(target: Map<any, any>, key: string | number | symbol): any {
                 return target.get(key);
             }
         });

@@ -1,35 +1,53 @@
-import {TwingNode} from "../node";
-import {TwingNodeOutputInterface} from "../node-output-interface";
-import {TwingNodeExpression} from "./expression";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {ExpressionNode} from "./expression";
+import {Compiler} from "../compiler";
 
-export const type = new TwingNodeType('print');
-
-export class TwingNodePrint extends TwingNode implements TwingNodeOutputInterface {
-    TwingNodeOutputInterfaceImpl: TwingNodeOutputInterface;
-
-    constructor(expr: TwingNodeExpression, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
-
-        nodes.set('expr', expr);
-
-        super(nodes, new Map(), lineno, columnno, tag);
-
-        this.TwingNodeOutputInterfaceImpl = this;
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .addSourceMapEnter(this)
-            .write('outputBuffer.echo(')
-            .subcompile(this.getNode('expr'))
-            .raw(');\n')
-            .addSourceMapLeave()
-        ;
-    }
+export interface BasePrintNode<Type extends string> extends BaseNode<Type, BaseNodeAttributes, {
+    expr: ExpressionNode;
+}> {
 }
+
+export interface PrintNode extends BasePrintNode<"print"> {
+}
+
+const compile = <Type extends string>(
+    node: BasePrintNode<Type>,
+    compiler: Compiler
+): void => {
+    const {expr} = node.children;
+
+    compiler
+        .addSourceMapEnter(node)
+        .write('outputBuffer.echo(')
+        .subCompile(expr)
+        .raw(');\n')
+        .addSourceMapLeave()
+    ;
+}
+
+export const createBasePrintNode = <Type extends string>(
+    type: Type,
+    expression: ExpressionNode,
+    line: number,
+    column: number,
+    tag: string | null = null
+): BasePrintNode<Type> => {
+    const baseNode = createBaseNode(type, {}, {
+        expr: expression
+    }, line, column, tag);
+
+    const printNode: BasePrintNode<Type> = {
+        ...baseNode,
+        compile: (compiler) => compile(printNode, compiler),
+        isAnOutputNode: true
+    };
+
+    return printNode;
+};
+
+export const createPrintNode = (
+    expression: ExpressionNode,
+    line: number,
+    column: number,
+    tag: string | null = null
+): PrintNode => createBasePrintNode("print", expression, line, column, tag);

@@ -6,11 +6,8 @@ import {TwingExtensionInterface} from "./extension-interface";
 import {TwingTest} from "./test";
 import {TwingOperator, TwingOperatorType} from "./operator";
 import {TwingSourceMapNodeFactory} from "./source-map/node-factory";
-import {TwingNodeType} from "./node-type";
 
 export class TwingExtensionSet {
-    private initialized: boolean = false;
-    private runtimeInitialized: boolean = false;
     private visitors: TwingNodeVisitorInterface[] = [];
     private filters: Map<string, TwingFilter> = new Map();
     private tests: Map<string, TwingTest> = new Map();
@@ -58,49 +55,15 @@ export class TwingExtensionSet {
         return JSON.stringify([...this.extensions.keys()]);
     }
 
-    isInitialized() {
-        return this.initialized || this.runtimeInitialized;
-    }
-
     getNodeVisitors(): TwingNodeVisitorInterface[] {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return this.visitors;
     }
 
     getTokenParsers(): TwingTokenParserInterface[] {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return [...this.tokenParsers.values()];
     }
 
-    /**
-     * Registers an extension.
-     *
-     * @param {TwingExtensionInterface} extension A TwingExtensionInterface instance
-     * @param {string} name A name the extension will be registered as
-     */
-    addExtension(extension: TwingExtensionInterface, name: string) {
-        if (this.initialized) {
-            throw new Error(`Unable to register extension "${name}" as extensions have already been initialized.`);
-        }
-
-        if (this.extensions.has(name)) {
-            throw new Error(`Unable to register extension "${name}" as it is already registered.`);
-        }
-
-        this.extensions.set(name, extension);
-    }
-
     addTokenParser(parser: TwingTokenParserInterface) {
-        if (this.initialized) {
-            throw new Error(`Unable to add token parser "${parser.getTag()}" as extensions have already been initialized.`);
-        }
-
         if (this.tokenParsers.has(parser.getTag())) {
             throw new Error(`Tag "${parser.getTag()}" is already registered.`);
         }
@@ -114,10 +77,6 @@ export class TwingExtensionSet {
      * @return Map<string, TwingOperator> A map of unary operator definitions
      */
     getUnaryOperators(): Map<string, TwingOperator> {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return this.unaryOperators;
     }
 
@@ -127,18 +86,10 @@ export class TwingExtensionSet {
      * @return Map<string, TwingOperator> A map of binary operators
      */
     getBinaryOperators(): Map<string, TwingOperator> {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return this.binaryOperators;
     }
 
     addFunction(twingFunction: TwingFunction) {
-        if (this.initialized) {
-            throw new Error(`Unable to add function "${twingFunction.getName()}" as extensions have already been initialized.`);
-        }
-
         if (this.functions.has(twingFunction.getName())) {
             throw new Error(`Function "${twingFunction.getName()}" is already registered.`);
         }
@@ -147,10 +98,6 @@ export class TwingExtensionSet {
     }
 
     getFunctions() {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return this.functions;
     }
 
@@ -161,18 +108,15 @@ export class TwingExtensionSet {
      * @returns {TwingFunction}     A TwingFunction instance or null if the function does not exist
      */
     getFunction(name: string): TwingFunction {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         if (this.functions.has(name)) {
+            // @ts-ignore
             return this.functions.get(name);
         }
 
         for (let [pattern, twingFunction] of this.functions) {
             let count: number = 0;
 
-            pattern = pattern.replace(/\*/g, function (match: string, value: string) {
+            pattern = pattern.replace(/\*/g, function () {
                 count++;
 
                 return '(.*?)';
@@ -180,6 +124,7 @@ export class TwingExtensionSet {
 
             if (count) {
                 let regExp = new RegExp('^' + pattern + '$', 'g');
+                // @ts-ignore
                 let match: RegExpExecArray = regExp.exec(name);
                 let matches = [];
 
@@ -195,14 +140,11 @@ export class TwingExtensionSet {
             }
         }
 
+        // @ts-ignore
         return null;
     }
 
     addFilter(filter: TwingFilter) {
-        if (this.initialized) {
-            throw new Error(`Unable to add filter "${filter.getName()}" as extensions have already been initialized.`);
-        }
-
         if (this.filters.has(filter.getName())) {
             throw new Error(`Filter "${filter.getName()}" is already registered.`);
         }
@@ -211,10 +153,6 @@ export class TwingExtensionSet {
     }
 
     getFilters(): Map<string, TwingFilter> {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return this.filters;
     }
 
@@ -225,11 +163,7 @@ export class TwingExtensionSet {
      *
      * @return {TwingFilter|false} A TwingFilter instance or false if the filter does not exist
      */
-    getFilter(name: string): TwingFilter {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
+    getFilter(name: string): TwingFilter | null {
         if (this.filters.has(name)) {
             return this.filters.get(name);
         }
@@ -240,7 +174,7 @@ export class TwingExtensionSet {
         for ([pattern, filter] of this.filters) {
             let count: number = 0;
 
-            pattern = pattern.replace(/\*/g, function (match: string, value: string) {
+            pattern = pattern.replace(/\*/g, function () {
                 count++;
 
                 return '(.*?)';
@@ -248,6 +182,7 @@ export class TwingExtensionSet {
 
             if (count) {
                 let regExp = new RegExp('^' + pattern + '$', 'g');
+                // @ts-ignore
                 let match: RegExpExecArray = regExp.exec(name);
                 let matches = [];
 
@@ -267,18 +202,10 @@ export class TwingExtensionSet {
     }
 
     addNodeVisitor(visitor: TwingNodeVisitorInterface) {
-        if (this.initialized) {
-            throw new Error('Unable to add a node visitor as extensions have already been initialized.');
-        }
-
         this.visitors.push(visitor);
     }
 
     addTest(test: TwingTest) {
-        if (this.initialized) {
-            throw new Error(`Unable to add test "${test.getName()}" as extensions have already been initialized.`);
-        }
-
         if (this.tests.has(test.getName())) {
             throw new Error(`Test "${test.getName()}" is already registered.`);
         }
@@ -291,10 +218,6 @@ export class TwingExtensionSet {
      * @returns {Map<string, TwingTest>}
      */
     getTests() {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return this.tests;
     }
 
@@ -305,11 +228,8 @@ export class TwingExtensionSet {
      * @returns {TwingTest} A TwingTest instance or null if the test does not exist
      */
     getTest(name: string): TwingTest {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         if (this.tests.has(name)) {
+            // @ts-ignore
             return this.tests.get(name);
         }
 
@@ -319,7 +239,7 @@ export class TwingExtensionSet {
         for ([pattern, test] of this.tests) {
             let count: number = 0;
 
-            pattern = pattern.replace(/\*/g, function (match: string, value: string) {
+            pattern = pattern.replace(/\*/g, function () {
                 count++;
 
                 return '(.*?)';
@@ -327,6 +247,7 @@ export class TwingExtensionSet {
 
             if (count) {
                 let regExp = new RegExp('^' + pattern + '$', 'g');
+                // @ts-ignore
                 let match: RegExpExecArray = regExp.exec(name);
                 let matches = [];
 
@@ -342,14 +263,11 @@ export class TwingExtensionSet {
             }
         }
 
+        // @ts-ignore
         return null;
     }
 
     addOperator(operator: TwingOperator) {
-        if (this.initialized) {
-            throw new Error(`Unable to add operator "${operator.getName()}" as extensions have already been initialized.`);
-        }
-
         let bucket: Map<string, TwingOperator>;
 
         if (operator.getType() === TwingOperatorType.UNARY) {
@@ -366,10 +284,6 @@ export class TwingExtensionSet {
     }
 
     addSourceMapNodeFactory(factory: TwingSourceMapNodeFactory) {
-        if (this.initialized) {
-            throw new Error(`Unable to add source-map node factory "${factory.nodeName}" as extensions have already been initialized.`);
-        }
-
         if (this.sourceMapNodeFactories.has(factory.nodeName)) {
             throw new Error(`Source-map node factory "${factory.nodeName}" is already registered.`);
         }
@@ -377,14 +291,7 @@ export class TwingExtensionSet {
         this.sourceMapNodeFactories.set(factory.nodeName, factory);
     }
 
-    /**
-     * @return Map<TwingNodeType, TwingSourceMapNodeFactory>
-     */
     getSourceMapNodeFactories(): Map<string, TwingSourceMapNodeFactory> {
-        if (!this.initialized) {
-            this.initExtensions();
-        }
-
         return this.sourceMapNodeFactories;
     }
 
@@ -397,15 +304,13 @@ export class TwingExtensionSet {
         return this.sourceMapNodeFactories.has(nodeType) ? this.sourceMapNodeFactories.get(nodeType) : null;
     }
 
-    protected initExtensions() {
-        for (let extension of this.extensions.values()) {
-            this.initExtension(extension);
+    addExtension(extension: TwingExtensionInterface, name: string) {
+        if (this.extensions.has(name)) {
+            throw new Error(`Unable to register extension "${name}" as it is already registered.`);
         }
 
-        this.initialized = true;
-    }
+        this.extensions.set(name, extension);
 
-    protected initExtension(extension: TwingExtensionInterface) {
         // filters
         for (let filter of extension.getFilters()) {
             this.addFilter(filter);

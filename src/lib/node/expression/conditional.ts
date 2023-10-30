@@ -1,33 +1,50 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
+import {Node} from "../../node";
 
-export const type = new TwingNodeType('expression_conditional');
+export const conditionalNodeType = "conditional";
 
-export class TwingNodeExpressionConditional extends TwingNodeExpression {
-    constructor(expr1: TwingNodeExpression, expr2: TwingNodeExpression, expr3: TwingNodeExpression, lineno: number, columnno: number) {
-        let nodes = new Map();
-
-        nodes.set('expr1', expr1);
-        nodes.set('expr2', expr2);
-        nodes.set('expr3', expr3);
-
-        super(nodes, new Map(), lineno, columnno);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('((')
-            .subcompile(this.getNode('expr1'))
-            .raw(') ? (')
-            .subcompile(this.getNode('expr2'))
-            .raw(') : (')
-            .subcompile(this.getNode('expr3'))
-            .raw('))')
-        ;
-    }
+export interface BaseConditionalNode<Type extends string> extends BaseExpressionNode<Type, BaseExpressionNodeAttributes, {
+    expr1: Node;
+    expr2: Node;
+    expr3: Node;
+}> {
 }
+
+export interface ConditionalNode extends BaseConditionalNode<typeof conditionalNodeType> {
+}
+
+export const createBaseConditionalNode = <Type extends string>(
+    type: Type,
+    expr1: Node,
+    expr2: Node,
+    expr3: Node,
+    line: number,
+    column: number
+): BaseConditionalNode<Type> => {
+    const baseNode = createBaseExpressionNode(type, {}, {
+        expr1, expr2, expr3
+    }, line, column);
+
+    return {
+        ...baseNode,
+        compile: (compiler) => {
+            compiler
+                .raw('((')
+                .subCompile(baseNode.children.expr1)
+                .raw(') ? (')
+                .subCompile(baseNode.children.expr2)
+                .raw(') : (')
+                .subCompile(baseNode.children.expr3)
+                .raw('))')
+            ;
+        }
+    };
+};
+
+export const createConditionalNode = (
+    expr1: Node,
+    expr2: Node,
+    expr3: Node,
+    line: number,
+    column: number
+) => createBaseConditionalNode(conditionalNodeType, expr1, expr2, expr3, line, column);

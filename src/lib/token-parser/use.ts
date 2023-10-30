@@ -1,19 +1,20 @@
-import {TwingTokenParser} from "../token-parser";
+import {TokenParser} from "../token-parser";
 import {TwingErrorSyntax} from "../error/syntax";
-import {TwingNodeExpressionConstant, type as constantType} from "../node/expression/constant";
-import {TwingNode} from "../node";
+import {ConstantNode, createConstantNode} from "../node/expression/constant";
+import {createBaseNode} from "../node";
 import {Token, TokenType} from "twig-lexer";
+import {createTraitNode} from "../node/trait";
 
-export class TwingTokenParserUse extends TwingTokenParser {
+export class UseTokenParser extends TokenParser {
     parse(token: Token) {
         let template = this.parser.parseExpression();
         let stream = this.parser.getStream();
 
-        if (template.type !== constantType) {
+        if (template.type !== "expression_constant") {
             throw new TwingErrorSyntax('The template references in a "use" statement must be a string.', stream.getCurrent().line, stream.getSourceContext());
         }
 
-        let targets = new Map();
+        let targets: Record<string, ConstantNode> = {};
 
         if (stream.nextIf(TokenType.NAME, 'with')) {
             do {
@@ -24,7 +25,7 @@ export class TwingTokenParserUse extends TwingTokenParser {
                     alias = stream.expect(TokenType.NAME).value;
                 }
 
-                targets.set(name, new TwingNodeExpressionConstant(alias, token.line, token.column));
+                targets[name] = createConstantNode(alias, token.line, token.column);
 
                 if (!stream.nextIf(TokenType.PUNCTUATION, ',')) {
                     break;
@@ -34,9 +35,9 @@ export class TwingTokenParserUse extends TwingTokenParser {
 
         stream.expect(TokenType.TAG_END);
 
-        this.parser.addTrait(new TwingNode(new Map([['template', template], ['targets', new TwingNode(targets)]])));
+        this.parser.addTrait(createTraitNode(template, createBaseNode(null, {}, targets), token.line, token.column));
 
-        return new TwingNode();
+        return createBaseNode(null);
     }
 
     getTag() {

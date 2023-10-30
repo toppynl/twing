@@ -1,26 +1,26 @@
 import {TwingParser} from "../../src/lib/parser";
-import {TwingEnvironmentNode} from "../../src/lib/environment/node";
+import {FilesystemEnvironment} from "../../src/lib/environment/filesystem-environment";
 import {TwingLoaderNull} from "../../src/lib/loader/null";
 import {TwingTokenStream} from "../../src/lib/token-stream";
-import {TwingNode} from "../../src/lib/node";
-import {TwingNodeExpression} from "../../src/lib/node/expression";
+import {Node} from "../../src/lib/node";
+import {ExpressionNode} from "../../src/lib/node/expression";
 
 const sinon = require('sinon');
 
 class Parser extends TwingParser {
     constructor() {
-        super(new TwingEnvironmentNode(new TwingLoaderNull()));
+        super(new FilesystemEnvironment(new TwingLoaderNull()));
     }
 
-    parseExpression(precedence: number = 0, allowArrow: boolean = false): TwingNodeExpression {
+    parseExpression(): ExpressionNode {
         return null;
     }
 
-    parseAssignmentExpression(): TwingNode {
+    parseAssignmentExpression(): ExpressionNode | null {
         return null;
     }
 
-    parseMultitargetExpression(): TwingNode {
+    parseMultitargetExpression(): Node | null {
         return null;
     }
 }

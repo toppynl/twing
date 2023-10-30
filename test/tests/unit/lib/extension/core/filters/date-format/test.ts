@@ -6,7 +6,7 @@ tape('date-format', (test) => {
 
     extension.setDateFormat();
 
-    test.same(extension.getDateFormat(), ['F j, Y H:i', '%d days']);
+    test.same(extension.getDateFormats(), ['F j, Y H:i', '%d days']);
 
     test.end();
 });
