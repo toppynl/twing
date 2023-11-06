@@ -29,7 +29,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `macros` does not exist in "index.twig" at line 6.';
+        return 'TwingRuntimeError: Variable `macros` does not exist in "index.twig" at line 6.';
     }
 }
 

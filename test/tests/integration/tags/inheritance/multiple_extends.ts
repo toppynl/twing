@@ -15,7 +15,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Multiple extends tags are forbidden in "index.twig" at line 3.';
+        return 'TwingParsingError: Multiple extends tags are forbidden in "index.twig" at line 3.';
     }
 }
 

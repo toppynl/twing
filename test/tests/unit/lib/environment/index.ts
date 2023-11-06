@@ -2,13 +2,12 @@ import * as tape from 'tape';
 import * as sinon from 'sinon';
 import {TokenParser} from "../../../../../src/lib/token-parser";
 import {Token, TokenType} from "twig-lexer";
-import {TwingTemplatesModule} from "../../../../../src/lib/environment";
+import {TwingTemplateModule} from "../../../../../src/lib/environment";
 import {TwingExtension} from "../../../../../src/lib/extension";
 import {TwingFilter} from "../../../../../src/lib/filter";
 import {TwingOperator, TwingOperatorAssociativity, TwingOperatorType} from "../../../../../src/lib/operator";
 import {TwingFunction} from "../../../../../src/lib/function";
 import {TwingTest} from "../../../../../src/lib/test";
-import {TwingBaseNodeVisitor} from "../../../../../src/lib/base-node-visitor";
 import {TwingParser} from "../../../../../src/lib/parser";
 import {TwingLexer} from "../../../../../src/lib/lexer";
 import {MockLoader} from "../../../../mock/loader";
@@ -18,9 +17,8 @@ import {TwingLoaderArray} from "../../../../../src/lib/loader/array";
 import {createFilesystemAwareEnvironment} from "../../../../../src/lib/environment/filesystem-environment";
 import {TwingCacheFilesystem} from "../../../../../src/lib/cache/filesystem";
 import {createMockedEnvironment, MockEnvironment} from "../../../../mock/environment";
-import {MockCache} from "../../../../mock/cache";
+import {createMockCache, MockCache} from "../../../../mock/cache";
 import {MockTemplate} from "../../../../mock/template";
-import {TwingCacheNull} from "../../../../../src/lib/cache/null";
 import {TwingTemplate} from "../../../../../src/lib/template";
 import {MappingItem, SourceMapConsumer} from "source-map";
 import {createTextNode} from "../../../../../src/lib/node/text";
@@ -287,7 +285,7 @@ tape('environment', (test) => {
         let templateName = 'autoReloadCacheMiss';
         let templateContent = 'autoReloadCacheMiss';
 
-        let cache = new MockCache();
+        let cache = createMockCache();
         let loader = getMockLoader(templateName, templateContent);
         let twing = createMockedEnvironment(loader, {
             cache: cache,
@@ -317,7 +315,7 @@ tape('environment', (test) => {
         let templateName = 'autoReloadCacheHit';
         let templateContent = 'autoReloadCacheHit';
 
-        let cache = new MockCache();
+        let cache = createMockCache();
         let loader = getMockLoader(templateName, templateContent);
         let twing = createMockedEnvironment(loader, {cache: cache, auto_reload: true, debug: false});
 
@@ -1041,7 +1039,7 @@ OOF</FOO>`
                     return Promise.resolve(className);
                 }
 
-                load(): Promise<TwingTemplatesModule> {
+                load(): Promise<TwingTemplateModule> {
                     return Promise.resolve(() => {
                         return new Map([
                             [0, CustomTemplate]

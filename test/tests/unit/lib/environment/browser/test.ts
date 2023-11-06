@@ -1,6 +1,5 @@
 import * as tape from 'tape';
 import {FilesystemLessEnvironment} from "../../../../../../src/lib/environment/filesystem-less-environment";
-import {TwingCacheNull} from "../../../../../../src/lib/cache/null";
 
 tape('browser environment', (test) => {
     test.test('cache from string', (test) => {

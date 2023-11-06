@@ -1,12 +1,12 @@
-import {TwingLoaderInterface} from "../../src/lib/loader-interface";
-import {TwingLoaderNull} from "../../src/lib/loader/null";
+import {TwingLoader} from "../../src/lib/loader";
 import {createEnvironment, TwingEnvironment, TwingEnvironmentOptions} from "../../src/lib/environment";
+import {createMockedLoader} from "./loader";
 
 export const createMockedEnvironment = (
-    loader?: TwingLoaderInterface,
+    loader?: TwingLoader,
     options: TwingEnvironmentOptions | null = null
 ): TwingEnvironment => {
-    const environment = createEnvironment(loader || new TwingLoaderNull(), options);
+    const environment = createEnvironment(loader || createMockedLoader(), options);
 
     return environment;
 };

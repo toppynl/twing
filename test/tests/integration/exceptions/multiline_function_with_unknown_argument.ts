@@ -17,7 +17,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unknown argument "invalid" for function "include(template, variables, with_context, ignore_missing, sandboxed)" in "index.twig" at line 4.';
+        return 'TwingCompilationError: Unknown argument "invalid" for function "include(template, variables, with_context, ignore_missing, sandboxed)" in "index.twig" at line 4.';
     }
 }
 

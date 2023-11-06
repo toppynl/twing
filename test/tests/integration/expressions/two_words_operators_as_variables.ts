@@ -14,7 +14,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unexpected token "operator" of value "starts with" in "index.twig" at line 2.';
+        return 'TwingParsingError: Unexpected token "operator" of value "starts with" in "index.twig" at line 2.';
     }
 }
 

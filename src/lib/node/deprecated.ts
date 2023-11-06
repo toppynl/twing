@@ -1,16 +1,16 @@
 import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {ExpressionNode} from "./expression";
+import {BaseExpressionNode} from "./expression";
 
 export interface DeprecatedNode extends BaseNode<"deprecated", BaseNodeAttributes, {
-    expr: ExpressionNode;
+    expr: BaseExpressionNode;
 }> {
 }
 
 export const createDeprecatedNode = (
-    expr: ExpressionNode,
+    expr: BaseExpressionNode,
     line: number,
     column: number,
-    tag: string = null
+    tag: string
 ): DeprecatedNode => {
     const baseNode = createBaseNode("deprecated", {}, {
         expr
@@ -25,7 +25,7 @@ export const createDeprecatedNode = (
                 .write('{\n')
                 .indent();
 
-            if (expr.type === "expression_constant") {
+            if (expr.is("constant")) {
                 compiler
                     .write('console.warn(')
                     .subCompile(expr)

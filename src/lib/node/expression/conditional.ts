@@ -1,12 +1,12 @@
 import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
-import {Node} from "../../node";
+import {BaseNode} from "../../node";
 
 export const conditionalNodeType = "conditional";
 
 export interface BaseConditionalNode<Type extends string> extends BaseExpressionNode<Type, BaseExpressionNodeAttributes, {
-    expr1: Node;
-    expr2: Node;
-    expr3: Node;
+    expr1: BaseNode;
+    expr2: BaseNode;
+    expr3: BaseNode;
 }> {
 }
 
@@ -15,9 +15,9 @@ export interface ConditionalNode extends BaseConditionalNode<typeof conditionalN
 
 export const createBaseConditionalNode = <Type extends string>(
     type: Type,
-    expr1: Node,
-    expr2: Node,
-    expr3: Node,
+    expr1: BaseNode,
+    expr2: BaseNode,
+    expr3: BaseNode,
     line: number,
     column: number
 ): BaseConditionalNode<Type> => {
@@ -42,9 +42,9 @@ export const createBaseConditionalNode = <Type extends string>(
 };
 
 export const createConditionalNode = (
-    expr1: Node,
-    expr2: Node,
-    expr3: Node,
+    expr1: BaseNode,
+    expr2: BaseNode,
+    expr3: BaseNode,
     line: number,
     column: number
 ) => createBaseConditionalNode(conditionalNodeType, expr1, expr2, expr3, line, column);

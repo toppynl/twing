@@ -1,40 +1,40 @@
 import {createFilterNode, FilterNode} from "../filter";
-import {createBaseNode, getChildrenCount, Node} from "../../../../node";
+import {BaseNode} from "../../../../node";
 import {createConstantNode} from "../../constant";
 import {createDefinedTestNode} from "../test/defined";
 import {createConditionalNode} from "../../conditional";
-import type {ArgumentsNode} from "../../arguments";
+import type {ArrayNode} from "../../array";
+import {createArrayNode, getKeyValuePairs} from "../../array";
 
 export interface DefaultFilterNode extends FilterNode {
 }
 
 export const createDefaultFilterNode = (
-    operand: Node,
-    methodArguments: ArgumentsNode,
+    operand: BaseNode,
+    methodArguments: ArrayNode,
     line: number,
-    column: number,
-    tag?: string
+    column: number
 ): DefaultFilterNode => {
     const defaultNode = createFilterNode(
         operand,
         'default',
         methodArguments,
         line,
-        column,
-        tag
+        column
     );
-
-    let actualOperand: Node;
+    
+    let actualOperand: BaseNode;
 
     if (operand.is("name") || operand.is("get_attribute")) {
         const testNode = createDefinedTestNode(
-            operand.clone(),
-            createBaseNode(null),
+            operand,
+            createArrayNode([], line, column),
             line,
             column
         );
 
-        const falseNode = getChildrenCount(methodArguments) > 0 ? methodArguments.children[0] : createConstantNode('', line, column);
+        const values = getKeyValuePairs(methodArguments).map(({value}) => value);
+        const falseNode = values.length > 0 ? values[0] : createConstantNode('', line, column);
 
         actualOperand = createConditionalNode(testNode, defaultNode, falseNode, line, column);
     } else {
@@ -51,7 +51,9 @@ export const createDefaultFilterNode = (
     const node: DefaultFilterNode = {
         ...baseNode,
         compile: (compiler) => {
-            compiler.subCompile(node.children.operand);
+            const {operand} = node.children;
+            
+            compiler.subCompile(operand!);
         }
     };
 

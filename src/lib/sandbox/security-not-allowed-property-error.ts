@@ -1,13 +1,10 @@
-import {TwingSandboxSecurityError} from "./security-error";
-import {TwingSource} from "../source";
+import {BaseSandboxSecurityError} from "./security-error";
 
 /**
- * Exception thrown when a not allowed class property is used in a template.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
+ * Exception thrown when a not allowed object property is used in a template.
  */
-export class TwingSandboxSecurityNotAllowedPropertyError extends TwingSandboxSecurityError {
-    constructor(message: string, line: number = -1, source: TwingSource = null) {
-        super(message, line, source);
-    }
+export interface TwingSandboxSecurityNotAllowedPropertyError extends BaseSandboxSecurityError {
+}
+
+export class TwingSandboxSecurityNotAllowedPropertyError extends BaseSandboxSecurityError {
 }

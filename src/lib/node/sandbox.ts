@@ -9,7 +9,7 @@ export const createSandboxNode = (
     body: Node,
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): SandboxNode => {
     const baseNode = createBaseNode("sandbox", {}, {
         body

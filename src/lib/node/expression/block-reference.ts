@@ -1,9 +1,8 @@
 import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
 import {Node} from "../../node";
-import {Compiler} from "../../compiler";
+import {TwingCompiler} from "../../compiler";
 
 type BlockReferenceExpressionNodeAttributes = BaseExpressionNodeAttributes & {
-    is_defined_test: boolean;
     output: boolean;
 };
 
@@ -31,11 +30,10 @@ export const createBlockReferenceExpressionNode = (
     }
 
     const baseNode = createBaseExpressionNode("block_reference_expression", {
-        is_defined_test: false,
         output: false
     }, children, line, column, tag);
 
-    const compileTemplateCall = (compiler: Compiler, method: string, needsOutputBuffer: boolean): Compiler => {
+    const compileTemplateCall = (compiler: TwingCompiler, method: string, needsOutputBuffer: boolean): TwingCompiler => {
         compiler.write('await ');
 
         if (!node.children.template) {
@@ -57,7 +55,7 @@ export const createBlockReferenceExpressionNode = (
         return compiler;
     }
 
-    const compileBlockArguments = (compiler: Compiler, needsOutputBuffer: boolean) => {
+    const compileBlockArguments = (compiler: TwingCompiler, needsOutputBuffer: boolean) => {
         compiler
             .raw('(')
             .subCompile(node.children.name)
@@ -76,14 +74,14 @@ export const createBlockReferenceExpressionNode = (
 
     const node: BlockReferenceExpressionNode = {
         ...baseNode,
-        compile: (compiler) => {
-            if (node.attributes.is_defined_test) {
+        compile: (compiler, flags) => {
+            if (flags?.isDefinedTest) {
                 compileTemplateCall(compiler, 'traceableHasBlock', false);
             } else {
                 compileTemplateCall(compiler, 'traceableRenderBlock', true);
             }
         }
     };
-    
+
     return node;
 };

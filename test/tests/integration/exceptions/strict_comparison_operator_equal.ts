@@ -14,7 +14,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unexpected operator of value "=". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead in "index.twig" at line 2.';
+        return 'TwingParsingError: Unexpected operator of value "=". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead in "index.twig" at line 2.';
     }
 }
 

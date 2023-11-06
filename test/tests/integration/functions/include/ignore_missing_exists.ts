@@ -19,7 +19,7 @@ NOT DISPLAYED
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorLoader: Template "DOES NOT EXIST" is not defined in "included.twig" at line 2.';
+        return 'TwingRuntimeError: Template "DOES NOT EXIST" is not defined in "included.twig" at line 2.';
     }
 }
 

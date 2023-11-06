@@ -1,11 +1,11 @@
 import {AnEnvironment} from "../../src/lib/environment";
-import {Compiler, createCompiler} from "../../src/lib/compiler";
+import {TwingCompiler, createCompiler} from "../../src/lib/compiler";
 import {MockLoader} from "./loader";
 import {createMockedEnvironment} from "./environment";
 
 export const createMockCompiler = (
     env: AnEnvironment | null = null
-): Compiler => {
+): TwingCompiler => {
     let loader = new MockLoader();
 
     return createCompiler(env ? env : createMockedEnvironment(loader));

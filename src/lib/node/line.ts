@@ -11,7 +11,7 @@ export const createLineNode = (
     data: number,
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): LineNode => {
     const baseNode = createBaseNode("line", {
         data

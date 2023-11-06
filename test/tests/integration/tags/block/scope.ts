@@ -17,7 +17,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `item` does not exist in "index.twig" at line 5.';
+        return 'TwingRuntimeError: Variable `item` does not exist in "index.twig" at line 5.';
     }
 }
 

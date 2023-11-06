@@ -1,5 +1,5 @@
 import TestBase, {runTest} from "../TestBase";
-import {TwingMarkup} from "../../../../src/lib/markup";
+import {createMarkup} from "../../../../src/lib/markup";
 import {createIntegrationTest} from "../test";
 
 class SplFileInfo {
@@ -147,7 +147,7 @@ OK
             dir_object: new SplFileInfo(),
             object: {},
             resource: opendir(),
-            safe: new TwingMarkup('foo', 'UTF-8')
+            safe: createMarkup(Buffer.from('foo'), 'UTF-8')
         }
     }
 }

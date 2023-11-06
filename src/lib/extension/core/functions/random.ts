@@ -1,8 +1,8 @@
-import {AnEnvironment} from "../../../environment";
 import {iconv} from "../../../helpers/iconv";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
-import {TwingErrorRuntime} from "../../../error/runtime";
+import {TwingRuntimeError} from "../../../error/runtime";
+import type {TwingTemplate} from "../../../template";
 
 const runes = require('runes');
 const mt_rand = require('locutus/php/math/mt_rand');
@@ -14,7 +14,7 @@ const array_rand = require('locutus/php/array/array_rand');
  * - a random character from a string
  * - a random integer between 0 and the integer parameter.
  *
- * @param {AnEnvironment} env
+ * @param {Runtime} template
  * @param {*} values The values to pick a random item from
  * @param {number} max Maximum value used when values is an integer
  *
@@ -22,7 +22,7 @@ const array_rand = require('locutus/php/array/array_rand');
  *
  * @returns {Promise<any>} A random value from the given sequence
  */
-export function random(env: AnEnvironment, values: any = null, max: number = null): any {
+export function random(template: TwingTemplate, values: any = null, max: number | null = null): any {
     let _do = (): any => {
         if (values === null) {
             return max === null ? mt_rand() : mt_rand(0, max);
@@ -55,7 +55,7 @@ export function random(env: AnEnvironment, values: any = null, max: number = nul
                 return '';
             }
 
-            let charset = env.getCharset();
+            let charset = template.environment.getCharset();
 
             if (charset !== 'UTF-8') {
                 values = iconv(charset, 'UTF-8', values);
@@ -78,7 +78,7 @@ export function random(env: AnEnvironment, values: any = null, max: number = nul
         }
 
         if (values.length < 1) {
-            throw new TwingErrorRuntime('The random function cannot pick from an empty array.');
+            throw new TwingRuntimeError('The random function cannot pick from an empty array.');
         }
 
         return values[array_rand(values, 1)];

@@ -1,143 +1,151 @@
-import {TwingSource} from "../source";
-import {TwingErrorLoader} from "../error/loader";
-import {Stats} from "fs";
-import {TwingLoaderInterface} from "../loader-interface";
-import {isAbsolute as isAbsolutePath, join as joinPath, dirname, resolve as resolvePath} from "path";
-import {stat as fsStat, statSync, readFile} from "fs";
+import type {Source} from "../source";
+import {TwingLoader} from "../loader";
+import {isAbsolute, join, dirname, resolve as pathResolve} from "path";
+import {createSource} from "../source";
 
 /**
  * Loads template from the filesystem relatively to the template that initiated the load.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
  */
-export class TwingLoaderRelativeFilesystem implements TwingLoaderInterface {
-    protected cache: Map<string, string> = new Map();
-    protected errorCache: Map<string, string> = new Map();
+export interface TwingRelativeFilesystemLoader extends TwingLoader {
+}
 
-    getSourceContext(name: string, from: TwingSource): Promise<TwingSource> {
-        return this.findTemplate(name, true, from).then((path) => {
-            return new Promise((resolve) => {
-                readFile(path, 'UTF-8', (_err, data) => {
-                    resolve(new TwingSource(data, name, path))
-                })
+interface Stats {
+    isDirectory(): boolean;
+
+    isFile(): boolean;
+
+    readonly mtime: Date;
+}
+
+export interface TwingRelativeFilesystemLoaderFilesystem {
+    stat(path: string, callback: (error: Error | null, stats: Stats | null) => void): void;
+
+    readFile(path: string, callback: (error: Error | null, data: Buffer | null) => void): void;
+}
+
+export const createRelativeFilesystemLoader = (
+    filesystem: TwingRelativeFilesystemLoaderFilesystem
+): TwingRelativeFilesystemLoader => {
+    let cache: Map<string, string> = new Map();
+
+    const stat = (path: string): Promise<Stats | null> => {
+        return new Promise((resolve) => {
+            filesystem.stat(path, (error, stats) => {
+                if (error) {
+                    resolve(null);
+                } else {
+                    resolve(stats);
+                }
             });
         });
-    }
+    };
 
-    getCacheKey(name: string, from: TwingSource): Promise<string> {
-        return this.findTemplate(name, true, from);
-    }
+    const getSourceContext: TwingLoader["getSourceContext"] = (name, from) => {
+        return findTemplate(name, from)
+            .then((path) => {
+                if (path === null) {
+                    return null;
+                }
+                else {
+                    return new Promise<Source>((resolve, reject) => {
+                        filesystem.readFile(path!, (error, data) => {
+                            if (error) {
+                                reject(error);
+                            } else {
+                                resolve(createSource(data!.toString(), name, path!));
+                            }
+                        });
+                    });
+                }
+            });
+    };
 
-    exists(name: string, from: TwingSource): Promise<boolean> {
-        name = this.normalizeName(this.resolvePath(name, from));
+    const getCacheKey: TwingLoader["getCacheKey"] = (name, from) => {
+        return Promise.resolve(normalizeName(resolvePathFromSource(name, from)));
+    };
 
-        if (this.cache.has(name)) {
+    const exists: TwingLoader["exists"] = (name, from) => {
+        name = normalizeName(resolvePathFromSource(name, from));
+
+        if (cache.has(name)) {
             return Promise.resolve(true);
         }
 
-        return this.findTemplate(name, false, from).then((name) => {
+        return findTemplate(name, from).then((name) => {
             return name !== null;
         });
     }
 
-    isFresh(name: string, time: number, from: TwingSource): Promise<boolean> {
-        return this.findTemplate(name, true, from).then((name) => {
-            return new Promise((resolve) => {
-                fsStat(name, (_err, stat) => {
-                    resolve(stat.mtime.getTime() < time);
-                });
+    const isFresh: TwingLoader["isFresh"] = (name, time, from) => {
+        return findTemplate(name, from)
+            .then((name) => {
+                if (name === null) {
+                    return true;
+                } else {
+                    return stat(name)
+                        .then((stats) => {
+                            return stats!.mtime.getTime() <= time;
+                        });
+                }
             });
-        });
-    }
+    };
 
     /**
      * Checks if the template can be found.
      *
      * @param {string} name  The template name
-     * @param {boolean} throw_ Whether to throw an exception when an error occurs
-     * @param {TwingSource} from The source that initiated the template loading
+     * @param {Source} from The source that initiated the template loading
      *
      * @returns {Promise<string>} The template name or null
      */
-    protected findTemplate(name: string, throw_: boolean = true, from: TwingSource = null): Promise<string> {
-        let _do = (): string => {
-            name = this.normalizeName(this.resolvePath(name, from));
+    const findTemplate = (name: string, from: Source | null): Promise<string | null> => {
+        let _do = (): Promise<string | null> => {
+            name = normalizeName(resolvePathFromSource(name, from));
+            
+            const template = cache.get(name);
 
-            if (this.cache.has(name)) {
-                return this.cache.get(name);
+            if (template) {
+                return Promise.resolve(template);
             }
 
-            if (this.errorCache.has(name)) {
-                if (!throw_) {
-                    return null;
-                }
+            return stat(name)
+                .then((stats) => {
+                    if (stats?.isFile()) {
+                        const templatePath = pathResolve(name);
 
-                throw new TwingErrorLoader(this.errorCache.get(name), -1, from);
-            }
+                        cache.set(name, templatePath);
 
-            try {
-                this.validateName(name, from);
-            } catch (e) {
-                if (!throw_) {
-                    return null;
-                }
-
-                throw e;
-            }
-
-            try {
-                let stat: Stats = statSync(name);
-
-                if (stat.isFile()) {
-                    this.cache.set(name, resolvePath(name));
-
-                    return this.cache.get(name);
-                }
-            } catch (e) {
-                // noop, we'll throw later if needed
-            }
-
-            this.errorCache.set(name, `Unable to find template "${name}".`);
-
-            if (!throw_) {
-                return null;
-            }
-
-            throw new TwingErrorLoader(this.errorCache.get(name), -1, from);
+                        return templatePath;
+                    } else {
+                        return null;
+                    }
+                });
         };
 
-        return new Promise((resolve, reject) => {
-            try {
-                resolve(_do());
-            } catch (e) {
-                reject(e);
-            }
-        });
-    }
+        return _do();
+    };
 
-    protected normalizeName(name: string) {
-        if (name === null) {
-            return '';
-        }
-
+    const normalizeName = (name: string) => {
         return name.replace(/\\/g, '/').replace(/\/{2,}/g, '/')
-    }
+    };
 
-    protected validateName(name: string, from: TwingSource) {
-        if (name.indexOf(`\0`) > -1) {
-            throw new TwingErrorLoader('A template name cannot contain NUL bytes.', -1, from);
-        }
-    }
+    const resolve: TwingLoader["resolve"] = (name, from) => {
+        return findTemplate(name, from);
+    };
 
-    resolve(name: string, from: TwingSource, shouldThrow: boolean = false): Promise<string> {
-        return this.findTemplate(name, shouldThrow, from);
-    }
-
-    private resolvePath(name: string, from: TwingSource): string {
-        if (name && from && !isAbsolutePath(name)) {
-            name = joinPath(dirname(from.getResolvedName()), name);
+    const resolvePathFromSource = (name: string, from: Source | null): string => {
+        if (name && from && !isAbsolute(name)) {
+            name = join(dirname(from.resolvedName), name);
         }
 
         return name;
-    }
+    };
+
+    return {
+        exists,
+        isFresh,
+        getCacheKey,
+        getSourceContext,
+        resolve
+    };
 }

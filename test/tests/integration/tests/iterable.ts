@@ -87,7 +87,7 @@ export class NotDefinedTernaryIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `notDefinedVar` does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable `notDefinedVar` does not exist in "index.twig" at line 1.';
     }
 }
 
@@ -103,7 +103,7 @@ export class NotDefinedIfIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `notDefinedVar` does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable `notDefinedVar` does not exist in "index.twig" at line 1.';
     }
 }
 
@@ -164,7 +164,7 @@ export class NotDefinedTernaryNotStrictIterableTest extends TestBase {
 
     getEnvironmentOptions() {
         return {
-            strict_variables: false
+            strictVariables: false
         };
     }
 
@@ -186,7 +186,7 @@ export class NotDefinedIfNotStrictIterableTest extends TestBase {
 
     getEnvironmentOptions() {
         return {
-            strict_variables: false
+            strictVariables: false
         };
     }
 
@@ -214,7 +214,7 @@ export class UndefinedTernaryNotStrictIterableTest extends TestBase {
 
     getEnvironmentOptions() {
         return {
-            strict_variables: false
+            strictVariables: false
         };
     }
 
@@ -242,7 +242,7 @@ export class UndefinedIfNotStrictIterableTest extends TestBase {
 
     getEnvironmentOptions() {
         return {
-            strict_variables: false
+            strictVariables: false
         };
     }
 

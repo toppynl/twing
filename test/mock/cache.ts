@@ -1,26 +1,23 @@
-import {TwingCacheNull} from "../../src/lib/cache/null";
 import {MockTemplate} from "./template";
+import {TwingCache} from "../../src/lib/cache";
 
-export class MockCache extends TwingCacheNull {
-    generateKey() {
-        return Promise.resolve('key');
-    }
+export const createMockCache = (): TwingCache => {
+    return {
+        generateKey: () => {
+            return Promise.resolve('key');
+        },
+        write: () => {
+            return Promise.resolve();
+        },
+        load: () => {
+            let templates = new Map([
+                [0, () => new MockTemplate()]
+            ]);
 
-    write() {
-        return Promise.resolve();
-    }
-
-    load() {
-        let templates = new Map([
-            [0, MockTemplate]
-        ]);
-
-        return Promise.resolve(() => {
-            return templates;
-        });
-    }
-
-    getTimestamp() {
-        return Promise.resolve(0);
-    }
-}
+            return Promise.resolve(templates);
+        },
+        getTimestamp: () => {
+            return Promise.resolve(0);
+        }
+    };
+};

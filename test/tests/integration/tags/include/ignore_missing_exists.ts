@@ -8,9 +8,7 @@ class Test extends TestBase {
 
     getTemplates() {
         return {
-            'included.twig': `
-{{ include("DOES NOT EXIST") }}
-`,
+            'included.twig': `{{ include("DOES NOT EXIST") }}`,
             'index.twig': `
 {{ include("included.twig", ignore_missing = true) }}
 NOT DISPLAYED
@@ -19,7 +17,7 @@ NOT DISPLAYED
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorLoader: Template "DOES NOT EXIST" is not defined in "included.twig" at line 2.';
+        return 'TwingRuntimeError: Template "DOES NOT EXIST" is not defined in "included.twig" at line 1.';
     }
 }
 

@@ -1,19 +1,18 @@
-import {TwingError} from "../error";
-import {TwingSource} from "../source";
+import type {Source} from "../source";
+import {TwingBaseError} from "./base";
 
-export const createRuntimeError = (
-    message: string,
-    line: number = -1,
-    source: TwingSource = null,
-    previous?: Error
-): TwingErrorRuntime => {
-    return new TwingErrorRuntime(message, line, source, previous);
+export const runtimeErrorName = 'TwingRuntimeError';
+
+export interface TwingRuntimeError extends TwingBaseError<typeof runtimeErrorName> {
+
+}
+
+export const isARuntimeError = (candidate: Error): candidate is TwingRuntimeError => {
+    return (candidate as TwingRuntimeError).name === runtimeErrorName;
 };
 
-export class TwingErrorRuntime extends TwingError {
-    constructor(message: string, lineno: number = -1, source: TwingSource = null, previous?: Error) {
-        super(message, lineno, source, previous);
-
-        this.name = 'TwingErrorRuntime';
+export class TwingRuntimeError extends TwingBaseError<typeof runtimeErrorName> {
+    constructor(message: string, line?: number, source?: Source, previous?: Error) {
+        super(runtimeErrorName, message, line, source, previous);
     }
 }

@@ -1,23 +1,13 @@
 import {TwingExtension} from "../extension";
-import {ForTokenParser} from "../token-parser/for";
 import {createAndNode} from "../node/expression/binary/and";
-import {ExtendsTokenParser} from "../token-parser/extends";
-import {TwingTokenParserFrom} from "../token-parser/from";
-import {MacroTokenParser} from "../token-parser/macro";
-import {getChildren, getChildrenCount, Node} from "../node";
+import {getChildren, getChildrenCount} from "../node";
 import {createInNode} from "../node/expression/binary/in";
-import {TwingTokenParserIf} from "../token-parser/if";
-import {SetTokenParser} from "../token-parser/set";
-import {BlockTokenParser} from "../token-parser/block";
 import {createGreaterThanNode} from "../node/expression/binary/greater";
 import {createLessThanNode} from "../node/expression/binary/less";
-import {TwingTokenParserInclude} from "../token-parser/include";
-import {TwingTokenParserWith} from "../token-parser/with";
 import {createNotNode} from "../node/expression/unary/not";
 import {createNegativeNode} from "../node/expression/unary/neg";
 import {createPositiveNode} from "../node/expression/unary/pos";
-import {TwingFunction} from "../function";
-import {TwingTokenParserSpaceless} from "../token-parser/spaceless";
+import {createFunction} from "../function";
 import {createConcatNode} from "../node/expression/binary/concat";
 import {createMultiplyNode} from "../node/expression/binary/mul";
 import {createDivNode} from "../node/expression/binary/div";
@@ -25,13 +15,7 @@ import {createFloorDivNode} from "../node/expression/binary/floor-div";
 import {createModuloNode} from "../node/expression/binary/mod";
 import {createSubtractNode} from "../node/expression/binary/sub";
 import {createAddNode} from "../node/expression/binary/add";
-import {UseTokenParser} from "../token-parser/use";
-import {TwingTokenParserEmbed} from "../token-parser/embed";
-import {TwingTokenParserFilter} from "../token-parser/filter";
 import {createRangeNode} from "../node/expression/binary/range";
-import {TwingTokenParserImport} from "../token-parser/import";
-import {DoTokenParser} from "../token-parser/do";
-import {TwingTokenParserFlush} from "../token-parser/flush";
 import {createEqualNode} from "../node/expression/binary/equal";
 import {createNotEqualToNode} from "../node/expression/binary/not-equal";
 import {createOrNode} from "../node/expression/binary/or";
@@ -42,19 +26,18 @@ import {createGreaterThanOrEqualToNode} from "../node/expression/binary/greater-
 import {createLessThanOrEqualToNode} from "../node/expression/binary/less-equal";
 import {createNotInNode} from "../node/expression/binary/not-in";
 import {createNullishCoalescingNode} from "../node/expression/nullish-coalescing";
-import {ExpressionNode} from "../node/expression";
+import {BaseExpressionNode} from "../node/expression";
 import {createPowerNode} from "../node/expression/binary/power";
 import {createDefinedTestNode} from "../node/expression/call/test/defined";
-import {TwingTest} from "../test";
+import {createTest, TwingTest} from "../test";
 import {createMatchesNode} from "../node/expression/binary/matches";
 import {createStartsWithNode} from "../node/expression/binary/starts-with";
 import {createEndsWithNode} from "../node/expression/binary/ends-with";
-import {TwingFilter} from "../filter";
+import {createFilter} from "../filter";
 import {Settings as DateTimeSettings} from 'luxon';
 import {createDefaultFilterNode} from "../node/expression/call/filter/default";
-import {TwingTokenParserDeprecated} from "../token-parser/deprecated";
-import {TwingTokenParserApply} from "../token-parser/apply";
-import {TwingOperator, TwingOperatorAssociativity, TwingOperatorType} from "../operator";
+import {createApplyTagHandler} from "../tag-handler/apply";
+import {createOperator, TwingOperator} from "../operator";
 import {even} from "./core/tests/even";
 import {odd} from "./core/tests/odd";
 import {sameAs} from "./core/tests/same-as";
@@ -62,7 +45,6 @@ import {nullTest} from "./core/tests/null";
 import {divisibleBy} from "./core/tests/divisible-by";
 import {min} from "./core/functions/min";
 import {max} from "./core/functions/max";
-import {VerbatimTokenParser} from "../token-parser/verbatim";
 import {date} from "./core/filters/date";
 import {dateModify} from "./core/filters/date-modify";
 import {format} from "./core/filters/format";
@@ -100,11 +82,9 @@ import {column} from "./core/filters/column";
 import {filter} from "./core/filters/filter";
 import {map} from "./core/filters/map";
 import {reduce} from "./core/filters/reduce";
-import {AutoEscapeTokenParser} from "../token-parser/auto-escape";
-import {TwingTokenParserSandbox} from "../token-parser/sandbox";
-import {TwingBaseNodeVisitor} from "../base-node-visitor";
-import {TwingNodeVisitorEscaper} from "../node-visitor/escaper";
-import {TwingNodeVisitorSandbox} from "../node-visitor/sandbox";
+import {createAutoEscapeTagHandler} from "../tag-handler/auto-escape";
+import {createEscaperNodeVisitor} from "../node-visitor/escaper";
+import {createSandboxNodeVisitor} from "../node-visitor/sandbox";
 import {range} from "./core/functions/range";
 import {constant} from "./core/functions/constant";
 import {cycle} from "./core/functions/cycle";
@@ -118,11 +98,31 @@ import {date as dateFunction} from "./core/functions/date";
 import {TwingSourceMapNodeFactorySpaceless} from "../source-map/node-factory/spaceless";
 import {TwingSourceMapNodeFactory} from "../source-map/node-factory";
 import {createConstantTestNode} from "../node/expression/call/test/constant";
-import {TwingNodeVisitorMacroAutoImport} from "../node-visitor/macro-auto-import";
-import {TwingTokenParserLine} from "../token-parser/line";
+import {createMacroAutoImportNodeVisitor} from "../node-visitor/macro-auto-import";
 import {extname, basename} from "path";
-import {PrimitiveEscapingStrategyResolver} from "../environment";
+import {PrimitiveEscapingStrategyResolver, TwingEnvironment} from "../environment";
 import {ArgumentsNode} from "../node/expression/arguments";
+import {createSetTagHandler} from "../tag-handler/set";
+import {createIfTagHandler} from "../tag-handler/if";
+import {createForTagHandler} from "../tag-handler/for";
+import {createVerbatimTagHandler} from "../tag-handler/verbatim";
+import {createEmbedTagHandler} from "../tag-handler/embed";
+import {createExtendsTagHandler} from "../tag-handler/extends";
+import {createBlockTagHandler} from "../tag-handler/block";
+import {createSpacelessTagHandler} from "../tag-handler/spaceless";
+import {createIncludeTagHandler} from "../tag-handler/include";
+import {createDeprecatedTagHandler} from "../tag-handler/deprecated";
+import {createUseTagHandler} from "../tag-handler/use";
+import {createImportTagHandler} from "../tag-handler/import";
+import {createMacroTagHandler} from "../tag-handler/macro";
+import {createFilterTagHandler} from "../tag-handler/filter";
+import {createWithTagHandler} from "../tag-handler/with";
+import {createFromTagHandler} from "../tag-handler/from";
+import {createLineTagHandler} from "../tag-handler/line";
+import {createSandboxTagHandler} from "../tag-handler/sandbox";
+import {createDoTagHandler} from "../tag-handler/do";
+import {createFlushTagHandler} from "../tag-handler/flush";
+import {TwingNodeVisitor} from "../node-visitor";
 
 export class TwingExtensionCore extends TwingExtension {
     private dateFormats: [string, string] = ['F j, Y H:i', '%d days'];
@@ -136,7 +136,10 @@ export class TwingExtensionCore extends TwingExtension {
     /**
      * @param {string | false | PrimitiveEscapingStrategyResolver} defaultStrategy An escaping strategy
      */
-    constructor(defaultStrategy: string | false | PrimitiveEscapingStrategyResolver = 'html') {
+    constructor(
+        private readonly environment: TwingEnvironment,
+        defaultStrategy: string | false | PrimitiveEscapingStrategyResolver = 'html',
+    ) {
         super();
 
         this.setDefaultStrategy(defaultStrategy);
@@ -279,29 +282,29 @@ export class TwingExtensionCore extends TwingExtension {
 
     getTokenParsers() {
         return [
-            new TwingTokenParserApply(),
-            new AutoEscapeTokenParser(),
-            new BlockTokenParser(),
-            new TwingTokenParserDeprecated(),
-            new DoTokenParser(),
-            new TwingTokenParserEmbed(),
-            new ExtendsTokenParser(),
-            new TwingTokenParserFilter(),
-            new TwingTokenParserFlush(),
-            new ForTokenParser(),
-            new TwingTokenParserFrom(),
-            new TwingTokenParserIf(),
-            new TwingTokenParserImport(),
-            new TwingTokenParserInclude(),
-            new TwingTokenParserLine(),
-            new MacroTokenParser(),
-            new TwingTokenParserSandbox(),
-            new SetTokenParser(),
-            new TwingTokenParserSpaceless(),
-            new UseTokenParser(),
-            new VerbatimTokenParser(),
-            new TwingTokenParserWith(),
-        ] as any; //todo
+            createApplyTagHandler(),
+            createAutoEscapeTagHandler(),
+            createBlockTagHandler(),
+            createDeprecatedTagHandler(),
+            createDoTagHandler(),
+            createEmbedTagHandler(),
+            createExtendsTagHandler(),
+            createFilterTagHandler(),
+            createFlushTagHandler(),
+            createForTagHandler(),
+            createFromTagHandler(),
+            createIfTagHandler(),
+            createImportTagHandler(),
+            createIncludeTagHandler(),
+            createLineTagHandler(),
+            createMacroTagHandler(),
+            createSandboxTagHandler(),
+            createSetTagHandler(),
+            createSpacelessTagHandler(),
+            createUseTagHandler(),
+            createVerbatimTagHandler(),
+            createWithTagHandler()
+        ];
     }
 
     getSourceMapNodeFactories(): TwingSourceMapNodeFactory[] {
@@ -310,203 +313,353 @@ export class TwingExtensionCore extends TwingExtension {
         ];
     }
 
-    getNodeVisitors(): TwingBaseNodeVisitor[] {
+    getNodeVisitors(): Array<TwingNodeVisitor> {
         return [
-            new TwingNodeVisitorEscaper(),
-            new TwingNodeVisitorMacroAutoImport(),
-            new TwingNodeVisitorSandbox()
+            createEscaperNodeVisitor(this.environment),
+            createMacroAutoImportNodeVisitor(),
+            createSandboxNodeVisitor(this.environment)
         ];
     }
 
     getFilters() {
         return [
-            new TwingFilter('abs', abs, []),
-            new TwingFilter('batch', batch, [
-                {name: 'size'},
-                {name: 'fill', defaultValue: null},
-                {name: 'preserve_keys', defaultValue: true}
+            createFilter('abs', abs, []),
+            createFilter('batch', batch, [
+                {
+                    name: 'size'
+                },
+                {
+                    name: 'fill',
+                    defaultValue: null
+                },
+                {
+                    name: 'preserve_keys',
+                    defaultValue: true
+                }
             ]),
-            new TwingFilter('capitalize', capitalize, [], {
-                needs_template: true
-            }),
-            new TwingFilter('column', column, [
-                {name: 'name'}
+            createFilter('capitalize', capitalize, []),
+            createFilter('column', column, [
+                {
+                    name: 'name'
+                }
             ]),
-            new TwingFilter('convert_encoding', convertEncoding, [
-                {name: 'to'},
-                {name: 'from'}
+            createFilter('convert_encoding', convertEncoding, [
+                {
+                    name: 'to'
+                },
+                {
+                    name: 'from'
+                }
             ], {
                 pre_escape: 'html',
                 is_safe: ['html']
             }),
-            new TwingFilter('date', date, [
-                {name: 'format', defaultValue: null},
-                {name: 'timezone', defaultValue: null}
+            createFilter('date', date, [
+                {
+                    name: 'format',
+                    defaultValue: null
+                },
+                {
+                    name: 'timezone',
+                    defaultValue: null
+                }
             ], {
                 needs_template: true
             }),
-            new TwingFilter('date_modify', dateModify, [
-                {name: 'modifier'}
+            createFilter('date_modify', dateModify, [
+                {
+                    name: 'modifier'
+                }
             ], {
                 needs_template: true
             }),
-            new TwingFilter('default', defaultFilter, [
-                {name: 'default'}
+            createFilter('default', defaultFilter, [
+                {
+                    name: 'default'
+                }
             ], {
-                expression_factory: (node, _filterName, argumentsNode, line, column, tag) => {
-                    return createDefaultFilterNode(node, argumentsNode, line, column, tag);
+                expression_factory: (node, _filterName, argumentsNode, line, column) => {
+                    return createDefaultFilterNode(node, argumentsNode, line, column);
                 }
             }),
-            new TwingFilter('e', escape, [
-                {name: 'strategy'},
-                {name: 'charset'}
+            createFilter('e', escape, [
+                {
+                    name: 'strategy',
+                    defaultValue: null
+                },
+                {
+                    name: 'charset',
+                    defaultValue: null
+                }
             ], {
                 needs_template: true,
                 is_safe_callback: this.escapeFilterIsSafe
             }),
-            new TwingFilter('escape', escape, [
-                {name: 'strategy'},
-                {name: 'charset'}
+            createFilter('escape', escape, [
+                {
+                    name: 'strategy',
+                    defaultValue: null
+                },
+                {
+                    name: 'charset',
+                    defaultValue: null
+                }
             ], {
                 needs_template: true,
                 is_safe_callback: this.escapeFilterIsSafe
             }),
-            new TwingFilter('filter', filter, [
-                {name: 'array'},
-                {name: 'arrow'}
+            createFilter('filter', filter, [
+                {
+                    name: 'array'
+                },
+                {
+                    name: 'arrow',
+                    defaultValue: null
+                }
             ]),
-            new TwingFilter('first', firstFilter, []),
-            new TwingFilter('format', format, []),
-            new TwingFilter('join', join, [
-                {name: 'glue', defaultValue: ''},
-                {name: 'and', defaultValue: null}
-            ]),
-            new TwingFilter('json_encode', jsonEncode, [
-                {name: 'options', defaultValue: null}
-            ]),
-            new TwingFilter('keys', arrayKeys, []),
-            new TwingFilter('last', last, []),
-            new TwingFilter('length', length, [], {
-                needs_template: true
+            createFilter('first', firstFilter, []),
+            createFilter('format', format, [], {
+                is_variadic: true
             }),
-            new TwingFilter('lower', lower, [], {
-                needs_template: true
-            }),
-            new TwingFilter('map', map, [
-                {name: 'arrow'}
+            createFilter('join', join, [
+                {
+                    name: 'glue',
+                    defaultValue: ''
+                },
+                {
+                    name: 'and',
+                    defaultValue: null
+                }
             ]),
-            new TwingFilter('merge', mergeFilter, []),
-            new TwingFilter('nl2br', nl2br, [], {
+            createFilter('json_encode', jsonEncode, [
+                {
+                    name: 'options',
+                    defaultValue: null
+                }
+            ]),
+            createFilter('keys', arrayKeys, []),
+            createFilter('last', last, []),
+            createFilter('length', length, []),
+            createFilter('lower', lower, []),
+            createFilter('map', map, [
+                {
+                    name: 'arrow'
+                }
+            ]),
+            createFilter('merge', mergeFilter, [
+                {
+                    name: 'source'
+                }
+            ]),
+            createFilter('nl2br', nl2br, [], {
                 pre_escape: 'html',
                 is_safe: ['html']
             }),
-            new TwingFilter('number_format', numberFormat, [
-                {name: 'decimal'},
-                {name: 'decimal_point'},
-                {name: 'thousand_sep'}
+            createFilter('number_format', numberFormat, [
+                {
+                    name: 'decimal',
+                    defaultValue: null
+                },
+                {
+                    name: 'decimal_point',
+                    defaultValue: null
+                },
+                {
+                    name: 'thousand_sep',
+                    defaultValue: null
+                }
             ], {
                 needs_template: true
             }),
-            new TwingFilter('raw', raw, [], {
+            createFilter('raw', raw, [], {
                 is_safe: ['all']
             }),
-            new TwingFilter('reduce', reduce, [
-                {name: 'arrow'},
-                {name: 'initial', defaultValue: null}
+            createFilter('reduce', reduce, [
+                {
+                    name: 'arrow'
+                },
+                {
+                    name: 'initial',
+                    defaultValue: null
+                }
             ]),
-            new TwingFilter('replace', replace, [
-                {name: 'from'}
+            createFilter('replace', replace, [
+                {
+                    name: 'from'
+                }
             ]),
-            new TwingFilter('reverse', reverseFilter, [
-                {name: 'preserve_keys', defaultValue: false}
+            createFilter('reverse', reverseFilter, [
+                {
+                    name: 'preserve_keys',
+                    defaultValue: false
+                }
             ]),
-            new TwingFilter('round', round, [
-                {name: 'precision', defaultValue: 0},
-                {name: 'method', defaultValue: 'common'}
+            createFilter('round', round, [
+                {
+                    name: 'precision',
+                    defaultValue: 0
+                },
+                {
+                    name: 'method',
+                    defaultValue: 'common'
+                }
             ]),
-            new TwingFilter('slice', sliceFilter, [
-                {name: 'start'},
-                {name: 'length', defaultValue: null},
-                {name: 'preserve_keys', defaultValue: false}
+            createFilter('slice', sliceFilter, [
+                {
+                    name: 'start'
+                },
+                {
+                    name: 'length',
+                    defaultValue: null
+                },
+                {
+                    name: 'preserve_keys',
+                    defaultValue: false
+                }
             ]),
-            new TwingFilter('sort', sort, []),
-            new TwingFilter('spaceless', spaceless, [], {
+            createFilter('sort', sort, []),
+            createFilter('spaceless', spaceless, [], {
                 is_safe: ['html']
             }),
-            new TwingFilter('split', split, [
-                {name: 'delimiter'},
-                {name: 'limit'}
+            createFilter('split', split, [
+                {
+                    name: 'delimiter'
+                },
+                {
+                    name: 'limit',
+                    defaultValue: null
+                }
             ]),
-            new TwingFilter('striptags', striptags, [
-                {name: 'allowable_tags'}
+            createFilter('striptags', striptags, [
+                {
+                    name: 'allowable_tags'
+                }
             ]),
-            new TwingFilter('title', title, []),
-            new TwingFilter('trim', trim, [
-                {name: 'character_mask', defaultValue: null},
-                {name: 'side', defaultValue: 'both'}
+            createFilter('title', title, []),
+            createFilter('trim', trim, [
+                {
+                    name: 'character_mask',
+                    defaultValue: null
+                },
+                {
+                    name: 'side',
+                    defaultValue: 'both'
+                }
             ]),
-            new TwingFilter('upper', upper, []),
-            new TwingFilter('url_encode', urlEncode, []),
+            createFilter('upper', upper, []),
+            createFilter('url_encode', urlEncode, []),
         ];
     }
 
     getFunctions() {
         return [
-            new TwingFunction('constant', constant, [
+            createFunction('constant', constant, [
                 {name: 'name'},
                 {name: 'object', defaultValue: null}
             ], {
                 needs_context: true
             }),
-            new TwingFunction('cycle', cycle, [
-                {name: 'values'},
-                {name: 'position'}
+            createFunction('cycle', cycle, [
+                {
+                    name: 'values'
+                },
+                {
+                    name: 'position'
+                }
             ]),
-            new TwingFunction('date', dateFunction, [
-                {name: 'date'},
-                {name: 'timezone'}
+            createFunction('date', dateFunction, [
+                {
+                    name: 'date',
+                    defaultValue: null
+                },
+                {
+                    name: 'timezone',
+                    defaultValue: null
+                }
             ], {
                 needs_template: true
             }),
-            new TwingFunction('dump', dump, [], {
+            createFunction('dump', dump, [], {
                 is_safe: ['html'],
-                needs_context: true
+                needs_context: true,
+                is_variadic: true
             }),
-            new TwingFunction('include', include, [
-                {name: 'template'},
-                {name: 'variables', defaultValue: {}},
-                {name: 'with_context', defaultValue: true},
-                {name: 'ignore_missing', defaultValue: false},
-                {name: 'sandboxed', defaultValue: false}
+            createFunction('include', include, [
+                {
+                    name: 'template'
+                },
+                {
+                    name: 'variables',
+                    defaultValue: {}
+                },
+                {
+                    name: 'with_context',
+                    defaultValue: true
+                },
+                {
+                    name: 'ignore_missing',
+                    defaultValue: false
+                },
+                {
+                    name: 'sandboxed',
+                    defaultValue: false
+                }
             ], {
                 needs_template: true,
                 needs_context: true,
                 needs_output_buffer: true,
                 is_safe: ['all']
             }),
-            new TwingFunction('max', max, []),
-            new TwingFunction('min', min, []),
-            new TwingFunction('random', random, [
-                {name: 'values', defaultValue: null},
-                {name: 'max', defaultValue: null}
+            createFunction('max', max, [], {
+                is_variadic: true
+            }),
+            createFunction('min', min, [], {
+                is_variadic: true
+            }),
+            createFunction('random', random, [
+                {
+                    name: 'values',
+                    defaultValue: null
+                },
+                {
+                    name: 'max',
+                    defaultValue: null
+                }
             ], {
                 needs_template: true
             }),
-            new TwingFunction('range', range, [
-                {name: 'low'},
-                {name: 'high'},
-                {name: 'step'}
+            createFunction('range', range, [
+                {
+                    name: 'low'
+                },
+                {
+                    name: 'high'
+                },
+                {
+                    name: 'step',
+                    defaultValue: 1
+                }
             ]),
-            new TwingFunction('source', source, [
-                {name: 'name'},
-                {name: 'ignore_missing', defaultValue: false}
+            createFunction('source', source, [
+                {
+                    name: 'name'
+                },
+                {
+                    name: 'ignore_missing',
+                    defaultValue: false
+                }
             ], {
                 needs_template: true,
                 is_safe: ['all']
             }),
-            new TwingFunction('template_from_string', templateFromString, [
-                {name: 'template'},
-                {name: 'name', defaultValue: null}
+            createFunction('template_from_string', templateFromString, [
+                {
+                    name: 'template'
+                },
+                {
+                    name: 'name',
+                    defaultValue: null
+                }
             ], {
                 needs_template: true
             })
@@ -515,120 +668,122 @@ export class TwingExtensionCore extends TwingExtension {
 
     getTests(): Array<TwingTest> {
         return [
-            new TwingTest('constant', null, [], {
+            createTest('constant', null, [], {
                 expression_factory: (node, _name, argumentsNode, line, column) => {
                     return createConstantTestNode(node, argumentsNode, line, column);
                 }
             }),
-            new TwingTest('divisible by', divisibleBy, []),
-            new TwingTest('defined', null, [], {
+            createTest('divisible by', divisibleBy, [{
+                name: 'divisor'
+            }]),
+            createTest('defined', null, [], {
                 expression_factory: (node, _name, argumentsNode, line, column) => {
                     return createDefinedTestNode(node, argumentsNode, line, column);
                 }
             }),
-            new TwingTest('empty', empty, []),
-            new TwingTest('even', even, []),
-            new TwingTest('iterable', iterable, []),
-            new TwingTest('none', nullTest, []),
-            new TwingTest('null', nullTest, []),
-            new TwingTest('odd', odd, []),
-            new TwingTest('same as', sameAs, []),
+            createTest('empty', empty, []),
+            createTest('even', even, []),
+            createTest('iterable', iterable, []),
+            createTest('none', nullTest, []),
+            createTest('null', nullTest, []),
+            createTest('odd', odd, []),
+            createTest('same as', sameAs, [
+                {
+                    name: 'comparand'
+                }
+            ]),
         ];
     }
 
-    getOperators(): TwingOperator[] {
+    getOperators(): Array<TwingOperator> {
         return [
-            new TwingOperator('not', TwingOperatorType.UNARY, 50, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('not', "UNARY", 50, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createNotNode(operands[0], line, column);
             }),
-            new TwingOperator('-', TwingOperatorType.UNARY, 500, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('-', "UNARY", 500, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createNegativeNode(operands[0], line, column);
             }),
-            new TwingOperator('+', TwingOperatorType.UNARY, 500, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('+', "UNARY", 500, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createPositiveNode(operands[0], line, column);
             }),
-            new TwingOperator('or', TwingOperatorType.BINARY, 10, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('or', "BINARY", 10, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createOrNode(operands, line, column);
             }),
-            new TwingOperator('and', TwingOperatorType.BINARY, 15, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('and', "BINARY", 15, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createAndNode(operands, line, column);
             }),
-            new TwingOperator('b-or', TwingOperatorType.BINARY, 16, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('b-or', "BINARY", 16, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createBitwiseOrNode(operands, line, column);
             }),
-            new TwingOperator('b-xor', TwingOperatorType.BINARY, 17, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('b-xor', "BINARY", 17, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createBitwiseXorNode(operands, line, column);
             }),
-            new TwingOperator('b-and', TwingOperatorType.BINARY, 18, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('b-and', "BINARY", 18, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createBitwiseAndNode(operands, line, column);
             }),
-            new TwingOperator('==', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('==', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createEqualNode(operands, line, column);
             }),
-            new TwingOperator('!=', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('!=', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createNotEqualToNode(operands, line, column);
             }),
-            new TwingOperator('<', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('<', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createLessThanNode(operands, line, column);
             }),
-            new TwingOperator('<=', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('<=', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createLessThanOrEqualToNode(operands, line, column);
             }),
-            new TwingOperator('>', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('>', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createGreaterThanNode(operands, line, column);
             }),
-            new TwingOperator('>=', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('>=', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createGreaterThanOrEqualToNode(operands, line, column);
             }),
-            new TwingOperator('not in', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('not in', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createNotInNode(operands, line, column);
             }),
-            new TwingOperator('in', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('in', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createInNode(operands, line, column);
             }),
-            new TwingOperator('matches', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('matches', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createMatchesNode(operands, line, column);
             }),
-            new TwingOperator('starts with', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('starts with', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createStartsWithNode(operands, line, column);
             }),
-            new TwingOperator('ends with', TwingOperatorType.BINARY, 20, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('ends with', "BINARY", 20, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createEndsWithNode(operands, line, column);
             }),
-            new TwingOperator('..', TwingOperatorType.BINARY, 25, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('..', "BINARY", 25, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createRangeNode(operands, line, column);
             }),
-            new TwingOperator('+', TwingOperatorType.BINARY, 30, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('+', "BINARY", 30, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createAddNode(operands, line, column);
             }),
-            new TwingOperator('-', TwingOperatorType.BINARY, 30, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('-', "BINARY", 30, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createSubtractNode(operands, line, column);
             }),
-            new TwingOperator('~', TwingOperatorType.BINARY, 40, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('~', "BINARY", 40, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createConcatNode(operands, line, column);
             }),
-            new TwingOperator('*', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('*', "BINARY", 60, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createMultiplyNode(operands, line, column);
             }),
-            new TwingOperator('/', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('/', "BINARY", 60, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createDivNode(operands, line, column);
             }),
-            new TwingOperator('//', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('//', "BINARY", 60, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createFloorDivNode(operands, line, column);
             }),
-            new TwingOperator('%', TwingOperatorType.BINARY, 60, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('%', "BINARY", 60, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createModuloNode(operands, line, column);
             }),
-            // @ts-ignore
-            new TwingOperator('is', TwingOperatorType.BINARY, 100, null),
-            // @ts-ignore
-            new TwingOperator('is not', TwingOperatorType.BINARY, 100, null),
-            new TwingOperator('**', TwingOperatorType.BINARY, 200, (operands: [Node, Node], line: number, column: number) => {
+            createOperator('**', "BINARY", 200, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createPowerNode(operands, line, column);
-            }, TwingOperatorAssociativity.RIGHT),
-            new TwingOperator('??', TwingOperatorType.BINARY, 300, (operands: [ExpressionNode, ExpressionNode], line: number, column: number) => {
+            }, "RIGHT"),
+            createOperator('??', "BINARY", 300, (operands: [BaseExpressionNode, BaseExpressionNode], line: number, column: number) => {
                 return createNullishCoalescingNode(operands, line, column);
-            }, TwingOperatorAssociativity.RIGHT)
+            }, "RIGHT")
         ];
     }
 
@@ -638,9 +793,9 @@ export class TwingExtensionCore extends TwingExtension {
     private escapeFilterIsSafe(filterArgs: ArgumentsNode) {
         if (getChildrenCount(filterArgs) > 0) {
             let result: Array<string> = [];
-            
+
             getChildren(filterArgs).forEach(([, arg]) => {
-                if (arg.is("expression_constant")) {
+                if (arg.is("constant")) {
                     result = [arg.attributes.value as string];
                 }
             });

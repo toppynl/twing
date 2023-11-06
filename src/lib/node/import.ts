@@ -1,5 +1,5 @@
 import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {ExpressionNode} from "./expression";
+import {BaseExpressionNode} from "./expression";
 import type {AssignNameNode} from "./expression/assign-name";
 
 export type ImportNodeAttributes = BaseNodeAttributes & {
@@ -7,24 +7,24 @@ export type ImportNodeAttributes = BaseNodeAttributes & {
 };
 
 export interface ImportNode extends BaseNode<"import", ImportNodeAttributes, {
-    expr: ExpressionNode;
+    expr: BaseExpressionNode;
     var: AssignNameNode;
 }> {
 }
 
 export const createImportNode = (
-    expr: ExpressionNode,
-    varName: AssignNameNode,
+    expression: BaseExpressionNode,
+    aliasName: AssignNameNode,
     global: boolean,
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): ImportNode => {
     const baseNode = createBaseNode("import", {
         global
     }, {
-        expr,
-        var: varName
+        expr: expression,
+        var: aliasName
     }, line, column, tag);
 
     return {
@@ -47,7 +47,7 @@ export const createImportNode = (
                 ;
             }
 
-            if (expr.type === "name" && expr.attributes.name === '_self') {
+            if (expr.is("name") && expr.attributes.name === '_self') {
                 compiler.raw('template');
             } else {
                 compiler

@@ -23,9 +23,9 @@ tape('ForNode', ({test}) => {
 
         same(node.attributes.with_loop, true);
         same(node.attributes.ifexpr, true);
-        same(node.children.key_target, keyTarget);
-        same(node.children.value_target, valueTarget);
-        same(node.children.seq, sequence);
+        same(node.children.keyTarget, keyTarget);
+        same(node.children.valueTarget, valueTarget);
+        same(node.children.sequence, sequence);
         same(node.children.else, null);
         same(node.line, 1);
         same(node.column, 1);

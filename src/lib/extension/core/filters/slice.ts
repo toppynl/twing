@@ -12,7 +12,7 @@ import {slice as sliceHelper} from "../../../helpers/slice";
  *
  * @returns {Promise<string | Map<any, any>>} The sliced variable
  */
-export function slice(item: any, start: number, length: number = null, preserveKeys: boolean = false): Promise<string | Map<any, any>> {
+export function slice(item: any, start: number, length: number | null = null, preserveKeys: boolean = false): Promise<string | Map<any, any>> {
     if (isTraversable(item)) {
         let iterableItem = iteratorToMap(item);
 

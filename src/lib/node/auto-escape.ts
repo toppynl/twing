@@ -14,7 +14,7 @@ export const createAutoEscapeNode = (
     body: Node,
     line: number,
     column: number,
-    tag = 'autoescape'
+    tag: string
 ): AutoEscapeNode => {
     const baseNode = createBaseNode("auto_escape", {
         strategy

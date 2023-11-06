@@ -16,7 +16,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variables passed to the "with" tag must be a hash in "index.twig" at line 2.';
+        return 'TwingRuntimeError: Variables passed to the "with" tag must be a hash in "index.twig" at line 2.';
     }
 
     getContext() {

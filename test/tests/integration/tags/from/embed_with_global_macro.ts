@@ -29,7 +29,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unknown "input" function in "index.twig" at line 6.';
+        return 'TwingParsingError: Unknown function "input" in "index.twig" at line 6.';
     }
 }
 

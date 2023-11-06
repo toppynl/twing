@@ -4,7 +4,7 @@ import {TwingSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag
 import {TwingSandboxSecurityNotAllowedFunctionError} from "./security-not-allowed-function-error";
 import {TwingSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
 import {TwingSandboxSecurityNotAllowedMethodError} from "./security-not-allowed-method-error";
-import {TwingMarkup} from "../markup";
+import {isAMarkup, TwingMarkup} from "../markup";
 
 export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInterface {
     TwingSandboxSecurityPolicyInterfaceImpl: TwingSandboxSecurityPolicyInterface;
@@ -16,16 +16,23 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
     private allowedFunctions: Array<string>;
 
     constructor(
-        allowedTags: Array<string> = [], 
-        allowedFilters: Array<string> = [], 
-        allowedMethods: Map<any, string> = new Map(), 
-        allowedProperties: Map<any, string> = new Map(), 
+        allowedTags: Array<string> = [],
+        allowedFilters: Array<string> = [],
+        allowedMethods: Map<any, string> = new Map(),
+        allowedProperties: Map<any, string> = new Map(),
         allowedFunctions: Array<string> = []
     ) {
         this.TwingSandboxSecurityPolicyInterfaceImpl = this;
         this.allowedTags = allowedTags;
         this.allowedFilters = allowedFilters;
-        this.setAllowedMethods(allowedMethods);
+        this.allowedMethods = new Map();
+
+        for (const [class_, m] of allowedMethods) {
+            this.allowedMethods.set(class_, (Array.isArray(m) ? m : [m]).map(function (item) {
+                return item.toLowerCase();
+            }));
+        }
+        
         this.allowedProperties = allowedProperties;
         this.allowedFunctions = allowedFunctions;
     }
@@ -36,16 +43,6 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
 
     setAllowedFilters(filters: Array<string>) {
         this.allowedFilters = filters;
-    }
-
-    setAllowedMethods(methods: Map<any, string | Array<string>>) {
-        this.allowedMethods = new Map();
-        
-        for (let [class_, m] of methods) {
-            this.allowedMethods.set(class_, (Array.isArray(m) ? m : [m]).map(function (item) {
-                return item.toLowerCase();
-            }));
-        }
     }
 
     setAllowedProperties(properties: Map<any, string>) {
@@ -65,9 +62,9 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
             }
         }
 
-        for (let filter of filters) {
-            if (!self.allowedFilters.includes(filter)) {
-                throw new TwingSandboxSecurityNotAllowedFilterError(`Filter "${filter}" is not allowed.`, filter);
+        for (const filterName of filters) {
+            if (!self.allowedFilters.includes(filterName)) {
+                throw new TwingSandboxSecurityNotAllowedFilterError(`Filter "${filterName}" is not allowed.`, filterName);
             }
         }
 
@@ -78,8 +75,8 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
         }
     }
 
-    checkMethodAllowed(obj: any, method: string): void {
-        if (obj instanceof TwingMarkup) {
+    checkMethodAllowed(obj: any | TwingMarkup, method: string): void {
+        if (isAMarkup(obj)) {
             return;
         }
 
@@ -99,11 +96,11 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
         }
     }
 
-    checkPropertyAllowed(obj: any, property: string): void {
+    checkPropertyAllowed(candidate: any, property: string): void {
         let allowed = false;
 
-        for (let [class_, properties] of this.allowedProperties) {
-            if (obj instanceof class_) {
+        for (let [objectConstructor, properties] of this.allowedProperties) {
+            if (candidate instanceof objectConstructor) {
                 allowed = (Array.isArray(properties) ? properties : [properties]).includes(property);
 
                 break;
@@ -111,7 +108,7 @@ export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInt
         }
 
         if (!allowed) {
-            throw new TwingSandboxSecurityNotAllowedPropertyError(`Calling "${property}" property on a "${obj.constructor.name}" is not allowed.`);
+            throw new TwingSandboxSecurityNotAllowedPropertyError(`Calling "${property}" property on a "${candidate.constructor.name}" is not allowed.`);
         }
     }
 }

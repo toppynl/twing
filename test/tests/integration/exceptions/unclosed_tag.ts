@@ -28,7 +28,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unexpected "endblock" tag (expecting closing tag for the "if" tag defined near line 4) in "index.twig" at line 16.';
+        return 'TwingParsingError: Unexpected "endblock" tag (expecting closing tag for the "if" tag defined near line 4) in "index.twig" at line 16.';
     }
 }
 

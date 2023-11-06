@@ -1,4 +1,4 @@
-import type {Compiler} from "./compiler";
+import type {TwingCompiler} from "./compiler";
 import type {ExpressionNode} from "./node/expression";
 import type {PrintNode} from "./node/print";
 import type {BlockReferenceNode} from "./node/block-reference";
@@ -25,7 +25,6 @@ import type {TraitNode} from "./node/trait";
 import type {SetNode} from "./node/set";
 import type {VerbatimNode} from "./node/verbatim";
 import type {SandboxNode} from "./node/sandbox";
-import type {SandboxedPrintNode} from "./node/sandboxed-print";
 import type {SpacelessNode} from "./node/spaceless";
 import type {WithNode} from "./node/with";
 import type {IfNode} from "./node/if";
@@ -56,7 +55,6 @@ export type Node =
     | ModuleNode
     | PrintNode
     | SandboxNode
-    | SandboxedPrintNode
     | SetNode
     | SpacelessNode
     | TextNode
@@ -70,10 +68,10 @@ export type NodeAttributes<T> = T extends BaseNode<any, infer Attributes, any> ?
 export type NodeChildren<T> = T extends BaseNode<any, any, infer Children> ? Children : never;
 
 export type BaseNodeAttributes = Record<never, never>;
-export type BaseNodeChildren = Record<string, BaseNode<any>>;
+export type BaseNodeChildren = Record<string, BaseNode>;
 
 export interface BaseNode<
-    Type extends string | null,
+    Type extends string | null = any,
     Attributes extends BaseNodeAttributes = BaseNodeAttributes,
     Children extends BaseNodeChildren = BaseNodeChildren,
 > {
@@ -83,16 +81,15 @@ export interface BaseNode<
     readonly isACaptureNode: boolean;
     readonly isAnOutputNode: boolean;
     readonly line: number;
-    readonly templateName: string | null; // todo: most probably useless, except as an attribute of ModuleNode
     readonly type: Type;
-
-    setTemplateName(name: string): void; // todo: most probably useless, except as an attribute of ModuleNode
-
-    compile(compiler: Compiler): void;
+    
+    compile(compiler: TwingCompiler, flags?: {
+        isDefinedTest?: boolean;
+        ignoreStrictCheck?: boolean;
+        optimizable?: boolean;
+    }): void;
 
     getNodeTag(): string | null;
-
-    clone(): this;
 
     toString(): string;
 
@@ -104,13 +101,13 @@ export interface BaseNode<
 type KeysOf<T> = T extends T ? keyof T : never;
 
 export const getChildren = <
-    T extends BaseNode<any>
+    T extends BaseNode
 >(node: T): Array<[KeysOf<NodeChildren<T>>, NodeChildren<T>[any]]> => {
     return Object.entries(node.children) as Array<[KeysOf<NodeChildren<T>>, NodeChildren<T>[any]]>;
 };
 
 export const getChildrenCount = (
-    node: BaseNode<any>
+    node: BaseNode
 ): number => {
     return Object.keys(node.children).length;
 };
@@ -127,8 +124,6 @@ export const createBaseNode = <
     column: number = 0,
     tag: string | null = null
 ): BaseNode<Type, Attributes, Children> => {
-    let templateName: string | null = null;
-
     const node: BaseNode<Type, Attributes, Children> = {
         attributes,
         children,
@@ -136,32 +131,21 @@ export const createBaseNode = <
         line,
         isACaptureNode: false,
         isAnOutputNode: false,
-        get templateName() {
-            return templateName;
-        },
-        setTemplateName(name: string) {
-            templateName = name;
-
-            for (const [, child] of getChildren(node)) {
-                child.setTemplateName(name);
-            }
-        },
         getNodeTag: () => tag,
-        compile: (compiler) => {
+        compile: (compiler, flags) => {
             for (const [, child] of getChildren(node)) {
-                child.compile(compiler);
+                child.compile(compiler, flags);
             }
         },
         is: (aType) => (aType as string) === node.type,
-        clone: () => createBaseNode(type, attributes, children, line, column, tag),
         toString: () => {
             const attributeRepresentations: Array<string> = [];
 
-            const isANode = (candidate: any): candidate is BaseNode<any> => {
+            const isANode = (candidate: any): candidate is BaseNode => {
                 return candidate &&
-                    (candidate as BaseNode<any>).type !== undefined &&
-                    (candidate as BaseNode<any>).attributes !== undefined &&
-                    (candidate as BaseNode<any>).children !== undefined;
+                    (candidate as BaseNode).type !== undefined &&
+                    (candidate as BaseNode).attributes !== undefined &&
+                    (candidate as BaseNode).children !== undefined;
             };
 
             for (const [name, value] of Object.entries(node.attributes)) {

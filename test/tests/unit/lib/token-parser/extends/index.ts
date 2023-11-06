@@ -1,6 +1,6 @@
 import * as tape from 'tape';
 import {TwingTokenStream} from "../../../../../../src/lib/token-stream";
-import {ExtendsTokenParser} from "../../../../../../src/lib/token-parser/extends";
+import {ExtendsTokenParser} from "../../../../../../src/lib/tag-handler/extends";
 import {getParser} from "../../../../../mock-builder/parser";
 import {Token, TokenType} from "twig-lexer";
 import {stub} from "sinon";
@@ -13,7 +13,7 @@ tape('ExtendsTokenParser', ({test}) => {
             let tokenParser = new ExtendsTokenParser();
             let parser = getParser(stream);
 
-            tokenParser.setParser(parser);
+            tokenParser.initialize(parser);
 
             stub(parser, 'peekBlockStack').returns(false);
             stub(parser, 'isMainScope').returns(true);

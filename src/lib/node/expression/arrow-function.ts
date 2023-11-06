@@ -1,17 +1,17 @@
-import type {BaseExpressionNode, BaseExpressionNodeAttributes, ExpressionNode} from "../expression";
+import type {BaseExpressionNode, BaseExpressionNodeAttributes} from "../expression";
 import type {BaseNode} from "../../node";
 import type {AssignNameNode} from "./assign-name";
 import {createBaseExpressionNode} from "../expression";
 
 export interface ArrowFunctionNode extends BaseExpressionNode<"arrow_function", BaseExpressionNodeAttributes, {
-    expr: ExpressionNode;
+    expr: BaseExpressionNode;
     names: BaseNode<any, any, Record<string, AssignNameNode>>;
 }> {
 
 }
 
 export const createArrowFunctionNode = (
-    expr: ExpressionNode,
+    expr: BaseExpressionNode,
     names: BaseNode<any, any, Record<any, AssignNameNode>>,
     line: number,
     column: number

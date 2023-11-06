@@ -17,7 +17,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unexpected token "end of statement block" of value "%}\n" ("name" expected with value "as") in "index.twig" at line 2.';
+        return 'TwingParsingError: Unexpected token "end of statement block" of value "%}\n" ("name" expected with value "as") in "index.twig" at line 2.';
     }
 }
 

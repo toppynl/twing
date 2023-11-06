@@ -102,7 +102,7 @@ export class StrictVariablesSetToFalse extends Test {
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            strict_variables: false
+            strictVariables: false
         }
     }
 }

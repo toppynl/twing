@@ -1,36 +1,39 @@
-import {TwingBaseNodeVisitor} from "../base-node-visitor";
 import {Node} from "../node";
 import {TwingEnvironment} from "../environment";
+import {createNodeVisitor, TwingNodeVisitor} from "../node-visitor";
 
 const objectHash = require('object-hash');
 
 interface Bucket {
-    key: any,
-    value: Array<string>
+    key: any;
+    value: Safe;
 }
 
-export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
-    private data: Map<string, Array<Bucket>> = new Map();
-    private safeVars: Array<string> = [];
+export type Safe = Array<Node | string | false>;
 
-    constructor() {
-        super();
+export interface SafeAnalysisNodeVisitor extends TwingNodeVisitor {
+    getSafe(node: Node): Safe | null;
 
-        this.TwingNodeVisitorInterfaceImpl = this;
-    }
+    safeVars: Array<string>;
+}
 
-    setSafeVars(safeVars: Array<string>) {
-        this.safeVars = safeVars;
-    }
+export const createSafeAnalysisNodeVisitor = (
+    environment: TwingEnvironment
+): SafeAnalysisNodeVisitor => {
+    const data: Map<string, Array<Bucket>> = new Map();
 
-    getSafe(node: Node): Array<Node | string | false> {
-        let hash = objectHash(node);
+    let safeVars: SafeAnalysisNodeVisitor["safeVars"] = [];
 
-        if (!this.data.has(hash)) {
-            return;
+    const getSafe: SafeAnalysisNodeVisitor["getSafe"] = (node) => {
+        const hash = objectHash(node);
+
+        const buckets = data.get(hash);
+
+        if (buckets === undefined) {
+            return null;
         }
 
-        let bucket = this.data.get(hash).find(function (bucket: Bucket) {
+        let bucket = buckets.find((bucket) => {
             if (bucket.key === node) {
                 if (bucket.value.includes('html_attr')) {
                     bucket.value.push('html');
@@ -43,12 +46,14 @@ export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
         return bucket ? bucket.value : null;
     }
 
-    private setSafe(node: Node, safe: Array<string>) {
+    const setSafe = (node: Node, safe: Safe) => {
         let hash = objectHash(node);
         let bucket = null;
 
-        if (this.data.has(hash)) {
-            bucket = this.data.get(hash).find(function (bucket: Bucket) {
+        let buckets = data.get(hash);
+
+        if (buckets !== undefined) {
+            bucket = buckets.find((bucket) => {
                 if (bucket.key === node) {
                     bucket.value = safe;
 
@@ -58,91 +63,91 @@ export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
         }
 
         if (!bucket) {
-            if (!this.data.has(hash)) {
-                this.data.set(hash, []);
+            if (buckets === undefined) {
+                buckets = [];
+
+                data.set(hash, buckets);
             }
 
-            this.data.get(hash).push({
+            buckets.push({
                 key: node,
                 value: safe
             });
         }
     }
 
-    protected doEnterNode(node: Node, _env: TwingEnvironment): Node {
+    const enterNode: TwingNodeVisitor["enterNode"] = (node) => {
         return node;
-    }
+    };
 
-    protected doLeaveNode(node: Node, env: TwingEnvironment): Node {
-        if (node.type === "expression_constant") {
+    const leaveNode: TwingNodeVisitor["leaveNode"] = (node) => {
+        if (node.is("constant")) {
             // constants are marked safe for all
-            this.setSafe(node, ['all']);
+            setSafe(node, ['all']);
         } else if (node.is('block_reference')) {
             // blocks are safe by definition
-            this.setSafe(node, ['all']);
+            setSafe(node, ['all']);
         } else if (node.is("parent")) {
             // parent block is safe by definition
-            this.setSafe(node, ['all']);
-        } else if (node.type === "conditional") {
+            setSafe(node, ['all']);
+        } else if (node.is("conditional")) {
             // intersect safeness of both operands
             const {expr2, expr3} = node.children;
+            const safe = intersectSafe(getSafe(expr2), getSafe(expr3));
 
-            let safe = this.intersectSafe(this.getSafe(expr2), this.getSafe(expr3));
-            this.setSafe(node, safe);
-        } else if (node.type === "call" && node.attributes.type === "filter") {
-            // filter expression is safe when the filter is safe
-            const {arguments: filterArgs, operand} = node.children;
+            setSafe(node, safe);
+        } else if (node.is("call")) {
+            const {arguments: callArguments} = node.children;
             const {operatorName} = node.attributes;
 
-            let name = operatorName;
-            let filter = env.getFilter(name);
+            if (node.attributes.type === "filter") {
+                // filter expression is safe when the filter is safe
+                const {operand} = node.children;
+                const filter = environment.getFilter(operatorName);
 
-            if (filter) {
-                let safe = filter.getSafe(filterArgs);
+                if (filter) {
+                    let safe = filter.getSafe(callArguments);
 
-                if (safe.length < 1) {
-                    safe = this.intersectSafe(this.getSafe(operand), filter.getPreservesSafety());
+                    if (safe && (safe.length < 1)) {
+                        safe = intersectSafe(getSafe(operand!), filter.preservesSafety);
+                    }
+
+                    setSafe(node, safe);
+                } else {
+                    setSafe(node, []);
                 }
+            } else if (node.attributes.type === "function") {
+                // function expression is safe when the function is safe
+                const functionNode = environment.getFunction(operatorName);
 
-                this.setSafe(node, safe);
-            } else {
-                this.setSafe(node, []);
+                if (functionNode) {
+                    setSafe(node, functionNode.getSafe(callArguments));
+                } else {
+                    setSafe(node, []);
+                }
             }
-        } else if (node.type === "call" && node.attributes.type === "function") {
-            // function expression is safe when the function is safe
-            const {arguments: functionArgs} = node.children;
-            const {operatorName} = node.attributes;
-
-            let name = operatorName;
-            let functionNode = env.getFunction(name);
-
-            if (functionNode) {
-                this.setSafe(node, functionNode.getSafe(functionArgs as any));
-            } else {
-                this.setSafe(node, []);
-            }
-        } else if (node.type === "method_call") {
+        } else if (node.is("method_call")) {
             if (node.attributes.safe) {
-                this.setSafe(node, ['all']);
+                setSafe(node, ['all']);
             } else {
-                this.setSafe(node, []);
+                setSafe(node, []);
             }
         } else if (node.is("get_attribute") && node.children.target.is("name")) {
             let name = node.children.target.attributes.name;
 
-            if (this.safeVars.includes(name)) {
-                this.setSafe(node, ['all']);
+            if (safeVars.includes(name)) {
+                setSafe(node, ['all']);
             } else {
-                this.setSafe(node, []);
+                setSafe(node, []);
             }
         } else {
-            this.setSafe(node, []);
+            setSafe(node, []);
         }
 
         return node;
-    }
-
-    private intersectSafe(a: Array<any>, b: Array<any>) {
+    };
+    
+    const intersectSafe = (a: Safe | null, b: Safe | null): Safe => {
         if (a === null || b === null) {
             return [];
         }
@@ -154,14 +159,18 @@ export class TwingNodeVisitorSafeAnalysis extends TwingBaseNodeVisitor {
         if (b.includes('all')) {
             return a;
         }
-
-        // array_intersect
-        return a.filter(function (n) {
+        
+        return a.filter((n) => {
             return b.includes(n);
         });
-    }
+    };
 
-    getPriority() {
-        return 0;
-    }
-}
+    return Object.assign(createNodeVisitor(
+        enterNode,
+        leaveNode,
+        0
+    ), {
+        getSafe,
+        safeVars
+    });
+};

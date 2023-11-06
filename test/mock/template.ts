@@ -1,31 +1,21 @@
-import {AnEnvironment} from "../../src/lib/environment";
-import {MockEnvironment} from "./environment";
-import {TwingTemplate} from "../../src/lib/template";
+import {createBaseTemplate, TwingTemplate} from "../../src/lib/template";
 import {MockLoader} from "./loader";
 import {TwingSource} from "../../src/lib/source";
+import {createMockedEnvironment} from "./environment";
 
-export class MockTemplate extends TwingTemplate {
-    protected _mySource: TwingSource;
-
-    constructor(env?: AnEnvironment, source?: TwingSource) {
-        if (!env) {
-            env = new MockEnvironment(new MockLoader());
-        }
-
-        super(env);
-
-        if (!source) {
-            source = new TwingSource('', 'foo.html.twig');
-        }
-
-        this._mySource = source;
+export const createMockTemplate = (
+    runtime?: Runtime,
+    source?: TwingSource
+): TwingTemplate => {
+    if (!runtime) {
+        runtime = createMockedEnvironment(new MockLoader());
     }
 
-    get source() {
-        return this._mySource;
+    if (!source) {
+        source = new TwingSource('', 'foo.html.twig');
     }
 
-    doDisplay(): Promise<void> {
-        return Promise.resolve();
-    }
-}
+    return Object.assign<TwingTemplate, Partial<TwingTemplate>>(createBaseTemplate(env, source, new Map(), new Map()), {
+        doDisplay: () => Promise.resolve()
+    });
+};

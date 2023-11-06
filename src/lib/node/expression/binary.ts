@@ -1,5 +1,5 @@
 import type {BaseExpressionNode, BaseExpressionNodeAttributes} from "../expression";
-import type {Compiler} from "../../compiler";
+import type {TwingCompiler} from "../../compiler";
 import type {Node, NodeType} from "../../node";
 import type {AddNode} from "./binary/add";
 import type {AndNode} from "./binary/and";
@@ -60,14 +60,14 @@ export interface BaseBinaryNode<Type extends string> extends BaseExpressionNode<
     left: Node;
     right: Node;
 }> {
-    compileLeftOperand: (compiler: Compiler) => void;
-    compileRightOperand: (compiler: Compiler) => void;
+    compileLeftOperand: (compiler: TwingCompiler) => void;
+    compileRightOperand: (compiler: TwingCompiler) => void;
 }
 
 export const createBaseBinaryNode = <Type extends string>(
     type: Type,
     operator: string | null,
-    operands: [Node, Node],
+    operands: [BaseExpressionNode, BaseExpressionNode],
     line: number,
     column: number
 ): BaseBinaryNode<Type> => {
@@ -97,13 +97,10 @@ export const createBaseBinaryNode = <Type extends string>(
         compileLeftOperand,
         compileRightOperand,
         compile: (compiler) => {
-            if (operator !== null) {
-                compileLeftOperand(compiler);
-                compiler.raw(operator);
-                compileRightOperand(compiler);
-            }
-        },
-        clone: () => createBaseBinaryNode(type, operator, [baseNode.children.left, baseNode.children.right], line, column)
+            compileLeftOperand(compiler);
+            compiler.raw(operator);
+            compileRightOperand(compiler);
+        }
     }
 };
 
@@ -111,11 +108,11 @@ export const createBinaryNodeFactory = <InstanceType extends BaseBinaryNode<any>
     type: NodeType<InstanceType>,
     operator: string | null,
     definition?: {
-        compile?: (compiler: Compiler, baseNode: BaseBinaryNode<NodeType<InstanceType>>) => void
+        compile?: (compiler: TwingCompiler, baseNode: BaseBinaryNode<NodeType<InstanceType>>) => void
     }
 ) => {
     const factory = (
-        operands: [Node, Node],
+        operands: [BaseExpressionNode, BaseExpressionNode],
         line: number,
         column: number
     ): InstanceType => {
@@ -123,8 +120,13 @@ export const createBinaryNodeFactory = <InstanceType extends BaseBinaryNode<any>
 
         return {
             ...baseNode,
-            compile: definition?.compile ? (compiler) => definition.compile(compiler, baseNode) : baseNode.compile,
-            clone: () => factory({...operands}, line, column)
+            compile: (compiler) => {
+                if (definition?.compile) {
+                    return definition.compile(compiler, baseNode);
+                } else {
+                    return baseNode.compile(compiler);
+                }
+            }
         } as InstanceType;
     };
 

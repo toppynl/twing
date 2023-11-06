@@ -1,7 +1,7 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode, getChildren, getChildrenCount, Node} from "../node";
-import {TwingSource} from "../source";
-import {Compiler} from "../compiler";
-import {ExpressionNode} from "./expression";
+import {BaseNode, BaseNodeAttributes, createBaseNode, getChildren, getChildrenCount} from "../node";
+import type {Source} from "../source";
+import {TwingCompiler} from "../compiler";
+import {BaseExpressionNode} from "./expression";
 import {BodyNode, createBodyNode} from "./body";
 import {TraitNode} from "./trait";
 import {MacroNode} from "./macro";
@@ -17,12 +17,8 @@ export type ModuleNodeChildren = {
     blocks: BaseNode<any, {}, Record<string, BodyNode>>;
     macros: BaseNode<any, {}, Record<string, MacroNode>>;
     traits: BaseNode<any, {}, Record<string, TraitNode>>;
-    display_start?: BaseNode<any>;
-    display_end?: BaseNode<any>;
-    constructor_start?: BaseNode<any>;
-    constructor_end?: BaseNode<any>;
-    factory_end?: BaseNode<any>;
-    parent?: ExpressionNode;
+    factory_end?: BaseNode;
+    parent?: BaseExpressionNode;
 };
 
 export interface ModuleNode extends BaseNode<"module", ModuleNodeAttributes, ModuleNodeChildren> {
@@ -30,12 +26,12 @@ export interface ModuleNode extends BaseNode<"module", ModuleNodeAttributes, Mod
 
 export const createModuleNode = (
     body: ModuleNode["children"]["body"],
-    parent: ExpressionNode | null,
+    parent: BaseExpressionNode | null,
     blocks: ModuleNode["children"]["blocks"],
     macros: ModuleNode["children"]["macros"],
     traits: ModuleNode["children"]["traits"],
     embeddedTemplates: Array<ModuleNode>,
-    source: TwingSource,
+    source: Source,
     line: number,
     column: number
 ): ModuleNode => {
@@ -53,21 +49,19 @@ export const createModuleNode = (
     const baseNode = createBaseNode("module", {
         index: 0,
         embedded_templates: embeddedTemplates,
-        templateName: source.getName()
+        templateName: source.name
     }, children, line, column);
-
-    //baseNode.setTemplateName(source.getName()); // todo check if needed
-
-    const compileClassHeader = (compiler: Compiler) => {
+    
+    const compileClassHeader = (compiler: TwingCompiler) => {
         let index = baseNode.attributes.index;
 
         compiler
-            .write(`[${index}, (runtime) => {\n`)
+            .write(`${index}: (runtime) => {\n`)
             .indent();
     };
 
-    const compileFactory = (compiler: Compiler) => {
-        const {blocks, macros, constructor_start} = baseNode.children;
+    const compileFactory = (compiler: TwingCompiler) => {
+        const {blocks, macros} = baseNode.children;
 
         compiler
             .write('const aliases = runtime.createContext();\n')
@@ -78,9 +72,9 @@ export const createModuleNode = (
         // source
         compiler
             .write('runtime.createSource(')
-            .string(source.getResolvedName())
+            .string(source.resolvedName)
             .raw(', ')
-            .string(source.getCode())
+            .string(source.code)
             .raw("), // source\n")
 
         // block handlers
@@ -141,13 +135,9 @@ export const createModuleNode = (
         compiler
             .write('const template = Object.assign(baseTemplate, {\n')
             .indent();
-
-        if (constructor_start) {
-            compiler.subCompile(constructor_start);
-        }
     }
 
-    const compileDoGetTraits = (compiler: Compiler) => {
+    const compileDoGetTraits = (compiler: TwingCompiler) => {
         const {traits} = baseNode.children;
 
         let count = getChildrenCount(traits);
@@ -172,7 +162,7 @@ export const createModuleNode = (
                 compiler
                     .write(`if (!trait_${i}.isTraitable) {\n`)
                     .indent()
-                    .write('throw runtime.createRuntimeError(\'Template ')
+                    .write('throw new runtime.Error(\'Template ')
                     .subCompile(template)
                     .raw(' cannot be used as a trait.\', ')
                     .render(template.line)
@@ -188,7 +178,7 @@ export const createModuleNode = (
                         .string(key)
                         .raw(")) {\n")
                         .indent()
-                        .write('throw runtime.createRuntimeError(\'Block ')
+                        .write('throw new runtime.Error(\'Block ')
                         .string(key as string)
                         .raw(' is not defined in trait ')
                         .subCompile(template)
@@ -221,7 +211,7 @@ export const createModuleNode = (
         }
     }
 
-    const compileDoGetParent = (compiler: Compiler) => {
+    const compileDoGetParent = (compiler: TwingCompiler) => {
         const {parent} = baseNode.children;
 
         if (parent) {
@@ -236,7 +226,7 @@ export const createModuleNode = (
             ;
 
             // if the parent name is not dynamic, then we can cache the parent as it will never change
-            if (parent.type === "expression_constant") {
+            if (parent.type === "constant") {
                 compiler
                     .raw('.then((parent) => {\n')
                     .indent()
@@ -254,36 +244,28 @@ export const createModuleNode = (
         }
     }
 
-    const compileDoDisplay = (compiler: Compiler) => {
-        const {display_start, display_end, body, parent} = baseNode.children;
+    const compileDoDisplay = (compiler: TwingCompiler) => {
+        const {body, parent} = baseNode.children;
 
         compiler
             .write("doDisplay: async(context, outputBuffer, blocks = new Map()) => {\n")
             .indent()
             .write('const aliases = template.aliases.clone();\n\n')
             .addSourceMapEnter(moduleNode);
-
-        if (display_start) {
-            compiler.subCompile(display_start)
-        }
-
+        
         compiler.subCompile(body);
 
         if (parent) {
             compiler.write('await (await template.getParent(context)).display(context, runtime.merge(await template.getBlocks(), blocks), outputBuffer);\n');
         }
-
-        if (display_end) {
-            compiler.subCompile(display_end);
-        }
-
+        
         compiler.addSourceMapLeave()
             .outdent()
             .write("},\n")
         ;
     }
 
-    const compileIsTraitable = (compiler: Compiler) => {
+    const compileIsTraitable = (compiler: TwingCompiler) => {
         const {macros, body, parent} = baseNode.children;
 
         // A template can be used as a trait if:
@@ -296,11 +278,7 @@ export const createModuleNode = (
         let traitable = (parent === undefined) && (getChildrenCount(macros) === 0);
 
         if (traitable) {
-            let node: Node = body;
-
-            if (node.type === "body") {
-                node = node.children.content;
-            }
+            let node: BaseNode = body.children.content;
 
             if (getChildrenCount(node) === 0) {
                 node = createBodyNode(node, line, column);
@@ -326,7 +304,7 @@ export const createModuleNode = (
         ;
     }
 
-    const compileFactoryFooter = (compiler: Compiler) => {
+    const compileFactoryFooter = (compiler: TwingCompiler) => {
         const {factory_end} = moduleNode.children;
 
         compiler
@@ -344,10 +322,10 @@ export const createModuleNode = (
         
         compiler
             .outdent()
-            .write(`}],\n`)
+            .write(`},\n`)
     }
 
-    const compileTemplate = (compiler: Compiler) => {
+    const compileTemplate = (compiler: TwingCompiler) => {
         compileClassHeader(compiler);
         compileFactory(compiler);
         compileDoGetParent(compiler);
@@ -364,7 +342,7 @@ export const createModuleNode = (
 
             if (index === 0) {
                 compiler
-                    .write('module.exports = new Map([\n')
+                    .write('module.exports = {\n')
                     .indent()
                 ;
             }
@@ -378,11 +356,11 @@ export const createModuleNode = (
             if (index === 0) {
                 compiler
                     .outdent()
-                    .write(']);\n')
+                    .write('};\n')
                 ;
             }
         }
     };
-
+    
     return moduleNode;
 };

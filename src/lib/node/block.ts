@@ -5,13 +5,13 @@ export type BlockNodeAttributes = BaseNodeAttributes & {
 };
 
 export interface BlockNode extends BaseNode<"block", BlockNodeAttributes, {
-    body: BaseNode<any>;
+    body: BaseNode;
 }> {
 }
 
 export const createBlockNode = (
     name: string,
-    body: BaseNode<any>,
+    body: BaseNode,
     line: number,
     column: number,
     tag: string | null = null

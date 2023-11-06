@@ -1,6 +1,6 @@
 import * as tape from 'tape';
 import {TwingTokenStream} from "../../../../../../src/lib/token-stream";
-import {DoTokenParser} from "../../../../../../src/lib/token-parser/do";
+import {DoTokenParser} from "../../../../../../src/lib/tag-handler/do";
 import {getParser} from "../../../../../mock-builder/parser";
 
 const sinon = require('sinon');
@@ -18,7 +18,7 @@ tape('DoTokenParser', ({test}) => {
 
         sinon.stub(parser, 'parseExpression').returns(new Token(TokenType.NAME, 'foo', 1, 1));
 
-        tokenParser.setParser(parser);
+        tokenParser.initialize(parser);
 
         same(tokenParser.parse(new Token(TokenType.TAG_START, null, 1, 1)).type, 'do');
 

@@ -1,5 +1,5 @@
 import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {ExpressionNode} from "./expression";
+import {BaseExpressionNode} from "./expression";
 
 /**
  * Checks if casting an expression to toString() is allowed by the sandbox.
@@ -10,12 +10,12 @@ import {ExpressionNode} from "./expression";
  * or {{ random(article) }}.
  */
 export interface CheckToStringNode extends BaseNode<"check_to_string", BaseNodeAttributes, {
-    expr: ExpressionNode;
+    expr: BaseExpressionNode;
 }> {
 }
 
 export const createCheckToStringNode = (
-    expression: ExpressionNode,
+    expression: BaseExpressionNode,
     line: number,
     column: number
 ): CheckToStringNode => {

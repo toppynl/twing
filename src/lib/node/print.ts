@@ -1,9 +1,9 @@
 import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {ExpressionNode} from "./expression";
-import {Compiler} from "../compiler";
+import {BaseExpressionNode} from "./expression";
+import {TwingCompiler} from "../compiler";
 
 export interface BasePrintNode<Type extends string> extends BaseNode<Type, BaseNodeAttributes, {
-    expr: ExpressionNode;
+    expr: BaseExpressionNode;
 }> {
 }
 
@@ -12,7 +12,7 @@ export interface PrintNode extends BasePrintNode<"print"> {
 
 const compile = <Type extends string>(
     node: BasePrintNode<Type>,
-    compiler: Compiler
+    compiler: TwingCompiler
 ): void => {
     const {expr} = node.children;
 
@@ -27,7 +27,7 @@ const compile = <Type extends string>(
 
 export const createBasePrintNode = <Type extends string>(
     type: Type,
-    expression: ExpressionNode,
+    expression: BaseExpressionNode,
     line: number,
     column: number,
     tag: string | null = null
@@ -46,8 +46,7 @@ export const createBasePrintNode = <Type extends string>(
 };
 
 export const createPrintNode = (
-    expression: ExpressionNode,
+    expression: BaseExpressionNode,
     line: number,
-    column: number,
-    tag: string | null = null
-): PrintNode => createBasePrintNode("print", expression, line, column, tag);
+    column: number
+): PrintNode => createBasePrintNode("print", expression, line, column);

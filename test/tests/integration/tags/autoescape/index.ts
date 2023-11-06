@@ -8,6 +8,7 @@ import "./objects";
 import "./raw";
 import "./strategy";
 import "./type";
+import "./with_a_non_supported_strategy_name";
 import "./with_filters";
 import "./with_filters_arguments";
 import "./with_pre_escape_filters";

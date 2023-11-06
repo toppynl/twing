@@ -17,7 +17,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Cannot use "extend" in a macro in "index.twig" at line 3.';
+        return 'TwingParsingError: Cannot use "extend" in a macro in "index.twig" at line 3.';
     }
 }
 

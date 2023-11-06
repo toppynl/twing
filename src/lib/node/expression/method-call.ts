@@ -2,9 +2,9 @@ import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNo
 import type {ArrayNode} from "./array";
 import type {Node} from "../../node";
 import type {BaseNameNode} from "./name";
+import {getKeyValuePairs} from "./array";
 
 export type MethodCallNodeAttributes = BaseExpressionNodeAttributes & {
-    is_defined_test: boolean;
     methodName: string;
     safe: boolean;
 };
@@ -24,19 +24,18 @@ export const createMethodCallNode = (
 ): MethodCallNode => {
     const baseNode = createBaseExpressionNode("method_call", {
         methodName,
-        safe: false,
-        is_defined_test: false
+        safe: false
     }, {
         operand, arguments: methodArguments
     }, line, column);
 
     return {
         ...baseNode,
-        compile: (compiler) => {
-            const {is_defined_test, methodName} = baseNode.attributes;
+        compile: (compiler, flags) => {
+            const {methodName} = baseNode.attributes;
             const {operand, arguments: methodArguments} = baseNode.children;
 
-            if (is_defined_test) {
+            if (flags?.isDefinedTest) {
                 compiler
                     .raw('(await aliases.proxy[')
                     .render(operand.attributes.name)
@@ -54,15 +53,15 @@ export const createMethodCallNode = (
                     .raw(', [')
                 ;
                 let first = true;
-
-                for (let pair of methodArguments.getKeyValuePairs()) {
+                
+                for (const {value} of getKeyValuePairs(methodArguments)) {
                     if (!first) {
                         compiler.raw(', ');
                     }
 
                     first = false;
 
-                    compiler.subCompile(pair['value']);
+                    compiler.subCompile(value);
                 }
 
                 compiler

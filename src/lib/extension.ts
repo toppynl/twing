@@ -1,6 +1,6 @@
 import {TwingExtensionInterface} from "./extension-interface";
-import {TwingTokenParserInterface} from "./token-parser-interface";
-import {TwingNodeVisitorInterface} from "./node-visitor-interface";
+import {TwingTagHandler} from "./tag-handler";
+import {TwingNodeVisitor} from "./node-visitor";
 import {TwingFilter} from "./filter";
 import {TwingFunction} from "./function";
 import {TwingTest} from "./test";
@@ -8,17 +8,11 @@ import {TwingOperator} from "./operator";
 import {TwingSourceMapNodeFactory} from "./source-map/node-factory";
 
 export class TwingExtension implements TwingExtensionInterface {
-    TwingExtensionInterfaceImpl: TwingExtensionInterface;
-
-    constructor() {
-        this.TwingExtensionInterfaceImpl = this;
-    }
-
-    getTokenParsers(): Array<TwingTokenParserInterface> {
+    getTokenParsers(): Array<TwingTagHandler> {
         return [];
     }
 
-    getNodeVisitors(): TwingNodeVisitorInterface[] {
+    getNodeVisitors(): TwingNodeVisitor[] {
         return [];
     }
 
@@ -34,7 +28,7 @@ export class TwingExtension implements TwingExtensionInterface {
         return [];
     }
 
-    getOperators(): TwingOperator[] {
+    getOperators(): Array<TwingOperator> {
         return [];
     }
 

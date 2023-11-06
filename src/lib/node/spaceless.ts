@@ -3,15 +3,15 @@ import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 export const spacelessNodeType = "spaceless";
 
 export interface SpacelessNode extends BaseNode<typeof spacelessNodeType, BaseNodeAttributes, {
-    body: BaseNode<any>;
+    body: BaseNode;
 }> {
 }
 
 export const createSpacelessNode = (
-    body: BaseNode<any>,
+    body: BaseNode,
     line: number,
     column: number,
-    tag = 'spaceless'
+    tag: string
 ): SpacelessNode => {
     const baseNode = createBaseNode(spacelessNodeType, {}, {
         body

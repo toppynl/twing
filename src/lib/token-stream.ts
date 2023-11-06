@@ -1,15 +1,15 @@
-import {TwingSource} from "./source";
-import {TwingErrorSyntax} from "./error/syntax";
+import {createSource, Source} from "./source";
+import {TwingParsingError} from "./error/parsing";
 import {Token, TokenStream, TokenType, astVisitor} from "twig-lexer";
 import {typeToEnglish} from "./lexer";
 
 export class TwingTokenStream {
     private readonly _stream: TokenStream;
-    private readonly _source: TwingSource;
+    private readonly _source: Source;
 
-    constructor(tokens: Token[], source: TwingSource = null) {
+    constructor(tokens: Token[], source?: Source) {
         this._stream = new TokenStream(tokens);
-        this._source = source ? source : new TwingSource('', '');
+        this._source = source ? source : createSource('', '');
     }
 
     private get stream(): TokenStream {
@@ -34,7 +34,7 @@ export class TwingTokenStream {
         return this.stream.next()
     }
 
-    nextIf(primary: TokenType, secondary: string[] | string = null): Token {
+    nextIf(primary: TokenType, secondary?: string[] | string): Token {
         return this.stream.nextIf(primary, secondary);
     }
 
@@ -43,13 +43,13 @@ export class TwingTokenStream {
      *
      * @return {Token}
      */
-    expect(type: TokenType, value: string[] | string | number = null, message: string = null): Token {
+    expect(type: TokenType, value: string[] | string | number | null = null, message: string | null= null): Token {
         let token = this.getCurrent();
 
-        if (!token.test(type, value)) {
+        if (!token.test(type, value || undefined)) {
             let line = token.line;
 
-            throw new TwingErrorSyntax(
+            throw new TwingParsingError(
                 `${message ? message + '. ' : ''}Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}" ("${typeToEnglish(type)}" expected${value ? ` with value "${value}"` : ''}).`,
                 line,
                 this._source
@@ -65,7 +65,7 @@ export class TwingTokenStream {
         return this.stream.look(number);
     }
 
-    test(type: TokenType, value: string | number | string[] = null): boolean {
+    test(type: TokenType, value?: string | number | string[]): boolean {
         return this.stream.test(type, value);
     }
 
@@ -97,7 +97,7 @@ export class TwingTokenStream {
     /**
      * Gets the source associated with this stream.
      *
-     * @return TwingSource
+     * @return Source
      */
     getSourceContext() {
         return this._source;

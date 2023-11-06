@@ -1,5 +1,5 @@
 import TestBase, {runTest} from "../../TestBase";
-import {TwingMarkup} from "../../../../../src/lib/markup";
+import {createMarkup} from "../../../../../src/lib/markup";
 import {createIntegrationTest} from "../../test";
 import {TwingEnvironmentOptions} from "../../../../../src/lib/environment";
 
@@ -31,7 +31,7 @@ class Test extends TestBase {
 
     getContext() {
         return {
-            markup: new TwingMarkup('Foo', 'utf-8')
+            markup: createMarkup(Buffer.from('Foo'), 'utf-8')
         }
     }
 }

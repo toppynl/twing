@@ -1,10 +1,10 @@
 import {BaseConditionalNode, conditionalNodeType, createBaseConditionalNode} from "./conditional";
-import {ExpressionNode} from "../expression";
+import {BaseExpressionNode} from "../expression";
 import {createDefinedTestNode} from "./call/test/defined";
 import {createNotNode} from "./unary/not";
 import {createAndNode} from "./binary/and";
 import {createTestNode} from "./call/test";
-import {createArgumentsNode} from "./arguments";
+import {createArrayNode} from "./array";
 
 export const nullishCoalescingNodeType = "nullish_coalescing";
 
@@ -12,20 +12,24 @@ export interface NullishCoalescingNode extends BaseConditionalNode<typeof nullis
 }
 
 export const createNullishCoalescingNode = (
-    operands: [ExpressionNode, ExpressionNode],
+    operands: [BaseExpressionNode, BaseExpressionNode],
     line: number,
     column: number
 ): NullishCoalescingNode => {
     const [left, right] = operands;
-
+    
+    if (left.is("name")) {
+        left.attributes.isAlwaysDefined = true;
+    }
+    
     const testNode = createAndNode(
         [
-            createDefinedTestNode(left.clone(), createArgumentsNode({}, line, column), line, column),
+            createDefinedTestNode(left, createArrayNode([], line, column), line, column),
             createNotNode(
                 createTestNode(
                     left,
                     'null',
-                    createArgumentsNode({}, line, column),
+                    createArrayNode([], line, column),
                     line, column
                 ),
                 line,
@@ -37,18 +41,9 @@ export const createNullishCoalescingNode = (
     );
 
     const baseNode = createBaseConditionalNode(nullishCoalescingNodeType, testNode, left, right, line, column);
-
+    
     const node: NullishCoalescingNode = {
         ...baseNode,
-        compile: (compiler) => {
-            const {expr2} = baseNode.children;
-
-            if (expr2.type === "name") {
-                expr2.attributes.always_defined = true;
-            }
-
-            baseNode.compile(compiler);
-        },
         is: (aType) => aType === node.type || aType === conditionalNodeType
     };
 

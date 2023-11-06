@@ -1,6 +1,6 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode, getChildren, getChildrenCount} from "../node";
-import {ArgumentsNode} from "./expression/arguments";
+import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 import {BodyNode} from "./body";
+import {ArrayNode, getKeyValuePairs} from "./expression/array";
 
 export const VARARGS_NAME = 'varargs';
 
@@ -10,17 +10,17 @@ export type MacroNodeAttributes = BaseNodeAttributes & {
 
 export interface MacroNode extends BaseNode<"macro", MacroNodeAttributes, {
     body: BodyNode;
-    arguments: ArgumentsNode;
+    arguments: ArrayNode;
 }> {
 }
 
 export const createMacroNode = (
     name: string,
     body: BodyNode,
-    macroArguments: ArgumentsNode,
+    macroArguments: ArrayNode,
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): MacroNode => {
     const baseNode = createBaseNode("macro", {
         name
@@ -35,14 +35,17 @@ export const createMacroNode = (
             const {body, arguments: macroArguments} = baseNode.children;
 
             compiler
-                .raw(`async (`)
-                .raw('outputBuffer, ')
+                .raw(`async (outputBuffer, `)
             ;
-
-            let count = getChildrenCount(macroArguments);
+            
+            const keyValuePairs = getKeyValuePairs(macroArguments);
+            const count = keyValuePairs.length;
+            
             let pos = 0;
-
-            for (let [name, defaultValue] of Object.entries(macroArguments.children)) {
+            
+            for (const {key, value: defaultValue} of keyValuePairs) {
+                const name = key.attributes.value;
+                
                 compiler
                     .raw('__' + name + '__ = ')
                     .subCompile(defaultValue)
@@ -68,7 +71,9 @@ export const createMacroNode = (
 
             let first = true;
 
-            for (let [name] of getChildren(macroArguments)) {
+            for (const {key} of keyValuePairs) {
+                const name = key.attributes.value;
+                
                 if (!first) {
                     compiler.raw(',\n');
                 }

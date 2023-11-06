@@ -18,8 +18,6 @@ import type {ParentNode} from "./expression/parent";
 import type {TemporaryNameNode} from "./expression/temp-name";
 import type {ArgumentsNode} from "./expression/arguments";
 
-export const expressionNodeType = "expression";
-
 export type ExpressionNode =
     | ArgumentsNode
     | ArrayNode
@@ -41,41 +39,13 @@ export type ExpressionNode =
     | UnaryNode
     ;
 
-export type BaseExpressionNodeAttributes = BaseNodeAttributes & {
-    optimizable?: boolean;
-    ignore_strict_check?: boolean;
-};
-
+export type BaseExpressionNodeAttributes = BaseNodeAttributes;
 export type BaseExpressionNodeChildren = BaseNodeChildren;
 
-export interface BaseExpressionNode<
-    Type extends string,
-    AdditionalAttributes extends BaseNodeAttributes = BaseNodeAttributes,
-    AdditionalChildren extends BaseNodeChildren = BaseNodeChildren,
-> extends BaseNode<Type, BaseExpressionNodeAttributes & AdditionalAttributes, BaseExpressionNodeChildren & AdditionalChildren> {
-}
+export type BaseExpressionNode<
+    Type extends string = any,
+    AdditionalAttributes extends BaseExpressionNodeAttributes = BaseExpressionNodeAttributes,
+    AdditionalChildren extends BaseExpressionNodeChildren = BaseExpressionNodeChildren,
+> = BaseNode<Type, BaseExpressionNodeAttributes & AdditionalAttributes, BaseExpressionNodeChildren & AdditionalChildren>;
 
-export const createBaseExpressionNode = <
-    Type extends string,
-    Attributes extends BaseExpressionNodeAttributes,
-    Children extends BaseExpressionNodeChildren
->(
-    type: Type,
-    attributes: Attributes,
-    children: Children,
-    line: number,
-    column: number,
-    tag: string | null = null
-): BaseExpressionNode<Type, Attributes, Children> => {
-    const baseNode = createBaseNode(type, attributes, children, line, column, tag);
-
-    const node: BaseExpressionNode<Type, Attributes, Children> = {
-        ...baseNode,
-        is: (type: string) => {
-            return type === node.type || type === expressionNodeType;
-        },
-        clone: () => createBaseExpressionNode(type, attributes, children, line, column, tag)
-    };
-
-    return node;
-};
+export const createBaseExpressionNode = createBaseNode;

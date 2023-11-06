@@ -1,6 +1,6 @@
 import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {ExpressionNode} from "./expression";
-import {Compiler} from "../compiler";
+import {BaseExpressionNode} from "./expression";
+import {TwingCompiler} from "../compiler";
 
 export type BaseIncludeNodeAttributes = BaseNodeAttributes & {
     only: boolean;
@@ -8,8 +8,8 @@ export type BaseIncludeNodeAttributes = BaseNodeAttributes & {
 };
 
 export type BaseIncludeNodeChildren = {
-    expression?: ExpressionNode;
-    variables: ExpressionNode;
+    expression?: BaseExpressionNode;
+    variables: BaseExpressionNode;
 };
 
 export interface BaseIncludeNode<
@@ -22,10 +22,10 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
     type: Type,
     attributes: Attributes,
     children: BaseIncludeNodeChildren,
-    addGetTemplate: (compiler: Compiler, baseNode: BaseIncludeNode<Type, Attributes>) => void,
+    addGetTemplate: (compiler: TwingCompiler, baseNode: BaseIncludeNode<Type, Attributes>) => void,
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): BaseIncludeNode<Type, Attributes> => {
     const baseNode = createBaseNode(type, attributes, children, line, column, tag);
 
@@ -40,15 +40,9 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
 
             addGetTemplate(compiler, node);
 
-            compiler.raw(', ');
-
-            if (variables) {
-                compiler.subCompile(variables);
-            } else {
-                compiler.render(undefined)
-            }
-
             compiler
+                .raw(', ')
+                .subCompile(variables)
                 .raw(', ')
                 .render(!only)
                 .raw(', ')

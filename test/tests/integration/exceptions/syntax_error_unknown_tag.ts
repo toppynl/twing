@@ -13,7 +13,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unknown "includes" tag. Did you mean "include" in "index.twig" at line 1?';
+        return 'TwingParsingError: Unknown "includes" tag. Did you mean "include" in "index.twig" at line 1?';
     }
 }
 

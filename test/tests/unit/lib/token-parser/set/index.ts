@@ -1,6 +1,6 @@
 import * as tape from 'tape';
 import {TwingTokenStream} from "../../../../../../src/lib/token-stream";
-import {SetTokenParser} from "../../../../../../src/lib/token-parser/set";
+import {SetTokenParser} from "../../../../../../src/lib/tag-handler/set";
 import {getParser} from "../../../../../mock-builder/parser";
 import {createBaseNode} from "../../../../../../src/lib/node";
 import {createConstantNode} from "../../../../../../src/lib/node/expression/constant";
@@ -20,7 +20,7 @@ tape('SetTokenParser', ({test}) => {
                 let tokenParser = new SetTokenParser();
                 let parser = getParser(stream);
 
-                tokenParser.setParser(parser);
+                tokenParser.initialize(parser);
 
                 stub(parser, 'parseAssignmentExpression').returns(createBaseNode(null, {}, {
                     0: createConstantNode('foo', 1, 1)
@@ -52,7 +52,7 @@ tape('SetTokenParser', ({test}) => {
                 let tokenParser = new SetTokenParser();
                 let parser = getParser(stream);
 
-                tokenParser.setParser(parser);
+                tokenParser.initialize(parser);
 
                 stub(parser, 'parseAssignmentExpression').returns(createBaseNode(null, {}, {
                     0: createConstantNode('foo', 1, 1),

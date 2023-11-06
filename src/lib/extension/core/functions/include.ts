@@ -1,9 +1,9 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {merge} from "../../../helpers/merge";
-import {TwingErrorLoader} from "../../../error/loader";
-import type {Template} from "../../../template";
+import {isATemplateLoadingError} from "../../../error/loader";
+import type {TwingTemplate} from "../../../template";
 import {isTraversable} from "../../../helpers/is-traversable";
-import {TwingErrorRuntime} from "../../../error/runtime";
+import {TwingRuntimeError} from "../../../error/runtime";
 import {isNullOrUndefined} from "util";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 import {TwingOutputBuffer} from "../../../output-buffer";
@@ -15,7 +15,7 @@ import {isMap} from "../../../helpers/is-map";
  *
  * @param {TwingTemplate} template
  * @param {TwingContext<any, any>} context
- * @param {TwingSource} from
+ * @param {Source} from
  * @param {TwingOutputBuffer} outputBuffer
  * @param {string | Map<number, string | TwingTemplate>} templates The template to render or an array of templates to try consecutively
  * @param {any} variables The variables to pass to the template
@@ -25,13 +25,13 @@ import {isMap} from "../../../helpers/is-map";
  *
  * @returns {Promise<string>} The rendered template
  */
-export function include(template: Template, context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, templates: string | Map<number, string | Template> | Template, variables: any = {}, withContext: boolean = true, ignoreMissing: boolean = false, sandboxed: boolean = false): Promise<string> {
-    let env = template.environment;
-    let from = template.source;
-    let alreadySandboxed = env.isSandboxed();
+export function include(template: TwingTemplate, context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, templates: string | Map<number, string | TwingTemplate> | TwingTemplate, variables: any = {}, withContext: boolean = true, ignoreMissing: boolean = false, sandboxed: boolean = false): Promise<string> {
+    const environment = template.environment;
+    const from = template.source;
+    const alreadySandboxed = environment.isSandboxed();
 
     if (!isPlainObject(variables) && !isTraversable(variables)) {
-        return Promise.reject(new TwingErrorRuntime(`Variables passed to the "include" function or tag must be iterable, got "${!isNullOrUndefined(variables) ? typeof variables : variables}".`, -1, from));
+        return Promise.reject(new TwingRuntimeError(`Variables passed to the "include" function or tag must be iterable, got "${!isNullOrUndefined(variables) ? typeof variables : variables}".`, undefined, from));
     }
 
     variables = iteratorToMap(variables);
@@ -42,7 +42,7 @@ export function include(template: Template, context: TwingContext<any, any>, out
 
     if (sandboxed) {
         if (!alreadySandboxed) {
-            env.enableSandbox();
+            environment.enableSandbox();
         }
     }
 
@@ -52,22 +52,22 @@ export function include(template: Template, context: TwingContext<any, any>, out
 
     let restoreSandbox = (): void => {
         if (sandboxed && !alreadySandboxed) {
-            env.disableSandbox();
+            environment.disableSandbox();
         }
     };
 
-    let resolveTemplate = (templates: Map<number, string | Template>): Promise<Template> => {
-        return env.resolveTemplate([...templates.values()], from).catch((e) => {
+    let resolveTemplate = (templates: Map<number, string | TwingTemplate>): Promise<TwingTemplate | null> => {
+        return environment.resolveTemplate([...templates.values()], from).catch((error) => {
             restoreSandbox();
 
-            if (e instanceof TwingErrorLoader) {
+            if (isATemplateLoadingError(error)) {
                 if (!ignoreMissing) {
-                    throw e;
+                    throw error;
                 } else {
                     return null;
                 }
             } else {
-                throw e;
+                throw error;
             }
         });
     };

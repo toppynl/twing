@@ -21,7 +21,7 @@ foo
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Impossible to access an attribute ("bar") on a string variable ("foo") in "foo" at line 3.';
+        return 'TwingRuntimeError: Impossible to access an attribute ("bar") on a string variable ("foo") in "foo" at line 3.';
     }
 
     getContext() {

@@ -34,7 +34,7 @@ class Test extends TestBase {
 
     getEnvironmentOptions() {
         return {
-            strict_variables: false
+            strictVariables: false
         }
     }
 

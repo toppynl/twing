@@ -1,32 +1,35 @@
 import {createTestNode, TestNode} from "../test";
-import {ExpressionNode} from "../../../expression";
-import type {ArgumentsNode} from "../../arguments";
+import {BaseExpressionNode} from "../../../expression";
+import type {ArrayNode} from "../../array";
+import {getKeyValuePairs} from "../../array";
 
 export interface ConstantTestNode extends TestNode {
 }
 
 export const createConstantTestNode = (
-    operand: ExpressionNode,
-    testArguments: ArgumentsNode,
+    operand: BaseExpressionNode,
+    testArguments: ArrayNode,
     line: number,
-    column: number,
-    tag: string = null
+    column: number
 ): ConstantTestNode => {
-    const baseNode = createTestNode(operand, 'constant', testArguments, line, column, tag);
+    const baseNode = createTestNode(operand, 'constant', testArguments, line, column);
 
     return {
         ...baseNode,
         compile: (compiler) => {
+            const {arguments: testArguments} = baseNode.children;
+            const keyValuePairs = getKeyValuePairs(testArguments);
+            
             compiler
                 .raw('(')
-                .subCompile(baseNode.children.operand)
+                .subCompile(baseNode.children.operand!)
                 .raw(' === await runtime.constant(context, ')
-                .subCompile(baseNode.children.arguments.children[0]);
+                .subCompile(keyValuePairs[0].value);
 
-            if (baseNode.children.arguments.children[1]) {
+            if (keyValuePairs.length > 1) {
                 compiler
                     .raw(', ')
-                    .subCompile(baseNode.children.arguments.children[1]);
+                    .subCompile(keyValuePairs[1].value);
             }
 
             compiler.raw('))');

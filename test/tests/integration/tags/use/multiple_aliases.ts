@@ -15,11 +15,11 @@ class Test extends TestBase {
 {% block content 'foo' %}
 {% block foo 'foo' %}`,
             'index.twig': `
-{% use "foo.twig" with content as foo_content %}
+{% use "foo.twig" with content as foo_content, foo as foo_foo %}
 {% use "bar.twig" %}
 
 {{ block('content') }}
-{{ block('foo') }}
+{{ block('foo_foo') }}
 {{ block('bar') }}
 {{ block('foo_content') }}`
         };

@@ -1,6 +1,6 @@
 import * as tape from 'tape';
 import {TwingTokenStream} from "../../../../../../src/lib/token-stream";
-import {UseTokenParser} from "../../../../../../src/lib/token-parser/use";
+import {UseTokenParser} from "../../../../../../src/lib/tag-handler/use";
 import {getParser} from "../../../../../mock-builder/parser";
 import {createConstantNode} from "../../../../../../src/lib/node/expression/constant";
 import {Token, TokenType} from "twig-lexer";
@@ -15,7 +15,7 @@ tape('UseTokenParser', ({test}) => {
             let tokenParser = new UseTokenParser();
             let parser = getParser(stream);
 
-            tokenParser.setParser(parser);
+            tokenParser.initialize(parser);
 
             stub(parser, 'parseExpression').returns(createBaseNode(null));
             stub(stream, 'getCurrent').returns({
@@ -50,7 +50,7 @@ tape('UseTokenParser', ({test}) => {
             let tokenParser = new UseTokenParser();
             let parser = getParser(stream);
 
-            tokenParser.setParser(parser);
+            tokenParser.initialize(parser);
 
             let trait: TraitNode;
 

@@ -18,7 +18,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: The "block" function takes one argument (the block name) in "base.twig" at line 2.';
+        return 'TwingParsingError: The "block" function takes one argument (the block name) in "base.twig" at line 2.';
     }
 }
 

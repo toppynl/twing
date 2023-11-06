@@ -1,24 +1,22 @@
 import {BaseCallNode, createBaseCallNode} from "../call";
-import {TwingErrorSyntax} from "../../../error/syntax";
-import type {ArgumentsNode} from "../arguments";
+import type {ArrayNode} from "../array";
+import {TwingCompilationError} from "../../../error/compilation";
 
 export interface FunctionNode extends BaseCallNode {
 }
 
 export const createFunctionNode = (
     functionName: string,
-    functionArguments: ArgumentsNode,
+    functionArguments: ArrayNode,
     line: number,
-    column: number,
-    tag: string | null = null
+    column: number
 ): FunctionNode => {
     const baseNode = createBaseCallNode({
         type: "function",
-        is_defined_test: false,
         operatorName: functionName
     }, {
         arguments: functionArguments
-    }, line, column, tag);
+    }, line, column);
 
     const node: FunctionNode = {
         ...baseNode,
@@ -27,22 +25,19 @@ export const createFunctionNode = (
             let twingFunction = compiler.environment.getFunction(name);
 
             if (twingFunction === null) {
-                throw new TwingErrorSyntax(`Unknown function "${name}".`, baseNode.line);
+                throw new TwingCompilationError(`Unknown function "${name}".`, baseNode.line);
             }
-
-            let callable = twingFunction.getCallable();
-
+            
             baseNode.compileCallable(
                 compiler,
                 name,
                 "function",
-                callable,
-                twingFunction.getArguments(),
-                twingFunction.getAcceptedArgments(),
-                twingFunction.needsTemplate(),
-                twingFunction.needsContext(),
-                twingFunction.needsOutputBuffer(),
-                twingFunction.isVariadic()
+                twingFunction.nativeArguments,
+                twingFunction.acceptedArguments,
+                twingFunction.needsTemplate,
+                twingFunction.needsContext,
+                twingFunction.needsOutputBuffer,
+                twingFunction.isVariadic
             );
         }
     };

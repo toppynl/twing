@@ -1,12 +1,11 @@
-import type {Node} from "../../node";
 import type {BaseExpressionNode} from "../expression";
 import {createBaseExpressionNode} from "../expression";
 
 type Attributes = {
-    value: Node | string | number | boolean;
+    value: string | number | boolean | null;
 };
 
-export interface ConstantNode extends BaseExpressionNode<"expression_constant", Attributes> {
+export interface ConstantNode extends BaseExpressionNode<"constant", Attributes> {
 }
 
 export const createConstantNode = (
@@ -14,15 +13,19 @@ export const createConstantNode = (
     line: number,
     column: number
 ): ConstantNode => {
-    const parent = createBaseExpressionNode('expression_constant', {
+    const parent = createBaseExpressionNode('constant', {
         value
     }, {}, line, column);
 
     return {
         ...parent,
-        compile: (compiler) => {
-            compiler.render(parent.attributes.value);
-        },
-        clone: () => createConstantNode(value, line, column)
+        compile: (compiler, flags) => {
+            if (flags?.isDefinedTest) {
+                compiler.render(true);
+            }
+            else {
+                compiler.render(parent.attributes.value);
+            }
+        }
     };
 };

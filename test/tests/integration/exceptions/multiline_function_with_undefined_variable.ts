@@ -24,7 +24,7 @@ Foo`
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `with_context` does not exist in "index.twig" at line 3.';
+        return 'TwingRuntimeError: Variable `with_context` does not exist in "index.twig" at line 3.';
     }
 }
 

@@ -1,6 +1,6 @@
 import * as tape from 'tape';
 import {TwingTokenStream} from "../../../../../../src/lib/token-stream";
-import {VerbatimTokenParser} from "../../../../../../src/lib/token-parser/verbatim";
+import {VerbatimTokenParser} from "../../../../../../src/lib/tag-handler/verbatim";
 import {getParser} from "../../../../../mock-builder/parser";
 import {Token, TokenType} from "twig-lexer";
 
@@ -18,7 +18,7 @@ tape('VerbatimTokenParser', ({test}) => {
         let tokenParser = new VerbatimTokenParser();
         let parser = getParser(stream);
 
-        tokenParser.setParser(parser);
+        tokenParser.initialize(parser);
 
         let node = tokenParser.parse(new Token(TokenType.TAG_START, null, 1, 1));
 

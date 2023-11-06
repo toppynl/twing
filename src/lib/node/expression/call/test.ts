@@ -1,53 +1,48 @@
 import {BaseCallNode, createBaseCallNode} from "../call";
 import type {BaseNode} from "../../../node";
-import {TwingErrorSyntax} from "../../../error/syntax";
-import type {ArgumentsNode} from "../arguments";
+import type {ArrayNode} from "../array";
+import {TwingCompilationError} from "../../../error/compilation";
 
-export interface TestNode extends BaseCallNode<BaseNode<any>> {
+export interface TestNode extends BaseCallNode {
 }
 
 export const createTestNode = (
-    operand: BaseNode<any>,
+    operand: BaseNode,
     testName: string,
-    testArguments: ArgumentsNode,
+    testArguments: ArrayNode,
     line: number,
-    column: number,
-    tag: string | null = null
+    column: number
 ): TestNode => {
     const callType = 'test';
 
     const baseNode = createBaseCallNode({
         type: callType,
-        is_defined_test: false,
         operatorName: testName,
     }, {
         operand,
         arguments: testArguments
-    }, line, column, tag);
+    }, line, column);
 
     const node: TestNode = {
         ...baseNode,
         compile: (compiler) => {
             const name = node.attributes.operatorName;
-            const twingTest = compiler.environment.getTest(name);
-
-            if (twingTest === null) {
-                throw new TwingErrorSyntax(`Unknown test "${name}".`, node.line);
+            const test = compiler.environment.getTest(name);
+            
+            if (test === null) {
+                throw new TwingCompilationError(`Unknown test "${name}".`, node.line);
             }
-
-            let callable = twingTest.getCallable();
-
+            
             baseNode.compileCallable(
                 compiler,
                 name,
                 callType,
-                callable,
-                twingTest.getArguments(),
-                twingTest.getAcceptedArgments(),
-                twingTest.needsTemplate(),
-                twingTest.needsContext(),
-                twingTest.needsOutputBuffer(),
-                twingTest.isVariadic()
+                test.nativeArguments,
+                test.acceptedArguments,
+                test.needsTemplate,
+                test.needsContext,
+                test.needsOutputBuffer,
+                test.isVariadic
             );
         }
     };

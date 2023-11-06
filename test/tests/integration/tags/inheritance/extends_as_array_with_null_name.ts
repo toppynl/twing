@@ -2,6 +2,10 @@ import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
+    getDescription() {
+        return '"extends" tag with array and a null name';
+    }
+
     getTemplates() {
         return {
             'bar.twig': `

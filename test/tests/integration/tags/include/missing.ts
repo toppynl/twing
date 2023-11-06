@@ -13,7 +13,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorLoader: Template "foo.twig" is not defined in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Template "foo.twig" is not defined in "index.twig" at line 1.';
     }
 }
 

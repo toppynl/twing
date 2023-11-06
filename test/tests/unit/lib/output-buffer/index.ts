@@ -48,6 +48,8 @@ tape('TwingOutputBuffering', (test) => {
     test.test('echo without process.stdout', (test) => {
         let stdout = process.stdout;
 
+        // todo: createOutputBuffer should take output stream as parameter and use it instead of process.stdout
+        // @ts-ignore
         delete process.stdout;
 
         let logSpy = spy(console, 'log');
@@ -224,7 +226,7 @@ tape('TwingOutputBuffering', (test) => {
     test.test('obGetContents', (test) => {
         reset(false);
 
-        test.equals(outputBuffer.getContents(), false);
+        test.equals(outputBuffer.getContents(), '');
 
         test.end();
     });
