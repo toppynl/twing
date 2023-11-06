@@ -3,8 +3,7 @@ import {createBaseExpressionNode} from "../expression";
 
 export type BaseNameNodeAttributes = BaseExpressionNodeAttributes & {
     name: string;
-    is_defined_test: boolean;
-    always_defined: boolean;
+    isAlwaysDefined: boolean;
 };
 
 export interface BaseNameNode<Type extends string> extends BaseExpressionNode<Type, BaseNameNodeAttributes> {
@@ -37,66 +36,59 @@ export const createBaseNameNode = <Type extends string>(
 
     const attributes: NameNode["attributes"] = {
         name,
-        always_defined: false,
-        is_defined_test: false,
-        ignore_strict_check: false,
-        optimizable: false
+        isAlwaysDefined: false
     };
 
-    const createFromAttributes = (
-        attributes: NameNode["attributes"]
-    ): BaseNameNode<Type> => {
-        const baseNode = createBaseExpressionNode(type, attributes, {}, line, column);
+    const baseNode = createBaseExpressionNode(type, attributes, {}, line, column);
 
-        const node = {
-            ...baseNode,
-            compile: (compiler) => {
-                const {name, always_defined, ignore_strict_check, is_defined_test} = attributes;
+    const node: BaseNameNode<Type> = {
+        ...baseNode,
+        compile: (compiler, flags) => {
+            const {name, isAlwaysDefined} = attributes;
 
-                if (is_defined_test) {
-                    if (isSpecial()) {
-                        compiler.render(true);
-                    } else {
-                        compiler.raw('(context.has(').render(name).raw('))');
-                    }
-                } else if (isSpecial()) {
-                    compiler.raw(specialVars.get(name));
-                } else if (always_defined) {
+            if (flags?.isDefinedTest) {
+                if (isSpecial()) {
+                    compiler.render(true);
+                } else {
                     compiler
-                        .raw('context.get(')
+                        .raw('(context.has(')
+                        .render(name)
+                        .raw('))');
+                }
+            } else if (isSpecial()) {
+                compiler.raw(specialVars.get(name));
+            } else if (isAlwaysDefined) {
+                compiler
+                    .raw('context.get(')
+                    .string(name)
+                    .raw(')')
+                ;
+            } else {
+                if (flags?.ignoreStrictCheck || !compiler.options.strictVariables) {
+                    compiler
+                        .raw('(context.has(')
                         .string(name)
-                        .raw(')')
+                        .raw(') ? context.get(')
+                        .string(name)
+                        .raw(') : null)')
                     ;
                 } else {
-                    if (ignore_strict_check || !compiler.options.strictVariables) {
-                        compiler
-                            .raw('(context.has(')
-                            .string(name)
-                            .raw(') ? context.get(')
-                            .string(name)
-                            .raw(') : null)')
-                        ;
-                    } else {
-                        compiler
-                            .raw('(context.has(')
-                            .string(name)
-                            .raw(') ? context.get(')
-                            .string(name)
-                            .raw(') : (() => { throw runtime.createRuntimeError(\'Variable ')
-                            .string(name)
-                            .raw(' does not exist.\', ')
-                            .render(line)
-                            .raw(', template.source); })()')
-                            .raw(')')
-                        ;
-                    }
+                    compiler
+                        .raw('(context.has(')
+                        .string(name)
+                        .raw(') ? context.get(')
+                        .string(name)
+                        .raw(') : (() => { throw new runtime.Error(\'Variable ')
+                        .string(name)
+                        .raw(' does not exist.\', ')
+                        .render(line)
+                        .raw(', template.source); })()')
+                        .raw(')')
+                    ;
                 }
-            },
-            clone: () => createFromAttributes({...node.attributes})
-        };
+            }
+        }
+    };
 
-        return node;
-    }
-
-    return createFromAttributes(attributes);
+    return node;
 };

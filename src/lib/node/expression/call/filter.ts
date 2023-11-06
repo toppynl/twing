@@ -1,51 +1,46 @@
 import {BaseNode} from "../../../node";
 import {BaseCallNode, createBaseCallNode} from "../call";
-import {TwingErrorSyntax} from "../../../error/syntax";
-import type {ArgumentsNode} from "../arguments";
+import type {ArrayNode} from "../array";
+import {TwingCompilationError} from "../../../error/compilation";
 
-export interface FilterNode extends BaseCallNode<BaseNode<any>> {
+export interface FilterNode extends BaseCallNode {
 }
 
 export const createFilterNode = (
-    operand: BaseNode<any>,
+    operand: BaseNode,
     filterName: string,
-    filterArguments: ArgumentsNode,
+    filterArguments: ArrayNode,
     line: number,
-    column: number,
-    tag: string = null
+    column: number
 ): FilterNode => {
     const baseNode = createBaseCallNode({
         type: "filter",
-        is_defined_test: false,
         operatorName: filterName
     }, {
         operand,
         arguments: filterArguments
-    }, line, column, tag);
+    }, line, column);
 
     const node: FilterNode = {
         ...baseNode,
         compile: (compiler) => {
-            let name = baseNode.attributes.operatorName;
-            let filter = compiler.environment.getFilter(name);
+            const name = node.attributes.operatorName;
+            const filter = compiler.environment.getFilter(name);
 
             if (filter === null) {
-                throw new TwingErrorSyntax(`Unknown filter "${name}".`, baseNode.line);
+                throw new TwingCompilationError(`Unknown filter "${name}".`, node.line);
             }
-
-            let callable = filter.getCallable();
-
+            
             baseNode.compileCallable(
                 compiler,
                 name,
                 'filter',
-                callable,
-                filter.getArguments(),
-                filter.getAcceptedArgments(),
-                filter.needsTemplate(),
-                filter.needsContext(),
-                filter.needsOutputBuffer(),
-                filter.isVariadic()
+                filter.nativeArguments,
+                filter.acceptedArguments,
+                filter.needsTemplate,
+                filter.needsContext,
+                filter.needsOutputBuffer,
+                filter.isVariadic
             );
         }
     };

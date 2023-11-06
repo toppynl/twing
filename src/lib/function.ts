@@ -1,32 +1,30 @@
 import {createFunctionNode, FunctionNode} from "./node/expression/call/function";
 import {
     TwingCallableWrapperOptions,
-    TwingCallableWrapper,
     TwingCallableArgument,
-    TwingCallable
+    TwingCallable, TwingCallableWrapper, createCallableWrapper
 } from "./callable-wrapper";
-import type {ArgumentsNode} from "./node/expression/arguments";
+import type {ArrayNode} from "./node/expression/array";
 
-type Factory = (name: string, argumentsNode: ArgumentsNode, line: number, column: number) => FunctionNode;
+type Factory = (name: string, argumentsNode: ArrayNode, line: number, column: number) => FunctionNode;
 
-export class TwingFunction extends TwingCallableWrapper<any, Factory> {
-    readonly options: TwingCallableWrapperOptions<Factory>;
-
-    /**
-     * Creates a template function.
-     *
-     * @param {string} name Name of this function
-     * @param {TwingCallable<any>} callable A callable implementing the function. If null, you need to overwrite the "expression_factory" option to customize compilation.
-     * @param {TwingCallableArgument[]} acceptedArguments
-     * @param {TwingCallableWrapperOptions} options Options
-     */
-    constructor(name: string, callable: TwingCallable<any>, acceptedArguments: TwingCallableArgument[], options: TwingCallableWrapperOptions<Factory> = {}) {
-        super (name, callable, acceptedArguments);
-
-        this.options.expression_factory = (name, argumentsNode, line, column) => {
-            return createFunctionNode(name, argumentsNode, line, column);
-        };
-
-        this.options = Object.assign({}, this.options, options);
-    }
+export interface TwingFunction extends TwingCallableWrapper<any, Factory> {
+    
 }
+
+export const createFunction = (
+    name: string, 
+    callable: TwingCallable<any>, 
+    acceptedArguments: TwingCallableArgument[], 
+    options: TwingCallableWrapperOptions & {
+        expression_factory?: Factory;
+    } = {}
+): TwingFunction => {
+    const expressionFactory = options.expression_factory || ((name, argumentsNode, line, column) => {
+        return createFunctionNode(name, argumentsNode, line, column);
+    });
+
+    const callableWrapper = createCallableWrapper(name, callable, acceptedArguments, expressionFactory, options);
+    
+    return callableWrapper;
+};

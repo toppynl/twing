@@ -25,7 +25,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `lmacros` does not exist in "index.twig" at line 6.';
+        return 'TwingRuntimeError: Variable `lmacros` does not exist in "index.twig" at line 6.';
     }
 }
 

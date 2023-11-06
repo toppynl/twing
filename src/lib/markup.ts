@@ -1,19 +1,27 @@
 import {iconv} from "./helpers/iconv";
 
-export interface Markup {
-    readonly content: Buffer;
+export interface TwingMarkup {
     readonly charset: string;
+    readonly content: Buffer;
     readonly count: number;
 
-    toString: () => string;
     toJSON: () => string;
+    toString: () => string;
 }
+
+export const isAMarkup = (candidate: any): candidate is TwingMarkup => {
+    return (candidate as TwingMarkup).charset !== undefined
+        && (candidate as TwingMarkup).content !== undefined
+        && (candidate as TwingMarkup).count !== undefined
+        && (candidate as TwingMarkup).toJSON !== undefined
+        && (candidate as TwingMarkup).toString !== undefined;
+};
 
 export const createMarkup = (
     content: Buffer,
     charset: string
 ) => {
-    const markup: Markup = {
+    const markup: TwingMarkup = {
         get content() {
             return content;
         },
@@ -35,32 +43,3 @@ export const createMarkup = (
 
     return markup;
 };
-
-/**
- * Marks a content as safe.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-export class TwingMarkup {
-    private content: Buffer;
-    private charset: string;
-
-    constructor(content: string, charset: string) {
-        this.content = Buffer.from(content);
-        this.charset = charset;
-    }
-
-    toString() {
-        return this.content.toString();
-    }
-
-    count(): number {
-        let content = iconv(this.charset, 'utf-8', this.content).toString();
-
-        return content.length;
-    }
-
-    toJSON() {
-        return this.content.toString();
-    }
-}

@@ -13,7 +13,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: The block \'content\' has already been defined line 2 in "index.twig" at line 3.';
+        return 'TwingParsingError: The block \'content\' has already been defined line 2 in "index.twig" at line 3.';
     }
 }
 

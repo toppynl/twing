@@ -3,7 +3,7 @@ export default class {
     public position: number;
 
     constructor() {
-        this.array = null;
+        this.array = [];
         this.position = 0;
     }
 
@@ -12,7 +12,7 @@ export default class {
         yield 2;
     }
 
-    bar(param1: string = null, param2: string = null) {
+    bar(param1: string | null = null, param2: string | null = null) {
         return 'bar' + (param1 ? '_' + param1 : '') + (param2 ? '-' + param2 : '');
     }
 

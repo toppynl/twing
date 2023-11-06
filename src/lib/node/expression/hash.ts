@@ -1,5 +1,5 @@
-import {BaseArrayNode, createBaseArrayNode} from "./array";
-import type {ExpressionNode} from "../expression";
+import {BaseArrayNode, createBaseArrayNode, getKeyValuePairs} from "./array";
+import type {BaseExpressionNode} from "../expression";
 
 export const type = 'expression_hash'
 
@@ -7,7 +7,10 @@ export interface HashNode extends BaseArrayNode<"hash"> {
 }
 
 export const createHashNode = (
-    elements: Record<number, ExpressionNode>,
+    elements: Array<{
+        key: BaseExpressionNode;
+        value: BaseExpressionNode;
+    }>,
     line: number,
     column: number
 ): HashNode => {
@@ -25,7 +28,7 @@ export const createHashNode = (
 
             let first = true;
 
-            for (let pair of baseNode.getKeyValuePairs()) {
+            for (let pair of getKeyValuePairs(baseNode)) {
                 if (!first) {
                     compiler.raw(', ');
                 }
@@ -42,7 +45,6 @@ export const createHashNode = (
             }
 
             compiler.raw('])');
-        },
-        clone: () => createHashNode({...baseNode.children}, line, column)
+        }
     };
 };

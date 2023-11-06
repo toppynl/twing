@@ -17,7 +17,7 @@ tape('traceableCallable', (test) => {
         let foo = new Foo();
 
         try {
-            await foo.traceableCallable(1, new TwingSource('', 'foo'))();
+            await foo.getTraceableCallable(1, new TwingSource('', 'foo'))();
 
             test.fail();
         }
@@ -42,7 +42,7 @@ tape('traceableCallable', (test) => {
         let foo = new Foo();
 
         try {
-            await foo.traceableCallable(1, null)();
+            await foo.getTraceableCallable(1, null)();
 
             test.fail();
         }

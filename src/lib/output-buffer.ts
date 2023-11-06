@@ -125,9 +125,9 @@ export class TwingOutputBuffer {
      * │   foo   │    │   foo   │ => oof
      * └─────────┘    └─────────┘
      *
-     * @returns {string | false}
+     * @returns {string}
      */
-    getAndFlush(): string | false {
+    getAndFlush(): string {
         let content = this.getContents();
 
         this.endAndFlush();
@@ -201,9 +201,9 @@ export class TwingOutputBuffer {
      * │   foo   │    │   foo   │ => oof
      * └─────────┘    └─────────┘
      *
-     * @returns {string | false}
+     * @returns {string}
      */
-    getAndClean(): string | false {
+    getAndClean(): string {
         let content = this.getContents();
 
         this.endAndClean();
@@ -223,10 +223,12 @@ export class TwingOutputBuffer {
     /**
      * Return the contents of the output buffer
      *
-     * @returns {string | false}
+     * @returns {string}
      */
-    getContents(): string | false {
-        return this.getActive() ? this.getActive().getContent() : false;
+    getContents(): string {
+        const activeOutputHandler = this.getActive();
+        
+        return activeOutputHandler ? activeOutputHandler.getContent() : '';
     }
 
     /**
@@ -250,7 +252,7 @@ export class TwingOutputBuffer {
         }
     }
 
-    private getActive(): TwingOutputHandler {
+    private getActive(): TwingOutputHandler | null {
         if (this._handlers.length > 0) {
             return this._handlers[this._handlers.length - 1];
         }

@@ -1,13 +1,12 @@
 /**
  * Lexes a template string.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
  */
 import {Lexer, TokenType} from "twig-lexer";
-import {TwingSource} from "./source";
 import {TwingTokenStream} from "./token-stream";
-import {TwingErrorSyntax} from "./error/syntax";
-import {TwingOperator} from "./operator";
+import {TwingParsingError} from "./error/parsing";
+import type {TwingOperator} from "./operator";
+import type {Source} from "./source";
+import {SyntaxError} from "twig-lexer/dist/types/lib/SyntaxError";
 
 export const typeToEnglish = (type: TokenType): string => {
     switch (type) {
@@ -48,37 +47,13 @@ export const typeToEnglish = (type: TokenType): string => {
     }
 };
 
-type TwingLexerOptions = {
-    interpolation_pair?: [string, string],
-    comment_pair?: [string, string],
-    tag_pair?: [string, string],
-    variable_pair?: [string, string]
-};
-
 export class TwingLexer extends Lexer {
     constructor(
         binaryOperators: Map<string, TwingOperator>,
-        unaryOperators: Map<string, TwingOperator>,
-        options: TwingLexerOptions = {}
+        unaryOperators: Map<string, TwingOperator>
     ) {
         super();
-
-        if (options.interpolation_pair) {
-            this.interpolationPair = options.interpolation_pair;
-        }
-
-        if (options.comment_pair) {
-            this.commentPair = options.comment_pair;
-        }
-
-        if (options.tag_pair) {
-            this.tagPair = options.tag_pair;
-        }
-
-        if (options.variable_pair) {
-            this.variablePair = options.variable_pair;
-        }
-
+        
         // custom operators
         for (let operators of [binaryOperators, unaryOperators]) {
             for (let [key] of operators) {
@@ -89,13 +64,13 @@ export class TwingLexer extends Lexer {
         }
     }
 
-    tokenizeSource(source: TwingSource): TwingTokenStream {
+    tokenizeSource(source: Source): TwingTokenStream {
         try {
-            let tokens = this.tokenize(source.getCode());
+            const tokens = this.tokenize(source.code);
 
             return new TwingTokenStream(tokens, source);
-        } catch (e) {
-            throw new TwingErrorSyntax(e.message, e.line, source, e);
+        } catch (error: any) {
+            throw new TwingParsingError((error as SyntaxError).message, (error as SyntaxError).line, source, error);
         }
     }
 }

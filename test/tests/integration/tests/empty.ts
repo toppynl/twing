@@ -1,5 +1,5 @@
 import TestBase, {runTest} from "../TestBase";
-import {TwingMarkup} from "../../../../src/lib/markup";
+import {createMarkup} from "../../../../src/lib/markup";
 import {createIntegrationTest} from "../test";
 
 class ToStringStub {
@@ -76,8 +76,8 @@ ok
             countable_not_empty: new Map([[1, 2]]),
             tostring_empty: new ToStringStub(''),
             tostring_not_empty: new ToStringStub('0' /* edge case of using "0" as the string */),
-            markup_empty: new TwingMarkup('', 'UTF-8'),
-            markup_not_empty: new TwingMarkup('test', 'UTF-8'),
+            markup_empty: createMarkup(Buffer.from(''), 'UTF-8'),
+            markup_not_empty: createMarkup(Buffer.from('test'), 'UTF-8'),
         };
     }
 }

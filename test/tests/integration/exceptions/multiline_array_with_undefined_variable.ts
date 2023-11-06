@@ -31,12 +31,12 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `foo2` does not exist in "index.twig" at line 11.';
+        return 'TwingRuntimeError: Variable `foo2` does not exist in "index.twig" at line 11.';
     }
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            strict_variables: true
+            strictVariables: true
         };
     }
 }

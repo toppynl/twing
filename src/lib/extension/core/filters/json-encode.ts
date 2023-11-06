@@ -6,7 +6,7 @@ import {isPlainObject} from "../../../helpers/is-plain-object";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {isTraversable} from "../../../helpers/is-traversable";
 
-export function jsonEncode(value: any): Promise<string> {
+export const jsonEncode = (value: any): Promise<string> => {
     const _sanitize = (value: any): any=> {
         if (isTraversable(value) || isPlainObject(value)) {
             value = iteratorToMap(value);

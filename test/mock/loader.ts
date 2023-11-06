@@ -1,20 +1,22 @@
-import {TwingSource} from "../../src/lib/source";
-import {TwingLoaderNull} from "../../src/lib/loader/null";
+import {createSource} from "../../src/lib/source";
+import {TwingLoader} from "../../src/lib/loader";
 
-export class MockLoader extends TwingLoaderNull {
-    getSourceContext() {
-        return Promise.resolve(new TwingSource('', ''));
-    }
-
-    getCacheKey() {
-        return Promise.resolve('');
-    }
-
-    isFresh() {
-        return Promise.resolve(true);
-    }
-
-    exists() {
-        return Promise.resolve(true);
-    }
-}
+export const createMockedLoader = (): TwingLoader => {
+    return {
+        getSourceContext() {
+            return Promise.resolve(createSource('', ''));
+        },
+        getCacheKey() {
+            return Promise.resolve('');
+        },
+        isFresh() {
+            return Promise.resolve(true);
+        },
+        exists() {
+            return Promise.resolve(true);
+        },
+        resolve() {
+            return Promise.resolve(null);
+        }
+    };
+};

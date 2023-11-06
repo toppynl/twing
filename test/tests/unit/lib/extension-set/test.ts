@@ -2,7 +2,7 @@ import * as tape from 'tape';
 import {TwingOperator, TwingOperatorType} from "../../../../../src/lib/operator";
 import {TwingExtension} from "../../../../../src/lib/extension";
 import {TwingExtensionSet} from "../../../../../src/lib/extension-set";
-import {TwingTokenParserFilter} from "../../../../../src/lib/token-parser/filter";
+import {TwingTokenParserFilter} from "../../../../../src/lib/tag-handler/filter";
 import {TwingTest} from "../../../../../src/lib/test";
 import {TwingFilter} from "../../../../../src/lib/filter";
 import {TwingFunction} from "../../../../../src/lib/function";
@@ -10,7 +10,6 @@ import {TwingSourceMapNodeFactory} from "../../../../../src/lib/source-map/node-
 import {TokenParser} from "../../../../../src/lib/token-parser";
 import {Token} from "twig-lexer";
 import {TwingNode} from "../../../../../src/lib/node";
-import {TwingBaseNodeVisitor} from "../../../../../src/lib/base-node-visitor";
 import {AnEnvironment} from "../../../../../src/lib/environment";
 import {spy} from "sinon";
 
@@ -83,7 +82,7 @@ tape('extension-set', (test) => {
             extensionSet.getFunctions();
 
             try {
-                extensionSet.addTokenParser(new TwingTestExtensionSetTokenParser());
+                extensionSet.addTagHandler(new TwingTestExtensionSetTokenParser());
 
                 test.fail();
             } catch (e) {
@@ -101,10 +100,10 @@ tape('extension-set', (test) => {
             let extensionSet = new TwingExtensionSet();
             let parser = new TwingTokenParserFilter();
 
-            extensionSet.addTokenParser(parser);
+            extensionSet.addTagHandler(parser);
 
             try {
-                extensionSet.addTokenParser(new TwingTokenParserFilter());
+                extensionSet.addTagHandler(new TwingTokenParserFilter());
 
                 test.fail();
             } catch (e) {

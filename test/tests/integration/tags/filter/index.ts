@@ -5,3 +5,4 @@ import "./basic";
 import "./json_encode";
 import "./with_for_tag";
 import "./multiple";
+import "./unknown";

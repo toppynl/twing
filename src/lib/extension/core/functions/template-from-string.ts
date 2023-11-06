@@ -1,4 +1,4 @@
-import type {Template} from "../../../template";
+import type {TwingTemplate} from "../../../template";
 
 /**
  * Loads a template from a string.
@@ -13,6 +13,6 @@ import type {Template} from "../../../template";
  *
  * @returns {Promise<TwingTemplate>}
  */
-export function templateFromString(template: Template, string: string, name: string = null): Promise<Template> {
+export function templateFromString(template: TwingTemplate, string: string, name: string | null = null): Promise<TwingTemplate | null> {
     return template.environment.createTemplate(string, name);
 }

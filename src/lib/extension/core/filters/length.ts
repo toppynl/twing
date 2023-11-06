@@ -1,15 +1,13 @@
-import {AnEnvironment} from "../../../environment";
 import {isNullOrUndefined} from "util";
 
 /**
  * Returns the length of a thing.
  *
- * @param {AnEnvironment} env A TwingEnvironment instance
  * @param {any} thing A thing
  *
  * @returns {Promise<number>} The length of the thing
  */
-export function length(_env: AnEnvironment, thing: any): Promise<number> {
+export function length(thing: any): Promise<number> {
     let length: number;
 
     if (isNullOrUndefined(thing)) {

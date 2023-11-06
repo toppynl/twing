@@ -1,5 +1,5 @@
 import {isMap} from "./is-map";
-import {TwingErrorRuntime} from "../error/runtime";
+import {TwingRuntimeError} from "../error/runtime";
 import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
@@ -13,7 +13,7 @@ const isObject = require('isobject');
 /**
  * Returns the attribute value for a given array/object.
  *
- * @param {AnEnvironment} runtime
+ * @param {Runtime} runtime
  * @param {*} object The object or array from where to get the item
  * @param {*} attribute The item to get from the array or object
  * @param {Map<any, any>} _arguments A map of arguments to pass if the item is an object method
@@ -82,7 +82,7 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
                     message = `Impossible to access an attribute ("${attribute}") on a ${typeof object} variable ("${object}").`;
                 }
 
-                throw new TwingErrorRuntime(message);
+                throw new TwingRuntimeError(message);
             }
         }
 
@@ -104,7 +104,7 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
                 message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
             }
 
-            throw new TwingErrorRuntime(message);
+            throw new TwingRuntimeError(message);
         }
 
         // object property
@@ -197,7 +197,7 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
                 return;
             }
 
-            throw new TwingErrorRuntime(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
+            throw new TwingRuntimeError(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
         }
 
         if (isDefinedTest) {

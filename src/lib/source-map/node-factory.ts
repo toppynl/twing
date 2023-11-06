@@ -1,8 +1,8 @@
 /**
  * @author Eric MORAND <eric.morand@gmail.com>
  */
-import {TwingSource} from "../source";
 import {TwingSourceMapNode} from "./node";
+import type {Source} from "../source";
 
 export class TwingSourceMapNodeFactory {
     private readonly _name: string;
@@ -11,7 +11,7 @@ export class TwingSourceMapNodeFactory {
         this._name = name;
     }
 
-    create(line: number, column: number, source: TwingSource): TwingSourceMapNode {
+    create(line: number, column: number, source: Source): TwingSourceMapNode {
         return new TwingSourceMapNode(line, column, source, this.nodeName);
     }
 

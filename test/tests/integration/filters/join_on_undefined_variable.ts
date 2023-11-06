@@ -22,7 +22,7 @@ class Test extends TestBase {
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            strict_variables: false
+            strictVariables: false
         };
     }
 }

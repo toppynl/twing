@@ -21,7 +21,7 @@ import {iteratorToArray} from "../../../helpers/iterator-to-array";
  *
  * @returns {Promise<string>} The concatenated string
  */
-export function join(value: any, glue: string = '', and: string = null): Promise<string> {
+export function join(value: any, glue: string = '', and: string | null = null): Promise<string> {
     let _do = (): string => {
         if (isNullOrUndefined(value)) {
             return '';

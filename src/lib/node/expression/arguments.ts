@@ -1,18 +1,18 @@
-import type {BaseExpressionNode, ExpressionNode} from "../expression";
+import type {BaseExpressionNode} from "../expression";
 import {createBaseExpressionNode} from "../expression";
 import type {BaseNodeAttributes} from "../../node";
 
-export interface ArgumentsNode extends BaseExpressionNode<"arguments", BaseNodeAttributes, Record<string, ExpressionNode>> {
+export interface ArgumentsNode<T extends BaseExpressionNode = BaseExpressionNode> extends BaseExpressionNode<"arguments", BaseNodeAttributes, Record<string, T>> {
 }
 
-export const createArgumentsNode = (
-    children: Record<string, ExpressionNode>,
+export const createArgumentsNode = <T extends BaseExpressionNode>(
+    children: Record<string, T>,
     line: number,
     column: number
-): ArgumentsNode => {
+): ArgumentsNode<T> => {
     const baseNode = createBaseExpressionNode("arguments", {}, children, line, column);
 
-    const node = {
+    const node: ArgumentsNode<T> = {
         ...baseNode
     };
 

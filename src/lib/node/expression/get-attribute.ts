@@ -1,37 +1,32 @@
 import {
     BaseExpressionNode,
     BaseExpressionNodeAttributes,
-    createBaseExpressionNode,
-    ExpressionNode
+    createBaseExpressionNode
 } from "../expression";
 
 export type GetAttributeCallType = "any" | "array" | "method";
 
 export type GetAttributeNodeAttributes = BaseExpressionNodeAttributes & {
-    is_defined_test: boolean;
     type: GetAttributeCallType;
 };
 
 export interface GetAttributeNode extends BaseExpressionNode<"get_attribute", GetAttributeNodeAttributes, {
-    target: ExpressionNode;
-    attribute: ExpressionNode;
-    arguments: ExpressionNode;
+    target: BaseExpressionNode;
+    attribute: BaseExpressionNode;
+    arguments: BaseExpressionNode;
 }> {
 }
 
 export const createGetAttributeNode = (
-    target: ExpressionNode,
-    attribute: ExpressionNode,
-    methodArguments: ExpressionNode,
+    target: BaseExpressionNode,
+    attribute: BaseExpressionNode,
+    methodArguments: BaseExpressionNode,
     type: GetAttributeCallType,
     line: number,
     column: number
 ): GetAttributeNode => {
     const baseNode = createBaseExpressionNode("get_attribute", {
-        type,
-        is_defined_test: false,
-        ignore_strict_check: false,
-        optimizable: true
+        type
     }, {
         target,
         attribute,
@@ -40,27 +35,17 @@ export const createGetAttributeNode = (
 
     const node: GetAttributeNode = {
         ...baseNode,
-        clone: () => {
-            const {attributes, children, line, column} = node;
-            const {target, attribute, arguments: methodArguments} = children;
-            const {type} = attributes;
-
-            return createGetAttributeNode(
-                target.clone(),
-                attribute.clone(),
-                methodArguments.clone(),
-                type,
-                line,
-                column
-            )
-        },
-        compile: (compiler) => {
-            const {environment, options} = compiler;
+        compile: (compiler, flags) => {
+            const {environment, options: compilerOptions} = compiler;
             const {target, attribute, arguments: methodArguments} = node.children;
-            const {optimizable, ignore_strict_check, type, is_defined_test} = node.attributes;
+            const {type} = node.attributes;
+            
+            const optimizable = flags?.optimizable !== false; // will default to true
+            const isDefinedTest = flags?.isDefinedTest === true; // will default to false
+            const ignoreStrictCheck = flags?.ignoreStrictCheck === true; // will default to false
 
             // optimize array, hash and Map calls
-            if (optimizable && (!options.strictVariables || ignore_strict_check) && !is_defined_test && (type === "array")) {
+            if (optimizable && (!compilerOptions.strictVariables || ignoreStrictCheck) && !isDefinedTest && (type === "array")) {
                 compiler
                     .raw('await (async () => {let object = ')
                     .subCompile(target)
@@ -73,20 +58,19 @@ export const createGetAttributeNode = (
             }
 
             compiler.raw(`await template.traceableMethod(runtime.getAttribute, ${node.line}, template.source)(runtime, `);
-
-            if (ignore_strict_check) {
-                target.attributes.ignore_strict_check = true;
-            }
-
-            compiler.subCompile(target);
+            
+            compiler.subCompile(target, {
+                ignoreStrictCheck,
+                optimizable: target.is("get_attribute") ? optimizable : undefined
+            });
 
             compiler.raw(', ').subCompile(attribute);
             compiler.raw(', ').subCompile(methodArguments);
 
             compiler
                 .raw(', ').render(type)
-                .raw(', ').render(is_defined_test)
-                .raw(', ').render(ignore_strict_check)
+                .raw(', ').render(flags?.isDefinedTest || false)
+                .raw(', ').render(flags?.ignoreStrictCheck || false)
                 .raw(', ').render(environment.isSandboxed())
                 .raw(')');
         }

@@ -1,0 +1,30 @@
+import {createVerbatimNode} from "../node/verbatim";
+import {Token, TokenType} from "twig-lexer";
+import {TwingTagHandler} from "../tag-handler";
+
+export const createVerbatimTagHandler = (): TwingTagHandler => {
+    const tag = 'verbatim';
+
+    return {
+        tag,
+        initialize: (parser) => {
+            return (token, stream) => {
+                stream.expect(TokenType.TAG_END);
+
+                let text = parser.subparse(stream, tag, (token: Token) => {
+                    return token.test(TokenType.NAME, 'endverbatim');
+                }, true);
+
+                stream.expect(TokenType.TAG_END);
+
+                let content = '';
+
+                if (text.is("text")) {
+                    content = text.attributes.data;
+                }
+
+                return createVerbatimNode(content, token.line, token.column, tag);
+            };
+        }
+    };
+};

@@ -1,7 +1,7 @@
 import TestBase, {runTest} from "../TestBase";
 import {createIntegrationTest} from "../test";
 import {createEnvironment} from "../../../../src/lib/environment";
-import {TwingLoaderArray} from "../../../../src";
+import {createArrayLoader} from "../../../../src/lib/loader/array";
 
 class Test extends TestBase {
     getDescription() {
@@ -34,7 +34,7 @@ NOT FOO
 
     async getContext() {
         const environment = createEnvironment(
-            new TwingLoaderArray({
+            createArrayLoader({
                 'included.twig': `
 {% block foo %}FOO{% endblock %}`
             })

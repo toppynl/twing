@@ -10,5 +10,5 @@ export const createVerbatimNode = (
     data: string,
     line: number,
     column: number,
-    tag: string = null
+    tag: string
 ): VerbatimNode => createBaseTextNode("verbatim", data, line, column, tag);

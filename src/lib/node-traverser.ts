@@ -1,77 +1,62 @@
-/**
- * TwingNodeTraverser is a node traverser.
- *
- * It visits all nodes and their children and calls the given visitor for each.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-import {TwingEnvironment} from "./environment";
-import {TwingNodeVisitorInterface} from "./node-visitor-interface";
-import {getChildren, Node} from "./node";
+import {TwingNodeVisitor} from "./node-visitor";
+import {BaseNode, getChildren, Node} from "./node";
 
 import {ksort} from "./helpers/ksort";
 import {push} from "./helpers/push";
 
-export class TwingNodeTraverser {
-    private visitors: Map<number, Map<string, TwingNodeVisitorInterface>> = new Map();
+/**
+ * TwingNodeTraverser is a node traverser.
+ *
+ * It visits all nodes and their children and calls the registered visitors for each.
+ */
+export type TwingNodeTraverser = (node: BaseNode) => BaseNode | null;
 
-    /**
-     *
-     * @param {AnEnvironment} env
-     * @param {Array<TwingNodeVisitorInterface>} visitors
-     */
-    constructor(
-        private readonly env: TwingEnvironment,
-        visitors: Array<TwingNodeVisitorInterface> = []
-    ) {
-        this.env = env;
+export const createNodeTraverser = (
+    visitors: Array<TwingNodeVisitor>
+): TwingNodeTraverser => {
+    const visitorsByPriority: Map<number, Map<string, TwingNodeVisitor>> = new Map();
 
-        for (let visitor of visitors) {
-            this.addVisitor(visitor);
-        }
-    }
+    for (const visitor of visitors) {
+        let visitors = visitorsByPriority.get(visitor.priority);
 
-    addVisitor(visitor: TwingNodeVisitorInterface) {
-        if (!this.visitors.has(visitor.getPriority())) {
-            this.visitors.set(visitor.getPriority(), new Map());
+        if (!visitors) {
+            visitors = new Map();
+
+            visitorsByPriority.set(visitor.priority, visitors);
         }
 
-        push(this.visitors.get(visitor.getPriority()), visitor);
+        push(visitors, visitor);
     }
 
-    /**
-     * Traverses a node and calls the registered visitors.
-     */
-    traverse(node: Node): Node {
-        let result: Node | false = node;
+    const traverseWithVisitor = (visitor: TwingNodeVisitor, node: BaseNode) => {
+        node = visitor.enterNode(node);
 
-        ksort(this.visitors);
-
-        for (const [, visitors] of this.visitors) {
-            for (const [, visitor] of visitors) {
-                result = this.traverseWithVisitor(visitor, node);
-            }
-        }
-
-        return result;
-    }
-
-    traverseWithVisitor(visitor: TwingNodeVisitorInterface, node: Node): Node {
-        node = visitor.enterNode(node, this.env);
-        
         for (const [key, child] of getChildren(node)) {
-            const newChild = this.traverseWithVisitor(visitor, child);
+            const newChild = traverseWithVisitor(visitor, child);
 
             if (newChild) {
                 if (newChild !== child) {
                     node.children[key] = newChild;
                 }
-            }
-            else {
-                delete child.children[key];
+            } else {
+                delete node.children[key];
             }
         }
 
-        return visitor.leaveNode(node, this.env);
-    }
-}
+        return visitor.leaveNode(node);
+    };
+
+    return (node) => {
+        let result: Node | null = node;
+
+        ksort(visitorsByPriority);
+
+        for (const [, visitors] of visitorsByPriority) {
+            for (const [, visitor] of visitors) {
+                result = traverseWithVisitor(visitor, node);
+            }
+        }
+
+        return result;
+    };
+};

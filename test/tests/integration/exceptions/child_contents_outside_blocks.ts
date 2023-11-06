@@ -27,7 +27,7 @@ Content outside a block.
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: A template that extends another one cannot include content outside Twig blocks. Did you forget to put the content inside a {% block %} tag in "index.twig" at line 3?';
+        return 'TwingParsingError: A template that extends another one cannot include content outside Twig blocks. Did you forget to put the content inside a {% block %} tag in "index.twig" at line 3?';
     }
 }
 

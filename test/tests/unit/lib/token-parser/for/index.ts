@@ -1,6 +1,6 @@
 import * as tape from 'tape';
 import {TwingTokenStream} from "../../../../../../src/lib/token-stream";
-import {ForTokenParser} from "../../../../../../src/lib/token-parser/for";
+import {ForTokenParser} from "../../../../../../src/lib/tag-handler/for";
 import {createForNode} from "../../../../../../src/lib/node/for";
 import {createAssignNameNode} from "../../../../../../src/lib/node/expression/assign-name";
 import {createConstantNode} from "../../../../../../src/lib/node/expression/constant";

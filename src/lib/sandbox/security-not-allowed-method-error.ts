@@ -1,8 +1,7 @@
-import {TwingSandboxSecurityError} from "./security-error";
-import {TwingSource} from "../source";
+import {BaseSandboxSecurityError} from "./security-error";
 
-export class TwingSandboxSecurityNotAllowedMethodError extends TwingSandboxSecurityError {
-    constructor(message: string, line: number = -1, source: TwingSource = null) {
-        super(message, line, source);
-    }
+export interface TwingSandboxSecurityNotAllowedMethodError extends BaseSandboxSecurityError {
+}
+
+export class TwingSandboxSecurityNotAllowedMethodError extends BaseSandboxSecurityError {
 }

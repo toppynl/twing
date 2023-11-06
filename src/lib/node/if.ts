@@ -1,16 +1,16 @@
 import {BaseNode, createBaseNode, getChildrenCount, BaseNodeAttributes} from "../node";
 
 type NodeIfChildren = {
-    tests: BaseNode<any>;
-    else?: BaseNode<any>;
+    tests: BaseNode;
+    else?: BaseNode;
 };
 
 export interface IfNode extends BaseNode<'if', BaseNodeAttributes, NodeIfChildren> {
 }
 
 export const createIfNode = (
-    testNode: BaseNode<any>,
-    elseNode: BaseNode<any> | null,
+    testNode: BaseNode,
+    elseNode: BaseNode | null,
     line: number,
     column: number,
     tag: string | null = null
@@ -66,7 +66,6 @@ export const createIfNode = (
 
     const node: IfNode = {
         ...baseNode,
-        clone: () => createIfNode(testNode, elseNode, line, column, tag),
         compile
     };
 

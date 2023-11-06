@@ -12,7 +12,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Calling "parent" on a template that does not extend nor "use" another template is forbidden in "index.twig" at line 3.';
+        return 'TwingParsingError: Calling "parent" on a template that does not extend nor "use" another template is forbidden in "index.twig" at line 3.';
     }
 }
 

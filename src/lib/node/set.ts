@@ -8,8 +8,8 @@ export type SetNodeAttributes = BaseNodeAttributes & {
 };
 
 export interface SetNode extends BaseNode<"set", SetNodeAttributes, {
-    names: BaseNode<any>;
-    values: BaseNode<any>;
+    names: BaseNode;
+    values: BaseNode;
 }> {
 }
 
@@ -19,7 +19,7 @@ export const createSetNode = (
     values: SetNode["children"]["values"],
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): SetNode => {
     const baseNode = createBaseNode("set", {
         capture,
@@ -77,7 +77,7 @@ export const createSetNode = (
                     ;
                 }
 
-                compiler.subCompile(names, false);
+                compiler.subCompile(names); //, false
 
                 if (capture) {
                     compiler

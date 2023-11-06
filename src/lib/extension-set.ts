@@ -1,20 +1,23 @@
-import {TwingTokenParserInterface} from "./token-parser-interface";
+import {TwingTagHandler} from "./tag-handler";
 import {TwingFilter} from "./filter";
 import {TwingFunction} from "./function";
-import {TwingNodeVisitorInterface} from "./node-visitor-interface";
+import {TwingNodeVisitor} from "./node-visitor";
 import {TwingExtensionInterface} from "./extension-interface";
 import {TwingTest} from "./test";
-import {TwingOperator, TwingOperatorType} from "./operator";
+import {TwingOperator} from "./operator";
 import {TwingSourceMapNodeFactory} from "./source-map/node-factory";
+import {getFunction} from "./helpers/get-function";
+import {getFilter} from "./helpers/get-filter";
+import {getTest} from "./helpers/get-test";
 
 export class TwingExtensionSet {
-    private visitors: TwingNodeVisitorInterface[] = [];
+    private visitors: TwingNodeVisitor[] = [];
     private filters: Map<string, TwingFilter> = new Map();
     private tests: Map<string, TwingTest> = new Map();
     private functions: Map<string, TwingFunction> = new Map();
     private unaryOperators: Map<string, TwingOperator> = new Map();
     private binaryOperators: Map<string, TwingOperator> = new Map();
-    private tokenParsers: Map<string, TwingTokenParserInterface> = new Map();
+    private tagHandlers: Map<string, TwingTagHandler> = new Map();
     private sourceMapNodeFactories: Map<string, TwingSourceMapNodeFactory> = new Map();
 
     readonly extensions: Map<string, TwingExtensionInterface>;
@@ -55,26 +58,22 @@ export class TwingExtensionSet {
         return JSON.stringify([...this.extensions.keys()]);
     }
 
-    getNodeVisitors(): TwingNodeVisitorInterface[] {
+    getNodeVisitors(): TwingNodeVisitor[] {
         return this.visitors;
     }
 
-    getTokenParsers(): TwingTokenParserInterface[] {
-        return [...this.tokenParsers.values()];
+    getTokenParsers(): TwingTagHandler[] {
+        return [...this.tagHandlers.values()];
     }
 
-    addTokenParser(parser: TwingTokenParserInterface) {
-        if (this.tokenParsers.has(parser.getTag())) {
-            throw new Error(`Tag "${parser.getTag()}" is already registered.`);
-        }
-
-        this.tokenParsers.set(parser.getTag(), parser);
+    addTagHandler(tagHandler: TwingTagHandler) {
+        this.tagHandlers.set(tagHandler.tag, tagHandler);
     }
 
     /**
      * Gets the registered unary Operators.
      *
-     * @return Map<string, TwingOperator> A map of unary operator definitions
+     * @return Map<string, Operator> A map of unary operator definitions
      */
     getUnaryOperators(): Map<string, TwingOperator> {
         return this.unaryOperators;
@@ -83,73 +82,26 @@ export class TwingExtensionSet {
     /**
      * Gets the registered binary Operators.
      *
-     * @return Map<string, TwingOperator> A map of binary operators
+     * @return Map<string, Operator> A map of binary operators
      */
     getBinaryOperators(): Map<string, TwingOperator> {
         return this.binaryOperators;
     }
 
     addFunction(twingFunction: TwingFunction) {
-        if (this.functions.has(twingFunction.getName())) {
-            throw new Error(`Function "${twingFunction.getName()}" is already registered.`);
-        }
-
-        this.functions.set(twingFunction.getName(), twingFunction);
+        this.functions.set(twingFunction.name, twingFunction);
     }
 
     getFunctions() {
         return this.functions;
     }
-
-    /**
-     * Get a function by name.
-     *
-     * @param {string} name         function name
-     * @returns {TwingFunction}     A TwingFunction instance or null if the function does not exist
-     */
-    getFunction(name: string): TwingFunction {
-        if (this.functions.has(name)) {
-            // @ts-ignore
-            return this.functions.get(name);
-        }
-
-        for (let [pattern, twingFunction] of this.functions) {
-            let count: number = 0;
-
-            pattern = pattern.replace(/\*/g, function () {
-                count++;
-
-                return '(.*?)';
-            });
-
-            if (count) {
-                let regExp = new RegExp('^' + pattern + '$', 'g');
-                // @ts-ignore
-                let match: RegExpExecArray = regExp.exec(name);
-                let matches = [];
-
-                if (match) {
-                    for (let i = 1; i <= count; i++) {
-                        matches.push(match[i]);
-                    }
-
-                    twingFunction.setArguments(matches);
-
-                    return twingFunction;
-                }
-            }
-        }
-
-        // @ts-ignore
-        return null;
+    
+    getFunction(name: string): TwingFunction | null {
+        return getFunction(this.functions, name);
     }
 
     addFilter(filter: TwingFilter) {
-        if (this.filters.has(filter.getName())) {
-            throw new Error(`Filter "${filter.getName()}" is already registered.`);
-        }
-
-        this.filters.set(filter.getName(), filter);
+        this.filters.set(filter.name, filter);
     }
 
     getFilters(): Map<string, TwingFilter> {
@@ -164,53 +116,15 @@ export class TwingExtensionSet {
      * @return {TwingFilter|false} A TwingFilter instance or false if the filter does not exist
      */
     getFilter(name: string): TwingFilter | null {
-        if (this.filters.has(name)) {
-            return this.filters.get(name);
-        }
-
-        let filter: TwingFilter;
-        let pattern: string;
-
-        for ([pattern, filter] of this.filters) {
-            let count: number = 0;
-
-            pattern = pattern.replace(/\*/g, function () {
-                count++;
-
-                return '(.*?)';
-            });
-
-            if (count) {
-                let regExp = new RegExp('^' + pattern + '$', 'g');
-                // @ts-ignore
-                let match: RegExpExecArray = regExp.exec(name);
-                let matches = [];
-
-                if (match) {
-                    for (let i = 1; i <= count; i++) {
-                        matches.push(match[i]);
-                    }
-
-                    filter.setArguments(matches);
-
-                    return filter;
-                }
-            }
-        }
-
-        return null;
+        return getFilter(this.filters, name);
     }
 
-    addNodeVisitor(visitor: TwingNodeVisitorInterface) {
+    addNodeVisitor(visitor: TwingNodeVisitor) {
         this.visitors.push(visitor);
     }
 
     addTest(test: TwingTest) {
-        if (this.tests.has(test.getName())) {
-            throw new Error(`Test "${test.getName()}" is already registered.`);
-        }
-
-        this.tests.set(test.getName(), test);
+        this.tests.set(test.name, test);
     }
 
     /**
@@ -225,62 +139,26 @@ export class TwingExtensionSet {
      * Gets a test by name.
      *
      * @param {string} name The test name
-     * @returns {TwingTest} A TwingTest instance or null if the test does not exist
+     * @returns {TwingTest} A MyTest instance or null if the test does not exist
      */
-    getTest(name: string): TwingTest {
-        if (this.tests.has(name)) {
-            // @ts-ignore
-            return this.tests.get(name);
-        }
-
-        let test: TwingTest;
-        let pattern: string;
-
-        for ([pattern, test] of this.tests) {
-            let count: number = 0;
-
-            pattern = pattern.replace(/\*/g, function () {
-                count++;
-
-                return '(.*?)';
-            });
-
-            if (count) {
-                let regExp = new RegExp('^' + pattern + '$', 'g');
-                // @ts-ignore
-                let match: RegExpExecArray = regExp.exec(name);
-                let matches = [];
-
-                if (match) {
-                    for (let i = 1; i <= count; i++) {
-                        matches.push(match[i]);
-                    }
-
-                    test.setArguments(matches);
-
-                    return test;
-                }
-            }
-        }
-
-        // @ts-ignore
-        return null;
+    getTest(name: string): TwingTest | null {
+        return getTest(this.tests, name);
     }
 
     addOperator(operator: TwingOperator) {
         let bucket: Map<string, TwingOperator>;
 
-        if (operator.getType() === TwingOperatorType.UNARY) {
+        if (operator.type === "UNARY") {
             bucket = this.unaryOperators;
         } else {
             bucket = this.binaryOperators;
         }
 
-        if (bucket.has(operator.getName())) {
-            throw new Error(`Operator "${operator.getName()}" is already registered.`);
+        if (bucket.has(operator.name)) {
+            throw new Error(`Operator "${operator.name}" is already registered.`);
         }
 
-        bucket.set(operator.getName(), operator);
+        bucket.set(operator.name, operator);
     }
 
     addSourceMapNodeFactory(factory: TwingSourceMapNodeFactory) {
@@ -333,7 +211,7 @@ export class TwingExtensionSet {
 
         // token parsers
         for (let parser of extension.getTokenParsers()) {
-            this.addTokenParser(parser);
+            this.addTagHandler(parser);
         }
 
         // node visitors

@@ -18,7 +18,7 @@ Foo`
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorRuntime: Variable `vars` does not exist in "index.twig" at line 3.';
+        return 'TwingRuntimeError: Variable `vars` does not exist in "index.twig" at line 3.';
     }
 }
 

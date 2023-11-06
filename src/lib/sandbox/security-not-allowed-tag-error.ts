@@ -1,16 +1,12 @@
-import {TwingSandboxSecurityError} from "./security-error";
-import {TwingSource} from "../source";
+import {BaseSandboxSecurityError} from "./security-error";
+import type {Source} from "../source";
 
-export class TwingSandboxSecurityNotAllowedTagError extends TwingSandboxSecurityError {
-    private readonly tagName: string;
+export interface TwingSandboxSecurityNotAllowedTagError extends BaseSandboxSecurityError {
+    readonly tagName: string;
+}
 
-    constructor(message: string, tagName: string, line: number = -1, source: TwingSource = null) {
+export class TwingSandboxSecurityNotAllowedTagError extends BaseSandboxSecurityError {
+    constructor(message: string, public readonly tagName: string, line?: number, source?: Source) {
         super(message, line, source);
-        
-        this.tagName = tagName;
-    }
-
-    getTagName() {
-        return this.tagName;
     }
 }

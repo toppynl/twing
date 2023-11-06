@@ -1,7 +1,6 @@
 import {DateTime, Duration} from "luxon";
 import {modifyDate} from "../../../helpers/modify-date";
-import {TwingErrorRuntime} from "../../../error/runtime";
-import {formatDateTime} from "../../../helpers/format-date-time";
+import {TwingRuntimeError} from "../../../error/runtime";
 import {TwingTemplate} from "../../../template";
 
 /**
@@ -19,13 +18,14 @@ import {TwingTemplate} from "../../../template";
  *
  * @returns {Promise<DateTime | Duration>}
  */
-export function date(
-    template: TwingTemplate, date: Date | DateTime | Duration | number | string,
-    timezone: string | null | false = null
-): Promise<DateTime | Duration> {
+export const createDate = (
+    template: TwingTemplate,
+    date: Date | DateTime | number | string | null,
+    timezone: string | null | false
+): Promise<DateTime> => {
     const defaultTimezone = template.environment.getTimezone();
     
-    let _do = (): DateTime | Duration => {
+    let _do = (): DateTime => {
         let result: DateTime;
 
         // determine the timezone
@@ -34,16 +34,12 @@ export function date(
                 timezone = defaultTimezone;
             }
         }
-        
+
         if (date instanceof DateTime) {
             if (timezone !== false) {
                 date = date.setZone(timezone);
             }
 
-            return date;
-        }
-
-        if (date instanceof Duration) {
             return date;
         }
 
@@ -82,7 +78,7 @@ export function date(
                     result = modifyDate(date);
                 }
             }
-        } else if (typeof date === 'number') {
+        } else {
             // date is PHP timestamp - i.e. in seconds
             let ts = date as number * 1000;
 
@@ -93,7 +89,7 @@ export function date(
         }
 
         if (!result || !result.isValid) {
-            throw new TwingErrorRuntime(`Failed to parse date "${date}".`);
+            throw new TwingRuntimeError(`Failed to parse date "${date}".`);
         }
 
         if (timezone !== false) {
@@ -105,9 +101,10 @@ export function date(
             }
         }
 
-        Reflect.set(result, 'format', (format: string) => {
-            return formatDateTime(this, format);
-        });
+        // todo: why did we have this?
+        // Reflect.set(result, 'format', (format: string) => {
+        //     return formatDateTime(result, format);
+        // });
 
         return result;
     };
@@ -117,4 +114,16 @@ export function date(
     } catch (e) {
         return Promise.reject(e);
     }
+}
+
+export const date = (
+    template: TwingTemplate,
+    date: Date | DateTime | Duration | number | string | null,
+    timezone: string | null | false
+): Promise<DateTime | Duration> => {
+    if (date instanceof Duration) {
+        return Promise.resolve(date);
+    }
+    
+    return createDate(template, date, timezone);
 }

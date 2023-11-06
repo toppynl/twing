@@ -1,12 +1,12 @@
 import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 
 export interface BodyNode extends BaseNode<"body", BaseNodeAttributes, {
-    content: BaseNode<any>;
+    content: BaseNode;
 }> {
 }
 
 export const createBodyNode = (
-    content: BaseNode<any>,
+    content: BaseNode,
     line: number,
     column: number,
     tag?: string

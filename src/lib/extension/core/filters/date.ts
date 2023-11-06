@@ -18,18 +18,18 @@ import {TwingTemplate} from "../../../template";
  *
  * @return {Promise<string>} The formatted date
  */
-export function date(template: TwingTemplate, date: DateTime | Duration | string, format: string = null, timezone: string | null | false = null): Promise<string> {
-    if (format === null) {
-        let formats = template.environment.getDateFormats();
-
-        format = date instanceof Duration ? formats[1] : formats[0];
-    }
-
+export const date = (template: TwingTemplate, date: DateTime | Duration | string, format: string | null = null, timezone: string | null | false = null): Promise<string> => {
     return createDate(template, date, timezone).then((date) => {
+        if (format === null) {
+            let formats = template.environment.getDateFormats();
+
+            format = date instanceof Duration ? formats[1] : formats[0];
+        }
+        
         if (date instanceof Duration) {
             return Promise.resolve(formatDuration(date, format));
         }
         
         return Promise.resolve(formatDateTime(date, format));
     });
-}
+};

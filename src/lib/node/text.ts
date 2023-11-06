@@ -34,8 +34,7 @@ export const createBaseTextNode = <Type extends string>(
                 .addSourceMapLeave()
             ;
         },
-        isAnOutputNode: true,
-        clone: () => createBaseTextNode(type, data, line, column, tag)
+        isAnOutputNode: true
     };
 
     return node;
@@ -44,6 +43,5 @@ export const createBaseTextNode = <Type extends string>(
 export const createTextNode = (
     data: string,
     line: number,
-    column: number,
-    tag: string | null = null
-): TextNode => createBaseTextNode(textNodeType, data, line, column, tag);
+    column: number
+): TextNode => createBaseTextNode(textNodeType, data, line, column);

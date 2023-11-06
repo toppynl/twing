@@ -18,7 +18,7 @@ export const createWithNode = (
     only: boolean,
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): WithNode => {
     const children: WithNodeChildren = {
         body
@@ -47,7 +47,7 @@ export const createWithNode = (
                     .raw(";\n")
                     .write(`if (typeof (tmp) !== 'object') {\n`)
                     .indent()
-                    .write('throw runtime.createRuntimeError(\'Variables passed to the "with" tag must be a hash.\', ')
+                    .write('throw new runtime.Error(\'Variables passed to the "with" tag must be a hash.\', ')
                     .render(baseNode.line)
                     .raw(", template.source);\n")
                     .outdent()

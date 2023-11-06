@@ -1,6 +1,6 @@
 import * as tape from 'tape';
 import {TwingTokenStream} from "../../../../../../src/lib/token-stream";
-import {MacroTokenParser} from "../../../../../../src/lib/token-parser/macro";
+import {MacroTokenParser} from "../../../../../../src/lib/tag-handler/macro";
 import {getParser} from "../../../../../mock-builder/parser";
 
 const sinon = require('sinon');
@@ -26,7 +26,7 @@ tape('MacroTokenParser', ({test}) => {
 
             sinon.stub(parser, 'parseExpression').returns(new Token(TokenType.NAME, 'foo', 1, 1));
 
-            tokenParser.setParser(parser);
+            tokenParser.initialize(parser);
 
             try {
                 tokenParser.parse(new Token(TokenType.NAME, 'block', 1, 1));

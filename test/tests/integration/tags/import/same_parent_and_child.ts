@@ -3,7 +3,7 @@ import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
     getDescription() {
-        return '"import" tag nested blocks with global macro';
+        return '"import" tag with same name in parent and child';
     }
 
     getTemplates() {

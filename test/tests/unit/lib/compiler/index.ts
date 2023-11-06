@@ -2,21 +2,18 @@ import * as tape from 'tape';
 import {createBaseNode} from "../../../../../src/lib/node";
 import {createConstantNode} from "../../../../../src/lib/node/expression/constant";
 import {createCompiler} from "../../../../../src/lib/compiler";
-import {MockEnvironment} from "../../../../mock/environment";
-import {MockLoader} from "../../../../mock/loader";
 import {createBodyNode} from "../../../../../src/lib/node/body";
 import {createTextNode} from "../../../../../src/lib/node/text";
+import {createMockedEnvironment} from "../../../../mock/environment";
 
 tape('Compiler', ({test}) => {
     test('subcompile method', ({same, end}) => {
         const node = createBaseNode(null, {}, {
             0: createConstantNode(1, 1, 1)
         }, 1, 1, 'foo');
-        const compiler = createCompiler(new MockEnvironment(new MockLoader()));
+        const compiler = createCompiler(createMockedEnvironment());
 
-        same(compiler.compile(node).indent().subCompile(node).source, '11', 'doesn\'t add indentation when raw is not set');
-        same(compiler.compile(node).indent().subCompile(node, true).source, '11', 'doesn\'t add indentation when raw is set to true');
-        same(compiler.compile(node).indent().subCompile(node, false).source, '1    1', 'add indentation when raw is set to false');
+        same(compiler.compile(node).indent().subCompile(node).source, '11', 'doesn\'t add indentation');
 
         end();
     });
@@ -24,7 +21,7 @@ tape('Compiler', ({test}) => {
     test('string method', ({same, end}) => {
         const node = createBaseNode(null, {}, {}, 1, 1, 'foo');
 
-        const compiler = createCompiler(new MockEnvironment(new MockLoader));
+        const compiler = createCompiler(createMockedEnvironment());
 
         same(compiler.compile(node).string('').source, '\`\`', 'supports empty parameter');
         same(compiler.compile(node).string(null).source, '\`\`', 'supports null parameter');
@@ -35,10 +32,10 @@ tape('Compiler', ({test}) => {
         end();
     });
 
-    test('repr method', ({same, end}) => {
+    test('render method', ({same, end}) => {
         const node = createBaseNode(null, {}, {}, 1, 1, 'foo');
 
-        const compiler = createCompiler(new MockEnvironment(new MockLoader));
+        const compiler = createCompiler(createMockedEnvironment());
 
         same(compiler.compile(node).render({1: 'a', 'b': 2, 'c': '3'}).source, '{"1": \`a\`, "b": 2, "c": \`3\`}', 'supports hashes');
         same(compiler.compile(node).render(undefined).source, 'undefined', 'supports undefined');
@@ -50,23 +47,23 @@ tape('Compiler', ({test}) => {
     test('outdent method', ({same, fail, end}) => {
         const node = createBaseNode(null, {}, {}, 1, 1, 'foo');
 
-        const compiler = createCompiler(new MockEnvironment(new MockLoader));
+        const compiler = createCompiler(createMockedEnvironment());
 
         try {
             compiler.compile(node).outdent();
 
             fail();
-        } catch (e) {
-            same(e.message, 'Unable to call outdent() as the indentation would become negative.', 'throws an error if the indentation becomes negative');
+        } catch (error) {
+            same((error as Error).message, 'Unable to call outdent() as the indentation would become negative.', 'throws an error if the indentation becomes negative');
         }
 
         end();
     });
 
     test('addSourceMapEnter', ({same, end}) => {
-        const compiler = createCompiler(new MockEnvironment(new MockLoader, {
-            source_map: true
-        }));
+        const compiler = createCompiler(createMockedEnvironment(), {
+            sourceMap: true
+        });
 
         const bodyNode = createBodyNode(createTextNode('foo', 1, 1), 1, 1);
 
@@ -74,7 +71,7 @@ tape('Compiler', ({test}) => {
             compiler.addSourceMapEnter(bodyNode);
         };
 
-        same(compiler.compile(bodyNode).source, 'this.environment.enterSourceMapBlock(1, 1, `body`, this.source, outputBuffer);\n');
+        same(compiler.compile(bodyNode).source, 'runtime.enterSourceMapBlock(1, 1, `body`, template.source, outputBuffer);\n');
 
         end();
     });

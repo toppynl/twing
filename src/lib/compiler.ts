@@ -1,5 +1,4 @@
-import type {BaseNode, Node} from "./node";
-import {isNullOrUndefined} from "util";
+import type {BaseNode} from "./node";
 import {addcslashes} from "locutus/php/strings";
 import {TwingFunction} from "./function";
 import {TwingTest} from "./test";
@@ -17,16 +16,20 @@ export type CompilerEnvironment = {
     isSandboxed: () => boolean;
 };
 
-export interface Compiler {
+export interface TwingCompiler {
     readonly environment: CompilerEnvironment;
 
     readonly options: CompilerOptions;
 
     readonly source: string;
 
-    compile(node: Node, indentation?: number): this;
-
-    subCompile(node: Node, asRaw?: boolean): this;
+    compile(node: BaseNode, indentation?: number): this;
+    
+    subCompile(node: BaseNode, options?: {
+        isDefinedTest?: boolean;
+        ignoreStrictCheck?: boolean;
+        optimizable?: boolean;
+    }): this;
 
     /**
      * Adds the passed data to the compiled code, as-is, without indentation.
@@ -48,7 +51,7 @@ export interface Compiler {
      */
     render(data: any): this;
 
-    addSourceMapEnter(node: BaseNode<any>): this;
+    addSourceMapEnter(node: BaseNode): this;
 
     addSourceMapLeave(): this;
 
@@ -68,11 +71,11 @@ export interface Compiler {
 export const createCompiler = (
     environment: CompilerEnvironment,
     options?: CompilerOptions
-): Compiler => {
+): TwingCompiler => {
     let source: string = '';
     let currentIndentation: number = 0;
 
-    const compiler: Compiler = {
+    const compiler: TwingCompiler = {
         environment,
         options: options || {
             sourceMap: false,
@@ -89,12 +92,12 @@ export const createCompiler = (
 
             return compiler;
         },
-        subCompile: (node, asRaw = true) => {
-            if (asRaw === false) {
-                source += ' '.repeat(currentIndentation * 4);
-            }
-
-            node.compile(compiler);
+        subCompile: (node, flags) => {
+            node.compile(compiler, flags ? {
+                isDefinedTest: flags.isDefinedTest,
+                ignoreStrictCheck: flags.ignoreStrictCheck,
+                optimizable: flags.optimizable
+            } : undefined);
 
             return compiler;
         },
@@ -109,7 +112,7 @@ export const createCompiler = (
             return compiler;
         },
         string: (value) => {
-            if (!isNullOrUndefined(value)) {
+            if (value !== null && value !== undefined) {
                 if (typeof value === 'string') {
                     value = '`' + addcslashes(value, "\0\t\\`").replace(/\${/g, '\\${') + '`';
                 }
@@ -124,7 +127,7 @@ export const createCompiler = (
         render: (data) => {
             if (typeof data === 'number') {
                 compiler.raw(data);
-            } else if (isNullOrUndefined(data)) {
+            } else if (data === null || data === undefined) {
                 compiler.raw(`${data}`);
             } else if (typeof data === 'boolean') {
                 compiler.raw(data ? 'true' : 'false');
@@ -177,24 +180,24 @@ export const createCompiler = (
             return compiler;
         },
         addSourceMapEnter: (node) => {
-            if (options?.sourceMap) {
+            if (compiler.options.sourceMap) {
                 compiler
-                    .write('this.environment.enterSourceMapBlock(')
+                    .write('runtime.enterSourceMapBlock(')
                     .raw(node.line)
                     .raw(', ')
                     .raw(node.column)
                     .raw(', ')
-                    .string(node.type || '')
+                    .string(node.type)
                     .raw(', ')
-                    .raw('this.source, outputBuffer);\n')
+                    .raw('template.source, outputBuffer);\n')
             }
 
             return compiler;
         },
         addSourceMapLeave: () => {
-            if (options?.sourceMap) {
+            if (compiler.options.sourceMap) {
                 compiler
-                    .write('this.environment.leaveSourceMapBlock(outputBuffer);\n')
+                    .write('runtime.leaveSourceMapBlock(outputBuffer);\n')
                 ;
             }
 

@@ -18,7 +18,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingErrorSyntax: Unexpected token "operator" of value "=" ("end of statement block" expected) in "foo.twig" at line 3.';
+        return 'TwingParsingError: Unexpected token "operator" of value "=" ("end of statement block" expected) in "foo.twig" at line 3.';
     }
 }
 

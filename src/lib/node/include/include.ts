@@ -10,7 +10,7 @@ export const createIncludeNode = (
     children: BaseIncludeNodeChildren,
     line: number,
     column: number,
-    tag: string | null = null
+    tag: string
 ): IncludeNode => {
     const baseNode = createBaseIncludeNode(
         includeNodeType,

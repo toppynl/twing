@@ -1,12 +1,13 @@
 import type {BaseNode, BaseNodeAttributes} from "../node";
 import {createBaseNode} from "../node";
 import type {ConstantNode} from "./expression/constant";
+import {BaseExpressionNode} from "./expression";
 
 export const traitNodeType = "trait";
 
 export interface TraitNode extends BaseNode<typeof traitNodeType, BaseNodeAttributes, {
     template: ConstantNode;
-    targets: BaseNode<null, {}, Record<string, ConstantNode>>;
+    targets: BaseExpressionNode<string, {}, Record<string, ConstantNode>>;
 }> {
 }
 

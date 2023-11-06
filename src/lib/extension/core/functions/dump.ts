@@ -94,18 +94,18 @@ let varDump = function (...args: any[]): string {
     return output.join('');
 };
 
-export function dump(context: any, ...vars: Array<any>): Promise<string> {
+export const dump = (context: any, ...vars: Array<any>): Promise<string> => {
     if (vars.length < 1) {
-        let vars_: Map<any, any> = new Map();
+        const vars_ = new Map();
 
-        return iterate(context, (key: any, value: any): Promise<void> => {
+        return iterate(context, (key, value) => {
             vars_.set(key, value);
 
-            return;
+            return Promise.resolve();
         }).then(() => {
             return varDump(vars_);
         });
     }
 
     return Promise.resolve(varDump(...vars));
-}
+};

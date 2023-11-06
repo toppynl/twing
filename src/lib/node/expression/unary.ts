@@ -1,6 +1,5 @@
 import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
-import {Compiler} from "../../compiler";
-import {Node, NodeType} from "../../node";
+import type {NodeType} from "../../node";
 import type {NegativeNode} from "./unary/neg";
 import type {NotNode} from "./unary/not";
 import type {PositiveNode} from "./unary/pos";
@@ -12,28 +11,23 @@ export type UnaryNode =
     ;
 
 export interface BaseUnaryNode<Type extends string> extends BaseExpressionNode<Type, BaseExpressionNodeAttributes, {
-    operand: Node;
+    operand: BaseExpressionNode;
 }> {
 }
 
 export const createUnaryNodeFactory = <InstanceType extends BaseUnaryNode<any>>(
     type: NodeType<InstanceType>,
-    operator: string | null,
-    definition?: {
-        compile?: (compiler: Compiler, baseNode: BaseUnaryNode<NodeType<InstanceType>>) => void
-    }
+    operator: string
 ) => {
     const factory = (
-        operand: Node,
+        operand: BaseExpressionNode,
         line: number,
         column: number
     ): InstanceType => {
         const baseNode = createBaseUnaryNode(type, operator, operand, line, column);
 
         return {
-            ...baseNode,
-            compile: definition?.compile ? (compiler: Compiler) => definition.compile(compiler, baseNode) : baseNode.compile,
-            clone: () => factory(baseNode.children.operand, line, column)
+            ...baseNode
         } as InstanceType;
     };
 
@@ -43,7 +37,7 @@ export const createUnaryNodeFactory = <InstanceType extends BaseUnaryNode<any>>(
 export const createBaseUnaryNode = <Type extends string>(
     type: Type,
     operator: string,
-    operand: Node,
+    operand: BaseExpressionNode,
     line: number,
     column: number
 ): BaseUnaryNode<Type> => {
@@ -59,7 +53,6 @@ export const createBaseUnaryNode = <Type extends string>(
                 .raw('(')
                 .subCompile(baseNode.children.operand)
                 .raw(')');
-        },
-        clone: () => createBaseUnaryNode(type, operator, baseNode.children.operand, line, column)
+        }
     };
 };

@@ -2,9 +2,9 @@ import {DateTime} from "luxon";
 
 export function modifyDate(modifier: string): DateTime {
     let result = null;
-    let regExp = /^([-|\+])([0-9]+?)(\s*)([a-z]*)/g;
-
-    let matches: RegExpExecArray = regExp.exec(modifier);
+    
+    const regExp = /^([-|\+])([0-9]+?)(\s*)([a-z]*)/g;
+    const matches = regExp.exec(modifier);
 
     if (matches) {
         result = DateTime.local();

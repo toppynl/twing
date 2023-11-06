@@ -3,7 +3,6 @@ import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
 export const blockReferenceType = "block_reference";
 
 export type BlockReferenceNodeAttributes = BaseNodeAttributes & {
-    is_defined_test: boolean;
     name: string;
 };
 
@@ -14,11 +13,10 @@ export const createBlockReferenceNode = (
     name: string,
     line: number,
     column: number,
-    tag: string = null
+    tag: string
 ): BlockReferenceNode => {
     const baseNode = createBaseNode(blockReferenceType, {
-        name,
-        is_defined_test: false
+        name
     }, {}, line, column, tag);
 
     return {

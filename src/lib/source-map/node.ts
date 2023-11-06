@@ -1,12 +1,12 @@
 import {SourceNode} from "source-map";
-import {TwingSource} from "../source";
+import {Source} from "../source";
 
 export class TwingSourceMapNode {
     protected _name: string;
-    protected _source: TwingSource;
+    protected _source: Source;
     protected _line: number;
     protected _column: number;
-    protected _parent: TwingSourceMapNode;
+    protected _parent: TwingSourceMapNode | null;
     protected _children: TwingSourceMapNode[];
     protected _content: string;
 
@@ -15,15 +15,15 @@ export class TwingSourceMapNode {
      *
      * @param {number} line 0-based
      * @param {number} column 0-based
-     * @param {TwingSource} source
+     * @param {Source} source
      * @param {string} name
      */
-    constructor(line: number, column: number, source: TwingSource, name: string) {
+    constructor(line: number, column: number, source: Source, name: string) {
         this._name = name;
         this._source = source;
         this._line = line;
         this._column = column;
-        this._content = null;
+        this._content = '';
         this._parent = null;
         this._children = [];
     }
@@ -67,16 +67,16 @@ export class TwingSourceMapNode {
     }
 
     toSourceNode(): SourceNode {
-        let chunks: string | SourceNode | (string | SourceNode)[] = null;
+        let chunks: string | SourceNode | (string | SourceNode)[] | null = null;
 
         if (this._children.length === 0) {
             chunks = this._content;
         }
 
         // source-map@6 types are faulty, we have to force-type chunks as any
-        let sourceNode = new SourceNode(this._line, this._column, this._source.getName(), chunks as any, this._name);
+        let sourceNode = new SourceNode(this._line, this._column, this._source.name, chunks as any, this._name);
 
-        sourceNode.setSourceContent(this._source.getName(), this._source.getCode());
+        sourceNode.setSourceContent(this._source.name, this._source.code);
 
         for (let child of this._children) {
             sourceNode.add(child.toSourceNode() as any);

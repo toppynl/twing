@@ -1,5 +1,5 @@
-import {TwingMarkup} from "../../../markup";
-import {TwingErrorRuntime} from "../../../error/runtime";
+import {isAMarkup} from "../../../markup";
+import {TwingRuntimeError} from "../../../error/runtime";
 import {TwingTemplate} from "../../../template";
 
 const bin2hex = require('locutus/php/strings/bin2hex');
@@ -22,18 +22,24 @@ const array_merge = require('locutus/php/array/array_merge');
  *
  * @returns {Promise<string>}
  */
-export function escape(template: TwingTemplate, string: any, strategy: string = 'html', charset: string = null, autoescape: boolean = false): Promise<string> {
-    let _do:() => string = () => {
+export function escape(
+    template: TwingTemplate,
+    string: any, // todo: should be string | Markup,
+    strategy: string | null,
+    charset: string | null,
+    autoescape: boolean = false // todo: check if needed
+): Promise<string> {
+    let _do: () => string = () => {
         let env = template.environment;
 
-        if (autoescape && string && string instanceof TwingMarkup) {
+        if (autoescape && string && isAMarkup(string)) {
             return string;
         }
 
         if (typeof string !== 'string') {
             if (string && (typeof string === 'object') && Reflect.has(string, 'toString')) {
                 string = '' + string;
-            } else if (['html', 'js', 'css', 'html_attr', 'url'].includes(strategy)) {
+            } else if (strategy && ['html', 'js', 'css', 'html_attr', 'url'].includes(strategy)) {
                 return string;
             }
         }
@@ -47,6 +53,7 @@ export function escape(template: TwingTemplate, string: any, strategy: string = 
         }
 
         switch (strategy) {
+            case null:
             case 'html':
                 return htmlspecialchars(string);
             case 'js':
@@ -141,8 +148,8 @@ export function escape(template: TwingTemplate, string: any, strategy: string = 
                      * Check if the current character to escape has a name entity we should
                      * replace it with while grabbing the hex value of the character.
                      */
-                    let int = chr.codePointAt(0);
-
+                    let int = chr.codePointAt(0)!;
+                    
                     if (entityMap.has(int)) {
                         return `&${entityMap.get(int)};`;
                     }
@@ -166,13 +173,15 @@ export function escape(template: TwingTemplate, string: any, strategy: string = 
             default:
                 let escapers = env.getEscapers();
 
-                if (escapers.has(strategy)) {
-                    return escapers.get(strategy)(env, string, charset);
+                const escaper = escapers.get(strategy);
+                
+                if (escaper) {
+                    return escaper(env, string, charset);
                 }
 
                 let validStrategies: Array<string> = array_merge(['html', 'js', 'url', 'css', 'html_attr'], [...escapers.keys()]);
 
-                throw new TwingErrorRuntime(`Invalid escaping strategy "${strategy}" (valid ones: ${validStrategies.join(', ')}).`);
+                throw new TwingRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${validStrategies.join(', ')}).`);
         }
     };
 

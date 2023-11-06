@@ -1,15 +1,15 @@
 import type {TwingFilter} from "./filter";
-import type {Template} from "./template";
-import type {TwingSource} from "./source";
-import type {TwingLoaderInterface} from "./loader-interface";
+import type {TwingTemplate} from "./template";
+import type {Source} from "./source";
+import type {TwingLoader} from "./loader";
 import type {TwingContext} from "./context";
-import {TwingFunction} from "./function";
+import type {TwingFunction} from "./function";
 import {TwingOutputBuffer} from "./output-buffer";
 import {IterateCallback} from "./helpers/iterate";
-import type {Markup} from "./markup";
+import type {TwingMarkup} from "./markup";
 import {TwingTest} from "./test";
 import {GetAttributeCallType} from "./node/expression/get-attribute";
-import {TwingErrorRuntime} from "./error/runtime";
+import type {TwingRuntimeError} from "./error/runtime";
 
 export interface Runtime {
     checkMethodAllowed(candidate: any, property: string): void;
@@ -30,22 +30,20 @@ export interface Runtime {
 
     createBaseTemplate(
         runtime: Runtime,
-        source: TwingSource,
+        source: Source,
         blockHandlers: any, // todo
         macroHandlers: any // todo
-    ): Template;
+    ): TwingTemplate;
 
     createContext<K, V>(container?: Map<K, V>): TwingContext<K, V>;
 
-    createMarkup(content: Buffer, charset: string): Markup;
+    createMarkup(content: Buffer, charset: string): TwingMarkup;
 
     createRange(low: any, high: any, step: number): Map<number, any>;
+    
+    createSource(name: string, code: string, resolvedName?: string): Source;
 
-    createRuntimeError(message: string, line?: number, source?: TwingSource, previous?: Error): TwingErrorRuntime;
-
-    createSource(name: string, code: string, resolvedName?: string): TwingSource;
-
-    createTemplate(content: string, name: string | null): Promise<Template | null>;
+    createTemplate(content: string, name: string | null): Promise<TwingTemplate | null>;
 
     count(a: any): number;
 
@@ -56,6 +54,15 @@ export interface Runtime {
     ensureToStringAllowed<T>(candidate: T): T;
 
     ensureTraversable<T>(candidate: T[]): T[] | [];
+
+    /**
+     * @param {number} line 0-based
+     * @param {number} column 1-based
+     * @param {string} nodeType
+     * @param {Source} source
+     * @param {TwingOutputBuffer} outputBuffer
+     */
+    enterSourceMapBlock(line: number, column: number, nodeType: string, source: Source, outputBuffer: TwingOutputBuffer): void;
 
     evaluate(value: any): boolean;
 
@@ -70,22 +77,24 @@ export interface Runtime {
     getEscapers(): Map<string, (runtime: Runtime, value: string, charset: string) => string>;
 
     getNumberFormat(): [number, string, string];
-
+    
+    getSourceMap(): string | null;
+    
     getTimezone(): string;
 
     getFilter(name: string): TwingFilter | null;
 
     getFunction(name: string): TwingFunction | null;
 
-    getLoader(): TwingLoaderInterface;
+    getLoader(): TwingLoader;
 
     getTest(name: string): TwingTest | null;
 
     include(
-        template: Template,
+        template: TwingTemplate,
         context: TwingContext<any, any>,
         outputBuffer: TwingOutputBuffer,
-        templates: string | Map<number, string | Template> | Template,
+        templates: string | Map<number, string | TwingTemplate> | TwingTemplate,
         variables: Map<string, any>,
         withContext: boolean,
         ignoreMissing: boolean,
@@ -101,8 +110,10 @@ export interface Runtime {
     readonly isStrictVariables: boolean;
 
     iterate(iterator: any, cb: IterateCallback): Promise<void>;
-
-    loadTemplate(name: string, index: number, from: TwingSource): Promise<Template | null>;
+    
+    leaveSourceMapBlock(outputBuffer: TwingOutputBuffer): void;
+    
+    loadTemplate(name: string, index: number, from: Source): Promise<TwingTemplate | null>;
 
     merge<V>(iterable1: Map<any, V>, iterable2: Map<any, V>): Map<any, V>;
 
@@ -110,7 +121,9 @@ export interface Runtime {
 
     parseRegularExpression(input: string): RegExp;
 
-    resolveTemplate(names: string | Template | Array<string | Template> | null, from: TwingSource): Promise<Template | null>;
+    resolveTemplate(names: string | TwingTemplate | Array<string | TwingTemplate | null> | null, from: Source): Promise<TwingTemplate | null>;
+    
+    readonly Error: typeof TwingRuntimeError;
 }
 
 // @ts-ignore

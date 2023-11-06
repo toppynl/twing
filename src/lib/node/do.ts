@@ -1,5 +1,5 @@
 import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import type {ExpressionNode} from "./expression";
+import type {BaseExpressionNode} from "./expression";
 
 /**
  * Represents a do node.
@@ -8,15 +8,15 @@ import type {ExpressionNode} from "./expression";
  * {% do 1 + 2 %}
  */
 export interface DoNode extends BaseNode<"do", BaseNodeAttributes, {
-    expr: ExpressionNode;
+    expr: BaseExpressionNode;
 }> {
 }
 
 export const createDoNode = (
-    expr: ExpressionNode,
+    expr: BaseExpressionNode,
     line: number,
     column: number,
-    tag: string = null
+    tag: string | null
 ): DoNode => {
     const baseNode = createBaseNode("do", {}, {
         expr
@@ -26,7 +26,7 @@ export const createDoNode = (
         ...baseNode,
         compile: (compiler) => {
             compiler
-                .subCompile(baseNode.children.expr, true)
+                .subCompile(baseNode.children.expr) //, true
                 .raw(";\n")
             ;
         }

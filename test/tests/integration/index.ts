@@ -8,6 +8,7 @@ import "./functions";
 import "./macros";
 import "./operators";
 import "./regression";
+import "./source-map";
 import "./tags";
 import "./tests";
 import "./whitespace";

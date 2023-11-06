@@ -3,15 +3,31 @@
   "lines": 100,
   "branches": 100,
   "functions": 100,
+  "watermarks": {
+    "lines": [
+      100,
+      100
+    ],
+    "functions": [
+      100,
+      100
+    ],
+    "branches": [
+      100,
+      100
+    ],
+    "statements": [
+      100,
+      100
+    ]
+  },
   "extension": [
     ".ts"
   ],
-  "include": "src",
-  "exclude": [
-    "src/base.ts",
-    "src/browser.ts",
-    "src/main.ts"
+  "include": [
+    "src/lib"
   ],
+  "exclude": [],
   "reporter": [
     "text-summary",
     "html"

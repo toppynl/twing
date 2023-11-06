@@ -1,4 +1,3 @@
-import {isNullOrUndefined} from "util";
 import {TwingTemplate} from "../../../template";
 
 const locutusNumberFormat = require('locutus/php/strings/number_format');
@@ -18,20 +17,20 @@ const locutusNumberFormat = require('locutus/php/strings/number_format');
  *
  * @returns {Promise<string>} The formatted number
  */
-export function numberFormat(template: TwingTemplate, number: any, decimal: number, decimalPoint: string, thousandSep: string): Promise<string> {
-    let env = template.environment;
-    let defaults = env.getNumberFormat();
+export const numberFormat = (template: TwingTemplate, number: any, decimal: number | null, decimalPoint: string | null, thousandSep: string | null): Promise<string> => {
+    const runtime = template.environment;
+    const defaults = runtime.getNumberFormat();
 
-    if (isNullOrUndefined(decimal)) {
-        decimal = defaults[0] as number;
+    if (decimal === null) {
+        decimal = defaults[0];
     }
 
-    if (isNullOrUndefined(decimalPoint)) {
-        decimalPoint = defaults[1] as string;
+    if (decimalPoint === null) {
+        decimalPoint = defaults[1];
     }
 
-    if (isNullOrUndefined(thousandSep)) {
-        thousandSep = defaults[2] as string;
+    if (thousandSep === null) {
+        thousandSep = defaults[2];
     }
 
     return Promise.resolve(locutusNumberFormat(number, decimal, decimalPoint, thousandSep));

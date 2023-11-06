@@ -1,202 +1,168 @@
-import {TwingLoaderInterface} from "../loader-interface";
-import {TwingErrorLoader} from "../error/loader";
-import {TwingSource} from "../source";
+import type {TwingLoader} from "../loader";
+import type {Source} from "../source";
 
-/**
- * Loads templates from other loaders.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-export class TwingLoaderChain implements TwingLoaderInterface {
-    private hasSourceCache: Map<string, boolean> = new Map();
-    private loaders: Array<TwingLoaderInterface> = [];
+export interface TwingChainLoader extends TwingLoader {
+    readonly loaders: Array<TwingLoader>;
 
-    /**
-     * @param {Array<TwingLoaderInterface>} loaders
-     */
-    constructor(loaders: Array<TwingLoaderInterface> = []) {
-        for (let loader of loaders) {
-            this.addLoader(loader);
-        }
-    }
-
-    addLoader(loader: TwingLoaderInterface) {
-        this.loaders.push(loader);
-        this.hasSourceCache = new Map();
-    }
-
-    /**
-     * @return TwingLoaderInterface[]
-     */
-    getLoaders(): TwingLoaderInterface[] {
-        return this.loaders;
-    }
-
-    getSourceContext(name: string, from: TwingSource): Promise<TwingSource> {
-        let exceptions: Array<string> = [];
-
-        let getSourceContextAtIndex = (index: number): Promise<TwingSource> => {
-            if (index < this.loaders.length) {
-                let loader = this.loaders[index];
-
-                return loader.exists(name, from).then((exists) => {
-                    if (!exists) {
-                        return getSourceContextAtIndex(index + 1);
-                    } else {
-                        return loader.getSourceContext(name, from)
-                            .catch((e) => {
-                                if (e instanceof TwingErrorLoader) {
-                                    exceptions.push(e.message);
-                                }
-
-                                return getSourceContextAtIndex(index + 1);
-                            });
-                    }
-                });
-            } else {
-                return Promise.resolve(null);
-            }
-        };
-
-        return getSourceContextAtIndex(0).then((source) => {
-            if (source) {
-                return source;
-            } else {
-                throw new TwingErrorLoader(`Template "${name}" is not defined${exceptions.length ? ' (' + exceptions.join(', ') + ')' : ''}.`, -1, from);
-            }
-        });
-    }
-
-    exists(name: string, from: TwingSource): Promise<boolean> {
-        if (this.hasSourceCache.has(name)) {
-            return Promise.resolve(this.hasSourceCache.get(name));
-        }
-
-        let existsAtIndex = (index: number): Promise<boolean> => {
-            if (index < this.loaders.length) {
-                let loader = this.loaders[index];
-
-                return loader.exists(name, from).then((exists) => {
-                    this.hasSourceCache.set(name, exists);
-
-                    if (!exists) {
-                        return existsAtIndex(index + 1);
-                    } else {
-                        return true;
-                    }
-                });
-            } else {
-                return Promise.resolve(false);
-            }
-        };
-
-        return existsAtIndex(0).then((exists) => {
-            this.hasSourceCache.set(name, exists);
-
-            return exists;
-        })
-    }
-
-    getCacheKey(name: string, from: TwingSource): Promise<string> {
-        let exceptions: Array<string> = [];
-
-        let getCacheKeyAtIndex = (index: number): Promise<string> => {
-            if (index < this.loaders.length) {
-                let loader = this.loaders[index];
-
-                return loader.exists(name, from).then((exists) => {
-                    if (!exists) {
-                        return getCacheKeyAtIndex(index + 1);
-                    } else {
-                        return loader.getCacheKey(name, from)
-                            .catch((e) => {
-                                if (e instanceof TwingErrorLoader) {
-                                    exceptions.push(loader.constructor.name + ': ' + e.message);
-                                }
-
-                                return getCacheKeyAtIndex(index + 1);
-                            });
-                    }
-                });
-            } else {
-                return Promise.resolve(null);
-            }
-        };
-
-        return getCacheKeyAtIndex(0).then((key) => {
-            if (key) {
-                return key;
-            } else {
-                throw new TwingErrorLoader(`Template "${name}" is not defined${exceptions.length ? ' (' + exceptions.join(', ') + ')' : ''}.`, -1, from);
-            }
-        });
-    }
-
-    isFresh(name: string, time: number, from: TwingSource): Promise<boolean> {
-        let exceptions: Array<string> = [];
-
-        let isFreshAtIndex = (index: number): Promise<boolean> => {
-            if (index < this.loaders.length) {
-                let loader = this.loaders[index];
-
-                return loader.exists(name, from).then((exists) => {
-                    if (!exists) {
-                        return isFreshAtIndex(index + 1);
-                    } else {
-                        return loader.isFresh(name, time, from)
-                            .catch((e) => {
-                                if (e instanceof TwingErrorLoader) {
-                                    exceptions.push(loader.constructor.name + ': ' + e.message);
-                                }
-
-                                return isFreshAtIndex(index + 1);
-                            });
-                    }
-                });
-            } else {
-                return Promise.resolve(null);
-            }
-        };
-
-        return isFreshAtIndex(0).then((fresh) => {
-            if (fresh !== null) {
-                return fresh;
-            } else {
-                throw new TwingErrorLoader(`Template "${name}" is not defined${exceptions.length ? ' (' + exceptions.join(', ') + ')' : ''}.`, -1, from);
-            }
-        });
-    }
-
-    resolve(name: string, from: TwingSource, shouldThrow: boolean = true): Promise<string> {
-        let exceptions: Array<string> = [];
-
-        let resolveAtIndex = (index: number): Promise<string> => {
-            if (index < this.loaders.length) {
-                let loader = this.loaders[index];
-
-                return loader.resolve(name, from, true).catch((e) => {
-                    if (e instanceof TwingErrorLoader) {
-                        exceptions.push(loader.constructor.name + ': ' + e.message);
-                    }
-
-                    return resolveAtIndex(index + 1);
-                });
-            } else {
-                return Promise.resolve(null);
-            }
-        };
-
-        return resolveAtIndex(0).then((resolvedName) => {
-            if (resolvedName) {
-                return resolvedName;
-            } else {
-                if (shouldThrow) {
-                    throw new TwingErrorLoader(`Template "${name}" is not defined${exceptions.length ? ' (' + exceptions.join(', ') + ')' : ''}.`, -1, from);
-                }
-                else {
-                    return null;
-                }
-            }
-        });
-    }
+    addLoader(loader: TwingLoader): void;
 }
+
+export const createChainLoader = (
+    loaders: Array<TwingLoader>
+): TwingChainLoader => {
+    let existsCache: Map<string, boolean> = new Map();
+
+    const addLoader: TwingChainLoader["addLoader"] = (loader) => {
+        loaders.push(loader);
+        existsCache = new Map();
+    };
+
+    const loader: TwingChainLoader = {
+        get loaders() {
+            return loaders
+        },
+        addLoader,
+        exists: (name, from) => {
+            const cachedResult = existsCache.get(name);
+            
+            if (cachedResult) {
+                return Promise.resolve(cachedResult);
+            }
+
+            const existsAtIndex = (index: number): Promise<boolean> => {
+                if (index < loaders.length) {
+                    const loader = loaders[index];
+
+                    return loader.exists(name, from)
+                        .then((exists) => {
+                            existsCache.set(name, exists);
+
+                            if (!exists) {
+                                return existsAtIndex(index + 1);
+                            } else {
+                                return true;
+                            }
+                        });
+                } else {
+                    return Promise.resolve(false);
+                }
+            };
+
+            return existsAtIndex(0).then((exists) => {
+                existsCache.set(name, exists);
+
+                return exists;
+            })
+        },
+        getCacheKey: (name, from) => {
+            const getCacheKeyAtIndex = (index: number): Promise<string | null> => {
+                if (index < loaders.length) {
+                    const loader = loaders[index];
+
+                    return loader.exists(name, from)
+                        .then((exists) => {
+                            if (!exists) {
+                                return getCacheKeyAtIndex(index + 1);
+                            } else {
+                                return loader.getCacheKey(name, from);
+                            }
+                        })
+                        .then((key) => {
+                            if (key === null) {
+                                return getCacheKeyAtIndex(index + 1);
+                            }
+
+                            return key;
+                        });
+                } else {
+                    return Promise.resolve(null);
+                }
+            };
+
+            return getCacheKeyAtIndex(0)
+                .then((key) => {
+                    if (key) {
+                        return key;
+                    } else {
+                        return null;
+                    }
+                });
+        },
+        getSourceContext: (name, from) => {
+            const getSourceContextAtIndex = (index: number): Promise<Source | null> => {
+                if (index < loaders.length) {
+                    let loader = loaders[index];
+
+                    return loader.getSourceContext(name, from)
+                        .then((source) => {
+                            if (source === null) {
+                                return getSourceContextAtIndex(index + 1);
+                            }
+
+                            return source;
+                        });
+                } else {
+                    return Promise.resolve(null);
+                }
+            };
+
+            return getSourceContextAtIndex(0)
+                .then((source) => {
+                    if (source) {
+                        return source;
+                    } else {
+                        return null;
+                    }
+                });
+        },
+        isFresh: (name, time, from) => {
+            const isFreshAtIndex = (index: number): Promise<boolean | null> => {
+                if (index < loaders.length) {
+                    const loader = loaders[index];
+
+                    return loader.isFresh(name, time, from)
+                        .then((isFresh) => {
+                            if (isFresh === null) {
+                                return isFreshAtIndex(index + 1);
+                            }
+                            
+                            return isFresh;
+                        });
+                } else {
+                    return Promise.resolve(null);
+                }
+            };
+
+            return isFreshAtIndex(0);
+        },
+        resolve: (name, from) => {
+            const resolveAtIndex = (index: number): Promise<string | null> => {
+                if (index < loaders.length) {
+                    const loader = loaders[index];
+
+                    return loader.resolve(name, from)
+                        .then((resolvedName) => {
+                            if (resolvedName === null) {
+                                return resolveAtIndex(index + 1);
+                            }
+                            
+                            return resolvedName;
+                        });
+                } else {
+                    return Promise.resolve(null);
+                }
+            };
+
+            return resolveAtIndex(0)
+                .then((resolvedName) => {
+                    if (resolvedName === null) {
+                        return null;
+                    }
+                    
+                    return resolvedName;
+                });
+        }
+    };
+
+    return loader;
+};

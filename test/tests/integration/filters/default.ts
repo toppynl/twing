@@ -117,7 +117,7 @@ ok
 
     getEnvironmentOptions() {
         return {
-            strict_variables: false
+            strictVariables: false
         }
     }
 }
