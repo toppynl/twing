@@ -13,6 +13,6 @@ import type {TwingTemplate} from "../../../template";
  *
  * @returns {Promise<TwingTemplate>}
  */
-export function templateFromString(template: TwingTemplate, string: string, name: string | null = null): Promise<TwingTemplate | null> {
-    return template.environment.createTemplate(string, name);
+export function templateFromString(template: TwingTemplate, string: string, name: string | null): Promise<TwingTemplate | null> {
+    return template.runtime.createTemplateFromString(string, name);
 }

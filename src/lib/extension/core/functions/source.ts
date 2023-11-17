@@ -1,4 +1,4 @@
-import {isATemplateLoadingError} from "../../../error/loader";
+import {TwingTemplateLoadingError} from "../../../error/loader";
 import {TwingTemplate} from "../../../template";
 
 /**
@@ -10,23 +10,16 @@ import {TwingTemplate} from "../../../template";
  *
  * @return {Promise<string>} The template source
  */
-export function source(template: TwingTemplate, name: string, ignoreMissing: boolean = false): Promise<string | null> {
-    const environment = template.environment;
+export const source = (template: TwingTemplate, name: string, ignoreMissing: boolean): Promise<string | null> => {
+    const environment = template.runtime;
     const from = template.source;
 
     return environment.getLoader().getSourceContext(name, from)
         .then((source) => {
-            return source?.code || null;
-        })
-        .catch((e) => {
-            if (isATemplateLoadingError(e)) { // todo: most probably useless since loaders don't throw anymore
-                if (!ignoreMissing) {
-                    throw e;
-                } else {
-                    return null;
-                }
-            } else {
-                throw e;
+            if (!ignoreMissing && (source === null)) {
+                throw new TwingTemplateLoadingError(name);
             }
+
+            return source?.code || null;
         });
-}
+};

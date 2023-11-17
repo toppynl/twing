@@ -1,37 +1,37 @@
-export type IterateCallback = (k: any, v: any) => Promise<void>;
+export type IterateCallback = (key: any, value: any) => Promise<void>;
 
 /**
  * Executes the provided function once for each element of an iterable.
  *
- * @param {*} it An iterable
- * @param {IterateCallback} cb Callback to execute for each element, taking a key and a value as arguments
+ * @param {*} iterable An iterable
+ * @param {IterateCallback} callback Callback to execute for each element, taking a key and a value as arguments
  *
  * @return {void}
  */
-export async function iterate(it: any, cb: IterateCallback): Promise<void> {
-    if (it.entries) {
-        for (let [k, v] of it.entries()) {
-            await cb(k, v);
+export const iterate = async (iterable: any, callback: IterateCallback): Promise<void> => {
+    if (iterable.entries) {
+        for (const [key, value] of iterable.entries()) {
+            await callback(key, value);
         }
     }
-    else if (typeof it[Symbol.iterator] === 'function') {
+    else if (typeof iterable[Symbol.iterator] === 'function') {
         let i: number = 0;
 
-        for (let value of it) {
-            await cb(i++, value);
+        for (let value of iterable) {
+            await callback(i++, value);
         }
     }
-    else if (typeof it['next'] === 'function') {
+    else if (typeof iterable['next'] === 'function') {
         let i: number = 0;
         let next: any;
 
-        while ((next = it.next()) && !next.done) {
-            await cb(i++, next.value);
+        while ((next = await iterable.next()) && !next.done) {
+            await callback(i++, next.value)
         }
     }
     else {
-        for (let k in it) {
-            await cb(k, it[k]);
+        for (const key in iterable) {
+            await callback(key, iterable[key]);
         }
     }
 }

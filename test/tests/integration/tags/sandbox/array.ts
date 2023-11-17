@@ -30,7 +30,7 @@ string(1) "b"
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            escapingStrategy: false
+            autoEscapingStrategy: "html"
         }
     }
 

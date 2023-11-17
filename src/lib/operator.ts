@@ -1,5 +1,5 @@
-import type {BaseNode} from "./node";
-import type {ExpressionNode} from "./node/expression";
+import type {TwingBaseNode} from "./node";
+import type {TwingExpressionNode} from "./node/expression";
 
 export type OperatorType =
     | 'BINARY'
@@ -11,7 +11,7 @@ export type OperatorAssociativity =
     | 'RIGHT'
     ;
 
-type TwingOperatorExpressionFactory = (operands: [BaseNode, BaseNode], line: number, column: number) => ExpressionNode;
+type TwingOperatorExpressionFactory = (operands: [TwingBaseNode, TwingBaseNode], line: number, column: number) => TwingExpressionNode;
 
 export interface TwingOperator {
     readonly name: string;

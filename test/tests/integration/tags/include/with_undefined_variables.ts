@@ -15,7 +15,7 @@ export class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable `data` does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "data" does not exist in "index.twig" at line 1.';
     }
 }
 

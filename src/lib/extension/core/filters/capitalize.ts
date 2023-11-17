@@ -1,5 +1,4 @@
-import {TwingMarkup} from "../../../markup";
-import {isNullOrUndefined} from "util";
+import type {TwingMarkup} from "../../../markup";
 
 const words = require('capitalize');
 
@@ -10,10 +9,10 @@ const words = require('capitalize');
  *
  * @returns {Promise<string>} The capitalized string
  */
-export function capitalize(string: string | TwingMarkup): Promise<string> {
-    if (isNullOrUndefined(string) || string === '') {
+export const capitalize = (string: string | TwingMarkup): Promise<string> => {
+    if ((string === null) || (string === undefined) || string === '') {
         return Promise.resolve(string);
     }
 
     return Promise.resolve(words(string.toString()));
-}
+};

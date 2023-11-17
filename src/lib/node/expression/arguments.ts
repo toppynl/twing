@@ -1,11 +1,12 @@
-import type {BaseExpressionNode} from "../expression";
+import type {TwingBaseExpressionNode} from "../expression";
 import {createBaseExpressionNode} from "../expression";
-import type {BaseNodeAttributes} from "../../node";
+import type {TwingBaseNodeAttributes} from "../../node";
 
-export interface ArgumentsNode<T extends BaseExpressionNode = BaseExpressionNode> extends BaseExpressionNode<"arguments", BaseNodeAttributes, Record<string, T>> {
+export interface ArgumentsNode<T extends TwingBaseExpressionNode = TwingBaseExpressionNode> extends TwingBaseExpressionNode<"arguments", TwingBaseNodeAttributes, Record<string, T>> {
 }
 
-export const createArgumentsNode = <T extends BaseExpressionNode>(
+// todo: check if needed - probably array node can be used instead
+export const createArgumentsNode = <T extends TwingBaseExpressionNode>(
     children: Record<string, T>,
     line: number,
     column: number

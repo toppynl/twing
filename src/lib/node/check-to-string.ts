@@ -1,5 +1,5 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {BaseExpressionNode} from "./expression";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseExpressionNode} from "./expression";
 
 /**
  * Checks if casting an expression to toString() is allowed by the sandbox.
@@ -9,16 +9,16 @@ import {BaseExpressionNode} from "./expression";
  * method is allowed if 'article' is an object. The same goes for {{ article|upper }}
  * or {{ random(article) }}.
  */
-export interface CheckToStringNode extends BaseNode<"check_to_string", BaseNodeAttributes, {
-    expr: BaseExpressionNode;
+export interface TwingCheckToStringNode extends TwingBaseNode<"check_to_string", TwingBaseNodeAttributes, {
+    expr: TwingBaseExpressionNode;
 }> {
 }
 
 export const createCheckToStringNode = (
-    expression: BaseExpressionNode,
+    expression: TwingBaseExpressionNode,
     line: number,
     column: number
-): CheckToStringNode => {
+): TwingCheckToStringNode => {
     const baseNode = createBaseNode("check_to_string", {}, {
         expr: expression
     }, line, column);
@@ -26,10 +26,12 @@ export const createCheckToStringNode = (
     return {
         ...baseNode,
         compile: (compiler) => {
+            const {expr} = baseNode.children;
+            
             compiler
-                .raw('runtime.ensureToStringAllowed(')
-                .subCompile(baseNode.children.expr)
-                .raw(')')
+                .write('runtime.ensureToStringAllowed( //').write(expr.type).write('\n')
+                .subCompile(expr).write('\n')
+                .write(')')
             ;
         }
     }

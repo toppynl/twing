@@ -1,4 +1,4 @@
-import type {BaseNode} from "./node";
+import type {TwingBaseNode} from "./node";
 import {addcslashes} from "locutus/php/strings";
 import {TwingFunction} from "./function";
 import {TwingTest} from "./test";
@@ -6,14 +6,12 @@ import {TwingFilter} from "./filter";
 
 export type CompilerOptions = {
     sourceMap?: boolean;
-    strictVariables?: boolean;
 };
 
 export type CompilerEnvironment = {
     getFunction: (name: string) => TwingFunction | null;
     getTest: (name: string) => TwingTest | null;
     getFilter: (name: string) => TwingFilter | null;
-    isSandboxed: () => boolean;
 };
 
 export interface TwingCompiler {
@@ -23,24 +21,15 @@ export interface TwingCompiler {
 
     readonly source: string;
 
-    compile(node: BaseNode, indentation?: number): this;
+    compile(node: TwingBaseNode): this;
     
-    subCompile(node: BaseNode, options?: {
-        isDefinedTest?: boolean;
-        ignoreStrictCheck?: boolean;
-        optimizable?: boolean;
-    }): this;
+    subCompile(node: TwingBaseNode): this;
 
     /**
-     * Adds the passed data to the compiled code, as-is, without indentation.
-     */
-    raw(data: any): this;
-
-    /**
-     * Adds the passed data to the compiled code, as-is, with indentation.
+     * Adds the passed data to the compiled code, as-is.
      */
     write(data: any): this;
-
+    
     /**
      * Adds the passed data to the compiled code, as a quoted string.
      */
@@ -51,21 +40,9 @@ export interface TwingCompiler {
      */
     render(data: any): this;
 
-    addSourceMapEnter(node: BaseNode): this;
+    addSourceMapEnter(node: TwingBaseNode): this;
 
     addSourceMapLeave(): this;
-
-    /**
-     * Indents the generated code.
-     */
-    indent(step?: number): this;
-
-    /**
-     * Outdents the generated code.
-     *
-     * @throws Error When the indentation level would become negative
-     */
-    outdent(step?: number): this;
 }
 
 export const createCompiler = (
@@ -73,41 +50,29 @@ export const createCompiler = (
     options?: CompilerOptions
 ): TwingCompiler => {
     let source: string = '';
-    let currentIndentation: number = 0;
 
     const compiler: TwingCompiler = {
         environment,
         options: options || {
-            sourceMap: false,
-            strictVariables: false
+            sourceMap: false
         },
         get source() {
             return source;
         },
-        compile: (node, indentation = 0) => {
-            currentIndentation = indentation;
+        compile: (node) => {
             source = '';
 
             compiler.subCompile(node);
 
             return compiler;
         },
-        subCompile: (node, flags) => {
-            node.compile(compiler, flags ? {
-                isDefinedTest: flags.isDefinedTest,
-                ignoreStrictCheck: flags.ignoreStrictCheck,
-                optimizable: flags.optimizable
-            } : undefined);
-
-            return compiler;
-        },
-        raw: (data) => {
-            source += data;
+        subCompile: (node) => {
+            node.compile(compiler);
 
             return compiler;
         },
         write: (data) => {
-            source += ' '.repeat(currentIndentation * 4) + data;
+            source += data;
 
             return compiler;
         },
@@ -126,53 +91,53 @@ export const createCompiler = (
         },
         render: (data) => {
             if (typeof data === 'number') {
-                compiler.raw(data);
+                compiler.write(data);
             } else if (data === null || data === undefined) {
-                compiler.raw(`${data}`);
+                compiler.write(`${data}`);
             } else if (typeof data === 'boolean') {
-                compiler.raw(data ? 'true' : 'false');
+                compiler.write(data ? 'true' : 'false');
             } else if (data instanceof Map) {
-                compiler.raw('new Map([');
+                compiler.write('new Map([');
 
                 let first = true;
 
                 for (let [k, v] of data) {
                     if (!first) {
-                        compiler.raw(', ');
+                        compiler.write(', ');
                     }
 
                     first = false;
 
                     compiler
-                        .raw('[')
+                        .write('[')
                         .render(k)
-                        .raw(', ')
+                        .write(', ')
                         .render(v)
-                        .raw(']')
+                        .write(']')
                     ;
                 }
 
-                compiler.raw('])');
+                compiler.write('])');
             } else if (typeof data === 'object') {
-                compiler.raw('{');
+                compiler.write('{');
 
                 let first = true;
 
                 for (let k in data) {
                     if (!first) {
-                        compiler.raw(', ');
+                        compiler.write(', ');
                     }
 
                     first = false;
 
                     compiler
-                        .raw(`"${k}"`)
-                        .raw(': ')
+                        .write(`"${k}"`)
+                        .write(': ')
                         .render(data[k])
                     ;
                 }
 
-                compiler.raw('}');
+                compiler.write('}');
             } else {
                 compiler.string(data);
             }
@@ -183,13 +148,13 @@ export const createCompiler = (
             if (compiler.options.sourceMap) {
                 compiler
                     .write('runtime.enterSourceMapBlock(')
-                    .raw(node.line)
-                    .raw(', ')
-                    .raw(node.column)
-                    .raw(', ')
+                    .write(node.line)
+                    .write(', ')
+                    .write(node.column)
+                    .write(', ')
                     .string(node.type)
-                    .raw(', ')
-                    .raw('template.source, outputBuffer);\n')
+                    .write(', ')
+                    .write('template.source, outputBuffer);\n\n')
             }
 
             return compiler;
@@ -200,20 +165,6 @@ export const createCompiler = (
                     .write('runtime.leaveSourceMapBlock(outputBuffer);\n')
                 ;
             }
-
-            return compiler;
-        },
-        indent: (step: number = 1) => {
-            currentIndentation += step;
-
-            return compiler;
-        },
-        outdent: (step: number = 1) => {
-            if (currentIndentation < step) {
-                throw new Error('Unable to call outdent() as the indentation would become negative.');
-            }
-
-            currentIndentation -= step;
 
             return compiler;
         }

@@ -1,16 +1,11 @@
-import {BaseExpressionNode} from "./node/expression";
 import {
     TwingCallableWrapper, createCallableWrapper,
     TwingCallable,
     TwingCallableArgument,
     TwingCallableWrapperOptions
 } from "./callable-wrapper";
-import {createTestNode, TestNode} from "./node/expression/call/test";
-import type {ArrayNode} from "./node/expression/array";
 
-type Factory = (node: BaseExpressionNode, name: string, argumentsNode: ArrayNode, line: number, column: number) => TestNode;
-
-export interface TwingTest extends TwingCallableWrapper<any, Factory> {
+export interface TwingTest extends TwingCallableWrapper<TwingCallable<boolean>> {
 
 }
 
@@ -22,17 +17,11 @@ export interface TwingTest extends TwingCallableWrapper<any, Factory> {
  * @param {TwingCallableArgument[]} acceptedArguments
  * @param {TwingCallableWrapperOptions} options Options
  */
-export const createTest = (
+export const createTest = <Callable extends TwingCallable<boolean>>(
     name: string,
-    callable: TwingCallable<boolean> | null,
+    callable: Callable,
     acceptedArguments: TwingCallableArgument[],
-    options: TwingCallableWrapperOptions & {
-        expression_factory?: Factory;
-    } = {}
+    options: TwingCallableWrapperOptions = {}
 ): TwingTest => {
-    const expressionFactory = options.expression_factory || ((node, name, argumentsNode, line, column) => {
-        return createTestNode(node, name, argumentsNode, line, column);
-    });
-
-    return createCallableWrapper(name, callable, acceptedArguments, expressionFactory, options);
+    return createCallableWrapper(name, callable, acceptedArguments, options);
 };

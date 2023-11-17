@@ -16,7 +16,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingParsingError: The "loop.last" variable is not defined when looping with a condition in "index.twig" at line 3.'
+        return 'TwingParsingError: The "loop.last" variable is not defined when looping with a condition in "index.twig" at line 3, column 8.'
     }
 
     getContext() {

@@ -1,20 +1,20 @@
-import {BaseArrayNode, createBaseArrayNode, getKeyValuePairs} from "./array";
-import type {BaseExpressionNode} from "../expression";
+import {TwingBaseArrayNode, createBaseArrayNode, getKeyValuePairs} from "./array";
+import type {TwingBaseExpressionNode} from "../expression";
 
-export const type = 'expression_hash'
+export const hashNodeType = 'hash'
 
-export interface HashNode extends BaseArrayNode<"hash"> {
+export interface TwingHashNode extends TwingBaseArrayNode<typeof hashNodeType> {
 }
 
 export const createHashNode = (
     elements: Array<{
-        key: BaseExpressionNode;
-        value: BaseExpressionNode;
+        key: TwingBaseExpressionNode;
+        value: TwingBaseExpressionNode;
     }>,
     line: number,
     column: number
-): HashNode => {
-    const baseNode = createBaseArrayNode("hash", elements, line, column);
+): TwingHashNode => {
+    const baseNode = createBaseArrayNode(hashNodeType, elements, line, column);
 
     return {
         ...baseNode,
@@ -23,28 +23,28 @@ export const createHashNode = (
         },
         compile: (compiler) => {
             compiler
-                .raw('new Map([')
+                .write('new Map([')
             ;
 
             let first = true;
 
             for (let pair of getKeyValuePairs(baseNode)) {
                 if (!first) {
-                    compiler.raw(', ');
+                    compiler.write(', ');
                 }
 
                 first = false;
 
                 compiler
-                    .raw('[')
+                    .write('[')
                     .subCompile(pair.key)
-                    .raw(', ')
+                    .write(', ')
                     .subCompile(pair.value)
-                    .raw(']')
+                    .write(']')
                 ;
             }
 
-            compiler.raw('])');
+            compiler.write('])');
         }
     };
 };

@@ -1,13 +1,15 @@
-import type {BaseBinaryNode} from "../binary";
+import type {TwingBaseBinaryNode} from "../binary";
 import {createBinaryNodeFactory} from "../binary";
 
-export interface AndNode extends BaseBinaryNode<"and"> {
+export const andNodeType = "and";
+
+export interface TwingAndNode extends TwingBaseBinaryNode<typeof andNodeType> {
 }
 
-export const createAndNode = createBinaryNodeFactory<AndNode>("and", '&&', {
+export const createAndNode = createBinaryNodeFactory<TwingAndNode>(andNodeType, '&&', {
     compile: (compiler, baseNode) => {
         compiler
-            .raw('!!')
+            .write('!!')
         ;
 
         baseNode.compile(compiler);

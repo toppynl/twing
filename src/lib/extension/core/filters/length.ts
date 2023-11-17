@@ -1,5 +1,3 @@
-import {isNullOrUndefined} from "util";
-
 /**
  * Returns the length of a thing.
  *
@@ -7,10 +5,10 @@ import {isNullOrUndefined} from "util";
  *
  * @returns {Promise<number>} The length of the thing
  */
-export function length(thing: any): Promise<number> {
+export const length = (thing: any): Promise<number> => {
     let length: number;
 
-    if (isNullOrUndefined(thing)) {
+    if ((thing === null) || (thing === undefined)) {
         length = 0;
     } else if (thing.length !== undefined) {
         length = thing.length;
@@ -23,4 +21,4 @@ export function length(thing: any): Promise<number> {
     }
 
     return Promise.resolve(length);
-}
+};

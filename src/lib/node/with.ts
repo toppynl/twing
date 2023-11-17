@@ -1,26 +1,26 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode, Node} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
 
-export type WithNodeAttributes = BaseNodeAttributes & {
+export type TwingWithNodeAttributes = TwingBaseNodeAttributes & {
     only: boolean;
 };
 
-export type WithNodeChildren = {
-    body: Node;
-    variables?: Node;
+export type TwingWithNodeChildren = {
+    body: TwingNode;
+    variables?: TwingNode;
 };
 
-export interface WithNode extends BaseNode<"with", WithNodeAttributes, WithNodeChildren> {
+export interface TwingWithNode extends TwingBaseNode<"with", TwingWithNodeAttributes, TwingWithNodeChildren> {
 }
 
 export const createWithNode = (
-    body: Node,
-    variables: Node | null,
+    body: TwingNode,
+    variables: TwingNode | null,
     only: boolean,
     line: number,
     column: number,
     tag: string
-): WithNode => {
-    const children: WithNodeChildren = {
+): TwingWithNode => {
+    const children: TwingWithNodeChildren = {
         body
     };
     
@@ -32,7 +32,7 @@ export const createWithNode = (
         only
     }, children, line, column, tag);
 
-    const node: WithNode = {
+    const node: TwingWithNode = {
         ...baseNode,
         compile: (compiler) => {
             const {variables, body} = baseNode.children;
@@ -41,16 +41,16 @@ export const createWithNode = (
             if (variables) {
                 compiler
                     .write('{\n')
-                    .indent()
+                    
                     .write(`let tmp = `)
                     .subCompile(variables)
-                    .raw(";\n")
+                    .write(";\n")
                     .write(`if (typeof (tmp) !== 'object') {\n`)
-                    .indent()
+                    
                     .write('throw new runtime.Error(\'Variables passed to the "with" tag must be a hash.\', ')
                     .render(baseNode.line)
-                    .raw(", template.source);\n")
-                    .outdent()
+                    .write(", template.source);\n")
+                    
                     .write("}\n")
                 ;
 
@@ -62,7 +62,7 @@ export const createWithNode = (
 
                 compiler
                     .write(`context = runtime.createContext(runtime.mergeGlobals(runtime.merge(context, runtime.convertToMap(tmp))));\n`)
-                    .outdent()
+                    
                     .write('}\n\n')
             } else {
                 compiler.write("context.set('_parent', context.clone());\n");

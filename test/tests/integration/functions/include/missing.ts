@@ -9,13 +9,21 @@ class Test extends TestBase {
     getTemplates() {
         return {
             'index.twig': `
-{{ include("foo.twig") }}`
+{{ include("foo") }}`
         };
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Template "foo.twig" is not defined in "index.twig" at line 2.';
+        return 'TwingRuntimeError: Unable to find template "foo" in "index.twig" at line 2.';
     }
 }
 
 runTest(createIntegrationTest(new Test()));
+
+runTest({
+   description: '"include" function with multiple missing templates',
+    templates: {
+       "index.twig": '{{ include(["foo", null, "bar"]) }}'
+    },
+    expectedErrorMessage: 'TwingRuntimeError: Unable to find one of the following templates: "foo", "", "bar" in "index.twig" at line 1.'
+});

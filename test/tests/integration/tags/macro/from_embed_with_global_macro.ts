@@ -21,5 +21,5 @@ runTest({
     },
     context: Promise.resolve({}),
     expectation: '',
-    expectedErrorMessage: 'TwingParsingError: Unknown function "input" in "index.twig" at line 6.'
+    expectedErrorMessage: 'TwingParsingError: Unknown function "input" in "index.twig" at line 6, column 12.'
 });

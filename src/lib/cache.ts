@@ -6,7 +6,7 @@ export interface TwingCache {
      *
      * @return {Promise<string>}
      */
-    generateKey(hash: string): Promise<string>;
+    generateKey: (hash: string) => Promise<string>;
 
     /**
      * Writes the compiled template to cache.
@@ -16,7 +16,7 @@ export interface TwingCache {
      *
      * @return {Promise<void>}
      */
-    write(key: string, content: string): Promise<void>;
+    write: (key: string, content: string) => Promise<void>;
 
     /**
      * Loads a compiled template from the cache.
@@ -25,7 +25,7 @@ export interface TwingCache {
      *
      * @return {Promise<string | null>}
      */
-    load(key: string): Promise<string | null>;
+    load: (key: string) => Promise<string | null>;
 
     /**
      * Returns the modification timestamp of a key.
@@ -34,5 +34,5 @@ export interface TwingCache {
      *
      * @returns {Promise<number>}
      */
-    getTimestamp(key: string): Promise<number>;
+    getTimestamp: (key: string) => Promise<number>;
 }

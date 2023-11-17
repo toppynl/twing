@@ -2,10 +2,10 @@
  * Lexes a template string.
  */
 import {Lexer, TokenType} from "twig-lexer";
-import {TwingTokenStream} from "./token-stream";
+import {TwingTokenStream, createTokenStream} from "./token-stream";
 import {TwingParsingError} from "./error/parsing";
 import type {TwingOperator} from "./operator";
-import type {Source} from "./source";
+import type {TwingSource} from "./source";
 import {SyntaxError} from "twig-lexer/dist/types/lib/SyntaxError";
 
 export const typeToEnglish = (type: TokenType): string => {
@@ -53,7 +53,7 @@ export class TwingLexer extends Lexer {
         unaryOperators: Map<string, TwingOperator>
     ) {
         super();
-        
+
         // custom operators
         for (let operators of [binaryOperators, unaryOperators]) {
             for (let [key] of operators) {
@@ -64,13 +64,15 @@ export class TwingLexer extends Lexer {
         }
     }
 
-    tokenizeSource(source: Source): TwingTokenStream {
+    tokenizeSource(source: TwingSource): TwingTokenStream {
         try {
             const tokens = this.tokenize(source.code);
 
-            return new TwingTokenStream(tokens, source);
+            return createTokenStream(tokens, source);
         } catch (error: any) {
-            throw new TwingParsingError((error as SyntaxError).message, (error as SyntaxError).line, source, error);
+            const {message, line, column} = (error as SyntaxError);
+
+            throw new TwingParsingError(message, line, column, source, error);
         }
     }
 }

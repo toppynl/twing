@@ -3,7 +3,7 @@ import type {TwingSandboxSecurityNotAllowedFunctionError} from "./security-not-a
 import type {TwingSandboxSecurityNotAllowedMethodError} from "./security-not-allowed-method-error";
 import type {TwingSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
 import type {TwingSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag-error";
-import type {Source} from "../source";
+import type {TwingSource} from "../source";
 import {TwingBaseError} from "../error/base";
 
 export type TwingSandboxSecurityError =
@@ -23,7 +23,7 @@ export interface BaseSandboxSecurityError extends TwingBaseError<typeof sandboxS
 }
 
 export class BaseSandboxSecurityError extends TwingBaseError<typeof sandboxSecurityErrorName> {
-    constructor(message: string, line?: number, source?: Source) {
-        super(sandboxSecurityErrorName, message, line, source);
+    constructor(message: string, line?: number, source?: TwingSource) {
+        super(sandboxSecurityErrorName, message, line, undefined, source);
     }
 }

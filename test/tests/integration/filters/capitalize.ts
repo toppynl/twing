@@ -1,5 +1,6 @@
 import TestBase, {runTest} from "../TestBase";
 import {createIntegrationTest} from "../test";
+import {TwingEnvironmentOptions} from "../../../../src/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -22,6 +23,12 @@ I like Twing.`;
     getContext(): any {
         return {
             undef: undefined
+        };
+    }
+    
+    getEnvironmentOptions(): TwingEnvironmentOptions {
+        return {
+            strictVariables: false
         };
     }
 }

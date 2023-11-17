@@ -1,8 +1,9 @@
 import * as tape from 'tape';
-import {TwingOutputBuffer} from "../../../../../src/lib/output-buffer";
+import {createOutputBuffer} from "../../../../../src/lib/output-buffer";
 import {spy} from "sinon";
+import {Writable} from "stream";
 
-const outputBuffer = new TwingOutputBuffer();
+const outputBuffer = createOutputBuffer();
 
 let reset = (restart = true) => {
     while (outputBuffer.getLevel()) {
@@ -15,55 +16,34 @@ let reset = (restart = true) => {
         outputBuffer.start();
         outputBuffer.echo('bar');
         outputBuffer.start();
-        outputBuffer.echo('oof');
+        outputBuffer.echo('o');
+        outputBuffer.echo('of');
     }
 };
 
-tape('TwingOutputBuffering', (test) => {
-    test.test('echo', (test) => {
-        let data = '';
-
-        let stdoutWrite = process.stdout.write;
-        let i = 0;
-
-        process.stdout.write = function (chunk: string) {
-            data += chunk;
-
-            if (i === 1) {
-                process.stdout.write = stdoutWrite;
+tape('TwingOutputBuffering', ({test}) => {
+    test('echo', (test) => {
+        const writeStream = new Writable({
+            write: (_chunk, _encoding, next) => {
+                next();
             }
+        });
+        const outputBuffer = createOutputBuffer();
 
-            i++;
+        outputBuffer.outputStream.pipe(writeStream);
 
-            return true;
-        };
-
-        outputBuffer.echo('foo');
-        outputBuffer.echo('bar');
-
-        test.same(data, 'foobar', 'process.stdout should contain "foobar"');
-        test.end();
-    });
-
-    test.test('echo without process.stdout', (test) => {
-        let stdout = process.stdout;
-
-        // todo: createOutputBuffer should take output stream as parameter and use it instead of process.stdout
-        // @ts-ignore
-        delete process.stdout;
-
-        let logSpy = spy(console, 'log');
+        const writeSpy = spy(writeStream, "write");
 
         outputBuffer.echo('foo');
         outputBuffer.echo('bar');
 
-        process.stdout = stdout;
-
-        test.same(logSpy.callCount, 2, 'console.log should be called twice');
+        test.same(writeSpy.callCount, 2);
+        test.same(writeSpy.firstCall.args[0].toString(), 'foo');
+        test.same(writeSpy.secondCall.args[0].toString(), 'bar');
         test.end();
     });
 
-    test.test('obStart', (test) => {
+    test('start', (test) => {
         outputBuffer.start();
 
         test.equal(outputBuffer.getLevel(), 1, 'getLevel() should return 1');
@@ -74,54 +54,47 @@ tape('TwingOutputBuffering', (test) => {
         test.end();
     });
 
-    test.test('obEndFlush', (test) => {
+    test('endAndFlush', ({same, fail, end}) => {
         reset();
+
         outputBuffer.endAndFlush();
 
-        test.equal(outputBuffer.getLevel(), 2, 'getLevel() should return 2');
-        test.same(outputBuffer.getContents(), 'baroof', `obGetContents() should return 'baroof'`);
+        same(outputBuffer.getLevel(), 2, 'getLevel() should return 2');
+        same(outputBuffer.getContents(), 'baroof', `obGetContents() should return 'baroof'`);
 
         reset(false);
 
-        let originalWrite = process.stdout.write;
+        try {
+            outputBuffer.endAndFlush();
 
-        process.stdout.write = function (chunk: string): boolean {
-            process.stdout.write = originalWrite;
-
-            test.same(chunk, 'Failed to delete and flush buffer: no buffer to delete or flush.');
-
-            return true;
-        };
-
-        test.false(outputBuffer.endAndFlush());
-
-        test.end();
+            fail();
+        } catch (error) {
+            same((error as Error).message, 'Failed to delete and flush buffer: no buffer to delete or flush.');
+        } finally {
+            end();
+        }
     });
 
-    test.test('obFlush', (test) => {
+    test('flush', ({same, fail, end}) => {
         reset();
         outputBuffer.flush();
 
-        test.same(outputBuffer.getContents(), '', `obGetContents() should return ''`);
+        same(outputBuffer.getContents(), '', `obGetContents() should return ''`);
 
         reset(false);
 
-        let originalWrite = process.stdout.write;
+        try {
+            outputBuffer.flush();
 
-        process.stdout.write = function (chunk: string): boolean {
-            process.stdout.write = originalWrite;
-
-            test.same(chunk, 'Failed to flush buffer: no buffer to flush.');
-
-            return true;
-        };
-
-        test.false(outputBuffer.flush());
-
-        test.end();
+            fail();
+        } catch (error) {
+            same((error as Error).message, 'Failed to flush buffer: no buffer to flush.');
+        } finally {
+            end();
+        }
     });
 
-    test.test('obGetFlush', (test) => {
+    test('getAndFlush', (test) => {
         reset();
 
         test.same(outputBuffer.getAndFlush(), 'oof', `obGetFlush() should return 'oof'`);
@@ -130,31 +103,27 @@ tape('TwingOutputBuffering', (test) => {
         test.end();
     });
 
-    test.test('obClean', (test) => {
+    test('clean', ({same, fail, end}) => {
         reset();
         outputBuffer.clean();
 
-        test.equal(outputBuffer.getLevel(), 3, 'getLevel() should return 3');
-        test.same(outputBuffer.getContents(), '', `obGetContents() should return ''`);
+        same(outputBuffer.getLevel(), 3, 'getLevel() should return 3');
+        same(outputBuffer.getContents(), '', `obGetContents() should return ''`);
 
         reset(false);
 
-        let originalWrite = process.stdout.write;
+        try {
+            outputBuffer.clean();
 
-        process.stdout.write = function (chunk: string): boolean {
-            process.stdout.write = originalWrite;
-
-            test.same(chunk, 'Failed to clean buffer: no buffer to clean.');
-
-            return true;
-        };
-
-        test.false(outputBuffer.clean());
-
-        test.end();
+            fail();
+        } catch (error) {
+            same((error as Error).message, 'Failed to clean buffer: no buffer to clean.');
+        } finally {
+            end();
+        }
     });
 
-    test.test('obGetClean', (test) => {
+    test('getAndClean', (test) => {
         reset();
 
         test.same(outputBuffer.getAndClean(), 'oof', `obGetClean() should return 'oof'`);
@@ -162,29 +131,33 @@ tape('TwingOutputBuffering', (test) => {
         test.end();
     });
 
-    test.test('obEndClean', (test) => {
-        reset();
+    test('endAndClean', ({test}) => {
+        test('removes the active buffer and returns true', ({same, end}) => {
+            reset();
 
-        test.true(outputBuffer.endAndClean(), `obEndClean() should return trusty`);
-        test.equal(outputBuffer.getLevel(), 2, 'getLevel() should return 2');
-        test.same(outputBuffer.getContents(), 'bar', `obGetContents() should return 'bar'`);
+            same(outputBuffer.endAndClean(), true);
+            same(outputBuffer.getLevel(), 2);
+            same(outputBuffer.getContents(), 'bar');
 
-        reset(false);
+            end();
+        });
 
-        let originalWrite = process.stdout.write;
+        test('throws an error when there is no active buffer', ({same, fail, end}) => {
+            reset(false);
 
-        process.stdout.write = (): boolean => {
-            process.stdout.write = originalWrite;
+            try {
+                outputBuffer.endAndClean();
 
-            return true;
-        };
-
-        test.false(outputBuffer.endAndClean());
-
-        test.end();
+                fail();
+            } catch (error) {
+                same((error as Error).message, 'Failed to clean buffer: no buffer to clean.');
+            } finally {
+                end();
+            }
+        });
     });
 
-    test.test('flush', (test) => {
+    test('flush', (test) => {
         reset();
         outputBuffer.flush();
 
@@ -193,29 +166,39 @@ tape('TwingOutputBuffering', (test) => {
         test.end();
     });
 
-    test.test('support echoing a number when not started', (test) => {
-        let w = process.stdout.write;
+    test('support echoing a number when not started', (test) => {
+        const outputBuffer = createOutputBuffer();
 
-        return new Promise((resolve) => {
-            reset(false);
-
-            process.stdout.write = function (chunk: string): boolean {
-                resolve(chunk.toString());
-
-                return true;
-            };
-
-            outputBuffer.echo(1);
-        }).then(function (actual) {
-            process.stdout.write = w;
-
-            test.same(actual, '1');
-
-            test.end();
+        let data: string = '';
+        
+        const writeStream = new Writable({
+            write: (chunk, _encoding, next) => {
+                data += chunk.toString();
+                
+                next();
+            }
         });
+        
+        outputBuffer.outputStream.pipe(writeStream);
+        
+        outputBuffer.echo(1);
+        
+        test.same(data, '1');
+
+        test.end();
     });
 
-    test.test('obGetLevel', (test) => {
+    test('support echoing a number when not started without an output stream', ({pass, end}) => {
+        const outputBuffer = createOutputBuffer();
+
+        outputBuffer.echo(1);
+
+        pass();
+
+        end();
+    });
+
+    test('getLevel', (test) => {
         reset(false);
 
         test.equals(outputBuffer.getLevel(), 0);
@@ -223,14 +206,19 @@ tape('TwingOutputBuffering', (test) => {
         test.end();
     });
 
-    test.test('obGetContents', (test) => {
-        reset(false);
+    test('getContents', (test) => {
+        reset(true);
+
+        test.equals(outputBuffer.getContents(), 'oof');
+
+        test.end();
+    });
+
+    test('getContents when not started', (test) => {
+        const outputBuffer = createOutputBuffer();
 
         test.equals(outputBuffer.getContents(), '');
 
         test.end();
     });
-
-
-    test.end();
 });

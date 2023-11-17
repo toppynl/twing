@@ -1,9 +1,9 @@
-import {isMap} from "./is-map";
+import {isMapLike} from "./map-like";
 import {TwingRuntimeError} from "../error/runtime";
 import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
-import type {GetAttributeCallType} from "../node/expression/get-attribute";
+import type {TwingGetAttributeCallType} from "../node/expression/attribute-accessor";
 import type {Runtime} from "../runtime";
 
 const isBool = require('locutus/php/var/is_bool');
@@ -18,18 +18,30 @@ const isObject = require('isobject');
  * @param {*} attribute The item to get from the array or object
  * @param {Map<any, any>} _arguments A map of arguments to pass if the item is an object method
  * @param {string} type The type of attribute (@see Twig_Template constants)
- * @param {boolean} isDefinedTest Whether this is only a defined check
- * @param {boolean} ignoreStrictCheck Whether to ignore the strict attribute check or not
+ * @param {boolean} shouldTestExistence Whether this is only a defined check
+ * @param {boolean} shouldIgnoreStrictCheck Whether to ignore the strict attribute check or not
  * @param {boolean} sandboxed
  *
  * @return {Promise<any>} The attribute value, or a boolean when isDefinedTest is true, or null when the attribute is not set and ignoreStrictCheck is true
  *
  * @throw {TwingErrorRuntime} if the attribute does not exist and Twing is running in strict mode and isDefinedTest is false
  */
-export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arguments: Map<any, any> = new Map(), type: GetAttributeCallType = "any", isDefinedTest: boolean = false, ignoreStrictCheck: boolean = false, sandboxed: boolean = false): Promise<any> => {
-    let _do = (): any => {
+export const getAttribute = (
+    runtime: Runtime,
+    object: any,
+    attribute: any,
+    _arguments: Map<any, any>,
+    type: TwingGetAttributeCallType,
+    shouldTestExistence: boolean,
+    shouldIgnoreStrictCheck: boolean | null
+): Promise<any> => {
+    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !runtime.isStrictVariables : shouldIgnoreStrictCheck;
+    
+    const {isSandboxed} = runtime;
+    
+    const _do = (): any => {
         let message: string;
-
+        
         // ANY_CALL or ARRAY_CALL
         if (type !== "method") {
             let arrayItem;
@@ -43,25 +55,29 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
             }
 
             if (object) {
-                if ((isMap(object) && (object as Map<any, any>).has(arrayItem)) || (isPlainObject(object) && Reflect.has(object, arrayItem))) {
-                    if (isDefinedTest) {
+                if ((isMapLike(object) && object.has(arrayItem)) || (isPlainObject(object) && Reflect.has(object, arrayItem))) {
+                    if (shouldTestExistence) {
                         return true;
                     }
 
+                    if (type !== "array" && isSandboxed) {
+                        runtime.checkPropertyAllowed(object, attribute);
+                    }
+                    
                     return get(object, arrayItem);
                 }
             }
-            
-            if ((type === "array") || (isMap(object)) || (object === null) || (typeof object !== 'object')) {
-                if (isDefinedTest) {
+
+            if ((type === "array") || (isMapLike(object)) || (object === null) || (typeof object !== 'object')) {
+                if (shouldTestExistence) {
                     return false;
                 }
 
-                if (ignoreStrictCheck || !runtime.isStrictVariables) {
+                if (shouldIgnoreStrictCheck) {
                     return;
                 }
 
-                if (isMap(object)) {
+                if (isMapLike(object)) {
                     if ((object as Map<any, any>).size < 1) {
                         message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
                     } else {
@@ -85,20 +101,20 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
                 throw new TwingRuntimeError(message);
             }
         }
-
+        
         // ANY_CALL or METHOD_CALL
-        if ((object === null) || (!isObject(object)) || (isMap(object))) {
-            if (isDefinedTest) {
+        if ((object === null) || (!isObject(object)) || (isMapLike(object))) {
+            if (shouldTestExistence) {
                 return false;
             }
 
-            if (ignoreStrictCheck || !runtime.isStrictVariables) {
+            if (shouldIgnoreStrictCheck) {
                 return;
             }
 
             if (object === null) {
                 message = `Impossible to invoke a method ("${attribute}") on a null variable.`;
-            } else if (isMap(object)) {
+            } else if (isMapLike(object)) {
                 message = `Impossible to invoke a method ("${attribute}") on an array.`;
             } else {
                 message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
@@ -106,22 +122,22 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
 
             throw new TwingRuntimeError(message);
         }
-
+        
         // object property
         if (type !== "method") {
             if (Reflect.has(object, attribute) && (typeof object[attribute] !== 'function')) {
-                if (isDefinedTest) {
+                if (shouldTestExistence) {
                     return true;
                 }
 
-                if (sandboxed) {
+                if (isSandboxed) {
                     runtime.checkPropertyAllowed(object, attribute);
                 }
 
                 return get(object, attribute);
             }
         }
-
+        
         // object method
         // precedence: getXxx() > isXxx() > hasXxx()
         let methods: Array<string> = [];
@@ -141,7 +157,7 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
         });
 
         let candidates = new Map();
-
+        
         for (let i = 0; i < methods.length; i++) {
             let method: string = methods[i];
             let lcName: string = lcMethods[i];
@@ -149,7 +165,7 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
             candidates.set(method, method);
             candidates.set(lcName, method);
 
-            let name: string;
+            let name: string = '';
 
             if (lcName[0] === 'g' && lcName.indexOf('get') === 0) {
                 name = method.substr(3);
@@ -167,9 +183,9 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
             } else {
                 continue;
             }
-
+            
             // skip get() and is() methods (in which case, name is empty)
-            if (name) {
+            if (name.length > 0) {
                 if (!candidates.has(name)) {
                     candidates.set(name, method);
                 }
@@ -183,28 +199,28 @@ export const getAttribute = (runtime: Runtime, object: any, attribute: any, _arg
         let itemAsString: string = attribute as string;
         let method: string;
         let lcItem: string;
-
+        
         if (candidates.has(attribute)) {
             method = candidates.get(attribute);
         } else if (candidates.has(lcItem = itemAsString.toLowerCase())) {
             method = candidates.get(lcItem);
         } else {
-            if (isDefinedTest) {
+            if (shouldTestExistence) {
                 return false;
             }
 
-            if (ignoreStrictCheck || !runtime.isStrictVariables) {
+            if (shouldIgnoreStrictCheck) {
                 return;
             }
 
             throw new TwingRuntimeError(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
         }
 
-        if (isDefinedTest) {
+        if (shouldTestExistence) {
             return true;
         }
 
-        if (sandboxed) {
+        if (isSandboxed) {
             runtime.checkMethodAllowed(object, method);
         }
 

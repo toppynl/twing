@@ -1,4 +1,4 @@
-import {isMap} from "../../../helpers/is-map";
+import {isMapLike} from "../../../helpers/map-like";
 
 /**
  * Cycles over a value.
@@ -9,7 +9,7 @@ import {isMap} from "../../../helpers/is-map";
  * @returns {Promise<any>} The value at position
  */
 export function cycle(value: Map<any, any> | any, position: number): Promise<any> {
-    if (!isMap(value)) {
+    if (!isMapLike(value)) {
         return Promise.resolve(value);
     }
 

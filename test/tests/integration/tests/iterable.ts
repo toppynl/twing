@@ -87,7 +87,7 @@ export class NotDefinedTernaryIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable `notDefinedVar` does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "notDefinedVar" does not exist in "index.twig" at line 1.';
     }
 }
 
@@ -103,13 +103,13 @@ export class NotDefinedIfIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable `notDefinedVar` does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "notDefinedVar" does not exist in "index.twig" at line 1.';
     }
 }
 
 export class UndefinedTernaryIterableTest extends TestBase {
     getDescription() {
-        return 'checking if an `undefined` variable is iterable via ternary evaluates to `false` if `strict_variables` is enabled (though ideally would throw a "does not exist" runtime error instead).';
+        return 'checking if an `undefined` variable is iterable via ternary throws a "does not exist" if `strict_variables` is enabled';
     }
 
     getTemplates() {
@@ -120,18 +120,18 @@ export class UndefinedTernaryIterableTest extends TestBase {
 
     getContext() {
         return {
-            undefinedVar: undefined as any
+            undefinedVar: undefined
         }
     }
 
-    getExpected() {
-        return `ko`;
+    getExpectedErrorMessage() {
+        return 'TwingRuntimeError: Variable "undefinedVar" does not exist in "index.twig" at line 1.';
     }
 }
 
 export class UndefinedIfIterableTest extends TestBase {
     getDescription() {
-        return 'checking if an `undefined` variable is iterable via `if` evaluates to `false` if `strict_variables` is enabled (though ideally would throw a "does not exist" runtime error instead).';
+        return 'checking if an `undefined` variable is iterable via `if` throws a "does not exist" if `strict_variables` is enabled.';
     }
 
     getTemplates() {
@@ -146,8 +146,8 @@ export class UndefinedIfIterableTest extends TestBase {
         }
     }
 
-    getExpected() {
-        return `ko`;
+    getExpectedErrorMessage() {
+        return 'TwingRuntimeError: Variable "undefinedVar" does not exist in "index.twig" at line 1.';
     }
 }
 

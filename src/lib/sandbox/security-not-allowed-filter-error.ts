@@ -1,5 +1,5 @@
 import {BaseSandboxSecurityError} from "./security-error";
-import type {Source} from "../source";
+import type {TwingSource} from "../source";
 
 /**
  * Exception thrown when a not allowed filter is used in a template.
@@ -9,7 +9,7 @@ export interface TwingSandboxSecurityNotAllowedFilterError extends BaseSandboxSe
 }
 
 export class TwingSandboxSecurityNotAllowedFilterError extends BaseSandboxSecurityError {
-    constructor(message: string, public readonly filterName: string, line?: number, source?: Source) {
+    constructor(message: string, public readonly filterName: string, line?: number, source?: TwingSource) {
         super(message, line, source);
     }
 }

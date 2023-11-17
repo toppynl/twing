@@ -1,13 +1,13 @@
-import type {Source} from "./source";
-import {Node} from "./node";
+import type {TwingSource} from "./source";
 import type {TwingRuntimeError} from "./error/runtime";
-import {Safe} from "./node-visitor/safe-analysis";
+import type {TwingArrayNode} from "./node/expression/array";
+import {Safe} from "./node-visitor/escaper";
 
-export type TwingCallable<T> = (...args: any[]) => Promise<T>;
+export type TwingCallable<R = any> = (...args: any[]) => Promise<R>;
 
 export type TwingCallableArgument = {
-    name: string,
-    defaultValue?: any
+    name: string;
+    defaultValue?: any;
 };
 
 export type TwingCallableWrapperOptions = {
@@ -16,17 +16,16 @@ export type TwingCallableWrapperOptions = {
     needs_output_buffer?: boolean;
     is_variadic?: boolean;
     is_safe?: Array<any>;
-    is_safe_callback?: Function;
+    is_safe_callback?: (argumentsNode: TwingArrayNode) => Safe;
     deprecated?: boolean | string;
     alternative?: string;
 }
 
-export interface TwingCallableWrapper<T, Factory extends Function> {
-    readonly acceptedArguments: TwingCallableArgument[];
+export interface TwingCallableWrapper<Callable extends TwingCallable> {
+    readonly acceptedArguments: Array<TwingCallableArgument>;
     readonly alternative: string | undefined;
-    readonly callable: TwingCallable<T> | null;
+    readonly callable: Callable;
     readonly deprecatedVersion: string | boolean | undefined;
-    readonly expressionFactory: Factory;
     readonly isDeprecated: boolean;
     readonly isVariadic: boolean;
     readonly name: string;
@@ -40,21 +39,20 @@ export interface TwingCallableWrapper<T, Factory extends Function> {
     readonly needsOutputBuffer: boolean;
     readonly needsTemplate: boolean;
 
-    getSafe(functionArguments: Node): Safe;
+    getSafe(argumentsNode: TwingArrayNode): Safe;
 
-    getTraceableCallable(line: number, source: Source): TwingCallable<T>
+    getTraceableCallable(line: number, source: TwingSource): Callable;
 }
 
-export const createCallableWrapper = <T, Factory extends Function>(
+export const createCallableWrapper = <Callable extends TwingCallable>(
     name: string,
-    callable: TwingCallable<T> | null,
-    acceptedArguments: TwingCallableArgument[],
-    expressionFactory: Factory,
+    callable: Callable,
+    acceptedArguments: Array<TwingCallableArgument>,
     options: TwingCallableWrapperOptions
-): TwingCallableWrapper<T, Factory> => {
+): TwingCallableWrapper<Callable> => {
     let nativeArguments: Array<string> = [];
 
-    const callableWrapper: TwingCallableWrapper<T, Factory> = {
+    const callableWrapper: TwingCallableWrapper<Callable> = {
         get callable() {
             return callable;
         },
@@ -69,9 +67,6 @@ export const createCallableWrapper = <T, Factory extends Function>(
         },
         get deprecatedVersion() {
             return options.deprecated;
-        },
-        get expressionFactory() {
-            return expressionFactory;
         },
         get isDeprecated() {
             return options.deprecated ? true : false;
@@ -106,8 +101,8 @@ export const createCallableWrapper = <T, Factory extends Function>(
             return [];
         },
         getTraceableCallable: (line, source) => {
-            return (...args) => {
-                return (callable!.apply(null, args) as Promise<T>) // todo: find a way to improve this
+            return ((...args) => {
+                return callable(...args)
                     .catch((error: TwingRuntimeError) => {
                         if (error.line === undefined) {
                             error.line = line;
@@ -119,7 +114,7 @@ export const createCallableWrapper = <T, Factory extends Function>(
 
                         throw error;
                     });
-            }
+            }) as typeof callable;
         }
     };
 

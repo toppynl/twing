@@ -1,5 +1,5 @@
 import {TwingParsingError} from "../error/parsing";
-import {ConstantNode, createConstantNode} from "../node/expression/constant";
+import {TwingConstantNode, createConstantNode} from "../node/expression/constant";
 import {createBaseNode} from "../node";
 import {TokenType} from "twig-lexer";
 import {createTraitNode} from "../node/trait";
@@ -17,10 +17,10 @@ export const createUseTagHandler = (): TwingTagHandler => {
                 const template = parser.parseExpression(stream);
 
                 if (!template.is("constant")) {
-                    throw new TwingParsingError('The template references in a "use" statement must be a string.', line, stream.getSourceContext());
+                    throw new TwingParsingError('The template references in a "use" statement must be a string.', line, column, stream.source);
                 }
                 
-                const targets: Record<string, ConstantNode> = {};
+                const targets: Record<string, TwingConstantNode> = {};
 
                 if (stream.nextIf(TokenType.NAME, 'with')) {
                     do {

@@ -1,26 +1,26 @@
-import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
-import type {NodeType} from "../../node";
-import type {NegativeNode} from "./unary/neg";
-import type {NotNode} from "./unary/not";
-import type {PositiveNode} from "./unary/pos";
+import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
+import type {TwingNodeType} from "../../node";
+import type {TwingNegativeNode} from "./unary/neg";
+import type {TwingNotNode} from "./unary/not";
+import type {TwingPositiveNode} from "./unary/pos";
 
-export type UnaryNode =
-    | NegativeNode
-    | NotNode
-    | PositiveNode
+export type TwingUnaryNode =
+    | TwingNegativeNode
+    | TwingNotNode
+    | TwingPositiveNode
     ;
 
-export interface BaseUnaryNode<Type extends string> extends BaseExpressionNode<Type, BaseExpressionNodeAttributes, {
-    operand: BaseExpressionNode;
+export interface TwingBaseUnaryNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, {
+    operand: TwingBaseExpressionNode;
 }> {
 }
 
-export const createUnaryNodeFactory = <InstanceType extends BaseUnaryNode<any>>(
-    type: NodeType<InstanceType>,
+export const createUnaryNodeFactory = <InstanceType extends TwingBaseUnaryNode<any>>(
+    type: TwingNodeType<InstanceType>,
     operator: string
 ) => {
     const factory = (
-        operand: BaseExpressionNode,
+        operand: TwingBaseExpressionNode,
         line: number,
         column: number
     ): InstanceType => {
@@ -37,10 +37,10 @@ export const createUnaryNodeFactory = <InstanceType extends BaseUnaryNode<any>>(
 export const createBaseUnaryNode = <Type extends string>(
     type: Type,
     operator: string,
-    operand: BaseExpressionNode,
+    operand: TwingBaseExpressionNode,
     line: number,
     column: number
-): BaseUnaryNode<Type> => {
+): TwingBaseUnaryNode<Type> => {
     const baseNode = createBaseExpressionNode(type, {}, {
         operand
     }, line, column);
@@ -49,10 +49,10 @@ export const createBaseUnaryNode = <Type extends string>(
         ...baseNode,
         compile: (compiler) => {
             compiler
-                .raw(operator)
-                .raw('(')
+                .write(operator)
+                .write('(')
                 .subCompile(baseNode.children.operand)
-                .raw(')');
+                .write(')');
         }
     };
 };

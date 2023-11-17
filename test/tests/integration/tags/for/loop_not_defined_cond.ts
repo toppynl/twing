@@ -15,7 +15,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingParsingError: The "loop" variable cannot be used in a looping condition in "index.twig" at line 2.'
+        return 'TwingParsingError: The "loop" variable cannot be used in a looping condition in "index.twig" at line 2, column 28.'
     }
 
     getContext() {

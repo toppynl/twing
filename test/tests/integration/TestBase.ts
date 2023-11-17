@@ -2,26 +2,29 @@ import * as tape from 'tape';
 import {SinonStub, stub} from 'sinon';
 import {TokenType} from "twig-lexer";
 import {createEnvironment, TwingEnvironmentOptions} from "../../../src/lib/environment";
-import {createPrintNode} from "../../../src/lib/node/print";
+import {createPrintNode} from "../../../src/lib/node/output/print";
 import {createConstantNode} from "../../../src/lib/node/expression/constant";
 import {TwingExtension} from "../../../src/lib/extension";
 import {createFilter} from "../../../src/lib/filter";
 import {createFunction} from "../../../src/lib/function";
 import {createTest} from "../../../src/lib/test";
-import {TwingSandboxSecurityPolicy} from "../../../src/lib/sandbox/security-policy";
+import {createSandboxSecurityPolicy} from "../../../src/lib/sandbox/security-policy";
 import {createArrayLoader} from "../../../src/lib/loader/array";
 import {escape} from "../../../src/lib/extension/core/filters/escape";
 import {TwingTemplate} from "../../../src/lib/template";
-import {TwingOutputBuffer} from "../../../src/lib/output-buffer";
 import {IntegrationTest} from "./test";
 import {TwingTagHandler} from "../../../src/lib/tag-handler";
 import {MappingItem, SourceMapConsumer} from "source-map";
 import {isATwingError} from "../../../src/lib/error";
 import {createFilesystemCache} from "../../../src/lib/cache/filesystem";
 import * as fs from "fs";
+import {TwingCache} from "../../../src/lib/cache";
+import {TwingLoader} from "../../../src/lib/loader";
+import {Settings} from "luxon";
 
 // @ts-ignore
-const cache = createFilesystemCache('tmp', fs);
+let cache: TwingCache | false = createFilesystemCache('tmp', fs);
+cache = false;
 
 const createSectionTokenParser = (): TwingTagHandler => {
     return {
@@ -36,7 +39,7 @@ const createSectionTokenParser = (): TwingTagHandler => {
     };
 };
 
-class TwingTestExtension extends TwingExtension {
+class TwingTestExtension implements TwingExtension {
     static staticCall(value: string) {
         return Promise.resolve(`*${value}*`);
     }
@@ -49,13 +52,25 @@ class TwingTestExtension extends TwingExtension {
         return Promise.resolve('static_magic_' + arguments_[0]);
     }
 
-    getTokenParsers() {
+    get nodeVisitors() {
+        return [];
+    }
+
+    get operators() {
+        return [];
+    }
+
+    get sourceMapNodeFactories() {
+        return [];
+    }
+
+    get tagHandlers() {
         return [
             createSectionTokenParser()
         ];
     }
 
-    getFilters() {
+    get filters() {
         return [
             createFilter('escape_and_nl2br', escape_and_nl2br, [], {
                 needs_template: true,
@@ -84,12 +99,14 @@ class TwingTestExtension extends TwingExtension {
         ];
     }
 
-    getFunctions() {
+    get functions() {
         return [
             createFunction('§', this.sectionFunction, [{
                 name: 'value'
             }]),
-            createFunction('safe_br', this.br, [], {'is_safe': ['html']}),
+            createFunction('safe_br', this.br, [], {
+                'is_safe': ['html']
+            }),
             createFunction('unsafe_br', this.br, []),
             createFunction('static_call_string', TwingTestExtension.staticCall, [{
                 name: 'value'
@@ -118,21 +135,11 @@ class TwingTestExtension extends TwingExtension {
                 return Promise.resolve(object);
             }, [{
                 name: 'attributes'
-            }]),
-            createFunction('getMacro', (template: TwingTemplate, outputBuffer: TwingOutputBuffer, name: string) => {
-                return template.getMacro(name).then((macroHandler) => {
-                    return (...args: Array<any>) => macroHandler!(outputBuffer, ...args);
-                });
-            }, [{
-                name: 'name'
-            }], {
-                needs_template: true,
-                needs_output_buffer: true
-            }),
+            }])
         ];
     }
 
-    getTests() {
+    get tests() {
         return [
             createTest('multi word', this.is_multi_word, []),
             createTest('test_*', this.dynamic_test, [])
@@ -210,8 +217,8 @@ export default abstract class {
  * nl2br which also escapes, for testing escaper filters.
  */
 function escape_and_nl2br(template: TwingTemplate, value: string, sep = '<br />') {
-    return escape(template, value, 'html', null).then((result) => {
-        return nl2br(result, sep);
+    return escape(template, value, 'html', 'UTF-8').then((result) => {
+        return nl2br(result?.toString() || '', sep);
     });
 }
 
@@ -238,58 +245,76 @@ function dynamic_foo(foo: string, bar: string, item: string) {
     return Promise.resolve(foo + '/' + bar + '/' + item);
 }
 
+const isATestWithALoader = (test: IntegrationTest): test is IntegrationTest & {
+    loader: TwingLoader
+} => {
+    return (test as any).loader !== undefined;
+};
+
 export const runTest = async (
     test: IntegrationTest
 ) => {
+    Settings.defaultZoneName = "Europe/Paris";
+    
+    let loader: TwingLoader;
+
     const {
         additionalFilters,
+        additionalFiltersAtCompileTime,
         additionalFunctions,
+        additionalFunctionsAtCompileTime,
+        additionalNodeVisitors,
         additionalTests,
         description,
         context,
         globals,
-        templates,
         environmentOptions,
         expectation,
         expectedErrorMessage,
         expectedDeprecationMessages,
         expectedSourceMapMappings,
+        sandboxPolicy,
         sandboxSecurityPolicyFilters,
         sandboxSecurityPolicyTags,
         sandboxSecurityPolicyFunctions,
+        sandboxSecurityPolicyMethods,
+        sandboxSecurityPolicyProperties,
         parserOptions
     } = test;
-    
+
     tape(description, async ({fail, same, end}) => {
-        let loader = createArrayLoader(templates);
+        if (!isATestWithALoader(test)) {
+            loader = createArrayLoader(test.templates);
+        } else {
+            loader = test.loader;
+        }
+
         let environment = createEnvironment(loader, Object.assign({}, <TwingEnvironmentOptions>{
-            cache: false, //cache,
-            sandboxPolicy: new TwingSandboxSecurityPolicy(sandboxSecurityPolicyTags, sandboxSecurityPolicyFilters, new Map(), new Map(), sandboxSecurityPolicyFunctions),
+            cache,
+            sandboxPolicy: sandboxPolicy || createSandboxSecurityPolicy({
+                allowedTags: sandboxSecurityPolicyTags,
+                allowedFilters: sandboxSecurityPolicyFilters,
+                allowedFunctions: sandboxSecurityPolicyFunctions,
+                allowedMethods: sandboxSecurityPolicyMethods,
+                allowedProperties: sandboxSecurityPolicyProperties
+            }),
             strictVariables: true,
-            source_map: expectedSourceMapMappings !== undefined,
+            emitsSourceMap: expectedSourceMapMappings !== undefined,
             parserOptions
         }, environmentOptions || {}));
 
-        environment.addExtension(new TwingTestExtension(), 'TwingTestExtension');
+        environment.addExtension(new TwingTestExtension());
+        environment.registerEscapingStrategy((value) => `custom ${value}`, 'custom');
 
-        if (additionalFilters) {
-            for (const additionalFilter of additionalFilters) {
-                environment.addFilter(additionalFilter);
-            }
-        }
+        environment.addExtension({
+            filters: additionalFilters || [],
+            functions: additionalFunctions || [],
+            nodeVisitors: additionalNodeVisitors || [],
+            tagHandlers: [],
+            tests: additionalTests || [],
+            operators: []
+        });
 
-        if (additionalFunctions) {
-            for (const additionalFunction of additionalFunctions) {
-                environment.addFunction(additionalFunction);
-            }
-        }
-
-        if (additionalTests) {
-            for (const additionalTest of additionalTests) {
-                environment.addTest(additionalTest);
-            }
-        }
-        
         if (globals) {
             for (let key in globals) {
                 environment.setGlobal(key, globals[key]);
@@ -306,17 +331,43 @@ export const runTest = async (
                 consoleData.push(data);
             });
         }
-        
+
         return (context || Promise.resolve({})).then(async (context: Record<string, any>) => {
             if (!expectedErrorMessage) {
                 try {
                     console.time(description);
                     
-                    let actual = await environment.render('index.twig', context);
+                    let actual: string;
+                    
+                    if (additionalFiltersAtCompileTime || additionalFunctionsAtCompileTime) {
+                        if (additionalFiltersAtCompileTime) {
+                            for (const filter of additionalFiltersAtCompileTime) {
+                                environment.addFilter(filter);
+                            }
+                        }
+
+                        if (additionalFunctionsAtCompileTime) {
+                            for (const twingFunction of additionalFunctionsAtCompileTime) {
+                                environment.addFunction(twingFunction);
+                            }
+                        }
+                        
+                        const tokens = environment.tokenize((await loader.getSourceContext('index.twig', null))!);
+                        const node = environment.parse(tokens, parserOptions || {
+                            strict: true
+                        });
+                        const content = environment.compile(node);
+                        const template = await environment.createTemplateFromCompiledSource(content, 'index.twig');
+                        
+                        actual = await template.render(context);
+                    }
+                    else {
+                        actual = await environment.render('index.twig', context);
+                    }
 
                     console.timeEnd(description);
 
-                    if (expectation) {
+                    if (expectation !== undefined) {
                         same(actual.trim(), expectation.trim(), `${description}: renders as expected`);
                     }
 
@@ -327,31 +378,37 @@ export const runTest = async (
                     }
 
                     if (expectedSourceMapMappings !== undefined) {
-                        const consumer = new SourceMapConsumer(JSON.parse(environment.getSourceMap()!));
-                        
+                        const sourceMap = environment.sourceMap;
                         const mappings: Array<MappingItem> = [];
-                        
-                        consumer.eachMapping((mapping) => {
-                            mappings.push(mapping);
-                        })
-                        
+
+                        if (sourceMap) {
+                            const consumer = new SourceMapConsumer(JSON.parse(sourceMap));
+
+                            consumer.eachMapping((mapping) => {
+                                mappings.push(mapping);
+                            })
+                        }
+
                         same(mappings, expectedSourceMapMappings);
                     }
                 } catch (e) {
-                    console.log(e);
-                    
+                    console.timeEnd(description);
+
                     fail(`${description}: should not throw an error (${e})`);
                 }
             } else {
                 try {
+                    console.time(description);
+
                     await environment.render('index.twig', context);
 
                     fail(`${description}: should throw an error`);
                 } catch (error: any) {
+                    console.timeEnd(description);
+
                     if (isATwingError(error)) {
                         same(error.toString(), expectedErrorMessage, `${description}: throws error`);
-                    }
-                    else {
+                    } else {
                         same(error.message, expectedErrorMessage, `${description}: throws error`);
                     }
                 }

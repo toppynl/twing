@@ -37,7 +37,7 @@ export function modifyDate(modifier: string): DateTime {
         let duration: any = {};
 
         duration[unit] = (sign === '-' ? -count : count);
-
+        
         result = result.plus(duration);
     }
     else {

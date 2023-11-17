@@ -1,105 +1,100 @@
-import {createSource, Source} from "./source";
+import type {TwingSource} from "./source";
 import {TwingParsingError} from "./error/parsing";
 import {Token, TokenStream, TokenType, astVisitor} from "twig-lexer";
 import {typeToEnglish} from "./lexer";
 
-export class TwingTokenStream {
-    private readonly _stream: TokenStream;
-    private readonly _source: Source;
-
-    constructor(tokens: Token[], source?: Source) {
-        this._stream = new TokenStream(tokens);
-        this._source = source ? source : createSource('', '');
-    }
-
-    private get stream(): TokenStream {
-        return this._stream;
-    }
-
-    get tokens(): Token[] {
-        return this.stream.tokens;
-    }
-
-    toString() {
-        return this.tokens.map(function (token) {
-            return token.toString();
-        }).join('\n');
-    }
-
-    injectTokens(tokens: Array<Token>) {
-        this.stream.injectTokens(tokens);
-    }
-
-    next(): Token {
-        return this.stream.next()
-    }
-
-    nextIf(primary: TokenType, secondary?: string[] | string): Token {
-        return this.stream.nextIf(primary, secondary);
-    }
+export interface TwingTokenStream {
+    readonly current: Token;
+    readonly source: TwingSource;
 
     /**
      * Tests a token and returns it or throws a syntax error.
      *
      * @return {Token}
      */
-    expect(type: TokenType, value: string[] | string | number | null = null, message: string | null= null): Token {
-        let token = this.getCurrent();
+    expect(type: TokenType, value?: Array<string> | string | number | null, message?: string | null): Token;
 
-        if (!token.test(type, value || undefined)) {
-            let line = token.line;
-
-            throw new TwingParsingError(
-                `${message ? message + '. ' : ''}Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}" ("${typeToEnglish(type)}" expected${value ? ` with value "${value}"` : ''}).`,
-                line,
-                this._source
-            );
-        }
-
-        this.next();
-
-        return token;
-    }
-
-    look(number: number): Token {
-        return this.stream.look(number);
-    }
-
-    test(type: TokenType, value?: string | number | string[]): boolean {
-        return this.stream.test(type, value);
-    }
+    injectTokens(tokens: Array<Token>): void;
 
     /**
      * Checks if end of stream was reached.
      *
      * @return boolean
      */
-    isEOF() {
-        return this.stream.current.type === TokenType.EOF;
-    }
+    isEOF(): boolean;
 
-    toAst(): Token[] {
-        return this.stream.traverse((token: Token, stream: TokenStream) => {
-            token = astVisitor(token, stream);
+    look(number: number): Token;
 
-            if (token && token.test(TokenType.TEST_OPERATOR)) {
-                token = new Token(TokenType.OPERATOR, token.value, token.line, token.column);
+    next(): Token;
+
+    nextIf(primary: TokenType, secondary?: Array<string> | string): Token;
+
+    test(type: TokenType, value?: string | number | string[]): boolean;
+
+    toAst(): Array<Token>;
+}
+
+export const createTokenStream = (
+    tokens: Array<Token>,
+    source: TwingSource
+): TwingTokenStream => {
+    const stream = new TokenStream(tokens);
+
+    const tokenStream: TwingTokenStream = {
+        get current() {
+            return stream.current;
+        },
+        get source() {
+            return source;
+        },
+        injectTokens: (tokens) => {
+            stream.injectTokens(tokens);
+        },
+        next: () => {
+            return stream.next()
+        },
+        nextIf: (primary, secondary) => {
+            return stream.nextIf(primary, secondary);
+        },
+        expect: (type, value = null, message = null) => {
+            let token = tokenStream.current;
+
+            if (!token.test(type, value || undefined)) {
+                const {line, column} = token;
+
+                throw new TwingParsingError(
+                    message ? `${message}.` : `Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}" ("${typeToEnglish(type)}" expected${value ? ` with value "${value}"` : ''}).`,
+                    line,
+                    column,
+                    source
+                );
             }
 
+            tokenStream.next();
+
             return token;
-        });
-    }
+        },
+        look: (number) => {
+            return stream.look(number);
+        },
+        test: (type, value) => {
+            return stream.test(type, value);
+        },
+        isEOF: () => {
+            return tokenStream.current.type === TokenType.EOF;
+        },
+        toAst: () => {
+            return stream.traverse((token: Token, stream: TokenStream) => {
+                token = astVisitor(token, stream);
 
-    getCurrent(): Token {
-        return this.stream.current;
-    }
+                if (token && token.test(TokenType.TEST_OPERATOR)) {
+                    token = new Token(TokenType.OPERATOR, token.value, token.line, token.column);
+                }
 
-    /**
-     * Gets the source associated with this stream.
-     *
-     * @return Source
-     */
-    getSourceContext() {
-        return this._source;
-    }
-}
+                return token;
+            });
+        }
+    };
+
+    return tokenStream;
+};

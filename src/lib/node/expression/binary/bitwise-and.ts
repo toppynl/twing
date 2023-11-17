@@ -1,6 +1,8 @@
-import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface BitwiseAndNode extends BaseBinaryNode<"bitwise_and"> {
+export const bitwiseAndNodeType = "bitwise_and";
+
+export interface TwingBitwiseAndNode extends TwingBaseBinaryNode<typeof bitwiseAndNodeType> {
 }
 
-export const createBitwiseAndNode = createBinaryNodeFactory<BitwiseAndNode>("bitwise_and", '&');
+export const createBitwiseAndNode = createBinaryNodeFactory<TwingBitwiseAndNode>(bitwiseAndNodeType, '&');

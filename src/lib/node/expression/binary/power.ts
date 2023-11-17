@@ -1,16 +1,16 @@
-import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface PowerNode extends BaseBinaryNode<"power"> {
+export interface TwingPowerNode extends TwingBaseBinaryNode<"power"> {
 }
 
-export const createPowerNode = createBinaryNodeFactory<PowerNode>("power", null, {
+export const createPowerNode = createBinaryNodeFactory<TwingPowerNode>("power", null, {
     compile: (compiler, baseNode) => {
         compiler
-            .raw('Math.pow(')
+            .write('Math.pow(')
             .subCompile(baseNode.children.left)
-            .raw(', ')
+            .write(', ')
             .subCompile(baseNode.children.right)
-            .raw(')')
+            .write(')')
         ;
     }
 });

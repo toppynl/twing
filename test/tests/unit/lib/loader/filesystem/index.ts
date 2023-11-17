@@ -7,7 +7,8 @@ import {
 import {resolve, join, relative, isAbsolute} from "path";
 import {spy, stub} from "sinon";
 import {createSource} from "../../../../../../src/lib/source";
-import {createMockedEnvironment} from "../../../../../mock/environment";
+import {TwingLoader} from "../../../../../../src/lib/loader";
+import {createEnvironment, TwingEnvironment, TwingEnvironmentOptions} from "../../../../../../src/lib/environment";
 
 const fixturesPath = 'fixtures';
 
@@ -111,38 +112,42 @@ let isFile: boolean = false;
 let isDirectory: boolean = false;
 let mtime: Date = new Date(1);
 
-const filesystem: TwingFilesystemLoaderFilesystem = {
-    readFile: (path, callback) => {
-        const template = templates.find(([templatePath]) => {
-            const resolvedTemplatePath = resolve(templatePath);
+const createFilesystem = () => {
+    const filesystem: TwingFilesystemLoaderFilesystem = {
+        readFile: (path, callback) => {
+            const template = templates.find(([templatePath]) => {
+                const resolvedTemplatePath = resolve(templatePath);
 
-            return resolvedTemplatePath === path;
-        });
+                return resolvedTemplatePath === path;
+            });
 
-        callback(null, Buffer.from(template ? template[1] : ''));
-    },
-    stat: (path, callback) => {
-        const filesystemPath = isAbsolute(path) ? path : relative(resolve('.'), path);
+            callback(null, Buffer.from(template ? template[1] : ''));
+        },
+        stat: (path, callback) => {
+            const filesystemPath = isAbsolute(path) ? path : relative(resolve('.'), path);
 
-        const template = templates.find(([templatePath]) => {
-            return templatePath === filesystemPath;
-        });
+            const template = templates.find(([templatePath]) => {
+                return templatePath === filesystemPath;
+            });
 
-        isFile = template !== undefined;
+            isFile = template !== undefined;
 
-        const directory = directories.find((directory) => {
-            return directory === filesystemPath;
-        });
+            const directory = directories.find((directory) => {
+                return directory === filesystemPath;
+            });
 
-        isDirectory = directory !== undefined;
+            isDirectory = directory !== undefined;
 
-        callback(null, stats);
-    }
+            callback(null, stats);
+        }
+    };
+    
+    return filesystem;
 };
 
 tape('loader filesystem', ({test}) => {
     test('constructor', (test) => {
-        let loader = createFilesystemLoader(filesystem, []);
+        let loader = createFilesystemLoader(createFilesystem(), []);
 
         test.same(loader.getPaths(), []);
 
@@ -151,7 +156,7 @@ tape('loader filesystem', ({test}) => {
 
     test('paths', async ({same, end}) => {
         for (const [basePath, cacheKey, rootPath] of basePaths) {
-            const loader = createFilesystemLoader(filesystem, [
+            const loader = createFilesystemLoader(createFilesystem(), [
                 join(basePath, 'normal_one'),
                 join(basePath, 'normal_two')
             ], rootPath);
@@ -187,7 +192,7 @@ tape('loader filesystem', ({test}) => {
             same((await loader.getSourceContext('@named/index.html', null))?.code, "named path (five)");
         }
 
-        const loader = createFilesystemLoader(filesystem);
+        const loader = createFilesystemLoader(createFilesystem());
         const filePath = 'foo/bar';
 
         loader.addPath(filePath);
@@ -200,7 +205,7 @@ tape('loader filesystem', ({test}) => {
     });
 
     test('no paths passed to factory', ({same, end}) => {
-        const loader = createFilesystemLoader(filesystem);
+        const loader = createFilesystemLoader(createFilesystem());
 
         same(loader.getPaths(), []);
         same(loader.getPaths('foo'), []);
@@ -209,7 +214,7 @@ tape('loader filesystem', ({test}) => {
     });
 
     test('getNamespaces', ({same, end}) => {
-        const loader = createFilesystemLoader(filesystem, '/tmp');
+        const loader = createFilesystemLoader(createFilesystem(), '/tmp');
 
         same(loader.getNamespaces(), [MAIN_NAMESPACE]);
 
@@ -223,7 +228,7 @@ tape('loader filesystem', ({test}) => {
     test('getSourceContext', async ({test}) => {
         test('returns a source on found template', async ({same, end}) => {
             const basePath = fixturesPath;
-            const loader = createFilesystemLoader(filesystem, fixturesPath);
+            const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
             loader.addPath(join(basePath, 'named_one'), 'named');
 
@@ -236,7 +241,7 @@ tape('loader filesystem', ({test}) => {
 
         test('returns null on missing template', async ({same, end}) => {
             const basePath = fixturesPath;
-            const loader = createFilesystemLoader(filesystem, [join(basePath, 'normal_one')]);
+            const loader = createFilesystemLoader(createFilesystem(), [join(basePath, 'normal_one')]);
 
             loader.addPath(join(basePath, 'named_one'), 'named');
 
@@ -246,6 +251,8 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('does not hit the cache ???', async ({same, end}) => { // todo: why ???
+            const filesystem = createFilesystem();
+
             const loader = createFilesystemLoader(filesystem, [join(fixturesPath, 'normal_one')]);
 
             const isFileSpy = spy(stats, "isFile");
@@ -263,7 +270,7 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('normalizes template name', async ({same, end}) => {
-            const loader = createFilesystemLoader(filesystem, fixturesPath);
+            const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
             const names = [
                 ['named_one/index.html', 'named_one/index.html'],
@@ -288,6 +295,8 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('propagates filesystem readFile errors', async ({same, fail, end}) => {
+            const filesystem = createFilesystem();
+            
             const loader = createFilesystemLoader(filesystem, fixturesPath);
 
             const readFileStub = stub(filesystem, "readFile").callsFake((_path, callback) => {
@@ -308,6 +317,8 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('returns null on filesystem stat error', async ({same, end}) => {
+            const filesystem = createFilesystem();
+
             const loader = createFilesystemLoader(filesystem, fixturesPath);
 
             const statStub = stub(filesystem, "stat").callsFake((_path, callback) => {
@@ -322,7 +333,7 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('returns a source on found template with absolute root path', async ({same, end}) => {
-            const loader = createFilesystemLoader(filesystem, '/fixtures');
+            const loader = createFilesystemLoader(createFilesystem(), '/fixtures');
             
             same((await loader.getSourceContext('named_one/index.html', null))?.code, 'named path');
             
@@ -332,7 +343,7 @@ tape('loader filesystem', ({test}) => {
 
     test('addPath / prependPath', ({test}) => {
         test('trim trailing slashes', ({same, end}) => {
-            let loader = createFilesystemLoader(filesystem, fixturesPath);
+            let loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
             loader.addPath(join(fixturesPath, 'normal_one/'));
             loader.addPath(join(fixturesPath, 'normal_one//'));
@@ -347,7 +358,7 @@ tape('loader filesystem', ({test}) => {
                 join(fixturesPath, 'normal_one')
             ]);
 
-            loader = createFilesystemLoader(filesystem, fixturesPath);
+            loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
             loader.prependPath(join(fixturesPath, 'normal_one/'));
             loader.prependPath(join(fixturesPath, 'normal_one//'));
@@ -366,6 +377,8 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('reset the caches', async ({same, end}) => {
+            const filesystem = createFilesystem();
+
             const loader = createFilesystemLoader(filesystem, fixturesPath);
 
             const statSpy = spy(filesystem, "stat");
@@ -386,13 +399,13 @@ tape('loader filesystem', ({test}) => {
 
     test('exists', async ({test}) => {
         test('on cache miss', async ({same, end}) => {
-            let loader = createFilesystemLoader(filesystem, fixturesPath);
+            let loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
             same(await loader.exists('foo', null), false);
             same(await loader.exists('@foo/bar', null), false);
             same(await loader.exists('@foo/bar', null), false);
 
-            loader = createFilesystemLoader(filesystem, []);
+            loader = createFilesystemLoader(createFilesystem(), []);
 
             same(await loader.exists("foo\0.twig", null), false);
             same(await loader.exists('@foo', null), false);
@@ -408,6 +421,7 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('on cache hit', async ({same, end}) => {
+            const filesystem = createFilesystem();
             const loader = createFilesystemLoader(filesystem, join(fixturesPath, 'normal_one'));
 
             await loader.getSourceContext('index.html', null);
@@ -424,7 +438,7 @@ tape('loader filesystem', ({test}) => {
     });
 
     test('resolve', async ({same, end}) => {
-        const loader = createFilesystemLoader(filesystem, fixturesPath);
+        const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
         same(await loader.resolve('named_one/index.html', null), resolve(join(fixturesPath, 'named_one/index.html')));
 
@@ -432,7 +446,7 @@ tape('loader filesystem', ({test}) => {
     });
 
     test('isFresh', async ({same, end}) => {
-        const loader = createFilesystemLoader(filesystem, fixturesPath);
+        const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
         same(await loader.isFresh('named_one/index.html', 0, null), false);
         same(await loader.isFresh('named_one/index.html', 1, null), true);
@@ -445,7 +459,16 @@ tape('loader filesystem', ({test}) => {
     });
 
     test('supports relative embed', async ({same, end}) => {
-        const loader = createFilesystemLoader(filesystem, fixturesPath);
+        const createMockedEnvironment = (
+            loader: TwingLoader,
+            options: TwingEnvironmentOptions | null = null
+        ): TwingEnvironment => {
+            const environment = createEnvironment(loader, options || {});
+
+            return environment;
+        };
+        
+        const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
         const environment = createMockedEnvironment(loader);
 
         const output = await environment.render('embed/index.html.twig');
@@ -457,7 +480,7 @@ tape('loader filesystem', ({test}) => {
 
     test('getCacheKey', ({test}) => {
         test('returns the template path on found template', async ({same, end}) => {
-            const loader = createFilesystemLoader(filesystem, fixturesPath);
+            const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
             same(await loader.getCacheKey('named_one/index.html', null), 'fixtures/named_one/index.html');
 
@@ -465,7 +488,7 @@ tape('loader filesystem', ({test}) => {
         });
 
         test('returns null on missing template', async ({same, end}) => {
-            const loader = createFilesystemLoader(filesystem, fixturesPath);
+            const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
 
             same(await loader.getCacheKey('missing', null), null);
 

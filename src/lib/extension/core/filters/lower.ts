@@ -1,4 +1,4 @@
-import {TwingMarkup} from "../../../markup";
+import type {TwingMarkup} from "../../../markup";
 
 /**
  * Converts a string to lowercase.
@@ -7,6 +7,6 @@ import {TwingMarkup} from "../../../markup";
  *
  * @returns {Promise<string>} The lowercased string
  */
-export function lower(string: string | TwingMarkup): Promise<string> {
+export const lower = (string: string | TwingMarkup): Promise<string> => {
     return Promise.resolve(string.toString().toLowerCase());
-}
+};

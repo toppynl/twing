@@ -8,5 +8,6 @@ import "./missing_nested";
 import "./only";
 import "./template_instance";
 import "./templates_as_array";
+import "./with_string_variables";
 import "./with_undefined_variables";
 import "./with_variables";

@@ -5,5 +5,5 @@ runTest({
     templates: {
         'index.twig': '{% set foo, bar %}{% endset %}'
     },
-    expectedErrorMessage: 'TwingParsingError: When using set with a block, you cannot have a multi-target in "index.twig" at line 1.'
+    expectedErrorMessage: 'TwingParsingError: When using set with a block, you cannot have a multi-target in "index.twig" at line 1, column 17.'
 });

@@ -1,7 +1,9 @@
-import type {BaseBinaryNode} from "../binary";
+import type {TwingBaseBinaryNode} from "../binary";
 import {createBinaryNodeFactory} from "../binary";
 
-export interface AddNode extends BaseBinaryNode<"add"> {
+export const addNodeType = "add";
+
+export interface TwingAddNode extends TwingBaseBinaryNode<typeof addNodeType> {
 }
 
-export const createAddNode = createBinaryNodeFactory<AddNode>("add", '+');
+export const createAddNode = createBinaryNodeFactory<TwingAddNode>(addNodeType, '+');

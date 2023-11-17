@@ -1,6 +1,6 @@
 import {createBaseNode} from "../node";
-import {createPrintNode} from "../node/print";
-import {createTemporaryNameNode} from "../node/expression/temp-name";
+import {createPrintNode} from "../node/output/print";
+import {createTemporaryNameNode} from "../node/expression/temporary-name";
 import {TokenType} from "twig-lexer";
 import {createSetNode} from "../node/set";
 import type {TwingTagHandler} from "../tag-handler";
@@ -16,9 +16,7 @@ export const createApplyTagHandler = (): TwingTagHandler => {
                 const name = parser.getVarName();
 
                 let reference = createTemporaryNameNode(name, false, line, column);
-
-                // reference._attributes.always_defined = true; // todo: was there, useful?
-
+                
                 const filter = parser.parseFilterExpressionRaw(stream, reference, tag);
 
                 stream.expect(TokenType.TAG_END);

@@ -3,20 +3,12 @@ import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
     getDescription() {
-        return '"use" tag';
+        return '"use" tag and inheritance';
     }
 
     getTemplates() {
         return {
-            'ancestor.twig': `
-{% block container %}
-    <div class="container">{{ block('sub_container') }}</div>
-{% endblock %}
-
-{% block sub_container %}
-    <div class="sub_container">sub_container</div>
-{% endblock %}`,
-            'index.twig': `
+            "index.twig": `
 {% use "parent.twig" %}
 
 {{ block('container') }}`,
@@ -25,7 +17,15 @@ class Test extends TestBase {
 
 {% block sub_container %}
     <div class="overridden_sub_container">overridden sub_container</div>
-{% endblock %}`
+{% endblock %}`,
+            'ancestor.twig': `
+{% block container %}
+    <div class="container">{{ block('sub_container') }}</div>
+{% endblock %}
+
+{% block sub_container %}
+    <div class="sub_container">sub_container</div>
+{% endblock %}`,
         };
     }
 

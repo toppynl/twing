@@ -11,13 +11,15 @@ class Test extends TestBase {
             'index.twig': `
 {% set foo %}f<br />o<br />o{% endset %}
 
-{{ foo }}`
+{{ foo }}
+{{ foo|escape }}`
         };
     }
 
     getExpected() {
         return `
 f<br />o<br />o
+f&lt;br /&gt;o&lt;br /&gt;o
 `;
     }
 

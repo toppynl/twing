@@ -1,5 +1,5 @@
 import type {TwingLoader} from "../loader";
-import type {Source} from "../source";
+import type {TwingSource} from "../source";
 import {resolve, join, isAbsolute, relative} from "path";
 import {createSource} from "../source";
 
@@ -238,7 +238,7 @@ export const createFilesystemLoader = (
                     if (path === null) {
                         return null;
                     } else {
-                        return new Promise<Source | null>((resolve, reject) => {
+                        return new Promise<TwingSource | null>((resolve, reject) => {
                             filesystem.readFile(path, (error, data) => {
                                 if (error) {
                                     reject(error);

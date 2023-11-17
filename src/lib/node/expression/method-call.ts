@@ -1,62 +1,69 @@
-import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
-import type {ArrayNode} from "./array";
-import type {Node} from "../../node";
-import type {BaseNameNode} from "./name";
+import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
+import type {TwingArrayNode} from "./array";
 import {getKeyValuePairs} from "./array";
+import {TwingBaseNode} from "../../node";
 
-export type MethodCallNodeAttributes = BaseExpressionNodeAttributes & {
+export const methodCallNodeType = "method_call";
+
+export type TwingMethodCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
     methodName: string;
-    safe: boolean;
+    shouldTestExistence: boolean;
 };
 
-export interface MethodCallNode extends BaseExpressionNode<"method_call", MethodCallNodeAttributes, {
-    operand: Node;
-    arguments: ArrayNode;
+type NodeWithName = TwingBaseNode<any, {
+    name: string;
+}>;
+
+export interface TwingMethodCallNode extends TwingBaseExpressionNode<typeof methodCallNodeType, TwingMethodCallNodeAttributes, {
+    operand: NodeWithName;
+    arguments: TwingArrayNode;
 }> {
 }
 
 export const createMethodCallNode = (
-    operand: BaseNameNode<any>,
+    operand: NodeWithName,
     methodName: string,
-    methodArguments: ArrayNode,
+    methodArguments: TwingArrayNode,
     line: number,
     column: number
-): MethodCallNode => {
-    const baseNode = createBaseExpressionNode("method_call", {
+): TwingMethodCallNode => {
+    const baseNode = createBaseExpressionNode(methodCallNodeType, {
         methodName,
-        safe: false
+        shouldTestExistence: false
     }, {
-        operand, arguments: methodArguments
+        operand,
+        arguments: methodArguments
     }, line, column);
 
     return {
         ...baseNode,
-        compile: (compiler, flags) => {
-            const {methodName} = baseNode.attributes;
+        compile: (compiler) => {
+            const {methodName, shouldTestExistence} = baseNode.attributes;
             const {operand, arguments: methodArguments} = baseNode.children;
 
-            if (flags?.isDefinedTest) {
+            if (shouldTestExistence) {
                 compiler
-                    .raw('(await aliases.proxy[')
+                    .write('(await aliases.proxy[')
                     .render(operand.attributes.name)
-                    .raw('].hasMacro(')
-                    .render(methodName)
-                    .raw('))')
+                    .write('].hasMacro(').write('\n')
+                    .render(methodName).write('\n')
+                    .write('))')
                 ;
             } else {
                 compiler
-                    .raw('await template.callMacro(aliases.proxy[')
+                    .write('await template.callMacro(').write('\n')
+                    .write('aliases.proxy[')
                     .render(operand.attributes.name)
-                    .raw('], ')
-                    .render(methodName)
-                    .raw(', outputBuffer')
-                    .raw(', [')
+                    .write('],').write('\n')
+                    .render(methodName).write(',').write('\n')
+                    .write('outputBuffer,').write('\n')
+                    .write('[').write('\n')
                 ;
                 let first = true;
-                
+
                 for (const {value} of getKeyValuePairs(methodArguments)) {
                     if (!first) {
-                        compiler.raw(', ');
+                        compiler.write(',').write('\n');
                     }
 
                     first = false;
@@ -65,10 +72,25 @@ export const createMethodCallNode = (
                 }
 
                 compiler
-                    .raw('], ')
-                    .render(baseNode.line)
-                    .raw(', context, template.source)');
+                    .write('],').write('\n')
+                    .render(baseNode.line).write(',').write('\n')
+                    .write('context,').write('\n')
+                    .write('template.source').write('\n')
+                    .write(')')
+                ;
             }
         }
     };
+};
+
+export const cloneMethodCallNode = (
+    node: TwingMethodCallNode
+): TwingMethodCallNode => {
+    return createMethodCallNode(
+        node.children.operand,
+        node.attributes.methodName,
+        node.children.arguments,
+        node.line,
+        node.column
+    );
 };

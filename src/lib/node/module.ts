@@ -1,45 +1,47 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode, getChildren, getChildrenCount} from "../node";
-import type {Source} from "../source";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, getChildren, getChildrenCount} from "../node";
+import type {TwingSource} from "../source";
 import {TwingCompiler} from "../compiler";
-import {BaseExpressionNode} from "./expression";
-import {BodyNode, createBodyNode} from "./body";
-import {TraitNode} from "./trait";
-import {MacroNode} from "./macro";
+import {TwingBaseExpressionNode} from "./expression";
+import {TwingBodyNode, createBodyNode} from "./body";
+import {TwingTraitNode} from "./trait";
+import {TwingMacroNode} from "./macro";
+import {TwingBlockNode} from "./block";
 
-export type ModuleNodeAttributes = BaseNodeAttributes & {
+export type TwingModuleNodeAttributes = TwingBaseNodeAttributes & {
     index: number;
-    embedded_templates: Array<ModuleNode>;
+    embedded_templates: Array<TwingModuleNode>;
     templateName: string;
 };
 
-export type ModuleNodeChildren = {
-    body: BodyNode;
-    blocks: BaseNode<any, {}, Record<string, BodyNode>>;
-    macros: BaseNode<any, {}, Record<string, MacroNode>>;
-    traits: BaseNode<any, {}, Record<string, TraitNode>>;
-    factory_end?: BaseNode;
-    parent?: BaseExpressionNode;
+export type TwingModuleNodeChildren = {
+    body: TwingBodyNode;
+    blocks: TwingBaseNode<any, {}, Record<string, TwingBlockNode>>;
+    macros: TwingBaseNode<any, {}, Record<string, TwingMacroNode>>;
+    traits: TwingBaseNode<any, {}, Record<string, TwingTraitNode>>;
+    securityCheck: TwingBaseNode;
+    parent?: TwingBaseExpressionNode;
 };
 
-export interface ModuleNode extends BaseNode<"module", ModuleNodeAttributes, ModuleNodeChildren> {
+export interface TwingModuleNode extends TwingBaseNode<"module", TwingModuleNodeAttributes, TwingModuleNodeChildren> {
 }
 
 export const createModuleNode = (
-    body: ModuleNode["children"]["body"],
-    parent: BaseExpressionNode | null,
-    blocks: ModuleNode["children"]["blocks"],
-    macros: ModuleNode["children"]["macros"],
-    traits: ModuleNode["children"]["traits"],
-    embeddedTemplates: Array<ModuleNode>,
-    source: Source,
+    body: TwingModuleNode["children"]["body"],
+    parent: TwingBaseExpressionNode | null,
+    blocks: TwingModuleNode["children"]["blocks"],
+    macros: TwingModuleNode["children"]["macros"],
+    traits: TwingModuleNode["children"]["traits"],
+    embeddedTemplates: Array<TwingModuleNode>,
+    source: TwingSource,
     line: number,
     column: number
-): ModuleNode => {
-    const children: ModuleNode["children"] = {
+): TwingModuleNode => {
+    const children: TwingModuleNode["children"] = {
         body,
         blocks,
         macros,
-        traits
+        traits,
+        securityCheck: createBaseNode(null)
     };
 
     if (parent !== null) {
@@ -51,61 +53,52 @@ export const createModuleNode = (
         embedded_templates: embeddedTemplates,
         templateName: source.name
     }, children, line, column);
-    
-    const compileClassHeader = (compiler: TwingCompiler) => {
+
+    const compileFactoryHeader = (compiler: TwingCompiler) => {
         let index = baseNode.attributes.index;
 
         compiler
+            .write(`/**\n`)
+            .write(` * @param {Runtime} runtime\n`)
+            .write(` */\n`)
             .write(`${index}: (runtime) => {\n`)
-            .indent();
-    };
-
-    const compileFactory = (compiler: TwingCompiler) => {
-        const {blocks, macros} = baseNode.children;
+        ;
 
         compiler
-            .write('const aliases = runtime.createContext();\n')
-            .write('const baseTemplate = runtime.createBaseTemplate(\n')
-            .indent()
-            .write('runtime,\n');
-
-        // source
-        compiler
-            .write('runtime.createSource(')
-            .string(source.resolvedName)
-            .raw(', ')
-            .string(source.code)
-            .raw("), // source\n")
+            .write('const source = runtime.createSource(\n')
+            .string(source.resolvedName).write(', ').write('\n')
+            .string(source.code).write('\n')
+            .write(");\n\n")
 
         // block handlers
         compiler
-            .write('new Map([ // block handlers\n')
-            .indent();
+            .write('/** @type {Map<string, TemplateBlockHandler>} */\n')
+            .write('const blockHandlers = new Map([\n')
+        ;
 
         let blockCount = getChildrenCount(blocks);
 
         for (const [name, node] of Object.entries(blocks.children)) {
             blockCount--;
 
-            compiler.write(`['${name}', `)
+            compiler
+                .write(`['${name}', `)
                 .subCompile(node)
-                .raw(']');
+                .write(']');
 
             if (blockCount > 0) {
-                compiler.raw(',')
+                compiler.write(',')
             }
 
-            compiler.raw('\n');
+            compiler.write('\n');
         }
 
-        compiler
-            .outdent()
-            .write(']),\n');
+        compiler.write(']);\n\n');
 
         // macro handlers
         compiler
-            .write('new Map([ // macro handlers\n')
-            .indent();
+            .write('/** @type {Map<string, TemplateMacroHandler>} */\n')
+            .write('const macroHandlers = new Map([\n');
 
         let macroCount = getChildrenCount(macros);
 
@@ -114,158 +107,42 @@ export const createModuleNode = (
 
             compiler.write(`['${name}', `)
                 .subCompile(node)
-                .raw(']');
+                .write(']');
 
             if (macroCount > 0) {
-                compiler.raw(',')
-            }
-
-            compiler.raw('\n');
-        }
-
-        compiler
-            .outdent()
-            .write(']),\n');
-
-        // end factory call
-        compiler
-            .outdent()
-            .write(');\n\n')
-
-        compiler
-            .write('const template = Object.assign(baseTemplate, {\n')
-            .indent();
-    }
-
-    const compileDoGetTraits = (compiler: TwingCompiler) => {
-        const {traits} = baseNode.children;
-
-        let count = getChildrenCount(traits);
-
-        if (count > 0) {
-            compiler
-                .write("async doGetTraits() {\n")
-                .indent()
-                .write('let traits = new Map();\n\n');
-
-            for (let [i, trait] of getChildren(traits)) {
-                const {template, targets} = trait.children;
-
-                compiler
-                    .write(`let trait_${i} = await template.loadTemplate(`)
-                    .subCompile(template)
-                    .raw(', ')
-                    .render(template.line)
-                    .raw(");\n\n")
-                ;
-
-                compiler
-                    .write(`if (!trait_${i}.isTraitable) {\n`)
-                    .indent()
-                    .write('throw new runtime.Error(\'Template ')
-                    .subCompile(template)
-                    .raw(' cannot be used as a trait.\', ')
-                    .render(template.line)
-                    .raw(", template.source);\n")
-                    .outdent()
-                    .write('}\n\n')
-                    .write(`let traits_${i} = runtime.cloneMap(await trait_${i}.getBlocks());\n\n`)
-                ;
-
-                for (let [key, target] of getChildren(targets)) {
-                    compiler
-                        .write(`if (!traits_${i}.has(`)
-                        .string(key)
-                        .raw(")) {\n")
-                        .indent()
-                        .write('throw new runtime.Error(\'Block ')
-                        .string(key as string)
-                        .raw(' is not defined in trait ')
-                        .subCompile(template)
-                        .raw('.\', ')
-                        .render(target.line)
-                        .raw(', template.source);\n')
-                        .outdent()
-                        .write('}\n\n')
-                        .write(`traits_${i}.set(`)
-                        .subCompile(target)
-                        .raw(`, traits_${i}.get(`)
-                        .string(key)
-                        .raw(`)); traits_${i}.delete(`)
-                        .string(key)
-                        .raw(');\n\n')
-                    ;
-                }
-            }
-
-            for (let i = 0; i < count; ++i) {
-                compiler.write(`traits = runtime.merge(traits, traits_${i});\n`);
+                compiler.write(',')
             }
 
             compiler.write('\n');
-
-            compiler
-                .write('return Promise.resolve(traits);\n')
-                .outdent()
-                .write('},\n');
         }
-    }
 
-    const compileDoGetParent = (compiler: TwingCompiler) => {
-        const {parent} = baseNode.children;
-
-        if (parent) {
-            compiler
-                .write("doGetParent: (context) => {\n")
-                .indent()
-                .write('return template.loadTemplate(')
-                .subCompile(parent)
-                .raw(', ')
-                .render(parent.line)
-                .raw(")")
-            ;
-
-            // if the parent name is not dynamic, then we can cache the parent as it will never change
-            if (parent.type === "constant") {
-                compiler
-                    .raw('.then((parent) => {\n')
-                    .indent()
-                    .write('template.parent = parent;\n\n')
-                    .write('return parent;\n')
-                    .outdent()
-                    .write('})')
-            }
-
-            compiler
-                .raw(';\n')
-                .outdent()
-                .write("},\n")
-            ;
-        }
-    }
-
-    const compileDoDisplay = (compiler: TwingCompiler) => {
-        const {body, parent} = baseNode.children;
-
+        compiler.write(']);\n\n');
+    };
+    
+    const compileTemplateInstantiation = (compiler: TwingCompiler) => {
         compiler
-            .write("doDisplay: async(context, outputBuffer, blocks = new Map()) => {\n")
-            .indent()
-            .write('const aliases = template.aliases.clone();\n\n')
-            .addSourceMapEnter(moduleNode);
+            .write('const template = runtime.createTemplate(\n')
+            .write('runtime,\n')
+            .write('source,\n')
+            .write('blockHandlers,\n')
+            .write('macroHandlers,\n')
+            .write('display,\n')
+            .write('getParent,\n')
+            .write('getTraits,\n')
+            .write('canBeUsedAsATrait\n')
+            .write(');\n\n');
         
-        compiler.subCompile(body);
-
-        if (parent) {
-            compiler.write('await (await template.getParent(context)).display(context, runtime.merge(await template.getBlocks(), blocks), outputBuffer);\n');
-        }
-        
-        compiler.addSourceMapLeave()
-            .outdent()
-            .write("},\n")
+        compiler
+            .write('const aliases = runtime.createContext();\n\n')
+            .write('aliases.proxy[`_self`] = template.aliases.proxy[`_self`] = template;\n\n')
         ;
+
+        const {securityCheck} = moduleNode.children;
+        
+        compiler.subCompile(securityCheck);
     }
 
-    const compileIsTraitable = (compiler: TwingCompiler) => {
+    const compileCanBeUsedAsATrait = (compiler: TwingCompiler) => {
         const {macros, body, parent} = baseNode.children;
 
         // A template can be used as a trait if:
@@ -275,67 +152,221 @@ export const createModuleNode = (
         //
         // Put another way, a template can be used as a trait if it
         // only contains blocks and use statements.
-        let traitable = (parent === undefined) && (getChildrenCount(macros) === 0);
+        let canBeUsedAsATrait = (parent === undefined) && (getChildrenCount(macros) === 0);
 
-        if (traitable) {
-            let node: BaseNode = body.children.content;
+        if (canBeUsedAsATrait) {
+            let node: TwingBaseNode = body.children.content;
 
             if (getChildrenCount(node) === 0) {
                 node = createBodyNode(node, line, column);
             }
 
-            for (let [, subNode] of Object.entries(node.children)) {
+            for (const [, subNode] of Object.entries(node.children)) {
                 if (getChildrenCount(subNode) === 0) {
                     continue;
                 }
 
-                traitable = false;
+                canBeUsedAsATrait = false;
 
                 break;
             }
         }
 
         compiler
-            .write("get isTraitable() {\n")
-            .indent()
-            .write(`return ${traitable ? 'true' : 'false'};\n`)
-            .outdent()
-            .write("}\n")
+            .write("const canBeUsedAsATrait = () => {\n")
+            .write(`return ${canBeUsedAsATrait ? 'true' : 'false'};\n`)
+            .write("};\n\n")
         ;
     }
 
-    const compileFactoryFooter = (compiler: TwingCompiler) => {
-        const {factory_end} = moduleNode.children;
+    const compileDisplay = (compiler: TwingCompiler) => {
+        const {body, parent} = baseNode.children;
 
         compiler
-            .outdent()
-            .write('});\n\n')
-            .write('aliases.proxy[`_self`] = template.aliases.proxy[`_self`] = template;\n\n')
-        ;
+            .write('/**').write('\n')
+            .write(' * @param {TwingContext} context').write('\n')
+            .write(' * @param {TwingOutputBuffer} outputBuffer').write('\n')
+            .write(' * @param {TemplateBlocksMap} blocks').write('\n')
+            .write(' */').write('\n')
+            .write("const display = async(context, outputBuffer, blocks = new Map()) => {\n")
+            .write('const aliases = template.aliases.clone();\n\n')
+            .addSourceMapEnter(moduleNode);
+
+        compiler.subCompile(body);
+
+        if (parent) {
+            compiler.write(`const displayParent = () => {
+    return Promise.all([
+        template.getParent(context),
+        template.getBlocks()
+    ]).then(([parent, ownBlocks]) => {
+        return new Promise((resolve, reject) => {
+            const stream = parent.display(context, runtime.merge(ownBlocks, blocks), outputBuffer)
         
-        if (factory_end) {
-            compiler.subCompile(factory_end);
+            let data = '';
+            
+            stream.on("error", (error) => {
+                reject(error);
+            });
+            
+            stream.on("data", (chunk, encoding, next) => {
+                data += chunk.toString();
+                
+                next();
+            });
+            
+            stream.on("end", () => {
+                resolve(data);
+            });
+        });
+    });
+};\n\n`);
+            
+            compiler.write('await displayParent();\n');
         }
 
         compiler
-            .write('return template;\n');
-        
+            .addSourceMapLeave()
+            .write("};\n\n")
+        ;
+    }
+
+    const compileGetParent = (compiler: TwingCompiler) => {
+        const {parent} = baseNode.children;
+
+        // parent variable
         compiler
-            .outdent()
+            .write('/** @type {TwingTemplate | null} */\n')
+            .write('let parent = null;\n\n')
+
+        // getParent function
+        compiler
+            .write('/**').write('\n')
+            .write(' * @param {TwingContext} context').write('\n')
+            .write(' */').write('\n')
+            .write("const getParent = async (context) => {\n");
+
+        if (parent) {
+            compiler
+                .write('if (parent !== null) {\n')
+                .write('return Promise.resolve(parent);\n')
+                .write('}\n\n')
+                .write('return template.loadTemplate(').write('\n')
+                .subCompile(parent).write(',').write('\n')
+                .render(parent.line).write('\n')
+                .write(")")
+            ;
+
+            // if the parent name is not dynamic, then we can cache the parent as it will never change
+            if (parent.type === "constant") {
+                compiler
+                    .write('.then((loadedParent) => {\n')
+                    .write('parent = loadedParent;\n\n')
+                    .write('return parent;\n')
+                    .write('})')
+            }
+
+            compiler
+                .write(';\n')
+            ;
+        } else {
+            compiler.write('return Promise.resolve(null);\n');
+        }
+
+        compiler.write("};\n\n")
+    }
+
+    const compileGetTraits = (compiler: TwingCompiler) => {
+        const {traits} = baseNode.children;
+        const count = getChildrenCount(traits);
+
+        compiler
+            .write('/** @type {TemplateBlocksMap | null} */\n')
+            .write('let traits = null;\n\n')
+            .write("const getTraits = async() => {\n")
+
+        if (count > 0) {
+            compiler
+                .write('if (traits === null) {\n')
+                .write('traits = new Map();\n\n');
+
+            for (let [i, trait] of getChildren(traits)) {
+                const {template, targets} = trait.children;
+
+                compiler
+                    .write(`let trait_${i} = await template.loadTemplate(`).write('\n')
+                    .subCompile(template).write(', ').write('\n')
+                    .render(template.line).write('\n')
+                    .write(");\n\n")
+                ;
+
+                compiler
+                    .write(`if (!trait_${i}.canBeUsedAsATrait) {\n`)
+                    .write('throw new runtime.Error(\'Template ')
+                    .subCompile(template)
+                    .write(' cannot be used as a trait.\', ')
+                    .render(template.line)
+                    .write(", template.source);\n")
+                    .write('}\n\n')
+                    .write(`let traits_${i} = runtime.cloneMap(await trait_${i}.getBlocks());\n\n`)
+                ;
+
+                for (let [key, target] of getChildren(targets)) {
+                    compiler
+                        .write(`if (!traits_${i}.has(`)
+                        .string(key)
+                        .write(")) {\n")
+                        .write('throw new runtime.Error(\'Block ')
+                        .string(key as string)
+                        .write(' is not defined in trait ')
+                        .subCompile(template)
+                        .write('.\', ')
+                        .render(target.line)
+                        .write(', template.source);\n')
+                        .write('}\n\n')
+                        .write(`traits_${i}.set(`)
+                        .subCompile(target)
+                        .write(`, traits_${i}.get(`)
+                        .string(key)
+                        .write(`)); traits_${i}.delete(`)
+                        .string(key)
+                        .write(');\n\n')
+                    ;
+                }
+            }
+
+            for (let i = 0; i < count; ++i) {
+                compiler.write(`traits = runtime.merge(traits, traits_${i});\n`);
+            }
+
+            compiler.write('}\n\n');
+
+            compiler
+                .write('return Promise.resolve(traits);\n')
+        } else {
+            compiler.write('return Promise.resolve(new Map());\n')
+        }
+
+        compiler.write('};\n\n');
+    }
+
+    const compileFactoryFooter = (compiler: TwingCompiler) => {
+        compiler
+            .write('return template;\n')
             .write(`},\n`)
     }
 
     const compileTemplate = (compiler: TwingCompiler) => {
-        compileClassHeader(compiler);
-        compileFactory(compiler);
-        compileDoGetParent(compiler);
-        compileDoGetTraits(compiler);
-        compileDoDisplay(compiler);
-        compileIsTraitable(compiler);
+        compileFactoryHeader(compiler);
+        compileCanBeUsedAsATrait(compiler);
+        compileDisplay(compiler);
+        compileGetParent(compiler);
+        compileGetTraits(compiler);
+        compileTemplateInstantiation(compiler);
         compileFactoryFooter(compiler);
     };
 
-    const moduleNode: ModuleNode = {
+    const moduleNode: TwingModuleNode = {
         ...baseNode,
         compile: (compiler) => {
             let index = baseNode.attributes.index;
@@ -343,7 +374,7 @@ export const createModuleNode = (
             if (index === 0) {
                 compiler
                     .write('module.exports = {\n')
-                    .indent()
+
                 ;
             }
 
@@ -354,13 +385,10 @@ export const createModuleNode = (
             }
 
             if (index === 0) {
-                compiler
-                    .outdent()
-                    .write('};\n')
-                ;
+                compiler.write('};\n');
             }
         }
     };
-    
+
     return moduleNode;
 };

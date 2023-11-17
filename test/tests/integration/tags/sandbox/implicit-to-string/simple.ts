@@ -18,12 +18,12 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingSandboxSecurityError: Calling "toString" method on "Article" is not allowed in "foo.twig" at line 2.';
+        return 'TwingSandboxSecurityError: Calling "toString" method on an instance of Object is not allowed in "foo.twig" at line 2.';
     }
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            escapingStrategy: false
+            autoEscapingStrategy: "html"
         }
     }
 

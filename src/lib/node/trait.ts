@@ -1,22 +1,22 @@
-import type {BaseNode, BaseNodeAttributes} from "../node";
+import type {TwingBaseNode, TwingBaseNodeAttributes} from "../node";
 import {createBaseNode} from "../node";
-import type {ConstantNode} from "./expression/constant";
-import {BaseExpressionNode} from "./expression";
+import type {TwingConstantNode} from "./expression/constant";
+import {TwingBaseExpressionNode} from "./expression";
 
 export const traitNodeType = "trait";
 
-export interface TraitNode extends BaseNode<typeof traitNodeType, BaseNodeAttributes, {
-    template: ConstantNode;
-    targets: BaseExpressionNode<string, {}, Record<string, ConstantNode>>;
+export interface TwingTraitNode extends TwingBaseNode<typeof traitNodeType, TwingBaseNodeAttributes, {
+    template: TwingConstantNode;
+    targets: TwingBaseExpressionNode<string, {}, Record<string, TwingConstantNode>>;
 }> {
 }
 
 export const createTraitNode = (
-    template: TraitNode["children"]["template"],
-    targets: TraitNode["children"]["targets"],
+    template: TwingTraitNode["children"]["template"],
+    targets: TwingTraitNode["children"]["targets"],
     line: number,
     column: number
-): TraitNode => {
+): TwingTraitNode => {
     return {
         ...createBaseNode(traitNodeType, {}, {
             template,

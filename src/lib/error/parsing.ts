@@ -1,13 +1,9 @@
-import type {Source} from "../source";
+import type {TwingSource} from "../source";
 import {TwingBaseError} from "./base";
 
 const Levenshtein = require('levenshtein');
 
 export const parsingErrorName = 'TwingParsingError';
-
-export const isAParsingError = (candidate: Error): candidate is TwingParsingError => {
-    return (candidate as TwingParsingError).name === parsingErrorName;
-};
 
 export interface TwingParsingError extends TwingBaseError<typeof parsingErrorName> {
     /**
@@ -20,8 +16,8 @@ export interface TwingParsingError extends TwingBaseError<typeof parsingErrorNam
 }
 
 export class TwingParsingError extends TwingBaseError<typeof parsingErrorName> {
-    constructor(message: string, line?: number, source?: Source, previous?: Error) {
-        super(parsingErrorName, message, line, source, previous);
+    constructor(message: string, line?: number, column?: number, source?: TwingSource, previous?: Error) {
+        super(parsingErrorName, message, line, column, source, previous);
     }
 
     addSuggestions(name: string, items: Array<string>) {

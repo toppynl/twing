@@ -1,4 +1,4 @@
-export interface Source {
+export interface TwingSource {
     readonly code: string;
     readonly name: string;
     readonly resolvedName: string;
@@ -8,7 +8,7 @@ export const createSource = (
     code: string,
     name: string,
     resolvedName?: string
-): Source => {
+): TwingSource => {
     return {
         get code() {
             return code;

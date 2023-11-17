@@ -34,7 +34,7 @@ foobar
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            escapingStrategy: "html"
+            autoEscapingStrategy: "html"
         };
     }
 }

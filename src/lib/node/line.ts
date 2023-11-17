@@ -1,10 +1,10 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 
-export type LineNodeAttributes = BaseNodeAttributes & {
-    data: number;
+export type TwingLineNodeAttributes = TwingBaseNodeAttributes & {
+    data: number; // todo: rename to something meaningful
 };
 
-export interface LineNode extends BaseNode<"line", LineNodeAttributes> {
+export interface TwingLineNode extends TwingBaseNode<"line", TwingLineNodeAttributes> {
 }
 
 export const createLineNode = (
@@ -12,7 +12,7 @@ export const createLineNode = (
     line: number,
     column: number,
     tag: string
-): LineNode => {
+): TwingLineNode => {
     const baseNode = createBaseNode("line", {
         data
     }, {}, line, column, tag);

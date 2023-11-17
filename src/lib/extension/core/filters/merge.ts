@@ -1,5 +1,4 @@
-import {merge as mergeHelper} from "../../../helpers/merge";
-import {isNullOrUndefined} from "util";
+import {mergeIterables} from "../../../helpers/merge-iterables";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {TwingRuntimeError} from "../../../error/runtime";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
@@ -16,18 +15,22 @@ import {iteratorToMap} from "../../../helpers/iterator-to-map";
  * </pre>
  *
  * @param {any} iterable1 An iterable
- * @param {any} iterable2 An iterable
+ * @param {any} source An iterable
  *
  * @return {Promise<Map<any, any>>} The merged map
  */
-export function merge(iterable1: any, iterable2: any): Promise<Map<any, any>> {
-    if (isNullOrUndefined(iterable1) || (!isTraversable(iterable1) && (typeof iterable1 !== 'object'))) {
-        throw new TwingRuntimeError(`The merge filter only works with arrays or "Traversable", got "${!isNullOrUndefined(iterable1) ? typeof iterable1 : iterable1}" as first argument.`);
+export const merge = (iterable1: any, source: any): Promise<Map<any, any>> => {
+    const isIterable1NullOrUndefined = (iterable1 === null) || (iterable1 === undefined);
+
+    if (isIterable1NullOrUndefined || (!isTraversable(iterable1) && (typeof iterable1 !== 'object'))) {
+        return Promise.reject(new TwingRuntimeError(`The merge filter only works on arrays or "Traversable", got "${!isIterable1NullOrUndefined ? typeof iterable1 : iterable1}".`));
     }
 
-    if (isNullOrUndefined(iterable2) || (!isTraversable(iterable2) && (typeof iterable2 !== 'object'))) {
-        throw new TwingRuntimeError(`The merge filter only works with arrays or "Traversable", got "${!isNullOrUndefined(iterable2) ? typeof iterable2 : iterable2}" as second argument.`);
+    const isSourceNullOrUndefined = (source === null) || (source === undefined);
+
+    if (isSourceNullOrUndefined || (!isTraversable(source) && (typeof source !== 'object'))) {
+        return Promise.reject(new TwingRuntimeError(`The merge filter only accepts arrays or "Traversable" as source, got "${!isSourceNullOrUndefined ? typeof source : source}".`));
     }
 
-    return Promise.resolve(mergeHelper(iteratorToMap(iterable1), iteratorToMap(iterable2)));
-}
+    return Promise.resolve(mergeIterables(iteratorToMap(iterable1), iteratorToMap(source)));
+};

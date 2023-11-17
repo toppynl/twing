@@ -24,10 +24,6 @@
   "extension": [
     ".ts"
   ],
-  "include": [
-    "src/lib"
-  ],
-  "exclude": [],
   "reporter": [
     "text-summary",
     "html"

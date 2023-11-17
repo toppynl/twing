@@ -1,4 +1,4 @@
-import {createSpacelessNode} from "../node/spaceless";
+import {createSpacelessNode} from "../node/output/spaceless";
 import {Token, TokenType} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
@@ -22,7 +22,7 @@ export const createSpacelessTagHandler = (): TwingTagHandler => {
             return (token, stream) => {
                 const {line, column} = token;
 
-                console.warn(`The "spaceless" tag in "${stream.getSourceContext().name}" at line ${line} is deprecated since Twig 2.7, use the "spaceless" filter instead.`);
+                console.warn(`The "spaceless" tag in "${stream.source.name}" at line ${line} is deprecated since Twig 2.7, use the "spaceless" filter instead.`);
 
                 stream.expect(TokenType.TAG_END);
 

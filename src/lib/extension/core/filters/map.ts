@@ -1,15 +1,13 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 
-export async function map(map: any, callback: (...args: Array<any>) => Promise<any>): Promise<Map<any, any>> {
-    let result: Map<any, any> = new Map();
+export const map = async (map: any, callback: (...args: Array<any>) => Promise<any>): Promise<Map<any, any>> => {
+    const result: Map<any, any> = new Map();
 
     map = iteratorToMap(map);
 
-    for (let [k, v] of map) {
-        v = await callback(v, k);
-
-        result.set(k, v);
+    for (const [key, value] of map) {
+        result.set(key, await callback(value, key));
     }
 
     return Promise.resolve(result);
-}
+};

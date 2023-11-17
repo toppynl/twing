@@ -1,21 +1,21 @@
-import type {BaseExpressionNode, BaseExpressionNodeAttributes} from "../expression";
-import type {BaseNode} from "../../node";
-import type {AssignNameNode} from "./assign-name";
+import type {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes} from "../expression";
+import type {TwingBaseNode} from "../../node";
+import type {TwingAssignmentNode} from "./assignment";
 import {createBaseExpressionNode} from "../expression";
 
-export interface ArrowFunctionNode extends BaseExpressionNode<"arrow_function", BaseExpressionNodeAttributes, {
-    expr: BaseExpressionNode;
-    names: BaseNode<any, any, Record<string, AssignNameNode>>;
+export interface TwingArrowFunctionNode extends TwingBaseExpressionNode<"arrow_function", TwingBaseExpressionNodeAttributes, {
+    expr: TwingBaseExpressionNode;
+    names: TwingBaseNode<any, any, Record<string, TwingAssignmentNode>>;
 }> {
 
 }
 
 export const createArrowFunctionNode = (
-    expr: BaseExpressionNode,
-    names: BaseNode<any, any, Record<any, AssignNameNode>>,
+    expr: TwingBaseExpressionNode,
+    names: TwingBaseNode<any, any, Record<any, TwingAssignmentNode>>,
     line: number,
     column: number
-): ArrowFunctionNode => {
+): TwingArrowFunctionNode => {
     const baseNode = createBaseExpressionNode("arrow_function", {}, {
         expr,
         names
@@ -24,42 +24,42 @@ export const createArrowFunctionNode = (
     return {
         ...baseNode,
         compile: (compiler) => {
-            compiler.raw('async (');
+            compiler.write('async (');
 
             let i: number = 0;
 
-            const nameNodes = Object.values(baseNode.children.names.children);
+            const assignmentNodes = Object.values(baseNode.children.names.children);
 
-            for (const nameNode of nameNodes) {
+            for (const assignmentNode of assignmentNodes) {
                 if (i > 0) {
-                    compiler.raw(', ');
+                    compiler.write(', ');
                 }
 
                 compiler
-                    .raw('$__')
-                    .raw(nameNode.attributes.name)
-                    .raw('__');
+                    .write('$__')
+                    .write(assignmentNode.attributes.name)
+                    .write('__');
 
                 i++;
             }
 
             compiler
-                .raw(') => {')
+                .write(') => {')
             ;
 
-            for (const nameNode of nameNodes) {
+            for (const nameNode of assignmentNodes) {
                 compiler
-                    .raw('context.proxy[\'')
-                    .raw(nameNode.attributes.name)
-                    .raw('\'] = $__')
-                    .raw(nameNode.attributes.name)
-                    .raw('__; ');
+                    .write('context.proxy[\'')
+                    .write(nameNode.attributes.name)
+                    .write('\'] = $__')
+                    .write(nameNode.attributes.name)
+                    .write('__; ');
             }
 
             compiler
-                .raw('return ')
+                .write('return ')
                 .subCompile(baseNode.children.expr)
-                .raw(';}');
+                .write(';}');
         }
     };
 };

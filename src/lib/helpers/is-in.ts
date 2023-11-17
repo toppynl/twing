@@ -2,9 +2,9 @@ import {compare as compareHelper} from "./compare";
 import {isTraversable} from "./is-traversable";
 import {iteratorToArray} from "./iterator-to-array";
 import {isAMarkup, TwingMarkup} from "../markup";
-import {isMap} from "./is-map";
+import {isMapLike} from "./map-like";
 
-export function isIn(value: string | object | TwingMarkup, compare: string | object | TwingMarkup): boolean {
+export function isIn(value: number | string | object | TwingMarkup, compare: string | object | TwingMarkup): boolean {
     let result = false;
 
     if (isAMarkup(value)) {
@@ -15,7 +15,7 @@ export function isIn(value: string | object | TwingMarkup, compare: string | obj
         compare = compare.toString();
     }
 
-    if (isMap(compare)) {
+    if (isMapLike(compare)) {
         for (let [, item] of (compare as Map<number, any>)) {
             if (compareHelper(item, value)) {
                 result = true;

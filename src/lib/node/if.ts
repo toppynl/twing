@@ -1,21 +1,21 @@
-import {BaseNode, createBaseNode, getChildrenCount, BaseNodeAttributes} from "../node";
+import {TwingBaseNode, createBaseNode, getChildrenCount, TwingBaseNodeAttributes} from "../node";
 
-type NodeIfChildren = {
-    tests: BaseNode;
-    else?: BaseNode;
+type TwingIfNodeChildren = {
+    tests: TwingBaseNode;
+    else?: TwingBaseNode;
 };
 
-export interface IfNode extends BaseNode<'if', BaseNodeAttributes, NodeIfChildren> {
+export interface TwingIfNode extends TwingBaseNode<'if', TwingBaseNodeAttributes, TwingIfNodeChildren> {
 }
 
 export const createIfNode = (
-    testNode: BaseNode,
-    elseNode: BaseNode | null,
+    testNode: TwingBaseNode,
+    elseNode: TwingBaseNode | null,
     line: number,
     column: number,
     tag: string | null = null
-): IfNode => {
-    const children: NodeIfChildren = {
+): TwingIfNode => {
+    const children: TwingIfNodeChildren = {
         tests: testNode
     };
 
@@ -23,13 +23,12 @@ export const createIfNode = (
         children.else = elseNode;
     }
 
-    const compile: IfNode["compile"] = (compiler) => {
+    const compile: TwingIfNode["compile"] = (compiler) => {
         const count = getChildrenCount(testNode);
 
         for (let i = 0; i < count; i += 2) {
             if (i > 0) {
                 compiler
-                    .outdent()
                     .write('}\n')
                     .write('else if (runtime.evaluate(')
                 ;
@@ -41,30 +40,26 @@ export const createIfNode = (
 
             compiler
                 .subCompile(testNode.children[i])
-                .raw(")) {\n")
-                .indent()
+                .write(")) {\n")
                 .subCompile(testNode.children[i + 1])
             ;
         }
 
         if (elseNode !== null) {
             compiler
-                .outdent()
                 .write("}\n")
                 .write("else {\n")
-                .indent()
                 .subCompile(elseNode)
             ;
         }
 
         compiler
-            .outdent()
             .write("}\n");
     };
 
     const baseNode = createBaseNode('if', {}, children, line, column, tag);
 
-    const node: IfNode = {
+    const node: TwingIfNode = {
         ...baseNode,
         compile
     };

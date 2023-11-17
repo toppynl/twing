@@ -1,31 +1,27 @@
-import type {BaseExpressionNode} from "../expression";
+import type {TwingBaseExpressionNode} from "../expression";
 import {createBaseExpressionNode} from "../expression";
 
-type Attributes = {
+type TwingConstantNodeAttributes = {
     value: string | number | boolean | null;
 };
 
-export interface ConstantNode extends BaseExpressionNode<"constant", Attributes> {
+// todo: make it generic to narrow the value type and remove casting in the code
+export interface TwingConstantNode extends TwingBaseExpressionNode<"constant", TwingConstantNodeAttributes> {
 }
 
 export const createConstantNode = (
-    value: Attributes["value"],
+    value: TwingConstantNodeAttributes["value"],
     line: number,
     column: number
-): ConstantNode => {
+): TwingConstantNode => {
     const parent = createBaseExpressionNode('constant', {
         value
     }, {}, line, column);
 
     return {
         ...parent,
-        compile: (compiler, flags) => {
-            if (flags?.isDefinedTest) {
-                compiler.render(true);
-            }
-            else {
-                compiler.render(parent.attributes.value);
-            }
+        compile: (compiler) => {
+            compiler.render(parent.attributes.value);
         }
     };
 };

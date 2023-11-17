@@ -1,38 +1,50 @@
-import {TwingExtensionInterface} from "./extension-interface";
 import {TwingTagHandler} from "./tag-handler";
 import {TwingNodeVisitor} from "./node-visitor";
 import {TwingFilter} from "./filter";
 import {TwingFunction} from "./function";
 import {TwingTest} from "./test";
 import {TwingOperator} from "./operator";
-import {TwingSourceMapNodeFactory} from "./source-map/node-factory";
 
-export class TwingExtension implements TwingExtensionInterface {
-    getTokenParsers(): Array<TwingTagHandler> {
-        return [];
-    }
+export interface TwingExtension {
+    /**
+     * Returns the token parser instances to add to the existing list.
+     *
+     * @return Array<TwingTagHandler>
+     */
+    readonly tagHandlers: Array<TwingTagHandler>;
 
-    getNodeVisitors(): TwingNodeVisitor[] {
-        return [];
-    }
+    /**
+     * Returns the node visitor instances to add to the existing list.
+     *
+     * @return Array<TwingNodeVisitor>
+     */
+    readonly nodeVisitors: Array<TwingNodeVisitor>;
 
-    getFilters(): TwingFilter[] {
-        return [];
-    }
+    /**
+     * Returns a list of filters to add to the existing list.
+     *
+     * @return Array<TwingFilter>
+     */
+    readonly filters: Array<TwingFilter>;
 
-    getTests(): TwingTest[] {
-        return [];
-    }
+    /**
+     * Returns a list of tests to add to the existing list.
+     *
+     * @returns Array<TwingTest>
+     */
+    readonly tests: Array<TwingTest>;
 
-    getFunctions(): TwingFunction[] {
-        return [];
-    }
+    /**
+     * Returns a list of functions to add to the existing list.
+     *
+     * @return Array<TwingFunction>
+     */
+    readonly functions: Array<TwingFunction>;
 
-    getOperators(): Array<TwingOperator> {
-        return [];
-    }
-
-    getSourceMapNodeFactories(): TwingSourceMapNodeFactory[] {
-        return [];
-    }
+    /**
+     * Returns a list of operators to add to the existing list.
+     *
+     * @return TwingOperator[]
+     */
+    readonly operators: Array<TwingOperator>;
 }

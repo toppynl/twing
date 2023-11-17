@@ -1,47 +1,47 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import type {AssignNameNode} from "./expression/assign-name";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import type {TwingAssignmentNode} from "./expression/assignment";
 import {createForLoopNode} from "./for-loop";
 import {createIfNode} from "./if";
-import type {BaseExpressionNode} from "./expression";
+import type {TwingBaseExpressionNode} from "./expression";
 
-export type ForNodeAttributes = BaseNodeAttributes & {
+export type TwingForNodeAttributes = TwingBaseNodeAttributes & {
     hasAnIf: boolean;
 };
 
-type ForNodeChildren = {
-    keyTarget: AssignNameNode;
-    valueTarget: AssignNameNode;
-    sequence: BaseExpressionNode;
-    body: BaseNode;
-    else?: BaseNode;
+type TwingForNodeChildren = {
+    keyTarget: TwingAssignmentNode;
+    valueTarget: TwingAssignmentNode;
+    sequence: TwingBaseExpressionNode;
+    body: TwingBaseNode;
+    else?: TwingBaseNode;
 };
 
-export interface ForNode extends BaseNode<"for", ForNodeAttributes, ForNodeChildren> {
+export interface TwingForNode extends TwingBaseNode<"for", TwingForNodeAttributes, TwingForNodeChildren> {
 }
 
 export const createForNode = (
-    keyTarget: AssignNameNode,
-    valueTarget: AssignNameNode,
-    sequence: BaseExpressionNode,
-    ifExpression: BaseExpressionNode | null,
-    body: BaseNode,
-    elseNode: BaseNode | null,
+    keyTarget: TwingAssignmentNode,
+    valueTarget: TwingAssignmentNode,
+    sequence: TwingBaseExpressionNode,
+    ifExpression: TwingBaseExpressionNode | null,
+    body: TwingBaseNode,
+    elseNode: TwingBaseNode | null,
     line: number,
     column: number,
     tag: string
-): ForNode => {
+): TwingForNode => {
     const loop = createForLoopNode(line, column, tag);
-    const bodyChildren: Record<number, BaseNode> = {};
+    const bodyChildren: Record<number, TwingBaseNode> = {};
 
     let i: number = 0;
 
     bodyChildren[i++] = body;
     bodyChildren[i++] = loop;
     
-    let actualBody: BaseNode = createBaseNode(null, {}, bodyChildren, line, column);
+    let actualBody: TwingBaseNode = createBaseNode(null, {}, bodyChildren, line, column);
 
     if (ifExpression) {
-        const ifChildren: Record<number, BaseNode> = {};
+        const ifChildren: Record<number, TwingBaseNode> = {};
 
         let i: number = 0;
 
@@ -53,7 +53,7 @@ export const createForNode = (
         loop.attributes.hasAnIf = true;
     }
 
-    const children: ForNodeChildren = {
+    const children: TwingForNodeChildren = {
         keyTarget: keyTarget,
         valueTarget: valueTarget,
         sequence: sequence,
@@ -70,7 +70,7 @@ export const createForNode = (
         hasAnIf: ifExpression !== null
     }, children, line, column, tag);
 
-    const node: ForNode = {
+    const node: TwingForNode = {
         ...baseNode,
         compile: (compiler) => {
             const {sequence, body, else: elseNode, valueTarget, keyTarget} = node.children;
@@ -79,21 +79,15 @@ export const createForNode = (
             compiler
                 .write("context.set('_parent', context.clone());\n\n")
                 .write('await (async () => {\n')
-                .indent()
-                .write('let c = runtime.ensureTraversable(')
+                .write('let sequence = runtime.ensureTraversable(')
                 .subCompile(sequence)
-                .raw(");\n\n")
-                .write('if (c === context) {\n')
-                .indent()
+                .write(");\n\n")
+                .write('if (sequence === context) {\n')
                 .write("context.set('_seq', context.clone());\n")
-                .outdent()
                 .write("}\n")
                 .write("else {\n")
-                .indent()
-                .write("context.set('_seq', c);\n")
-                .outdent()
+                .write("context.set('_seq', sequence);\n")
                 .write("}\n")
-                .outdent()
                 .write("})();\n\n")
             ;
 
@@ -112,44 +106,37 @@ export const createForNode = (
 
             if (!hasAnIf) {
                 compiler
-                    .write("if ((typeof context.get('_seq') === 'object') && runtime.isCountable(context.get('_seq'))) {\n")
-                    .indent()
+                    .write("if (typeof context.get('_seq') === 'object') {\n")
                     .write("let length = runtime.count(context.get('_seq'));\n")
                     .write("let loop = context.get('loop');\n")
                     .write("loop.set('revindex0', length - 1);\n")
                     .write("loop.set('revindex', length);\n")
                     .write("loop.set('length', length);\n")
                     .write("loop.set('last', (length === 1));\n")
-                    .outdent()
                     .write("}\n")
                 ;
             }
 
             compiler
                 .write("await runtime.iterate(context.get('_seq'), async (__key__, __value__) => {\n")
-                .indent()
                 .subCompile(keyTarget) //, false
-                .raw(' = __key__;\n')
+                .write(' = __key__;\n')
                 .subCompile(valueTarget) //, false
-                .raw(' = __value__;\n')
+                .write(' = __value__;\n')
                 .subCompile(body)
-                .outdent()
                 .write("});\n")
             ;
 
             if (elseNode) {
                 compiler
                     .write("if (context.get('_iterated') === false) {\n")
-                    .indent()
                     .subCompile(elseNode)
-                    .outdent()
                     .write("}\n")
                 ;
             }
 
             compiler
                 .write("(() => {\n")
-                .indent()
                 .write(`let parent = context.get('_parent');\n`)
             ;
 
@@ -166,18 +153,13 @@ export const createForNode = (
             // keep the values set in the inner context for variables defined in the outer context
             compiler
                 .write(`for (let [k, v] of parent) {\n`)
-                .indent()
                 .write('if (!context.has(k)) {\n')
-                .indent()
                 .write(`context.set(k, v);\n`)
-                .outdent()
                 .write('}\n')
-                .outdent()
                 .write('}\n')
             ;
 
             compiler
-                .outdent()
                 .write("})();\n")
             ;
         }
