@@ -1,8 +1,8 @@
-export function examineObject(object: any): Array<any> {
+export const examineObject = (object: any): Array<any> => {
     let properties: Array<any> = [];
 
     if (object) {
-        for (let property of Object.getOwnPropertyNames(object)) {
+        for (const property of Object.getOwnPropertyNames(object)) {
             properties.push(property);
         }
 
@@ -12,4 +12,4 @@ export function examineObject(object: any): Array<any> {
     }
 
     return properties;
-}
+};

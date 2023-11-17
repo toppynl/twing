@@ -1,16 +1,16 @@
-import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface RangeNode extends BaseBinaryNode<"range"> {
+export interface TwingRangeNode extends TwingBaseBinaryNode<"range"> {
 }
 
-export const createRangeNode = createBinaryNodeFactory<RangeNode>("range", null, {
+export const createRangeNode = createBinaryNodeFactory<TwingRangeNode>("range", null, {
     compile: (compiler, baseNode) => {
         compiler
-            .raw('runtime.createRange(')
+            .write('runtime.createRange(')
             .subCompile(baseNode.children.left)
-            .raw(', ')
+            .write(', ')
             .subCompile(baseNode.children.right)
-            .raw(')')
+            .write(')')
         ;
     }
 });

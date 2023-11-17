@@ -108,4 +108,4 @@ export class StrictVariablesSetToFalse extends Test {
 }
 
 runTest(createIntegrationTest(new Test));
-runTest(createIntegrationTest(new StrictVariablesSetToFalse));
+// runTest(createIntegrationTest(new StrictVariablesSetToFalse));

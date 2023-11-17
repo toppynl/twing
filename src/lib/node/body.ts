@@ -1,15 +1,15 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 
-export interface BodyNode extends BaseNode<"body", BaseNodeAttributes, {
-    content: BaseNode;
+export interface TwingBodyNode extends TwingBaseNode<"body", TwingBaseNodeAttributes, {
+    content: TwingBaseNode;
 }> {
 }
 
 export const createBodyNode = (
-    content: BaseNode,
+    content: TwingBaseNode,
     line: number,
     column: number,
     tag?: string
-): BodyNode => createBaseNode("body", {}, {
+): TwingBodyNode => createBaseNode("body", {}, {
     content
 }, line, column, tag);

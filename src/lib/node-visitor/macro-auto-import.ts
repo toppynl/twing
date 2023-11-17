@@ -11,8 +11,6 @@ export const createMacroAutoImportNodeVisitor = (): TwingNodeVisitor => {
                 const name = node.children.attribute.attributes.value as string;
                 const methodCallNode = createMethodCallNode(node.children.target, name, node.children.arguments, node.line, node.column);
                 
-                methodCallNode.attributes.safe = true;
-
                 node = methodCallNode;
             }
 

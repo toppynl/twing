@@ -1,5 +1,5 @@
-import type {BaseNode} from "./node";
-import {Node} from "./node";
+import type {TwingBaseNode} from "./node";
+import {TwingNode} from "./node";
 
 /**
  * The interface that all node visitors must implement.
@@ -8,16 +8,16 @@ export interface TwingNodeVisitor {
     /**
      * Called before the passed node is visited.
      *
-     * @return {BaseNode} The modified node
+     * @return {TwingBaseNode} The modified node
      */
-    enterNode(node: BaseNode): BaseNode;
+    enterNode(node: TwingBaseNode): TwingBaseNode;
 
     /**
      * Called after the passed node has been visited.
      *
-     * @return {BaseNode} The modified node or null if the node must be removed from its parent
+     * @return {TwingBaseNode} The modified node or null if the node must be removed from its parent
      */
-    leaveNode(node: BaseNode): BaseNode | null;
+    leaveNode(node: TwingBaseNode): TwingBaseNode | null;
 
     /**
      * Returns the priority for this visitor.
@@ -33,8 +33,8 @@ export interface TwingNodeVisitor {
  * Convenient factory for TwingNodeVisitor
  */
 export const createNodeVisitor = (
-    enterNode: (node: BaseNode) => Node,
-    leaveNode: (node: BaseNode) => Node | null,
+    enterNode: (node: TwingBaseNode) => TwingNode,
+    leaveNode: (node: TwingBaseNode) => TwingNode | null,
     priority: number
 ): TwingNodeVisitor => {
     return {

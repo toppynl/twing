@@ -25,13 +25,13 @@ class Test extends TestBase {
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            escapingStrategy: false
+            autoEscapingStrategy: "html"
         }
     }
 
     getContext() {
         return {
-            markup: createMarkup(Buffer.from('Foo'), 'utf-8')
+            markup: createMarkup('Foo', 'utf-8')
         }
     }
 }

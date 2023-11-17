@@ -1,10 +1,10 @@
 import * as tape from 'tape';
 import {createNodeTraverser} from "../../../../../src/lib/node-traverser";
-import {BaseNode, createBaseNode} from "../../../../../src/lib/node";
+import {TwingBaseNode, createBaseNode} from "../../../../../src/lib/node";
 import {createNodeVisitor, TwingNodeVisitor} from "../../../../../src/lib/node-visitor";
 
 const createRemoveNodeToRemoveNodeVisitor = (
-    nodeToRemove: BaseNode
+    nodeToRemove: TwingBaseNode
 ): TwingNodeVisitor => {
     return createNodeVisitor(
         (node) => {

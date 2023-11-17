@@ -1,16 +1,16 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode, Node} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
 
-export interface SandboxNode extends BaseNode<"sandbox", BaseNodeAttributes, {
-    body: Node;
+export interface TwingSandboxNode extends TwingBaseNode<"sandbox", TwingBaseNodeAttributes, {
+    body: TwingNode;
 }> {
 }
 
 export const createSandboxNode = (
-    body: Node,
+    body: TwingNode,
     line: number,
     column: number,
     tag: string
-): SandboxNode => {
+): TwingSandboxNode => {
     const baseNode = createBaseNode("sandbox", {}, {
         body
     }, line, column, tag);
@@ -20,20 +20,14 @@ export const createSandboxNode = (
         compile: (compiler) => {
             compiler
                 .write('await (async () => {\n')
-                .indent()
-                .write('let alreadySandboxed = runtime.isSandboxed();\n')
+                .write('let alreadySandboxed = runtime.isSandboxed;\n')
                 .write("if (!alreadySandboxed) {\n")
-                .indent()
-                .write("runtime.enableSandbox();\n")
-                .outdent()
+                .write("runtime.isSandboxed = true;\n")
                 .write("}\n")
                 .subCompile(baseNode.children.body)
                 .write("if (!alreadySandboxed) {\n")
-                .indent()
-                .write("runtime.disableSandbox();\n")
-                .outdent()
+                .write("runtime.isSandboxed = false;\n")
                 .write("}\n")
-                .outdent()
                 .write("})();\n")
             ;
         }

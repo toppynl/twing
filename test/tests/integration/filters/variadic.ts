@@ -23,5 +23,8 @@ runTest({
 5=>1
 5=>1,2
 5=>1,2
-`
+`,
+    environmentOptions: {
+        autoEscapingStrategy: null
+    }
 });

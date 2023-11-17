@@ -1,5 +1,5 @@
 import type {TwingParser} from "./parser";
-import type {BaseNode} from "./node";
+import type {TwingBaseNode} from "./node";
 import type {Token} from "twig-lexer";
 import type {TwingTokenStream} from "./token-stream";
 
@@ -18,4 +18,4 @@ export interface TwingTagHandler {
     readonly tag: string;
 }
 
-export type TwingTokenParser = (token: Token, stream: TwingTokenStream) => BaseNode | null;
+export type TwingTokenParser = (token: Token, stream: TwingTokenStream) => TwingBaseNode | null;

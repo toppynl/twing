@@ -1,7 +1,7 @@
 {
-  "author": "Eric MORAND <eric.morand@gmail.com>",
   "name": "twing",
   "description": "First-class Twig engine for Node.js",
+  "author": "Eric MORAND <eric.morand@gmail.com>",
   "keywords": [
     "browser",
     "compiler",
@@ -10,36 +10,40 @@
     "twig-engine",
     "typescript"
   ],
-  "version": "5.1.1",
+  "version": "0.0.0",
   "homepage": "http://NightlyCommit.github.io/twing",
   "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/nightlycommit/twing"
   },
-  "main": "dist/cjs/main.js",
-  "browser": "dist/es/browser.js",
-  "module": "dist/es",
-  "types": "dist/types/main.d.ts",
+  "main": "dist/cjs/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    "import": "dist/es/index.js",
+    "default": "dist/cjs/index.js",
+    "types": "dist/types/index.d.ts"
+  },
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=6.0.0"
   },
   "scripts": {
+    "prebuild": "rimraf dist",
+    "prebuild:test": "npm run prebuild",
+    "prebuild:test:browser": "npm run prebuild:test",
     "precover": "rimraf coverage .nyc_output",
-    "prepare": "rimraf dist && npm run build && replace-in-file '__VERSION__' $npm_package_version 'dist/**' --verbose && npm run bundle",
-    "test": "node dist/test | tap-spec",
-    "test:browser": "rimraf test/tests/browser/dist && (tsc --project test/tests/browser && node test/tests/browser/dist/test/tests/browser/test.js) | browserify - | tape-run --render='tap-spec'",
-    "test:docs": "cd docs && bundle exec jekyll build",
+    "test": "node dist/test",
+    "test:browser": "browserify dist/test/index.js | tape-run --sandbox=false",
     "cover": "c8 --src=dist/src --exclude-after-remap npm run test",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "build": "npm run build:cjs && npm run build:es && npm run build:types",
     "build:cjs": "rimraf dist/cjs && tsc --project . --module commonjs --outDir dist/cjs",
     "build:es": "rimraf dist/es && tsc --project . --module es6 --outDir dist/es",
+    "build:test": "rimraf dist && tsc --project test --outDir dist",
     "build:types": "rimraf dist/types && tsc --project . --declaration true --emitDeclarationOnly true --outDir dist/types",
-    "bundle": "browserify dist/cjs/browser.js -g uglifyify -s Twing -o dist/lib.min.js",
-    "docs": "cd docs && bundle exec jekyll serve",
-    "docs:install": "cd docs && bundle install --path vendor/bundle",
-    "build:test": "rimraf dist && tsc --project test --outDir dist"
+    "bundle": "browserify dist/cjs/index.js -g uglifyify -s Twing -o dist/lib.min.js"
   },
   "dependencies": {
     "capitalize": "^1.0.0",
@@ -51,7 +55,6 @@
     "levenshtein": "^1.0.5",
     "locutus": "^2.0.11",
     "luxon": "^1.19.3",
-    "object-hash": "^1.2.0",
     "pad": "^2.0.3",
     "regex-parser": "^2.2.8",
     "runes": "^0.4.3",
@@ -61,7 +64,6 @@
     "utf8-binary-cutter": "^0.9.2"
   },
   "devDependencies": {
-    "@types/fs-extra": "^8.0.0",
     "@types/locutus": "0.0.5",
     "@types/luxon": "^1.4.0",
     "@types/node": "^10.17.60",
@@ -69,18 +71,11 @@
     "@types/tape": "^4.2.33",
     "@types/tmp": "0.0.33",
     "browserify": "^16.2.3",
-    "coveralls": "^3.0.14",
-    "fs-finder": "^1.8.1",
     "nyc": "^15.0.1",
-    "replace-in-file": "^3.4.2",
     "rimraf": "^2.6.2",
     "sinon": "^6.3.4",
-    "tap-bail": "^1.0.0",
-    "tap-spec": "^5.0.0",
     "tape": "^5.6.1",
-    "tape-run": "^10.0.0",
-    "ts-node": "^8.4.1",
-    "tsify": "^4.0.1",
+    "tape-run": "^11.0.0",
     "typescript": "^5.2.2",
     "uglifyify": "^5.0.1"
   }

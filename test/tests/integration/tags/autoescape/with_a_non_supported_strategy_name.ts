@@ -5,16 +5,16 @@ runTest({
     templates: {
         'index.twig': '{% autoescape 5 %}{% endautoescape %}'
     },
-    expectedErrorMessage: 'TwingParsingError: An escaping strategy must be a string or false in "index.twig" at line 1.'
+    expectedErrorMessage: 'TwingParsingError: An escaping strategy must be a string or false in "index.twig" at line 1, column 15.'
 });
 
 runTest({
-    description: '"autoescape" tag with a variable as strategy name',
+    description: '"autoescape" tag with a non-supported strategy name',
     templates: {
-        'index.twig': '{% autoescape foo %}{% endautoescape %}'
+        'index.twig': '{% autoescape "bar" %}{{ foo }}{% endautoescape %}'
     },
     context: Promise.resolve({
         foo: 'html'
     }),
-    expectedErrorMessage: 'TwingParsingError: An escaping strategy must be a string or false in "index.twig" at line 1.'
+    expectedErrorMessage: 'TwingRuntimeError: Invalid escaping strategy "bar" (valid ones: css, custom, html, html_attr, js, url) in "index.twig" at line 1.'
 });

@@ -20,6 +20,6 @@ runTest({
         br: '<br />'
     }),
     environmentOptions: {
-        escapingStrategy: 'name'
+        autoEscapingStrategy: 'name'
     }
 });

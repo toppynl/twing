@@ -1,5 +1,5 @@
 import type {TwingLoader} from "../loader";
-import type {Source} from "../source";
+import type {TwingSource} from "../source";
 
 export interface TwingChainLoader extends TwingLoader {
     readonly loaders: Array<TwingLoader>;
@@ -89,7 +89,7 @@ export const createChainLoader = (
                 });
         },
         getSourceContext: (name, from) => {
-            const getSourceContextAtIndex = (index: number): Promise<Source | null> => {
+            const getSourceContextAtIndex = (index: number): Promise<TwingSource | null> => {
                 if (index < loaders.length) {
                     let loader = loaders[index];
 

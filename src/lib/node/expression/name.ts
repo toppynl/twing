@@ -1,94 +1,58 @@
-import type {BaseExpressionNode, BaseExpressionNodeAttributes} from "../expression";
-import {createBaseExpressionNode} from "../expression";
+import type {TwingBaseExpressionNodeAttributes} from "../expression";
+import {createBaseNode, TwingBaseNode} from "../../node";
 
-export type BaseNameNodeAttributes = BaseExpressionNodeAttributes & {
+export type TwingNameNodeAttributes = TwingBaseExpressionNodeAttributes & {
     name: string;
     isAlwaysDefined: boolean;
+    shouldIgnoreStrictCheck: boolean;
+    shouldTestExistence: boolean;
 };
 
-export interface BaseNameNode<Type extends string> extends BaseExpressionNode<Type, BaseNameNodeAttributes> {
-}
+export const nameNodeType = "name";
 
-export interface NameNode extends BaseNameNode<'name'> {
+export interface TwingNameNode extends TwingBaseNode<typeof nameNodeType, TwingNameNodeAttributes> {
 }
 
 export const createNameNode = (
     name: string,
     line: number,
     column: number
-): NameNode => createBaseNameNode("name", name, line, column);
-
-export const createBaseNameNode = <Type extends string>(
-    type: Type,
-    name: string,
-    line: number,
-    column: number
-): BaseNameNode<Type> => {
-    const specialVars = new Map([
-        ['_self', 'template.templateName'],
-        ['_context', 'context'],
-        ['_charset', 'runtime.getCharset()']
-    ]);
-
-    const isSpecial = () => {
-        return specialVars.has(name);
-    };
-
-    const attributes: NameNode["attributes"] = {
+): TwingNameNode => {
+    const attributes: TwingNameNode["attributes"] = {
         name,
-        isAlwaysDefined: false
+        isAlwaysDefined: false,
+        shouldIgnoreStrictCheck: false,
+        shouldTestExistence: false
     };
 
-    const baseNode = createBaseExpressionNode(type, attributes, {}, line, column);
+    const baseNode = createBaseNode(nameNodeType, attributes, {}, line, column);
 
-    const node: BaseNameNode<Type> = {
+    const node: TwingNameNode = {
         ...baseNode,
-        compile: (compiler, flags) => {
-            const {name, isAlwaysDefined} = attributes;
+        compile: (compiler) => {
+            const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = attributes;
 
-            if (flags?.isDefinedTest) {
-                if (isSpecial()) {
-                    compiler.render(true);
-                } else {
-                    compiler
-                        .raw('(context.has(')
-                        .render(name)
-                        .raw('))');
-                }
-            } else if (isSpecial()) {
-                compiler.raw(specialVars.get(name));
-            } else if (isAlwaysDefined) {
-                compiler
-                    .raw('context.get(')
-                    .string(name)
-                    .raw(')')
-                ;
-            } else {
-                if (flags?.ignoreStrictCheck || !compiler.options.strictVariables) {
-                    compiler
-                        .raw('(context.has(')
-                        .string(name)
-                        .raw(') ? context.get(')
-                        .string(name)
-                        .raw(') : null)')
-                    ;
-                } else {
-                    compiler
-                        .raw('(context.has(')
-                        .string(name)
-                        .raw(') ? context.get(')
-                        .string(name)
-                        .raw(') : (() => { throw new runtime.Error(\'Variable ')
-                        .string(name)
-                        .raw(' does not exist.\', ')
-                        .render(line)
-                        .raw(', template.source); })()')
-                        .raw(')')
-                    ;
-                }
-            }
+            compiler
+                .write(`await template.getTraceableMethod(runtime.getContextValue, ${node.line}, template.source)(`).write('\n')
+                .write('template,').write('\n')
+                .write('context,').write('\n')
+                .render(name).write(',').write('\n')
+                .render(isAlwaysDefined).write(',').write('\n')
+                .render(shouldIgnoreStrictCheck).write(',').write('\n')
+                .render(shouldTestExistence).write(',').write('\n')
+                .write(')')
         }
     };
 
     return node;
+};
+
+export const cloneNameNode = (
+    node: TwingNameNode
+): TwingNameNode => {
+    return createNameNode(
+        node.attributes.name,
+        node.line,
+        node.column
+    );
 };

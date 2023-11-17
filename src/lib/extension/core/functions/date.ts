@@ -13,99 +13,84 @@ import {TwingTemplate} from "../../../template";
  * </pre>
  *
  * @param {TwingTemplate} template
- * @param {Date | DateTime | Duration | number | string} date A date or null to use the current time
+ * @param {Date | DateTime | Duration | number | string} input A date or null to use the current time
  * @param {string | null | boolean} timezone The target timezone, null to use the default, false to leave unchanged
  *
  * @returns {Promise<DateTime | Duration>}
  */
 export const createDate = (
     template: TwingTemplate,
-    date: Date | DateTime | number | string | null,
+    input: Date | DateTime | number | string | null,
     timezone: string | null | false
 ): Promise<DateTime> => {
-    const defaultTimezone = template.environment.getTimezone();
+    const defaultTimezone = template.runtime.timezone;
     
-    let _do = (): DateTime => {
+    const _do = (): DateTime => {
         let result: DateTime;
 
+        if (input === null) {
+            result = DateTime.local();
+        }
+        else if (typeof input === 'number') {
+            result = DateTime.fromMillis(input * 1000);
+        }
+        else if (typeof input === 'string') {
+            if (input === 'now') {
+                result = DateTime.local();
+            } else {
+                result = DateTime.fromISO(input, {
+                    setZone: true
+                });
+
+                if (!result.isValid) {
+                    result = DateTime.fromRFC2822(input, {
+                        setZone: true
+                    });
+                }
+
+                if (!result.isValid) {
+                    result = DateTime.fromSQL(input, {
+                        setZone: true
+                    });
+                }
+
+                if (!result.isValid && /^-{0,1}\d+$/.test(input)) {
+                    result = DateTime.fromMillis(Number.parseInt(input) * 1000, {
+                        setZone: true
+                    });
+                }
+
+                if (!result.isValid) {
+                    result = modifyDate(input);
+                }
+            }
+        }
+        else if (input instanceof DateTime) {
+            result = input;
+        }
+        else {
+            result = DateTime.fromJSDate(input);
+        }
+
+        if (!result || !result.isValid) {
+            throw new TwingRuntimeError(`Failed to parse date "${input}".`);
+        }
+        
+        // now let's apply timezone
         // determine the timezone
         if (timezone !== false) {
             if (timezone === null) {
                 timezone = defaultTimezone;
             }
-        }
-
-        if (date instanceof DateTime) {
-            if (timezone !== false) {
-                date = date.setZone(timezone);
-            }
-
-            return date;
-        }
-
-        let parsedUtcOffset = 0;
-
-        if (!date) {
-            result = DateTime.local();
-        } else if (date instanceof Date) {
-            result = DateTime.fromJSDate(date);
-        } else if (typeof date === 'string') {
-            if (date === 'now') {
-                result = DateTime.local();
-            } else {
-                result = DateTime.fromISO(date, {
-                    zone: defaultTimezone || undefined,
-                    setZone: true
-                });
-
-                if (!result.isValid) {
-                    result = DateTime.fromRFC2822(date, {
-                        zone: defaultTimezone || undefined,
-                        setZone: true
-                    });
-                }
-
-                if (!result.isValid) {
-                    result = DateTime.fromSQL(date, {
-                        zone: defaultTimezone || undefined,
-                        setZone: true
-                    });
-                }
-
-                if (result.isValid) {
-                    parsedUtcOffset = result.offset;
-                } else {
-                    result = modifyDate(date);
-                }
-            }
-        } else {
-            // date is PHP timestamp - i.e. in seconds
-            let ts = date as number * 1000;
-
-            // timestamp are UTC by definition
-            result = DateTime.fromMillis(ts, {
-                setZone: false
-            });
-        }
-
-        if (!result || !result.isValid) {
-            throw new TwingRuntimeError(`Failed to parse date "${date}".`);
-        }
-
-        if (timezone !== false) {
+            
             result = result.setZone(timezone);
-        } else {
-            if (parsedUtcOffset) {
-                // explicit UTC offset
-                result = result.setZone(`UTC+${parsedUtcOffset / 60}`);
-            }
         }
-
+        
         // todo: why did we have this?
         // Reflect.set(result, 'format', (format: string) => {
         //     return formatDateTime(result, format);
         // });
-
+        
         return result;
     };
 

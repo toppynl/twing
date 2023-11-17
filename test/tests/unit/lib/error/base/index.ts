@@ -4,7 +4,7 @@ import {TwingBaseError} from "../../../../../../src/lib/error/base";
 tape('TwingBaseError', ({test}) => {
     test('creates a valid TwingRuntimeError', ({same, end}) => {
         const previousError = 'I am Error';
-        const error = new TwingBaseError('name', 'message', undefined, undefined, previousError);
+        const error = new TwingBaseError('name', 'message', undefined, undefined, undefined, previousError);
 
         same(error.previous, previousError);
 

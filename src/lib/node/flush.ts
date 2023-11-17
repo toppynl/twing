@@ -1,13 +1,13 @@
-import {BaseNode, createBaseNode} from "../node";
+import {TwingBaseNode, createBaseNode} from "../node";
 
-export interface FlushNode extends BaseNode<"flush"> {
+export interface TwingFlushNode extends TwingBaseNode<"flush"> {
 }
 
 export const createFlushNode = (
     line: number,
     column: number,
     tag?: string
-): FlushNode => {
+): TwingFlushNode => {
     return {
         ...createBaseNode("flush", {}, {}, line, column, tag),
         compile: (compiler) => {

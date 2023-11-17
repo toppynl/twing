@@ -39,7 +39,7 @@ class Test extends TestBase {
 
     getContext() {
         return {
-            foo: createMarkup(Buffer.from('foo'), 'UTF-8'),
+            foo: createMarkup(('foo'), 'UTF-8'),
             map: new Map([['message', 'Hello, world!']])
         };
     }

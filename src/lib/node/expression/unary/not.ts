@@ -1,6 +1,8 @@
-import {BaseUnaryNode, createUnaryNodeFactory} from "../unary";
+import {TwingBaseUnaryNode, createUnaryNodeFactory} from "../unary";
 
-export interface NotNode extends BaseUnaryNode<"not"> {
+export const notNodeType = "not";
+
+export interface TwingNotNode extends TwingBaseUnaryNode<typeof notNodeType> {
 }
 
-export const createNotNode = createUnaryNodeFactory<NotNode>("not", '!');
+export const createNotNode = createUnaryNodeFactory<TwingNotNode>(notNodeType, '!');

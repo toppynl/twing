@@ -1,144 +1,38 @@
-import {isNullOrUndefined} from "util";
+import {PassThrough, Readable} from "stream";
 
-export class TwingOutputHandler {
-    private content: string;
+interface TwingOutputHandler {
+    getContent(): string;
 
-    constructor() {
-        this.content = '';
-    }
+    write(value: string): void;
 
-    getContent() {
-        return this.content;
-    }
-
-    write(value: string) {
-        this.content = value;
-    }
-
-    append(value: string) {
-        this.content += value;
-    }
+    append(value: string): void;
 }
 
-export class TwingOutputBuffer {
-    private readonly _handlers: Array<TwingOutputHandler>;
+const createOutputHandler = (): TwingOutputHandler => {
+    let content: string = '';
 
-    constructor() {
-        this._handlers = [];
-    }
-
-    echo(string: any) {
-        if (typeof string === 'boolean') {
-            string = (string === true) ? '1' : '';
+    return {
+        getContent: () => {
+            return content;
+        },
+        write: (value) => {
+            content = value;
+        },
+        append: (value) => {
+            content += value;
         }
-        else if (isNullOrUndefined(string)) {
-            string = '';
-        }
+    };
+};
 
-        return this.outputWrite(string);
-    }
-
-    /**
-     * Turn on Output Buffering (specifying an optional output handler).
-     *
-     * @returns {boolean}
-     */
-    start() {
-        let handler = new TwingOutputHandler();
-
-        this._handlers.push(handler);
-
-        return true;
-    }
-
-    /**
-     * Flush (send) contents of the output buffer. The last buffer content is sent to next buffer
-     *
-     * In human terms, append the top-most buffer to the second-top-most buffer and empty the top-most buffer
-     *
-     * ┌─────────┐    ┌─────────┐
-     * │   oof   │    │         │
-     * ├─────────┤    ├─────────┤
-     * │   bar   │ => │  baroof │
-     * ├─────────┤    ├─────────┤
-     * │   foo   │    │   foo   │ => true
-     * └─────────┘    └─────────┘
-     *
-     */
-    flush() {
-        let active = this.getActive();
-
-        if (!active) {
-            process.stdout.write('Failed to flush buffer: no buffer to flush.');
-
-            return false;
-        }
-
-        this._handlers.pop();
-        this.outputWrite(active.getContent());
-
-        active.write('');
-
-        this._handlers.push(active);
-
-        return true;
-    }
-
-    /**
-     * Flush (send) the output buffer, and delete current output buffer
-     *
-     * In human terms: append the top-most buffer to the second-top-most buffer and remove the top-most buffer
-     *
-     * ┌─────────┐
-     * │   oof   │
-     * ├─────────┤    ┌─────────┐
-     * │   bar   │ -> │  baroof │
-     * ├─────────┤    ├─────────┤
-     * │   foo   │    │   foo   │ => true
-     * └─────────┘    └─────────┘
-     *
-     * @returns {boolean}
-     */
-    endAndFlush(): boolean {
-        if (!this.getActive()) {
-            process.stdout.write('Failed to delete and flush buffer: no buffer to delete or flush.');
-
-            return false;
-        }
-
-        this.flush();
-        this._handlers.pop();
-
-        return true;
-    }
-
-    /**
-     * Get active buffer contents, flush (send) the output buffer, and delete active output buffer
-     *
-     * In human terms: append the top-most buffer to the second-top-most buffer, remove the top-most buffer and returns its content
-     *
-     * ┌─────────┐
-     * │   oof   │
-     * ├─────────┤    ┌─────────┐
-     * │   bar   │ -> │  baroof │
-     * ├─────────┤    ├─────────┤
-     * │   foo   │    │   foo   │ => oof
-     * └─────────┘    └─────────┘
-     *
-     * @returns {string}
-     */
-    getAndFlush(): string {
-        let content = this.getContents();
-
-        this.endAndFlush();
-
-        return content;
-    }
+export interface TwingOutputBuffer {
+    readonly outputStream: Readable;
+    
+    echo(string: any): string | void;
 
     /**
      * Clean (erase) the output buffer
      *
-     * In human terms, empty the top-most buffer
+     * In human terms: empties the top-most buffer
      *
      * ┌─────────┐    ┌─────────┐
      * │   oof   │    │         │
@@ -149,25 +43,14 @@ export class TwingOutputBuffer {
      * └─────────┘    └─────────┘
      *
      */
-    clean() {
-        let active = this.getActive();
-
-        if (!active) {
-            process.stdout.write('Failed to clean buffer: no buffer to clean.');
-
-            return false;
-        }
-
-        active.write('');
-
-        return true;
-    }
+    clean(): boolean;
 
     /**
      * Clean the output buffer, and delete active output buffer
      *
-     * In human terms: clean the top-most buffer and remove the top-most buffer
+     * In human terms: removes the top-most buffer
      *
+     * ```text
      * ┌─────────┐
      * │   oof   │
      * ├─────────┤    ┌─────────┐
@@ -175,90 +58,234 @@ export class TwingOutputBuffer {
      * ├─────────┤    ├─────────┤
      * │   foo   │    │   foo   │ => true
      * └─────────┘    └─────────┘
+     * ```
+     * 
+     * @returns {boolean}
+     */
+    endAndClean(): boolean;
+
+    /**
+     * Flush (send) the output buffer, and delete current output buffer
+     *
+     * In human terms: appends the top-most buffer to the second-top-most buffer and removes the top-most buffer
+     *
+     * ```text
+     * ┌─────────┐
+     * │   oof   │
+     * ├─────────┤    ┌─────────┐
+     * │   bar   │ -> │  baroof │
+     * ├─────────┤    ├─────────┤
+     * │   foo   │    │   foo   │ => true
+     * └─────────┘    └─────────┘
+     * ```
      *
      * @returns {boolean}
      */
-    endAndClean(): boolean {
-        if (this.clean()) {
-            this._handlers.pop();
+    endAndFlush(): boolean;
 
-            return true;
-        }
-
-        return false;
-    }
+    /**
+     * Flush (send) contents of the output buffer. The last buffer content is sent to next buffer
+     *
+     * In human terms: appends the top-most buffer to the second-top-most buffer and empties the top-most buffer
+     *
+     * ┌─────────┐    ┌─────────┐
+     * │   oof   │    │         │
+     * ├─────────┤    ├─────────┤
+     * │   bar   │ => │  baroof │
+     * ├─────────┤    ├─────────┤
+     * │   foo   │    │   foo   │ => true
+     * └─────────┘    └─────────┘
+     *
+     */
+    flush(): boolean;
 
     /**
      * Get active buffer contents and delete active output buffer
      *
-     * In human terms: Remove the top-most buffer and returns its content
+     * In human terms: removes the top-most buffer and returns its content
      *
+     * ```text
      * ┌─────────┐
      * │   oof   │
      * ├─────────┤    ┌─────────┐
      * │   bar   │ -> │   bar   │
+     * ├─────────┤    ├─────────┤
+     * │   foo   │    │   foo   │ => "oof"
+     * └─────────┘    └─────────┘
+     * ```
+     * 
+     * @returns {string}
+     */
+    getAndClean(): string,
+
+    /**
+     * Get active buffer contents, flush (send) the output buffer, and delete active output buffer
+     *
+     * In human terms: appends the top-most buffer to the second-top-most buffer, removes the top-most buffer and returns its content
+     *
+     * ┌─────────┐
+     * │   oof   │
+     * ├─────────┤    ┌─────────┐
+     * │   bar   │ -> │  baroof │
      * ├─────────┤    ├─────────┤
      * │   foo   │    │   foo   │ => oof
      * └─────────┘    └─────────┘
      *
      * @returns {string}
      */
-    getAndClean(): string {
-        let content = this.getContents();
+    getAndFlush(): string;
 
-        this.endAndClean();
-
-        return content;
-    }
+    /**
+     * Gets the contents of the output buffer without clearing it.
+     *
+     * In human terms: returns the content of the top-most buffer
+     *
+     * ┌─────────┐
+     * │   oof   │
+     * ├─────────┤
+     * │   bar   │
+     * ├─────────┤
+     * │   foo   │ => "oof"
+     * └─────────┘
+     *
+     * @returns {string}
+     */
+    getContents(): string;
 
     /**
      * Return the nesting level of the output buffering mechanism
      *
      * @returns {number}
      */
-    getLevel(): number {
-        return this._handlers.length;
-    }
+    getLevel(): number;
 
     /**
-     * Return the contents of the output buffer
+     * Turn on Output Buffering (specifying an optional output handler).
      *
-     * @returns {string}
+     * @returns {boolean}
      */
-    getContents(): string {
-        const activeOutputHandler = this.getActive();
-        
-        return activeOutputHandler ? activeOutputHandler.getContent() : '';
-    }
+    start(): boolean;
+}
+
+export const createOutputBuffer = (): TwingOutputBuffer => {
+    const handlers: Array<TwingOutputHandler> = [];
+    const outputStream = new PassThrough();
 
     /**
-     * Append the string to the top-most buffer or return  the string if there is none
+     * Append the string to the top-most buffer or write it to the output stream if there is none
      *
      * @param {string} string | void
      */
-    private outputWrite(string: string): string | void {
-        let active = this.getActive();
-
+    const outputWrite = (string: string): void => {
+        const active = getActive();
+        
         if (active) {
             active.append(string);
+        } else {
+            outputStream.write(string);
         }
-        else {
-            if (process && process.stdout) {
-                process.stdout.write(string);
-            }
-            else {
-                console.log(string);
-            }
-        }
-    }
+    };
 
-    private getActive(): TwingOutputHandler | null {
-        if (this._handlers.length > 0) {
-            return this._handlers[this._handlers.length - 1];
-        }
-        else {
+    const getActive = (): TwingOutputHandler | null => {
+        if (handlers.length > 0) {
+            return handlers[handlers.length - 1];
+        } else {
             return null;
         }
-    }
-}
+    };
 
+    const outputBuffer: TwingOutputBuffer = {
+        get outputStream() {
+            return outputStream;  
+        },
+        clean: () => {
+            const active = getActive();
+
+            if (!active) {
+                throw new Error('Failed to clean buffer: no buffer to clean.');
+            }
+
+            active.write('');
+
+            return true;
+        },
+        echo(value: any) {
+            if (typeof value === 'boolean') {
+                value = (value === true) ? '1' : '';
+            } 
+            else if (typeof value === "number") {
+                value = String(value);
+            }
+            else if (value === null || value === undefined) {
+                value = '';
+            }
+
+            return outputWrite(value);
+        },
+        endAndClean: () => {
+            outputBuffer.clean();
+            handlers.pop();
+
+            return true;
+        },
+        endAndFlush: () => {
+            if (!getActive()) {
+                throw new Error('Failed to delete and flush buffer: no buffer to delete or flush.');
+            }
+
+            outputBuffer.flush();
+
+            handlers.pop();
+
+            return true;
+        },
+        flush: () => {
+            let active = getActive();
+
+            if (!active) {
+                throw new Error('Failed to flush buffer: no buffer to flush.');
+            }
+
+            handlers.pop();
+
+            outputWrite(active.getContent());
+
+            active.write('');
+
+            handlers.push(active);
+
+            return true;
+        },
+        getAndClean: () => {
+            const content = outputBuffer.getContents();
+
+            outputBuffer.endAndClean();
+
+            return content;
+        },
+        getAndFlush: () => {
+            const content = outputBuffer.getContents();
+
+            outputBuffer.endAndFlush();
+
+            return content;
+        },
+        getContents: () => {
+            const activeOutputHandler = getActive();
+            
+            return activeOutputHandler ? activeOutputHandler.getContent() : '';
+        },
+        getLevel: () => {
+            return handlers.length;
+        },
+        start: () => {
+            const handler = createOutputHandler();
+
+            handlers.push(handler);
+
+            return true;
+        }
+    };
+
+    return outputBuffer;
+};

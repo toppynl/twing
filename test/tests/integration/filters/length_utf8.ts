@@ -25,7 +25,7 @@ class Test extends TestBase {
     getContext() {
         return {
             string: 'été',
-            markup: createMarkup(Buffer.from('foo'), 'UTF-8')
+            markup: createMarkup(('foo'), 'UTF-8')
         };
     }
 }

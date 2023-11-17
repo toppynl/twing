@@ -1,7 +1,29 @@
 import TestBase, {runTest} from "../TestBase";
-import {ToStringMock} from "../../../mock/to-string";
-import {CountableMock} from "../../../mock/countable";
 import {createIntegrationTest} from "../test";
+
+class CountableMock {
+    length: number;
+
+    constructor(count: number) {
+        this.length = count;
+    }
+
+    toString() {
+        throw new Error('toString shall not be called on Countables');
+    }
+}
+
+class ToStringMock {
+    value: string;
+
+    constructor(value: string) {
+        this.value = value;
+    }
+
+    toString() {
+        return this.value;
+    }
+}
 
 class Test extends TestBase {
     getDescription() {

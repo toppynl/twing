@@ -2,6 +2,10 @@ import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
+    getDescription(): string {
+        return 'An error is thrown when a block name is not unique';
+    }
+
     getTemplates() {
         return {
             'index.twig': `
@@ -13,7 +17,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingParsingError: The block \'content\' has already been defined line 2 in "index.twig" at line 3.';
+        return 'TwingParsingError: The block \'content\' has already been defined at {2:4} in "index.twig" at line 3, column 8.';
     }
 }
 

@@ -8,19 +8,14 @@ class Test extends TestBase {
 
     getTemplates() {
         return {
-            'index.twig': `
-{% set tmp = include("foo.twig") %}
-
-FOO{{ tmp }}BAR`,
-            'foo.twig': `
-FOOBAR`
+            'index.twig': `{% set tmp = include("foo.twig") %}FOO{{ tmp }}BAR`,
+            'foo.twig': `foo.twig content`
         };
     }
 
     getExpected() {
         return `
-FOO
-FOOBARBAR
+FOOfoo.twig contentBAR
 `;
     }
 }

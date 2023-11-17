@@ -1,12 +1,12 @@
-import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface OrNode extends BaseBinaryNode<"or"> {
+export interface TwingOrNode extends TwingBaseBinaryNode<"or"> {
 }
 
-export const createOrNode = createBinaryNodeFactory<OrNode>("or", '||', {
+export const createOrNode = createBinaryNodeFactory<TwingOrNode>("or", '||', {
     compile: (compiler, baseNode) => {
         compiler
-            .raw('!!')
+            .write('!!')
         ;
 
         baseNode.compile(compiler);

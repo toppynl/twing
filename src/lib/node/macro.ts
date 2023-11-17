@@ -1,27 +1,27 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {BodyNode} from "./body";
-import {ArrayNode, getKeyValuePairs} from "./expression/array";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBodyNode} from "./body";
+import {TwingArrayNode, getKeyValuePairs} from "./expression/array";
 
 export const VARARGS_NAME = 'varargs';
 
-export type MacroNodeAttributes = BaseNodeAttributes & {
+export type TwingMacroNodeAttributes = TwingBaseNodeAttributes & {
     name: string;
 };
 
-export interface MacroNode extends BaseNode<"macro", MacroNodeAttributes, {
-    body: BodyNode;
-    arguments: ArrayNode;
+export interface TwingMacroNode extends TwingBaseNode<"macro", TwingMacroNodeAttributes, {
+    body: TwingBodyNode;
+    arguments: TwingArrayNode;
 }> {
 }
 
 export const createMacroNode = (
     name: string,
-    body: BodyNode,
-    macroArguments: ArrayNode,
+    body: TwingBodyNode,
+    macroArguments: TwingArrayNode,
     line: number,
     column: number,
     tag: string
-): MacroNode => {
+): TwingMacroNode => {
     const baseNode = createBaseNode("macro", {
         name
     }, {
@@ -35,7 +35,7 @@ export const createMacroNode = (
             const {body, arguments: macroArguments} = baseNode.children;
 
             compiler
-                .raw(`async (outputBuffer, `)
+                .write(`async (outputBuffer, `)
             ;
             
             const keyValuePairs = getKeyValuePairs(macroArguments);
@@ -47,26 +47,26 @@ export const createMacroNode = (
                 const name = key.attributes.value;
                 
                 compiler
-                    .raw('__' + name + '__ = ')
+                    .write('__' + name + '__ = ')
                     .subCompile(defaultValue)
                 ;
 
                 if (++pos < count) {
-                    compiler.raw(', ');
+                    compiler.write(', ');
                 }
             }
 
             if (count) {
-                compiler.raw(', ');
+                compiler.write(', ');
             }
 
             compiler
-                .raw('...__varargs__')
-                .raw(") => {\n")
-                .indent()
+                .write('...__varargs__')
+                .write(") => {\n")
+                
                 .write('let aliases = template.aliases.clone();\n')
                 .write("let context = runtime.createContext(runtime.mergeGlobals(new Map([\n")
-                .indent()
+                
             ;
 
             let first = true;
@@ -75,7 +75,7 @@ export const createMacroNode = (
                 const name = key.attributes.value;
                 
                 if (!first) {
-                    compiler.raw(',\n');
+                    compiler.write(',\n');
                 }
 
                 first = false;
@@ -83,49 +83,49 @@ export const createMacroNode = (
                 compiler
                     .write('[')
                     .string(name)
-                    .raw(', __' + name + '__]')
+                    .write(', __' + name + '__]')
                 ;
             }
 
             if (!first) {
-                compiler.raw(',\n');
+                compiler.write(',\n');
             }
 
             compiler
                 .write('[')
                 .string(VARARGS_NAME)
-                .raw(', ')
+                .write(', ')
             ;
 
             compiler
-                .raw("\__varargs__]\n")
-                .outdent()
+                .write("\__varargs__]\n")
+                
                 .write("])));\n\n")
                 .write("let blocks = new Map();\n")
                 .write('let result;\n')
                 .write('let error;\n\n')
                 .write("outputBuffer.start();\n")
                 .write("try {\n")
-                .indent()
+                
                 .subCompile(body)
-                .raw("\n")
+                .write("\n")
                 .write('let tmp = outputBuffer.getContents();\n')
-                .write("result = (tmp === '') ? '' : runtime.createMarkup(tmp, runtime.getCharset());\n")
-                .outdent()
+                .write("result = (tmp === '') ? '' : runtime.createMarkup(tmp, runtime.charset);\n")
+                
                 .write("}\n")
                 .write('catch (e) {\n')
-                .indent()
+                
                 .write('error = e;\n')
-                .outdent()
+                
                 .write('}\n\n')
                 .write("outputBuffer.endAndClean();\n\n")
                 .write('if (error) {\n')
-                .indent()
+                
                 .write('throw error;\n')
-                .outdent()
+                
                 .write('}\n')
                 .write('return result;\n')
-                .outdent()
+                
                 .write("}")
             ;
         }

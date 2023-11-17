@@ -1,4 +1,4 @@
-import {TwingMarkup} from "../../../markup";
+import type {TwingMarkup} from "../../../markup";
 
 /**
  * Converts a string to uppercase.
@@ -7,6 +7,6 @@ import {TwingMarkup} from "../../../markup";
  *
  * @returns {Promise<string>} The uppercased string
  */
-export function upper(string: string | TwingMarkup): Promise<string> {
+export const upper = (string: string | TwingMarkup): Promise<string> => {
     return Promise.resolve(string.toString().toUpperCase());
-}
+};

@@ -1,4 +1,3 @@
-import {isNullOrUndefined} from "util";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
 
@@ -21,18 +20,18 @@ import {iteratorToArray} from "../../../helpers/iterator-to-array";
  *
  * @returns {Promise<string>} The concatenated string
  */
-export function join(value: any, glue: string = '', and: string | null = null): Promise<string> {
-    let _do = (): string => {
-        if (isNullOrUndefined(value)) {
+export const join = (value: any, glue: string, and: string | null): Promise<string> => {
+    const _do = (): string => {
+        if ((value == null) || (value === undefined)) {
             return '';
         }
 
         if (isTraversable(value)) {
             value = iteratorToArray(value);
 
-            // this is ugly but we have to ensure that each element of the array is rendered as PHP would render it
+            // this is ugly, but we have to ensure that each element of the array is rendered as PHP would render it
             // this is mainly useful for booleans that are not rendered the same way in PHP and JavaScript
-            let safeValue = value.map(function (item: any) {
+            const safeValue = value.map((item: any) => {
                 if (typeof item === 'boolean') {
                     return (item === true) ? '1' : ''
                 }
@@ -55,4 +54,4 @@ export function join(value: any, glue: string = '', and: string | null = null): 
     };
 
     return Promise.resolve(_do());
-}
+};

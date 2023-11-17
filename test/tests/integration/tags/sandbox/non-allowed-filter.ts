@@ -20,7 +20,7 @@ class Test extends TestBase {
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
         return {
-            escapingStrategy: false
+            autoEscapingStrategy: "html"
         }
     }
 

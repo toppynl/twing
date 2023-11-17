@@ -2,8 +2,8 @@ import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
-    getName() {
-        return 'tags/include/only';
+    getDescription() {
+        return '"include" tag with "only" directive';
     }
 
     getTemplates() {
@@ -16,17 +16,10 @@ class Test extends TestBase {
         };
     }
 
-    getContext() {
-        return {
-            foo: 'bar'
-        };
-    }
-
     getExpected() {
         return `
 global,_parent,`;
     }
-
 }
 
 runTest(createIntegrationTest(new Test));

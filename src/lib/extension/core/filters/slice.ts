@@ -1,6 +1,6 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
-import {slice as sliceHelper} from "../../../helpers/slice";
+import {sliceMap} from "../../../helpers/slice-map";
 
 /**
  * Slices a variable.
@@ -12,15 +12,15 @@ import {slice as sliceHelper} from "../../../helpers/slice";
  *
  * @returns {Promise<string | Map<any, any>>} The sliced variable
  */
-export function slice(item: any, start: number, length: number | null = null, preserveKeys: boolean = false): Promise<string | Map<any, any>> {
+export const slice = (item: any, start: number, length: number | null, preserveKeys: boolean): Promise<string | Map<any, any>> => {
     if (isTraversable(item)) {
-        let iterableItem = iteratorToMap(item);
+        const iterableItem = iteratorToMap(item);
 
         if (length === null) {
             length = iterableItem.size - start;
         }
 
-        return Promise.resolve(sliceHelper(iterableItem, start, length, preserveKeys));
+        return Promise.resolve(sliceMap(iterableItem, start, length, preserveKeys));
     }
 
     item = '' + (item ? item : '');
@@ -30,4 +30,4 @@ export function slice(item: any, start: number, length: number | null = null, pr
     }
 
     return Promise.resolve(item.substr(start, length));
-}
+};

@@ -1,21 +1,21 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode, Node} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
 
-export type CheckSecurityNodeAttributes = BaseNodeAttributes & {
-    usedFilters: Map<string, Node | string>;
-    usedTags: Map<string, Node | string>;
-    usedFunctions: Map<string, Node | string>;
+export type CheckSecurityNodeAttributes = TwingBaseNodeAttributes & {
+    usedFilters: Map<string, TwingNode | string>;
+    usedTags: Map<string, TwingNode | string>;
+    usedFunctions: Map<string, TwingNode | string>;
 };
 
-export interface CheckSecurityNode extends BaseNode<"check_security", CheckSecurityNodeAttributes> {
+export interface TwingCheckSecurityNode extends TwingBaseNode<"check_security", CheckSecurityNodeAttributes> {
 }
 
 export const createCheckSecurityNode = (
-    usedFilters: Map<string, Node>,
-    usedTags: Map<string, Node>,
-    usedFunctions: Map<string, Node>,
+    usedFilters: Map<string, TwingNode>,
+    usedTags: Map<string, TwingNode>,
+    usedFunctions: Map<string, TwingNode>,
     line: number,
     column: number
-): CheckSecurityNode => {
+): TwingCheckSecurityNode => {
     const baseNode = createBaseNode("check_security", {
         usedFilters,
         usedTags,
@@ -46,44 +46,30 @@ export const createCheckSecurityNode = (
             }
 
             compiler
-                .write('const tags = ').render(tags).raw(";\n")
-                .write('const filters = ').render(filters).raw(";\n")
-                .write('const functions = ').render(functions).raw(";\n\n")
+                .write('const tags = ').render(tags).write(";\n")
+                .write('const filters = ').render(filters).write(";\n")
+                .write('const functions = ').render(functions).write(";\n\n")
                 .write("try {\n")
-                .indent()
-                .write("runtime.checkSecurity(\n")
-                .indent()
+                .write("runtime.isSandboxed && runtime.checkSecurity(\n")
                 .write(!tags.size ? "[],\n" : "['" + [...tags.keys()].join('\', \'') + "'],\n")
                 .write(!filters.size ? "[],\n" : "['" + [...filters.keys()].join('\', \'') + "'],\n")
                 .write(!functions.size ? "[]\n" : "['" + [...functions.keys()].join('\', \'') + "']\n")
-                .outdent()
                 .write(");\n")
-                .outdent()
                 .write("}\n")
                 .write("catch (error) {\n")
-                .indent()
                 .write("if (error.name === 'TwingSandboxSecurityError') {\n")
-                .indent()
                 .write("error.source = template.source;\n\n")
                 .write("if ((typeof error.tagName === 'string') && tags.has(error.tagName)) {\n")
-                .indent()
                 .write("error.line = tags.get(error.tagName);\n")
-                .outdent()
                 .write("}\n")
                 .write("else if ((typeof error.filterName === 'string') && filters.has(error.filterName)) {\n")
-                .indent()
                 .write("error.line = filters.get(error.filterName);\n")
-                .outdent()
                 .write("}\n")
                 .write("else if ((typeof error.functionName === 'string') && functions.has(error.functionName)) {\n")
-                .indent()
                 .write("error.line = functions.get(error.functionName);\n")
-                .outdent()
                 .write("}\n")
-                .outdent()
                 .write('}\n\n')
                 .write("throw error;\n")
-                .outdent()
                 .write("}\n\n")
             ;
         }

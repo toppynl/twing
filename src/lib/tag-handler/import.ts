@@ -1,4 +1,4 @@
-import {createAssignNameNode} from "../node/expression/assign-name";
+import {createAssignmentNode} from "../node/expression/assignment";
 import {createImportNode} from "../node/import";
 import {TokenType} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
@@ -14,7 +14,7 @@ export const createImportTagHandler = (): TwingTagHandler => {
 
                 stream.expect(TokenType.NAME, 'as');
                 
-                const alias = createAssignNameNode(stream.expect(TokenType.NAME).value, token.line, token.column);
+                const alias = createAssignmentNode(stream.expect(TokenType.NAME).value, token.line, token.column);
 
                 stream.expect(TokenType.TAG_END);
                 parser.addImportedSymbol('template', alias.attributes.name);

@@ -1,0 +1,30 @@
+import {runTest} from "../TestBase";
+
+runTest({
+    description: 'No error is thrown when a allowed function is used',
+    templates: {
+        "index.twig": `
+{{ dump(5) }}
+`
+    },
+    environmentOptions: {
+        sandboxed: true
+    },
+    sandboxSecurityPolicyFunctions: [
+        'dump'
+    ],
+    expectation: 'int(5)'
+});
+
+runTest({
+    description: 'An error is thrown when a non-allowed function is used',
+    templates: {
+        "index.twig": `
+{{ dump(5) }}
+`
+    },
+    environmentOptions: {
+        sandboxed: true
+    },
+    expectedErrorMessage: 'TwingSandboxSecurityError: Function "dump" is not allowed in "index.twig" at line 2.'
+});

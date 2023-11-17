@@ -2,11 +2,12 @@ import {iterate} from "../../../helpers/iterate";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToHash} from "../../../helpers/iterator-to-hash";
 import {count} from "../../../helpers/count";
+import {createMarkup, TwingMarkup} from "../../../markup";
 
 /**
  * Adapted from https://github.com/kvz/locutus/blob/master/src/php/var/var_dump.js
  */
-let varDump = function (...args: any[]): string {
+const varDump = (...args: any[]): string => {
     let padChar = ' ';
     let padVal = 4;
     let length = 0;
@@ -33,20 +34,17 @@ let varDump = function (...args: any[]): string {
         return result;
     };
 
-    let formatArray = (obj: any, curDepth: number, padVal: number, padChar: string) => {
+    let formatArray = (obj: any, curDepth: number) => {
         if (isTraversable(obj)) {
             obj = iteratorToHash(obj);
         }
-
-        if (curDepth > 0) {
-            curDepth++;
-        }
-
-        let baseCount = padVal * (curDepth - 1);
+        
+        let baseCount = padVal * (curDepth);
         let thickCount = padVal * (curDepth + 1);
-
-        let basePad = padChar.repeat(baseCount > 0 ? baseCount : 0);
+        
+        let basePad = padChar.repeat(baseCount);
         let thickPad = padChar.repeat(thickCount);
+        
         let str: string = '';
         let val: string;
 
@@ -64,7 +62,7 @@ let varDump = function (...args: any[]): string {
                     str += key;
                     str += '] =>\n';
                     str += thickPad;
-                    str += formatArray(objVal, curDepth + 1, padVal, padChar);
+                    str += formatArray(objVal, curDepth + 1);
                 } else {
                     val = getInnerVal(objVal);
                     str += thickPad;
@@ -88,13 +86,13 @@ let varDump = function (...args: any[]): string {
     let output: string[] = [];
 
     for (let arg of args) {
-        output.push(formatArray(arg, 0, padVal, padChar));
+        output.push(formatArray(arg, 0));
     }
 
     return output.join('');
 };
 
-export const dump = (context: any, ...vars: Array<any>): Promise<string> => {
+export const dump = (context: any, ...vars: Array<any>): Promise<TwingMarkup> => {
     if (vars.length < 1) {
         const vars_ = new Map();
 
@@ -103,9 +101,9 @@ export const dump = (context: any, ...vars: Array<any>): Promise<string> => {
 
             return Promise.resolve();
         }).then(() => {
-            return varDump(vars_);
+            return createMarkup(varDump(vars_));
         });
     }
 
-    return Promise.resolve(varDump(...vars));
+    return Promise.resolve(createMarkup(varDump(...vars)));
 };

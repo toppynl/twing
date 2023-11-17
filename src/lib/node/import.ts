@@ -1,25 +1,25 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {BaseExpressionNode} from "./expression";
-import type {AssignNameNode} from "./expression/assign-name";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseExpressionNode} from "./expression";
+import type {TwingAssignmentNode} from "./expression/assignment";
 
-export type ImportNodeAttributes = BaseNodeAttributes & {
+export type TwingImportNodeAttributes = TwingBaseNodeAttributes & {
     global: boolean;
 };
 
-export interface ImportNode extends BaseNode<"import", ImportNodeAttributes, {
-    expr: BaseExpressionNode;
-    var: AssignNameNode;
+export interface TwingImportNode extends TwingBaseNode<"import", TwingImportNodeAttributes, {
+    expr: TwingBaseExpressionNode;
+    var: TwingAssignmentNode;
 }> {
 }
 
 export const createImportNode = (
-    expression: BaseExpressionNode,
-    aliasName: AssignNameNode,
+    expression: TwingBaseExpressionNode,
+    aliasName: TwingAssignmentNode,
     global: boolean,
     line: number,
     column: number,
     tag: string
-): ImportNode => {
+): TwingImportNode => {
     const baseNode = createBaseNode("import", {
         global
     }, {
@@ -36,30 +36,30 @@ export const createImportNode = (
             compiler
                 .write('aliases.proxy[')
                 .render(varName.attributes.name)
-                .raw('] = ')
+                .write('] = ')
             ;
 
             if (global) {
                 compiler
-                    .raw('template.aliases.proxy[')
+                    .write('template.aliases.proxy[')
                     .render(varName.attributes.name)
-                    .raw('] = ')
+                    .write('] = ')
                 ;
             }
 
             if (expr.is("name") && expr.attributes.name === '_self') {
-                compiler.raw('template');
+                compiler.write('template');
             } else {
                 compiler
-                    .raw('await template.loadTemplate(')
+                    .write('await template.loadTemplate(')
                     .subCompile(expr)
-                    .raw(', ')
+                    .write(', ')
                     .render(baseNode.line)
-                    .raw(')')
+                    .write(')')
                 ;
             }
 
-            compiler.raw(";\n");
+            compiler.write(";\n");
         }
     };
 };

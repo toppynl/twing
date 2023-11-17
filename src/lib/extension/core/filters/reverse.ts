@@ -11,10 +11,10 @@ const esrever = require('esrever');
  *
  * @returns {Promise<string | Map<any, any>>} The reversed input
  */
-export function reverse(item: any, preserveKeys: boolean = false): Promise<string | Map<any, any>> {
+export const reverse = (item: any, preserveKeys: boolean): Promise<string | Map<any, any>> => {
     if (typeof item === 'string') {
         return Promise.resolve(esrever.reverse(item));
     } else {
         return Promise.resolve(reverseHelper(iteratorToMap(item as Map<any, any>), preserveKeys));
     }
-}
+};

@@ -27,7 +27,7 @@ export const createMacroTagHandler = (): TwingTagHandler => {
 
                 for (const {key, value: macroArgument} of getKeyValuePairs(macroArguments)) {
                     const {value: argumentName} = key.attributes;
-                    
+
                     if (argumentName === VARARGS_NAME) {
                         throw new TwingParsingError(`The argument "${VARARGS_NAME}" in macro "${name}" cannot be defined because the variable "${VARARGS_NAME}" is reserved for arbitrary arguments.`, macroArgument.line);
                     }
@@ -46,7 +46,9 @@ export const createMacroTagHandler = (): TwingTagHandler => {
                     const value = nextToken.value;
 
                     if (value != name) {
-                        throw new TwingParsingError(`Expected endmacro for macro "${name}" (but "${value}" given).`, stream.getCurrent().line, stream.getSourceContext());
+                        const {line, column} = nextToken;
+
+                        throw new TwingParsingError(`Expected endmacro for macro "${name}" (but "${value}" given).`, line, column, stream.source);
                     }
                 }
 

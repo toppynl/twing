@@ -5,8 +5,6 @@ import {resolve} from "path";
 
 const filesystem: TwingFilesystemCacheFilesystem = {
     mkdir: (_path, _options, callback) => {
-        console.log('MKDIR', _path);
-        
         callback(null);
     },
     stat: (_path, callback) => {

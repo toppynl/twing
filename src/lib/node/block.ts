@@ -1,35 +1,33 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 
-export type BlockNodeAttributes = BaseNodeAttributes & {
+export type TwingBlockNodeAttributes = TwingBaseNodeAttributes & {
     name: string;
 };
 
-export interface BlockNode extends BaseNode<"block", BlockNodeAttributes, {
-    body: BaseNode;
+export interface TwingBlockNode extends TwingBaseNode<"block", TwingBlockNodeAttributes, {
+    body: TwingBaseNode;
 }> {
 }
 
 export const createBlockNode = (
     name: string,
-    body: BaseNode,
+    body: TwingBaseNode,
     line: number,
     column: number,
     tag: string | null = null
-): BlockNode => {
+): TwingBlockNode => {
     const baseNode = createBaseNode("block", {name}, {body}, line, column, tag);
 
-    const node: BlockNode = {
+    const node: TwingBlockNode = {
         ...baseNode,
         compile: (compiler) => {
             compiler
-                .raw(`async (context, outputBuffer, blocks = new Map()) => {\n`)
-                .indent()
+                .write(`async (context, outputBuffer, blocks = new Map()) => {\n`)
                 .write('const aliases = template.aliases.clone();\n')
             ;
 
             compiler
                 .subCompile(baseNode.children.body)
-                .outdent()
                 .write("}")
             ;
         }

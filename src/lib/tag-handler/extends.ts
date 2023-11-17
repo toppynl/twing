@@ -20,18 +20,18 @@ export const createExtendsTagHandler = (): TwingTagHandler => {
         tag,
         initialize: (parser) => {
             return (token, stream) => {
-                const {line} = token;
-                
+                const {line, column} = token;
+
                 if (parser.peekBlockStack()) {
-                    throw new TwingParsingError('Cannot use "extend" in a block.', line, stream.getSourceContext());
+                    throw new TwingParsingError('Cannot use "extend" in a block.', line, column, stream.source);
                 } else if (!parser.isMainScope()) {
-                    throw new TwingParsingError('Cannot use "extend" in a macro.', line, stream.getSourceContext());
+                    throw new TwingParsingError('Cannot use "extend" in a macro.', line, column, stream.source);
                 }
 
                 if (parser.parent !== null) {
-                    throw new TwingParsingError('Multiple extends tags are forbidden.', line, stream.getSourceContext());
+                    throw new TwingParsingError('Multiple extends tags are forbidden.', line, column, stream.source);
                 }
-                
+
                 parser.parent = parser.parseExpression(stream);
 
                 stream.expect(TokenType.TAG_END);

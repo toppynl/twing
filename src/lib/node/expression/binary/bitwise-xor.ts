@@ -1,7 +1,9 @@
-import type {BaseBinaryNode} from "../binary";
+import type {TwingBaseBinaryNode} from "../binary";
 import {createBinaryNodeFactory} from "../binary";
 
-export interface BitwiseXorNode extends BaseBinaryNode<"bitwise_xor"> {
+export const bitwiseXorNodeType = "bitwise_xor";
+
+export interface TwingBitwiseXorNode extends TwingBaseBinaryNode<typeof bitwiseXorNodeType> {
 }
 
-export const createBitwiseXorNode = createBinaryNodeFactory<BitwiseXorNode>("bitwise_xor", '^');
+export const createBitwiseXorNode = createBinaryNodeFactory<TwingBitwiseXorNode>(bitwiseXorNodeType, '^');

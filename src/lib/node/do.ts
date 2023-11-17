@@ -1,5 +1,5 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import type {BaseExpressionNode} from "./expression";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import type {TwingBaseExpressionNode} from "./expression";
 
 /**
  * Represents a do node.
@@ -7,17 +7,17 @@ import type {BaseExpressionNode} from "./expression";
  * The do tag works exactly like the regular variable expression ({{ ... }}) just that it doesn't print anything:
  * {% do 1 + 2 %}
  */
-export interface DoNode extends BaseNode<"do", BaseNodeAttributes, {
-    expr: BaseExpressionNode;
+export interface TwingDoNode extends TwingBaseNode<"do", TwingBaseNodeAttributes, {
+    expr: TwingBaseExpressionNode;
 }> {
 }
 
 export const createDoNode = (
-    expr: BaseExpressionNode,
+    expr: TwingBaseExpressionNode,
     line: number,
     column: number,
     tag: string | null
-): DoNode => {
+): TwingDoNode => {
     const baseNode = createBaseNode("do", {}, {
         expr
     }, line, column, tag);
@@ -27,7 +27,7 @@ export const createDoNode = (
         compile: (compiler) => {
             compiler
                 .subCompile(baseNode.children.expr) //, true
-                .raw(";\n")
+                .write(";\n")
             ;
         }
     };

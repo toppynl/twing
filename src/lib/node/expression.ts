@@ -1,51 +1,51 @@
-import {BaseNode, createBaseNode, BaseNodeAttributes, BaseNodeChildren} from "../node";
-import type {ConstantNode} from "./expression/constant";
-import type {NameNode} from "./expression/name";
-import type {AssignNameNode} from "./expression/assign-name";
-import type {ArrayNode} from "./expression/array";
-import type {HashNode} from "./expression/hash";
-import type {ArrowFunctionNode} from "./expression/arrow-function";
-import type {BinaryNode} from "./expression/binary";
-import type {UnaryNode} from "./expression/unary";
-import type {FilterNode} from "./expression/call/filter";
-import type {ConditionalNode} from "./expression/conditional";
-import type {CallNode} from "./expression/call";
-import type {BlockReferenceExpressionNode} from "./expression/block-reference";
-import type {GetAttributeNode} from "./expression/get-attribute";
-import type {MethodCallNode} from "./expression/method-call";
-import type {NullishCoalescingNode} from "./expression/nullish-coalescing";
-import type {ParentNode} from "./expression/parent";
-import type {TemporaryNameNode} from "./expression/temp-name";
+import {TwingBaseNode, createBaseNode, TwingBaseNodeAttributes, TwingBaseNodeChildren} from "../node";
+import type {TwingConstantNode} from "./expression/constant";
+import type {TwingNameNode} from "./expression/name";
+import type {TwingAssignmentNode} from "./expression/assignment";
+import type {TwingArrayNode} from "./expression/array";
+import type {TwingHashNode} from "./expression/hash";
+import type {TwingArrowFunctionNode} from "./expression/arrow-function";
+import type {TwingBinaryNode} from "./expression/binary";
+import type {TwingUnaryNode} from "./expression/unary";
+import type {TwingFilterNode} from "./expression/call/filter";
+import type {TwingConditionalNode} from "./expression/conditional";
+import type {TwingCallNode} from "./expression/call";
+import type {TwingBlockFunctionNode} from "./expression/block-function";
+import type {TwingAttributeAccessorNode} from "./expression/attribute-accessor";
+import type {TwingMethodCallNode} from "./expression/method-call";
+import type {TwingNullishCoalescingNode} from "./expression/nullish-coalescing";
+import type {TwingParentFunctionNode} from "./expression/parent-function";
+import type {TwingTemporaryNameNode} from "./expression/temporary-name";
 import type {ArgumentsNode} from "./expression/arguments";
 
-export type ExpressionNode =
+export type TwingExpressionNode =
     | ArgumentsNode
-    | ArrayNode
-    | ArrowFunctionNode
-    | AssignNameNode
-    | BinaryNode
-    | BlockReferenceExpressionNode
-    | CallNode
-    | ConditionalNode
-    | ConstantNode
-    | FilterNode
-    | GetAttributeNode
-    | HashNode
-    | MethodCallNode
-    | NameNode
-    | NullishCoalescingNode
-    | ParentNode
-    | TemporaryNameNode
-    | UnaryNode
+    | TwingArrayNode
+    | TwingArrowFunctionNode
+    | TwingAssignmentNode
+    | TwingBinaryNode
+    | TwingBlockFunctionNode
+    | TwingCallNode
+    | TwingConditionalNode
+    | TwingConstantNode
+    | TwingFilterNode
+    | TwingAttributeAccessorNode
+    | TwingHashNode
+    | TwingMethodCallNode
+    | TwingNameNode
+    | TwingNullishCoalescingNode
+    | TwingParentFunctionNode
+    | TwingTemporaryNameNode
+    | TwingUnaryNode
     ;
 
-export type BaseExpressionNodeAttributes = BaseNodeAttributes;
-export type BaseExpressionNodeChildren = BaseNodeChildren;
+export type TwingBaseExpressionNodeAttributes = TwingBaseNodeAttributes;
 
-export type BaseExpressionNode<
+// todo: this is a base node, no need for a type
+export type TwingBaseExpressionNode<
     Type extends string = any,
-    AdditionalAttributes extends BaseExpressionNodeAttributes = BaseExpressionNodeAttributes,
-    AdditionalChildren extends BaseExpressionNodeChildren = BaseExpressionNodeChildren,
-> = BaseNode<Type, BaseExpressionNodeAttributes & AdditionalAttributes, BaseExpressionNodeChildren & AdditionalChildren>;
+    AdditionalAttributes extends TwingBaseExpressionNodeAttributes = TwingBaseExpressionNodeAttributes,
+    AdditionalChildren extends TwingBaseNodeChildren = TwingBaseNodeChildren,
+> = TwingBaseNode<Type, TwingBaseExpressionNodeAttributes & AdditionalAttributes, TwingBaseNodeChildren & AdditionalChildren>;
 
 export const createBaseExpressionNode = createBaseNode;

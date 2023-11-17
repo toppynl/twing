@@ -1,17 +1,17 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 
-export type CommentNodeAttributes = BaseNodeAttributes & {
+export type TwingCommentNodeAttributes = TwingBaseNodeAttributes & {
     data: string;
 };
 
-export interface CommentNode extends BaseNode<"comment", CommentNodeAttributes> {
+export interface TwingCommentNode extends TwingBaseNode<"comment", TwingCommentNodeAttributes> {
 }
 
 export const createCommentNode = (
     data: string,
     line: number,
     column: number
-): CommentNode => {
+): TwingCommentNode => {
     const baseNode = createBaseNode("comment", {
         data
     }, {}, line, column);

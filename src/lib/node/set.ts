@@ -1,26 +1,25 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode, getChildrenCount} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, getChildrenCount} from "../node";
 import {createConstantNode} from "./expression/constant";
-import {textNodeType} from "./text";
+import {textNodeType} from "./output/text";
 
-export type SetNodeAttributes = BaseNodeAttributes & {
-    capture: boolean;
-    safe: boolean;
+export type SetNodeAttributes = TwingBaseNodeAttributes & {
+    capture: boolean; // todo: rename
 };
 
-export interface SetNode extends BaseNode<"set", SetNodeAttributes, {
-    names: BaseNode;
-    values: BaseNode;
+export interface TwingSetNode extends TwingBaseNode<"set", SetNodeAttributes, {
+    names: TwingBaseNode;
+    values: TwingBaseNode;
 }> {
 }
 
 export const createSetNode = (
     capture: boolean,
-    names: SetNode["children"]["names"],
-    values: SetNode["children"]["values"],
+    names: TwingSetNode["children"]["names"],
+    values: TwingSetNode["children"]["values"],
     line: number,
     column: number,
     tag: string
-): SetNode => {
+): TwingSetNode => {
     const baseNode = createBaseNode("set", {
         capture,
         safe: false
@@ -58,7 +57,7 @@ export const createSetNode = (
 
                 for (const [, node] of Object.entries(names.children)) {
                     if (index > 0) {
-                        compiler.raw(', ');
+                        compiler.write(', ');
                     }
 
                     compiler
@@ -68,7 +67,7 @@ export const createSetNode = (
                     index++;
                 }
 
-                compiler.raw(']');
+                compiler.write(']');
             } else {
                 if (capture) {
                     compiler
@@ -81,22 +80,27 @@ export const createSetNode = (
 
                 if (capture) {
                     compiler
-                        .raw(" = (() => {let tmp = outputBuffer.getAndClean(); return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.getCharset());})()")
+                        .write(" = (() => {\n")
+                        
+                        .write("let tmp = outputBuffer.getAndClean();\n")
+                        .write("return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.charset);\n")
+                        
+                        .write("})()")
                     ;
                 }
             }
 
             if (!capture) {
-                compiler.raw(' = ');
+                compiler.write(' = ');
 
                 if (getChildrenCount(values) > 1) {
-                    compiler.raw('[');
+                    compiler.write('[');
 
                     let index = 0;
 
                     for (const [, value] of Object.entries(values.children)) {
                         if (index > 0) {
-                            compiler.raw(', ');
+                            compiler.write(', ');
                         }
 
                         compiler
@@ -106,13 +110,18 @@ export const createSetNode = (
                         index++;
                     }
 
-                    compiler.raw(']');
+                    compiler.write(']');
                 } else {
                     if (safe) {
                         compiler
-                            .raw("await (async () => {let tmp = ")
+                            .write("await (async () => {\n")
+                            
+                            .write("let tmp = ")
                             .subCompile(values)
-                            .raw("; return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.getCharset());})()")
+                            .write(";\n")
+                            .write("return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.charset);\n")
+                            
+                            .write("})()")
                         ;
                     } else {
                         compiler.subCompile(values);
@@ -120,7 +129,7 @@ export const createSetNode = (
                 }
             }
 
-            compiler.raw(';\n');
+            compiler.write(';\n');
         },
         isACaptureNode: true
     };

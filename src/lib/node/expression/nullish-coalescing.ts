@@ -1,6 +1,5 @@
-import {BaseConditionalNode, conditionalNodeType, createBaseConditionalNode} from "./conditional";
-import {BaseExpressionNode} from "../expression";
-import {createDefinedTestNode} from "./call/test/defined";
+import {TwingBaseConditionalNode, conditionalNodeType, createBaseConditionalNode} from "./conditional";
+import {TwingBaseExpressionNode} from "../expression";
 import {createNotNode} from "./unary/not";
 import {createAndNode} from "./binary/and";
 import {createTestNode} from "./call/test";
@@ -8,14 +7,14 @@ import {createArrayNode} from "./array";
 
 export const nullishCoalescingNodeType = "nullish_coalescing";
 
-export interface NullishCoalescingNode extends BaseConditionalNode<typeof nullishCoalescingNodeType> {
+export interface TwingNullishCoalescingNode extends TwingBaseConditionalNode<typeof nullishCoalescingNodeType> {
 }
 
 export const createNullishCoalescingNode = (
-    operands: [BaseExpressionNode, BaseExpressionNode],
+    operands: [TwingBaseExpressionNode, TwingBaseExpressionNode],
     line: number,
     column: number
-): NullishCoalescingNode => {
+): TwingNullishCoalescingNode => {
     const [left, right] = operands;
     
     if (left.is("name")) {
@@ -24,7 +23,7 @@ export const createNullishCoalescingNode = (
     
     const testNode = createAndNode(
         [
-            createDefinedTestNode(left, createArrayNode([], line, column), line, column),
+            createTestNode(left, "defined", createArrayNode([], line, column), line, column),
             createNotNode(
                 createTestNode(
                     left,
@@ -42,7 +41,7 @@ export const createNullishCoalescingNode = (
 
     const baseNode = createBaseConditionalNode(nullishCoalescingNodeType, testNode, left, right, line, column);
     
-    const node: NullishCoalescingNode = {
+    const node: TwingNullishCoalescingNode = {
         ...baseNode,
         is: (aType) => aType === node.type || aType === conditionalNodeType
     };

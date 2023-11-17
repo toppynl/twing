@@ -1,26 +1,26 @@
 import {
-    BaseExpressionNode,
-    BaseExpressionNodeAttributes,
+    TwingBaseExpressionNode,
+    TwingBaseExpressionNodeAttributes,
     createBaseExpressionNode
 } from "../expression";
-import {ConstantNode, createConstantNode} from "./constant";
+import {TwingConstantNode, createConstantNode} from "./constant";
 import {pushToRecord} from "../../helpers/record";
 
 const array_chunk = require('locutus/php/array/array_chunk');
 
-export interface BaseArrayNode<Type extends string> extends BaseExpressionNode<Type, BaseExpressionNodeAttributes, Record<number, BaseExpressionNode>> {
+export interface TwingBaseArrayNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, Record<number, TwingBaseExpressionNode>> {
 }
 
-export interface ArrayNode extends BaseArrayNode<"array"> {
+export interface TwingArrayNode extends TwingBaseArrayNode<"array"> {
 }
 
 export const getKeyValuePairs = (
-    node: BaseArrayNode<any>
+    node: TwingBaseArrayNode<any>
 ): Array<{
-    key: ConstantNode,
-    value: BaseExpressionNode
+    key: TwingConstantNode,
+    value: TwingBaseExpressionNode
 }> => {
-    const chunks: Array<[key: ConstantNode, value: BaseExpressionNode]> = array_chunk(Object.values(node.children), 2);
+    const chunks: Array<[key: TwingConstantNode, value: TwingBaseExpressionNode]> = array_chunk(Object.values(node.children), 2);
 
     return chunks.map(([key, value]) => {
         return {key, value};
@@ -30,13 +30,13 @@ export const getKeyValuePairs = (
 export const createBaseArrayNode = <Type extends string>(
     type: Type,
     elements: Array<{
-        key: BaseExpressionNode;
-        value: BaseExpressionNode;
+        key: TwingBaseExpressionNode;
+        value: TwingBaseExpressionNode;
     }>,
     line: number,
     column: number
-): BaseArrayNode<Type> => {
-    const children: BaseArrayNode<any>["children"] = {};
+): TwingBaseArrayNode<Type> => {
+    const children: TwingBaseArrayNode<any>["children"] = {};
 
     for (const {key, value} of elements) {
         pushToRecord(children, key);
@@ -44,49 +44,44 @@ export const createBaseArrayNode = <Type extends string>(
     }
 
     const baseNode = createBaseExpressionNode(type, {}, children, line, column);
-    
-    const node: BaseArrayNode<Type> = {
+
+    const node: TwingBaseArrayNode<Type> = {
         ...baseNode,
-        compile: (compiler, flags) => {
-            if (flags?.isDefinedTest) {
-                compiler.render(true);
-            }
-            else {
-                compiler.raw('new Map([');
+        compile: (compiler) => {
+            compiler.write('new Map([');
 
-                let first = true;
+            let first = true;
 
-                for (const pair of getKeyValuePairs(node)) {
-                    if (!first) {
-                        compiler.raw(', ');
-                    }
-
-                    first = false;
-
-                    compiler
-                        .raw('[')
-                        .subCompile(pair.key)
-                        .raw(', ')
-                        .subCompile(pair.value)
-                        .raw(']')
+            for (const pair of getKeyValuePairs(node)) {
+                if (!first) {
+                    compiler.write(', ');
                 }
 
-                compiler.raw('])');
+                first = false;
+
+                compiler
+                    .write('[')
+                    .subCompile(pair.key)
+                    .write(', ')
+                    .subCompile(pair.value)
+                    .write(']')
             }
+
+            compiler.write('])');
         }
     };
-    
+
     return node;
 };
 
 export const createArrayNode = (
     elements: Array<{
-        key?: BaseExpressionNode;
-        value: BaseExpressionNode;
+        key?: TwingBaseExpressionNode;
+        value: TwingBaseExpressionNode;
     }>,
     line: number,
     column: number
-): ArrayNode => {
+): TwingArrayNode => {
     let index = 0;
 
     const baseNode = createBaseArrayNode("array", elements.map(({key, value}) => {

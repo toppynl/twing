@@ -1,6 +1,8 @@
-import {BaseUnaryNode, createUnaryNodeFactory} from "../unary";
+import {TwingBaseUnaryNode, createUnaryNodeFactory} from "../unary";
 
-export interface NegativeNode extends BaseUnaryNode<"neg"> {
+export const negativeNodeType = "neg";
+
+export interface TwingNegativeNode extends TwingBaseUnaryNode<typeof negativeNodeType> {
 }
 
-export const createNegativeNode = createUnaryNodeFactory<NegativeNode>("neg", '-');
+export const createNegativeNode = createUnaryNodeFactory<TwingNegativeNode>(negativeNodeType, '-');

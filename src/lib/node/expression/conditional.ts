@@ -1,26 +1,26 @@
-import {BaseExpressionNode, BaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
-import {BaseNode} from "../../node";
+import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
+import {TwingBaseNode} from "../../node";
 
 export const conditionalNodeType = "conditional";
 
-export interface BaseConditionalNode<Type extends string> extends BaseExpressionNode<Type, BaseExpressionNodeAttributes, {
-    expr1: BaseNode;
-    expr2: BaseNode;
-    expr3: BaseNode;
+export interface TwingBaseConditionalNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, {
+    expr1: TwingBaseNode;
+    expr2: TwingBaseNode;
+    expr3: TwingBaseNode;
 }> {
 }
 
-export interface ConditionalNode extends BaseConditionalNode<typeof conditionalNodeType> {
+export interface TwingConditionalNode extends TwingBaseConditionalNode<typeof conditionalNodeType> {
 }
 
 export const createBaseConditionalNode = <Type extends string>(
     type: Type,
-    expr1: BaseNode,
-    expr2: BaseNode,
-    expr3: BaseNode,
+    expr1: TwingBaseNode,
+    expr2: TwingBaseNode,
+    expr3: TwingBaseNode,
     line: number,
     column: number
-): BaseConditionalNode<Type> => {
+): TwingBaseConditionalNode<Type> => {
     const baseNode = createBaseExpressionNode(type, {}, {
         expr1, expr2, expr3
     }, line, column);
@@ -29,22 +29,22 @@ export const createBaseConditionalNode = <Type extends string>(
         ...baseNode,
         compile: (compiler) => {
             compiler
-                .raw('((')
+                .write('((')
                 .subCompile(baseNode.children.expr1)
-                .raw(') ? (')
+                .write(') ? (')
                 .subCompile(baseNode.children.expr2)
-                .raw(') : (')
+                .write(') : (')
                 .subCompile(baseNode.children.expr3)
-                .raw('))')
+                .write('))')
             ;
         }
     };
 };
 
 export const createConditionalNode = (
-    expr1: BaseNode,
-    expr2: BaseNode,
-    expr3: BaseNode,
+    expr1: TwingBaseNode,
+    expr2: TwingBaseNode,
+    expr3: TwingBaseNode,
     line: number,
     column: number
 ) => createBaseConditionalNode(conditionalNodeType, expr1, expr2, expr3, line, column);

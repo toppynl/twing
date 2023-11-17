@@ -1,16 +1,16 @@
-import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface MatchesNode extends BaseBinaryNode<"matches"> {
+export interface TwingMatchesNode extends TwingBaseBinaryNode<"matches"> {
 }
 
-export const createMatchesNode = createBinaryNodeFactory<MatchesNode>("matches", '<=', {
+export const createMatchesNode = createBinaryNodeFactory<TwingMatchesNode>("matches", '<=', {
     compile: (compiler, baseNode) => {
         compiler
-            .raw('runtime.parseRegularExpression(')
+            .write('runtime.parseRegularExpression(')
             .subCompile(baseNode.children.right)
-            .raw(').test(')
+            .write(').test(')
             .subCompile(baseNode.children.left)
-            .raw(')')
+            .write(')')
         ;
     }
 });

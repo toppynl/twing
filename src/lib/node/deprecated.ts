@@ -1,29 +1,29 @@
-import {BaseNode, BaseNodeAttributes, createBaseNode} from "../node";
-import {BaseExpressionNode} from "./expression";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseExpressionNode} from "./expression";
 
-export interface DeprecatedNode extends BaseNode<"deprecated", BaseNodeAttributes, {
-    expr: BaseExpressionNode;
+export interface TwingDeprecatedNode extends TwingBaseNode<"deprecated", TwingBaseNodeAttributes, {
+    expr: TwingBaseExpressionNode;
 }> {
 }
 
 export const createDeprecatedNode = (
-    expr: BaseExpressionNode,
+    expr: TwingBaseExpressionNode,
     line: number,
     column: number,
     tag: string
-): DeprecatedNode => {
+): TwingDeprecatedNode => {
     const baseNode = createBaseNode("deprecated", {}, {
         expr
     }, line, column, tag);
 
-    const node: DeprecatedNode = {
+    const node: TwingDeprecatedNode = {
         ...baseNode,
         compile: (compiler) => {
             const {expr} = node.children;
 
             compiler
                 .write('{\n')
-                .indent();
+            ;
 
             if (expr.is("constant")) {
                 compiler
@@ -33,20 +33,19 @@ export const createDeprecatedNode = (
             } else {
                 compiler.write(`let message = `)
                     .subCompile(expr)
-                    .raw(';\n')
+                    .write(';\n')
                     .write(`console.warn(message`)
                 ;
             }
 
             compiler
-                .raw(' + ')
+                .write(' + ')
                 .string(' ("')
-                .raw(' + ')
-                .raw('template.templateName')
-                .raw(' + ')
+                .write(' + ')
+                .write('template.templateName')
+                .write(' + ')
                 .string(`" at line ${node.line})`)
-                .raw(');\n')
-                .outdent()
+                .write(');\n')
                 .write('}\n')
             ;
         }

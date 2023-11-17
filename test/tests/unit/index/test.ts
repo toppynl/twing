@@ -1,6 +1,5 @@
 import * as tape from 'tape';
-import * as mainIndex from "../../../../src/main";
-import * as browserIndex from "../../../../src/browser";
+import * as index from "../../../../src";
 
 tape('main and browser indexes', (test) => {
     let expected = [
@@ -148,21 +147,12 @@ tape('main and browser indexes', (test) => {
     ];
 
     for (let key of expected) {
-        test.true(Reflect.has(mainIndex, key), `${key} is exported by main index`);
-        test.true(Reflect.has(browserIndex, key), `${key} is exported by browser index`);
+        test.true(Reflect.has(index, key), `${key} is exported by the index`);
     }
 
-    for (let key in mainIndex) {
-        test.true(expected.includes(key), `${key} is legit in main index`);
+    for (let key in index) {
+        test.true(expected.includes(key), `${key} is legit in the index`);
     }
-
-    for (let key in browserIndex) {
-        test.true(expected.includes(key), `${key} is legit in browser index`);
-    }
-
-    test.same(browserIndex.TwingLoaderFilesystem.name, 'TwingLoaderNull', 'browser export of TwingLoaderRelativeFilesystem is a noop');
-    test.same(browserIndex.TwingLoaderRelativeFilesystem.name, 'TwingLoaderNull', 'browser export of TwingLoaderRelativefilesystem is a noop');
-    test.same(browserIndex.TwingCacheFilesystem.name, 'TwingCacheNull', 'browser export of TwingCacheFilesystem is a noop');
-
+    
     test.end();
 });

@@ -22,7 +22,7 @@ const array_rand = require('locutus/php/array/array_rand');
  *
  * @returns {Promise<any>} A random value from the given sequence
  */
-export function random(template: TwingTemplate, values: any = null, max: number | null = null): any {
+export function random(template: TwingTemplate, values: any | null, max: number | null): any {
     let _do = (): any => {
         if (values === null) {
             return max === null ? mt_rand() : mt_rand(0, max);
@@ -55,7 +55,7 @@ export function random(template: TwingTemplate, values: any = null, max: number 
                 return '';
             }
 
-            let charset = template.environment.getCharset();
+            let charset = template.runtime.charset;
 
             if (charset !== 'UTF-8') {
                 values = iconv(charset, 'UTF-8', values);
@@ -65,8 +65,8 @@ export function random(template: TwingTemplate, values: any = null, max: number 
             values = runes(values.toString());
 
             if (charset !== 'UTF-8') {
-                values = values.map(function (value: string) {
-                    return iconv('UTF-8', charset, Buffer.from(value));
+                values = values.map((value: string) => {
+                    return iconv('UTF-8', charset, Buffer.from(value)).toString();
                 });
             }
         } else if (isTraversable(values)) {

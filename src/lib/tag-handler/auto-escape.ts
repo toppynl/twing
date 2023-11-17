@@ -2,7 +2,6 @@ import {TwingParsingError} from "../error/parsing";
 import {createAutoEscapeNode} from "../node/auto-escape";
 import {Token, TokenType} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
-import {EscapingStrategy} from "../environment";
 
 /**
  * Marks a section of a template to be escaped or not.
@@ -16,20 +15,24 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
             return (token, stream) => {
                 const {line, column} = token;
 
-                let value: EscapingStrategy;
+                let strategy: string | true | null;
 
                 if (stream.test(TokenType.TAG_END)) {
-                    value = "html";
+                    strategy = true; // defer to the default strategy
                 } else {
                     const expression = parser.parseExpression(stream);
-                    
+
                     if (!expression.is("constant") ||
                         (typeof expression.attributes.value !== "string" && expression.attributes.value !== false)
                     ) {
-                        throw new TwingParsingError('An escaping strategy must be a string or false.', stream.getCurrent().line, stream.getSourceContext());
+                        const {line, column} = expression;
+
+                        throw new TwingParsingError('An escaping strategy must be a string or false.', line, column, stream.source);
                     }
 
-                    value = expression.attributes.value;
+                    const {value} = expression.attributes;
+
+                    strategy = value === false ? null : value; // null means no auto-escaping
                 }
 
                 stream.expect(TokenType.TAG_END);
@@ -40,7 +43,7 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
 
                 stream.expect(TokenType.TAG_END);
 
-                return createAutoEscapeNode(value, body, line, column, tag);
+                return createAutoEscapeNode(strategy, body, line, column, tag);
             };
         }
     };

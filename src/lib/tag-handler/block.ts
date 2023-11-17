@@ -1,8 +1,8 @@
 import {createBaseNode} from "../node";
 import {TwingParsingError} from "../error/parsing";
 import {createBlockNode} from "../node/block";
-import {createPrintNode} from "../node/print";
-import {createBlockReferenceNode} from "../node/block-reference";
+import {createPrintNode} from "../node/output/print";
+import {createBlockReferenceNode} from "../node/output/block-reference";
 import {Token, TokenType} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
@@ -26,11 +26,13 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                 const {line, column} = token;
                 const name = stream.expect(TokenType.NAME).value;
 
-                if (parser.hasBlock(name)) {
-                    throw new TwingParsingError(`The block '${name}' has already been defined line ${parser.getBlock(name)!.line}.`, line, stream.getSourceContext());
+                let block = parser.getBlock(name);
+
+                if (block !== null) {
+                    throw new TwingParsingError(`The block '${name}' has already been defined at {${block.line}:${block.column}}.`, line, column, stream.source);
                 }
 
-                const block = createBlockNode(name, createBaseNode(null), line, column);
+                block = createBlockNode(name, createBaseNode(null), line, column);
 
                 parser.setBlock(name, block);
                 parser.pushLocalScope();
@@ -49,7 +51,9 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                         const value = token.value;
 
                         if (value !== name) {
-                            throw new TwingParsingError(`Expected endblock for block "${name}" (but "${value}" given).`, stream.getCurrent().line, stream.getSourceContext());
+                            const {line, column} = token;
+
+                            throw new TwingParsingError(`Expected endblock for block "${name}" (but "${value}" given).`, line, column, stream.source);
                         }
                     }
                 } else {

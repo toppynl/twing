@@ -1,21 +1,23 @@
-import {BaseCallNode, createBaseCallNode} from "../call";
-import type {BaseNode} from "../../../node";
-import type {ArrayNode} from "../array";
+import {TwingBaseCallNode, createBaseCallNode} from "../call";
+import type {TwingBaseNode} from "../../../node";
+import type {TwingArrayNode} from "../array";
 import {TwingCompilationError} from "../../../error/compilation";
 
-export interface TestNode extends BaseCallNode {
+export const testNodeType = "test";
+
+export interface TwingTestNode extends TwingBaseCallNode<typeof testNodeType> {
 }
 
 export const createTestNode = (
-    operand: BaseNode,
+    operand: TwingBaseNode,
     testName: string,
-    testArguments: ArrayNode,
+    testArguments: TwingArrayNode,
     line: number,
     column: number
-): TestNode => {
+): TwingTestNode => {
     const callType = 'test';
 
-    const baseNode = createBaseCallNode({
+    const baseNode = createBaseCallNode(testNodeType, {
         type: callType,
         operatorName: testName,
     }, {
@@ -23,7 +25,7 @@ export const createTestNode = (
         arguments: testArguments
     }, line, column);
 
-    const node: TestNode = {
+    const node: TwingTestNode = {
         ...baseNode,
         compile: (compiler) => {
             const name = node.attributes.operatorName;

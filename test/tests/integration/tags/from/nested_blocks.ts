@@ -25,7 +25,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingParsingError: Unknown function "linput" in "index.twig" at line 6.';
+        return 'TwingParsingError: Unknown function "linput" in "index.twig" at line 6, column 13.';
     }
 }
 

@@ -19,7 +19,7 @@ foo`,
     }
 
     getExpectedErrorMessage() {
-        return 'TwingParsingError: Only "include" tags are allowed within a "sandbox" section in "index.twig" at line 4.'
+        return 'TwingParsingError: Only "include" tags are allowed within a "sandbox" section in "index.twig" at line 4, column 1.'
     }
 }
 

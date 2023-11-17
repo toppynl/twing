@@ -17,9 +17,6 @@ class Test extends TestBase {
 {% endautoescape %}
 {% autoescape false %}
     {{ var }}<br />
-{% endautoescape %}
-{% autoescape false %}
-    {{ var }}<br />
 {% endautoescape %}`
         };
     }
@@ -28,7 +25,6 @@ class Test extends TestBase {
         return `
     &lt;br /&gt;<br />
     &lt;br /&gt;<br />
-    <br /><br />
     <br /><br />
 `;
     }

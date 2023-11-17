@@ -1,20 +1,20 @@
-import {BaseBinaryNode, createBinaryNodeFactory} from "../binary";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface StartsWithNode extends BaseBinaryNode<"starts_with"> {
+export interface TwingStartsWithNode extends TwingBaseBinaryNode<"starts_with"> {
 }
 
-export const createStartsWithNode = createBinaryNodeFactory<StartsWithNode>("starts_with", null, {
+export const createStartsWithNode = createBinaryNodeFactory<TwingStartsWithNode>("starts_with", null, {
     compile: (compiler, baseNode) => {
         compiler
-            .raw('await (async () => {')
-            .raw(`let left = `)
+            .write('await (async () => {')
+            .write(`let left = `)
             .subCompile(baseNode.children.left)
-            .raw('; ')
-            .raw(`let right = `)
+            .write('; ')
+            .write(`let right = `)
             .subCompile(baseNode.children.right)
-            .raw('; ')
-            .raw(`return typeof left === 'string' && typeof right === 'string' && (right.length < 1 || left.startsWith(right));`)
-            .raw('})()')
+            .write('; ')
+            .write(`return typeof left === 'string' && typeof right === 'string' && (right.length < 1 || left.startsWith(right));`)
+            .write('})()')
         ;
     }
 });

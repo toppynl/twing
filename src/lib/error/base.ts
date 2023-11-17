@@ -1,8 +1,6 @@
-import {Source} from "../source";
+import {TwingSource} from "../source";
 
 export interface TwingBaseError<Name extends string> extends Error {
-    readonly messageWithLocation: string;
-
     appendMessage(message: string): void;
 }
 
@@ -10,9 +8,10 @@ export class TwingBaseError<Name extends string> extends Error {
     readonly previous: any | undefined;
 
     line: number | undefined;
-    source: Source | undefined;
+    column: number | undefined;
+    source: TwingSource | undefined;
 
-    constructor(name: Name, message: string, line?: number, source?: Source, previous?: any) {
+    constructor(name: Name, message: string, line?: number, column?: number, source?: TwingSource, previous?: any) {
         super(message);
         
         super.name = name;
@@ -21,7 +20,7 @@ export class TwingBaseError<Name extends string> extends Error {
 
         Object.defineProperty(this, "source", {
             get: () => source,
-            set: (value: Source) => {
+            set: (value: TwingSource) => {
                 source = value;
 
                 updateRepresentation();
@@ -36,11 +35,6 @@ export class TwingBaseError<Name extends string> extends Error {
 
                 updateRepresentation();
             },
-            enumerable: false
-        });
-        
-        Object.defineProperty(this, "messageWithLocation", {
-            get: () => representation,
             enumerable: false
         });
         
@@ -88,6 +82,10 @@ export class TwingBaseError<Name extends string> extends Error {
 
             if (line !== undefined) {
                 representation += ` at line ${line}`;
+            }
+
+            if (column !== undefined) {
+                representation += `, column ${column}`;
             }
 
             if (dot) {

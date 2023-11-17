@@ -1,2 +1,11 @@
 import "./block";
 import "./name";
+import "./on-conditional";
+import "./on-macro";
+import "./on-nested-conditionals";
+import "./on-non-existing-filter";
+import "./on-non-existing-function";
+import "./on-name";
+import "./on-unsafe-filter";
+import "./simple";
+import "./when-disabled";

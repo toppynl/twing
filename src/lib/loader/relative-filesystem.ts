@@ -1,4 +1,4 @@
-import type {Source} from "../source";
+import type {TwingSource} from "../source";
 import {TwingLoader} from "../loader";
 import {isAbsolute, join, dirname, resolve as pathResolve} from "path";
 import {createSource} from "../source";
@@ -47,7 +47,7 @@ export const createRelativeFilesystemLoader = (
                     return null;
                 }
                 else {
-                    return new Promise<Source>((resolve, reject) => {
+                    return new Promise<TwingSource>((resolve, reject) => {
                         filesystem.readFile(path!, (error, data) => {
                             if (error) {
                                 reject(error);
@@ -94,11 +94,11 @@ export const createRelativeFilesystemLoader = (
      * Checks if the template can be found.
      *
      * @param {string} name  The template name
-     * @param {Source} from The source that initiated the template loading
+     * @param {TwingSource} from The source that initiated the template loading
      *
      * @returns {Promise<string>} The template name or null
      */
-    const findTemplate = (name: string, from: Source | null): Promise<string | null> => {
+    const findTemplate = (name: string, from: TwingSource | null): Promise<string | null> => {
         let _do = (): Promise<string | null> => {
             name = normalizeName(resolvePathFromSource(name, from));
             
@@ -133,7 +133,7 @@ export const createRelativeFilesystemLoader = (
         return findTemplate(name, from);
     };
 
-    const resolvePathFromSource = (name: string, from: Source | null): string => {
+    const resolvePathFromSource = (name: string, from: TwingSource | null): string => {
         if (name && from && !isAbsolute(name)) {
             name = join(dirname(from.resolvedName), name);
         }

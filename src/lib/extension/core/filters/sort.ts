@@ -6,18 +6,18 @@ import {asort} from "../../../helpers/asort";
 /**
  * Sorts an iterable.
  *
- * @param {Map<any, any>} iterable
+ * @param {any} iterable
  *
  * @returns {Promise<Map<any, any>>}
  */
-export function sort(iterable: Map<any, any>): Promise<Map<any, any>> {
+export const sort = (iterable: any): Promise<Map<any, any>> => {
     if (!isTraversable(iterable)) {
-        throw new TwingRuntimeError(`The sort filter only works with iterables, got "${typeof iterable}".`);
+        return Promise.reject(new TwingRuntimeError(`The sort filter only works with iterables, got "${typeof iterable}".`));
     }
 
-    let map = iteratorToMap(iterable);
+    const map = iteratorToMap(iterable);
 
     asort(map);
 
     return Promise.resolve(map);
-}
+};

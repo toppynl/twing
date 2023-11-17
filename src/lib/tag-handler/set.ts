@@ -1,7 +1,7 @@
 import {TwingParsingError} from "../error/parsing";
 import {createSetNode} from "../node/set";
 import {TokenType} from "twig-lexer";
-import {BaseNode, getChildrenCount} from "../node";
+import {TwingBaseNode, getChildrenCount} from "../node";
 import {TwingTagHandler} from "../tag-handler";
 
 export const createSetTagHandler = (): TwingTagHandler => {
@@ -15,7 +15,7 @@ export const createSetTagHandler = (): TwingTagHandler => {
                 const names = parser.parseAssignmentExpression(stream);
 
                 let capture = false;
-                let values: BaseNode;
+                let values: TwingBaseNode;
 
                 if (stream.nextIf(TokenType.OPERATOR, '=')) {
                     values = parser.parseMultiTargetExpression(stream);
@@ -23,14 +23,18 @@ export const createSetTagHandler = (): TwingTagHandler => {
                     stream.expect(TokenType.TAG_END);
 
                     if (getChildrenCount(names) !== getChildrenCount(values)) {
-                        throw new TwingParsingError('When using set, you must have the same number of variables and assignments.', stream.getCurrent().line, stream.getSourceContext());
+                        const {line, column} = stream.current;
+                        
+                        throw new TwingParsingError('When using set, you must have the same number of variables and assignments.', line, column, stream.source);
                     }
                 }
                 else {
                     capture = true;
 
                     if (getChildrenCount(names) > 1) {
-                        throw new TwingParsingError('When using set with a block, you cannot have a multi-target.', stream.getCurrent().line, stream.getSourceContext());
+                        const {line, column} = stream.current;
+
+                        throw new TwingParsingError('When using set with a block, you cannot have a multi-target.', line, column, stream.source);
                     }
 
                     stream.expect(TokenType.TAG_END);
