@@ -22,6 +22,8 @@ import {TwingTokenStream} from "./token-stream";
 import {TwingExtension} from "./extension";
 import {TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
 import {TwingModuleNode} from "./node/module";
+import {RawSourceMap} from "source-map";
+import {createSourceMapRuntime} from "./source-map-runtime";
 
 export type TwingEnvironmentOptions = {
     autoEscapingStrategy?: "css" | "html" | "js" | "name" | string | null;
@@ -30,7 +32,6 @@ export type TwingEnvironmentOptions = {
     charset?: string;
     dateFormat?: string;
     dateIntervalFormat?: string;
-    emitsSourceMap?: boolean;
     numberFormat?: NumberFormat;
     parserOptions?: TwingParserOptions;
     strictVariables?: boolean;
@@ -40,11 +41,9 @@ export type TwingEnvironmentOptions = {
 };
 
 export interface TwingEnvironment {
-    readonly sourceMap: string | null;
-
     /**
      * Convenient method...
-     * 
+     *
      * @param extension
      */
     addExtension(extension: TwingExtension): void;
@@ -67,7 +66,7 @@ export interface TwingEnvironment {
     compile(node: TwingModuleNode): string;
 
     createTemplateFromCompiledSource(content: string, name: string): Promise<TwingTemplate>;
-    
+
     /**
      * Loads a template by its name.
      *
@@ -86,7 +85,7 @@ export interface TwingEnvironment {
      * Register the passed listener...
      */
     on(eventName: "load", listener: (name: string, from: TwingSource | null) => void): void;
-    
+
     /**
      * Converts a token list to a template.
      *
@@ -102,7 +101,12 @@ export interface TwingEnvironment {
      * @param name
      * @param context
      */
-    render(name: string, context?: Record<string, any>): Promise<string>;
+    render(name: string, context: Record<string, any>): Promise<string>;
+
+    renderWithSourceMap(name: string, context: Record<string, any>): Promise<{
+        data: string;
+        sourceMap: RawSourceMap;
+    }>;
 
     registerEscapingStrategy(handler: EscapingStrategyHandler, name: string): void;
 
@@ -161,7 +165,6 @@ export const createEnvironment = (
         parserOptions: options?.parserOptions,
         sandboxed: options?.sandboxed,
         sandboxPolicy: options?.sandboxPolicy,
-        source_map: options?.emitsSourceMap,
         strictVariables: options?.strictVariables
     };
 
@@ -173,9 +176,6 @@ export const createEnvironment = (
     );
 
     const environment: TwingEnvironment = {
-        get sourceMap() {
-            return runtime.getSourceMap();
-        },
         addExtension: extensionSet.addExtension,
         addFilter: extensionSet.addFilter,
         addFunction: extensionSet.addFunction,
@@ -192,10 +192,28 @@ export const createEnvironment = (
         },
         parse: runtime.parse,
         registerTemplate: runtime.registerTemplate,
-        render: (name, context = {}) => {
+        render: (name, context) => {
             return runtime.loadTemplate(name)
                 .then((template) => {
                     return template.render(context);
+                });
+        },
+        renderWithSourceMap: (name, context) => {
+            const sourceMapRuntime = createSourceMapRuntime();
+
+            return runtime.loadTemplate(name)
+                .then((template) => {
+                    return template.render(context, undefined, sourceMapRuntime);
+                })
+                .then((data) => {
+                    const {sourceNode} = sourceMapRuntime;
+                    
+                    const {map} = sourceNode.toStringWithSourceMap();
+                    
+                    return {
+                        data,
+                        sourceMap: JSON.parse(map.toString())
+                    };
                 });
         },
         setGlobal: runtime.setGlobal,

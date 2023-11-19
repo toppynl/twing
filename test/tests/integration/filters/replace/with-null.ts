@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": `{{ "foo"|replace(null) }}`
     },
-    expectation: 'foo'
+    trimmedExpectation: 'foo'
 })

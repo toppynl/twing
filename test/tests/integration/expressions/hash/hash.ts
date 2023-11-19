@@ -8,7 +8,7 @@ runTest({
 {{ {0: 1, 'foo': 'bar', (1 + 2): 1}|keys|join(',') }}
 `
     },
-    expectation: `1,bar
+    trimmedExpectation: `1,bar
 0,foo,3
 `
 });

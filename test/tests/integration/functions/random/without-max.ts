@@ -10,7 +10,7 @@ runTest({
 {{ random2 == 0 or random2 == 1 }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 1
 1
 `

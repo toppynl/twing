@@ -10,7 +10,7 @@ runTest({
 {{ date2|date() }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 January 1, 2000 01:00
 December 31, 1999 20:00
 `

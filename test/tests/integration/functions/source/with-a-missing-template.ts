@@ -13,5 +13,5 @@ runTest({
     templates: {
         "index.twig": '{{ source("foo", true) }}'
     },
-    expectation: ''
+    trimmedExpectation: ''
 });

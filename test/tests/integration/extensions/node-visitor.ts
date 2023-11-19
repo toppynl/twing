@@ -5,7 +5,7 @@ runTest({
     templates: {
         "index.twig": `foo`
     },
-    expectation: `foo visited`,
+    trimmedExpectation: `foo visited`,
     additionalNodeVisitors: [
         {
             priority: 0,

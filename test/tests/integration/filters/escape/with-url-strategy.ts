@@ -43,7 +43,7 @@ for (const key in specialCharacters) {
         templates: {
             "index.twig": `{{ key|escape("url") }}`
         },
-        expectation: `${value}`,
+        trimmedExpectation: `${value}`,
         context: Promise.resolve({
             key
         })
@@ -55,7 +55,7 @@ runTest({
     templates: {
         "index.twig": `{{ "123"|escape("url") }}`
     },
-    expectation: `123`
+    trimmedExpectation: `123`
 });
 
 runTest({
@@ -63,5 +63,5 @@ runTest({
     templates: {
         "index.twig": `{{ ""|escape("url") }}`
     },
-    expectation: ``
+    trimmedExpectation: ``
 });

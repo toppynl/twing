@@ -10,7 +10,7 @@ runTest({
 {% endautoescape %}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 <br />
 &lt;br /&gt;
 `

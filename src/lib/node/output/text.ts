@@ -37,7 +37,8 @@ export const createBaseTextNode = <Type extends string>(
             
             compiler
                 .write(';\n')
-                .addSourceMapLeave();
+                .addSourceMapLeave()
+            ;
         }
     };
 

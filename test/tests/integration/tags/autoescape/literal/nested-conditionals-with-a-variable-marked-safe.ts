@@ -17,7 +17,7 @@ runTest({
     context: Promise.resolve({
         'someVar': '<br />',
     }),
-    expectation: `
+    trimmedExpectation: `
 <br />
 <br />
 <br />

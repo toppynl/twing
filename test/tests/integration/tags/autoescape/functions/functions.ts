@@ -44,7 +44,7 @@ false
             is_safe: []
         })
     ],
-    expectation: `
+    trimmedExpectation: `
 css
     <br/>
     \\3C br\\2F \\3E 

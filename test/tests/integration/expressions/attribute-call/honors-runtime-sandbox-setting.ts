@@ -33,7 +33,7 @@ for (const [name, context, errorMessage] of testCases) {
                 "index.twig": `{{ foo.bar }}`
             },
             context: Promise.resolve(context),
-            expectation: sandboxed ? undefined : 'bar',
+            trimmedExpectation: sandboxed ? undefined : 'bar',
             expectedErrorMessage: sandboxed ? errorMessage : undefined,
             environmentOptions: {
                 cache,

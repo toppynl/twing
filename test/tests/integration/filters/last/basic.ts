@@ -8,7 +8,7 @@ runTest({
 {{ ["a", "b"]|last }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 o
 b
 `

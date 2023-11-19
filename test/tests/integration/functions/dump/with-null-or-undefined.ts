@@ -13,7 +13,7 @@ runTest({
             undefined: () => undefined
         }
     }),
-    expectation: `
+    trimmedExpectation: `
 NULL
 
 NULL

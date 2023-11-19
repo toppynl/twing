@@ -15,7 +15,7 @@ runTest({
             return value;
         }
     }),
-    expectation: `
+    trimmedExpectation: `
 object(Closure) (0) {}
 
 object(Closure) (0) {}

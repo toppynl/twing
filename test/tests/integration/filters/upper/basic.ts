@@ -9,7 +9,7 @@ runTest({
 {{ markup|upper }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 FOO
 FOO
 `,

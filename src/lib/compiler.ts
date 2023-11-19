@@ -4,10 +4,6 @@ import {TwingFunction} from "./function";
 import {TwingTest} from "./test";
 import {TwingFilter} from "./filter";
 
-export type CompilerOptions = {
-    sourceMap?: boolean;
-};
-
 export type CompilerEnvironment = {
     getFunction: (name: string) => TwingFunction | null;
     getTest: (name: string) => TwingTest | null;
@@ -17,19 +13,17 @@ export type CompilerEnvironment = {
 export interface TwingCompiler {
     readonly environment: CompilerEnvironment;
 
-    readonly options: CompilerOptions;
-
     readonly source: string;
 
     compile(node: TwingBaseNode): this;
-    
+
     subCompile(node: TwingBaseNode): this;
 
     /**
      * Adds the passed data to the compiled code, as-is.
      */
     write(data: any): this;
-    
+
     /**
      * Adds the passed data to the compiled code, as a quoted string.
      */
@@ -46,16 +40,12 @@ export interface TwingCompiler {
 }
 
 export const createCompiler = (
-    environment: CompilerEnvironment,
-    options?: CompilerOptions
+    environment: CompilerEnvironment
 ): TwingCompiler => {
     let source: string = '';
 
     const compiler: TwingCompiler = {
         environment,
-        options: options || {
-            sourceMap: false
-        },
         get source() {
             return source;
         },
@@ -145,26 +135,23 @@ export const createCompiler = (
             return compiler;
         },
         addSourceMapEnter: (node) => {
-            if (compiler.options.sourceMap) {
-                compiler
-                    .write('runtime.enterSourceMapBlock(')
-                    .write(node.line)
-                    .write(', ')
-                    .write(node.column)
-                    .write(', ')
-                    .string(node.type)
-                    .write(', ')
-                    .write('template.source, outputBuffer);\n\n')
-            }
+            compiler
+                .write('sourceMapRuntime?.enterSourceMapBlock(')
+                .write(node.line)
+                .write(', ')
+                .write(node.column)
+                .write(', ')
+                .string(node.type)
+                .write(', ')
+                .write('template.source, outputBuffer);\n')
+            ;
 
             return compiler;
         },
         addSourceMapLeave: () => {
-            if (compiler.options.sourceMap) {
-                compiler
-                    .write('runtime.leaveSourceMapBlock(outputBuffer);\n')
-                ;
-            }
+            compiler
+                .write('sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);\n')
+            ;
 
             return compiler;
         }

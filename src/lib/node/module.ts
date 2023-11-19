@@ -2,10 +2,10 @@ import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, getChildren, get
 import type {TwingSource} from "../source";
 import {TwingCompiler} from "../compiler";
 import {TwingBaseExpressionNode} from "./expression";
-import {TwingBodyNode, createBodyNode} from "./body";
 import {TwingTraitNode} from "./trait";
 import {TwingMacroNode} from "./macro";
 import {TwingBlockNode} from "./block";
+import {createBodyNode, TwingBodyNode} from "./body";
 
 export type TwingModuleNodeAttributes = TwingBaseNodeAttributes & {
     index: number;
@@ -160,9 +160,9 @@ export const createModuleNode = (
             if (getChildrenCount(node) === 0) {
                 node = createBodyNode(node, line, column);
             }
-
-            for (const [, subNode] of Object.entries(node.children)) {
-                if (getChildrenCount(subNode) === 0) {
+            
+            for (const [, child] of Object.entries(node.children)) {
+                if (getChildrenCount(child) === 0) {
                     continue;
                 }
 
@@ -173,9 +173,7 @@ export const createModuleNode = (
         }
 
         compiler
-            .write("const canBeUsedAsATrait = () => {\n")
-            .write(`return ${canBeUsedAsATrait ? 'true' : 'false'};\n`)
-            .write("};\n\n")
+            .write(`const canBeUsedAsATrait = ${canBeUsedAsATrait ? 'true' : 'false'};\n\n`)
         ;
     }
 
@@ -187,12 +185,15 @@ export const createModuleNode = (
             .write(' * @param {TwingContext} context').write('\n')
             .write(' * @param {TwingOutputBuffer} outputBuffer').write('\n')
             .write(' * @param {TemplateBlocksMap} blocks').write('\n')
+            .write(' * @param {TwingSourceMapRuntime} sourceMapRuntime').write('\n')
             .write(' */').write('\n')
-            .write("const display = async(context, outputBuffer, blocks = new Map()) => {\n")
+            .write("const display = async(context, outputBuffer, blocks, sourceMapRuntime) => {\n")
             .write('const aliases = template.aliases.clone();\n\n')
-            .addSourceMapEnter(moduleNode);
+            .addSourceMapEnter(moduleNode)
+        ;
 
-        compiler.subCompile(body);
+        compiler
+            .subCompile(body);
 
         if (parent) {
             compiler.write(`const displayParent = () => {
@@ -201,7 +202,7 @@ export const createModuleNode = (
         template.getBlocks()
     ]).then(([parent, ownBlocks]) => {
         return new Promise((resolve, reject) => {
-            const stream = parent.display(context, runtime.merge(ownBlocks, blocks), outputBuffer)
+            const stream = parent.display(context, runtime.merge(ownBlocks, blocks), outputBuffer, sourceMapRuntime)
         
             let data = '';
             

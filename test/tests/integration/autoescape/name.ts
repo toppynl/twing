@@ -21,7 +21,7 @@ runTest({
         'index.css': `
 {{ br -}}`
     },
-    expectation:
+    trimmedExpectation:
         `
 &lt;br /&gt;
 \\u003Cbr\\u0020\\/\\u003E

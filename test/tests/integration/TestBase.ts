@@ -14,7 +14,7 @@ import {escape} from "../../../src/lib/extension/core/filters/escape";
 import {TwingTemplate} from "../../../src/lib/template";
 import {IntegrationTest} from "./test";
 import {TwingTagHandler} from "../../../src/lib/tag-handler";
-import {MappingItem, SourceMapConsumer} from "source-map";
+import {MappingItem, RawSourceMap, SourceMapConsumer} from "source-map";
 import {isATwingError} from "../../../src/lib/error";
 import {createFilesystemCache} from "../../../src/lib/cache/filesystem";
 import * as fs from "fs";
@@ -126,7 +126,9 @@ class TwingTestExtension implements TwingExtension {
                 name: 'name'
             }]),
             createFunction('createObject', (attributes: Map<string, any>) => {
-                const object: { [p: string]: any } = {};
+                const object: {
+                    [p: string]: any
+                } = {};
 
                 for (let [key, value] of attributes) {
                     object[key] = value;
@@ -184,7 +186,9 @@ export default abstract class {
         return '<no description provided>';
     }
 
-    getTemplates(): { [k: string]: string } {
+    getTemplates(): {
+        [k: string]: string
+    } {
         return {};
     }
 
@@ -192,7 +196,9 @@ export default abstract class {
         return '';
     }
 
-    getGlobals(): { [k: string]: string } {
+    getGlobals(): {
+        [k: string]: string
+    } {
         return {};
     }
 
@@ -255,7 +261,7 @@ export const runTest = async (
     test: IntegrationTest
 ) => {
     Settings.defaultZoneName = "Europe/Paris";
-    
+
     let loader: TwingLoader;
 
     const {
@@ -279,7 +285,8 @@ export const runTest = async (
         sandboxSecurityPolicyFunctions,
         sandboxSecurityPolicyMethods,
         sandboxSecurityPolicyProperties,
-        parserOptions
+        parserOptions,
+        trimmedExpectation
     } = test;
 
     tape(description, async ({fail, same, end}) => {
@@ -336,9 +343,10 @@ export const runTest = async (
             if (!expectedErrorMessage) {
                 try {
                     console.time(description);
-                    
+
                     let actual: string;
-                    
+                    let sourceMap: RawSourceMap | null = null;
+
                     if (additionalFiltersAtCompileTime || additionalFunctionsAtCompileTime) {
                         if (additionalFiltersAtCompileTime) {
                             for (const filter of additionalFiltersAtCompileTime) {
@@ -351,24 +359,34 @@ export const runTest = async (
                                 environment.addFunction(twingFunction);
                             }
                         }
-                        
+
                         const tokens = environment.tokenize((await loader.getSourceContext('index.twig', null))!);
                         const node = environment.parse(tokens, parserOptions || {
                             strict: true
                         });
                         const content = environment.compile(node);
                         const template = await environment.createTemplateFromCompiledSource(content, 'index.twig');
-                        
+
                         actual = await template.render(context);
-                    }
-                    else {
-                        actual = await environment.render('index.twig', context);
+                    } else {
+                        if (expectedSourceMapMappings !== undefined) {
+                            const result = await environment.renderWithSourceMap('index.twig', context);
+
+                            actual = result.data;
+                            sourceMap = result.sourceMap;
+                        } else {
+                            actual = await environment.render('index.twig', context);
+                        }
                     }
 
                     console.timeEnd(description);
 
                     if (expectation !== undefined) {
-                        same(actual.trim(), expectation.trim(), `${description}: renders as expected`);
+                        same(actual, expectation, `${description}: renders as expected`);
+                    }
+
+                    if (trimmedExpectation !== undefined) {
+                        same(actual.trim(), trimmedExpectation.trim(), `${description}: trimmed, renders as expected`);
                     }
 
                     if (consoleStub) {
@@ -377,18 +395,21 @@ export const runTest = async (
                         same(consoleData, expectedDeprecationMessages, `${description}: outputs deprecation warnings`);
                     }
 
-                    if (expectedSourceMapMappings !== undefined) {
-                        const sourceMap = environment.sourceMap;
+                    if (sourceMap !== null) {
                         const mappings: Array<MappingItem> = [];
+                        const consumer = new SourceMapConsumer(sourceMap);
 
-                        if (sourceMap) {
-                            const consumer = new SourceMapConsumer(JSON.parse(sourceMap));
-
-                            consumer.eachMapping((mapping) => {
-                                mappings.push(mapping);
-                            })
-                        }
-
+                        consumer.eachMapping(({source, generatedLine, generatedColumn, originalLine, originalColumn, name}) => {
+                            mappings.push({
+                                source,
+                                generatedLine,
+                                generatedColumn,
+                                originalLine,
+                                originalColumn,
+                                name
+                            });
+                        })
+                        
                         same(mappings, expectedSourceMapMappings);
                     }
                 } catch (e) {

@@ -1,2 +1,1 @@
-import "./tests/integration";
-import "./tests/unit";
+import "./tests";

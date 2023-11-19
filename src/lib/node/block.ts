@@ -22,7 +22,7 @@ export const createBlockNode = (
         ...baseNode,
         compile: (compiler) => {
             compiler
-                .write(`async (context, outputBuffer, blocks = new Map()) => {\n`)
+                .write(`async (context, outputBuffer, blocks = new Map(), sourceMapRuntime) => {\n`)
                 .write('const aliases = template.aliases.clone();\n')
             ;
 

@@ -9,7 +9,7 @@ runTest({
     context: Promise.resolve({
         foo: '<br/>'
     }),
-    expectation: '&lt;br/&gt;',
+    trimmedExpectation: '&lt;br/&gt;',
     additionalFilters: [
         createFilter('unsafe', (value) => Promise.resolve(value), [], {
             is_safe: []

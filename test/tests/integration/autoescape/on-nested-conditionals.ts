@@ -15,7 +15,7 @@ runTest({
         foo: '<br/>',
         bar: true
     }),
-    expectation: `
+    trimmedExpectation: `
 &lt;br/&gt;
 <br/>
 &lt;br/&gt;

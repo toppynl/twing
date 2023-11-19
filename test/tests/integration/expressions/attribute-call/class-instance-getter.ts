@@ -12,5 +12,5 @@ runTest({
             }
         })
     }),
-    expectation: 'foo.bar'
+    trimmedExpectation: 'foo.bar'
 });

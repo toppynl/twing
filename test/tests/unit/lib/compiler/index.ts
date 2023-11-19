@@ -2,8 +2,6 @@ import * as tape from 'tape';
 import {createBaseNode} from "../../../../../src/lib/node";
 import {createConstantNode} from "../../../../../src/lib/node/expression/constant";
 import {createCompiler} from "../../../../../src/lib/compiler";
-import {createBodyNode} from "../../../../../src/lib/node/body";
-import {createTextNode} from "../../../../../src/lib/node/output/text";
 import {createRuntime} from "../../../../../src/lib/runtime";
 import {createExtensionSet} from "../../../../../src/lib/extension-set";
 import {createArrayLoader} from "../../../../../src/lib/loader/array";
@@ -55,22 +53,6 @@ tape('Compiler', ({test}) => {
         }).source, '{"1": \`a\`, "b": 2, "c": \`3\`}', 'supports hashes');
         same(compiler.compile(node).render(undefined).source, 'undefined', 'supports undefined');
         same(compiler.compile(node).render(new Map([[0, 1], [1, 2]])).source, 'new Map([[0, 1], [1, 2]])', 'supports ES6 maps');
-
-        end();
-    });
-
-    test('addSourceMapEnter', ({same, end}) => {
-        const compiler = createCompiler(createCompilerEnvironment(), {
-            sourceMap: true
-        });
-
-        const bodyNode = createBodyNode(createTextNode('foo', 1, 1), 1, 1);
-
-        bodyNode.compile = (compiler) => {
-            compiler.addSourceMapEnter(bodyNode);
-        };
-
-        same(compiler.compile(bodyNode).source, 'runtime.enterSourceMapBlock(1, 1, `body`, template.source, outputBuffer);\n\n');
 
         end();
     });

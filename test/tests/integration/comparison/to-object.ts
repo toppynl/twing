@@ -8,7 +8,7 @@ runTest({
 {{ foo == bar ? 1 : 0 }}
 `
    },
-    expectation: `
+    trimmedExpectation: `
 1
 0
 `,

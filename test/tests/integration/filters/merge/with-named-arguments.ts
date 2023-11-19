@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": `{{ {"foo": 1}|merge(source = {"bar": 1})|keys|join }}`
     },
-    expectation: 'foobar'
+    trimmedExpectation: 'foobar'
 });

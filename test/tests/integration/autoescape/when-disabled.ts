@@ -8,7 +8,7 @@ runTest({
     context: Promise.resolve({
         br: '<br/>'
     }),
-    expectation: '<br/>',
+    trimmedExpectation: '<br/>',
     environmentOptions: {
         autoEscapingStrategy: null     
     }

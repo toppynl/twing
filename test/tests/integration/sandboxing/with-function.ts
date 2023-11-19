@@ -13,7 +13,7 @@ runTest({
     sandboxSecurityPolicyFunctions: [
         'dump'
     ],
-    expectation: 'int(5)'
+    trimmedExpectation: 'int(5)'
 });
 
 runTest({

@@ -1,10 +1,14 @@
+/* istanbul ignore file */
+
 // cache
 export type {TwingCache} from "./lib/cache";
 
 export {createFilesystemCache} from "./lib/cache/filesystem";
 
 // error
-export {TwingError, isATwingError} from "./lib/error";
+export type {TwingError} from "./lib/error";
+
+export {isATwingError} from "./lib/error";
 export {TwingBaseError} from "./lib/error/base";
 export {TwingCompilationError, isACompilationError} from "./lib/error/compilation";
 export {TwingTemplateLoadingError, isATemplateLoadingError} from "./lib/error/loader";
@@ -254,5 +258,6 @@ export {createFunction} from "./lib/function";
 export {createOperator} from "./lib/operator";
 export {createSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
 export {createSource} from "./lib/source";
+export {createSourceMapRuntime} from "./lib/source-map-runtime";
 export {createTemplate} from "./lib/template";
 export {createTest} from "./lib/test";

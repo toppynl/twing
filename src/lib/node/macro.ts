@@ -35,7 +35,7 @@ export const createMacroNode = (
             const {body, arguments: macroArguments} = baseNode.children;
 
             compiler
-                .write(`async (outputBuffer, `)
+                .write(`async (outputBuffer, sourceMapRuntime, `)
             ;
             
             const keyValuePairs = getKeyValuePairs(macroArguments);

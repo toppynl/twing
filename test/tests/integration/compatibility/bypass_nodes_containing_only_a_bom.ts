@@ -10,7 +10,7 @@ Content
 {% endblock %}
 `
     },
-    expectation: 'Content'
+    trimmedExpectation: 'Content'
 });
 
 runTest({
@@ -23,5 +23,5 @@ Content
 {% endblock %}
 `
     },
-    expectation: 'Content'
+    trimmedExpectation: 'Content'
 });

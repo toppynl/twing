@@ -10,5 +10,5 @@ runTest({
             toString: () => 'foo'
         }
     }),
-    expectation: `foo`
+    trimmedExpectation: `foo`
 })

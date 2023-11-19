@@ -27,7 +27,7 @@ export const createParentFunctionNode = (
             compiler
                 .write(`await template.getTraceableRenderParentBlock(${baseNode.line}, template.source)(`)
                 .string(name)
-                .write(', context, outputBuffer, blocks)')
+                .write(', context, outputBuffer, sourceMapRuntime)')
             ;
         }
     }

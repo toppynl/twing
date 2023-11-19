@@ -13,7 +13,7 @@ runTest({
         'parent.html.twig': `{% set _content = block('content')|raw %}
 {{ _content|raw }}`
     },
-    expectation: `
+    trimmedExpectation: `
 &lt;br /&gt;
 `,
     context: Promise.resolve({

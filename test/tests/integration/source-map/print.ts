@@ -36,6 +36,6 @@ runTest({
         originalColumn: 7,
         name: 'print'
     }],
-    expectation: `5
+    trimmedExpectation: `5
 55`
 });

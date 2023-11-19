@@ -39,7 +39,7 @@ runTest({
 {{ 2 == "2.0" ? 1 : 0 }}
 `
    },
-    expectation: `
+    trimmedExpectation: `
 0
 1
 0

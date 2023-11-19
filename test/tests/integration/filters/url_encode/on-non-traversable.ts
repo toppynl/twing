@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": '{{ 5|url_encode }}'
     },
-    expectation: ''
+    trimmedExpectation: ''
 })

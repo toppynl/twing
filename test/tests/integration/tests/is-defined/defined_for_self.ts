@@ -5,5 +5,5 @@ runTest({
     templates: {
         'index.twig': '{% if _self is defined %}ok{% endif %}'
     },
-    expectation: 'ok'
+    trimmedExpectation: 'ok'
 });

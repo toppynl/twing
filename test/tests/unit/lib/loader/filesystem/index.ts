@@ -471,7 +471,7 @@ tape('loader filesystem', ({test}) => {
         const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
         const environment = createMockedEnvironment(loader);
 
-        const output = await environment.render('embed/index.html.twig');
+        const output = await environment.render('embed/index.html.twig', {});
 
         same(output, 'Hello world!Hello world!');
 

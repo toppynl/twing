@@ -9,5 +9,5 @@ runTest({
 {% endfor %}
 `
     },
-    expectation: ''
+    trimmedExpectation: ''
 });

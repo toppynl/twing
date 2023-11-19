@@ -30,8 +30,7 @@ import {mergeIterables} from "./helpers/merge-iterables";
 import {parseRegularExpression} from "./helpers/parse-regular-expression";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
 import {createContext} from "./context";
-import {basename, extname, isAbsolute, relative} from "path";
-import type {TwingSourceMapNode} from "./source-map/node";
+import {basename, extname} from "path";
 import {createHash} from "crypto";
 import {isACompilationError} from "./error/compilation";
 import {TwingParsingError} from "./error/parsing";
@@ -50,7 +49,7 @@ import {getFilter} from "./helpers/get-filter";
 import {getFunction} from "./helpers/get-function";
 import {getContextValue} from "./helpers/get-context-value";
 import {createCoreExtension} from "./extension/core";
-import {createSourceMapNode} from "./source-map/node";
+import {TwingSourceMapRuntime} from "./source-map-runtime";
 
 export type TwingTemplateFactory = (runtime: Runtime) => TwingTemplate;
 export type TwingTemplateModule = {
@@ -101,7 +100,7 @@ export interface Runtime {
     convertToMap(iterable: any): Map<any, any>;
 
     count(data: any): number;
-    
+
     createContext<K, V>(container?: Map<K, V>): TwingContext<K, V>;
 
     createMarkup(content: string, charset: string): TwingMarkup;
@@ -111,22 +110,13 @@ export interface Runtime {
     createSource(name: string, code: string, resolvedName?: string): TwingSource;
 
     createTemplateFromCompiledSource(compiledSource: string, name: string): Promise<TwingTemplate>;
-    
+
     createTemplateFromString(content: string, name: string | null): Promise<TwingTemplate>;
-    
+
     ensureToStringAllowed<T>(candidate: T): T;
 
     ensureTraversable<T>(candidate: T[]): T[] | [];
-
-    /**
-     * @param {number} line 0-based
-     * @param {number} column 1-based
-     * @param {string} nodeType
-     * @param {TwingSource} source
-     * @param {TwingOutputBuffer} outputBuffer
-     */
-    enterSourceMapBlock(line: number, column: number, nodeType: string, source: TwingSource, outputBuffer: TwingOutputBuffer): void;
-
+    
     escape(template: TwingTemplate, value: string | boolean | TwingMarkup | null | undefined, strategy: EscapingStrategy, charset: string | null, autoEscape?: boolean): Promise<string | boolean>;
 
     evaluate(value: any): boolean;
@@ -134,8 +124,6 @@ export interface Runtime {
     getAttribute(runtime: Runtime, target: any, attribute: any, methodArguments: Map<any, any>, type: TwingGetAttributeCallType, shouldTestExistence: boolean, shouldIgnoreStrictCheck: boolean): any;
 
     getContextValue(template: TwingTemplate, context: TwingContext<any, any>, name: string, isAlwaysDefined: boolean, shouldIgnoreStrictCheck: boolean, shouldTestExistence: boolean): Promise<any>;
-
-    getSourceMap(): string | null;
 
     /**
      * Get a filter by its name.
@@ -173,6 +161,7 @@ export interface Runtime {
         template: TwingTemplate,
         context: TwingContext<any, any>,
         outputBuffer: TwingOutputBuffer,
+        sourceMapRunTime: TwingSourceMapRuntime,
         templates: string | Map<number, string | TwingTemplate> | TwingTemplate,
         variables: Map<string, any>,
         withContext: boolean,
@@ -180,13 +169,11 @@ export interface Runtime {
         sandboxed: boolean,
         line: number
     ): Promise<TwingMarkup>;
-    
+
     isIn(a: any, b: any): boolean;
 
     iterate(iterator: any, cb: IterateCallback): Promise<void>;
-
-    leaveSourceMapBlock(outputBuffer: TwingOutputBuffer): void;
-
+    
     loadTemplate(name: string, index?: number, from?: TwingSource | null): Promise<TwingTemplate>;
 
     merge<V>(iterable1: Map<any, V>, iterable2: Map<any, V>): Map<any, V>;
@@ -253,7 +240,6 @@ export type CreateRuntimeOptions = {
     parserOptions?: TwingParserOptions;
     sandboxed?: boolean;
     sandboxPolicy?: TwingSandboxSecurityPolicy;
-    source_map?: boolean;
     strictVariables?: boolean;
     timezone?: string;
 };
@@ -265,7 +251,7 @@ export const createRuntime = (
     options: CreateRuntimeOptions
 ): Runtime => {
     extensionSet.addExtension(createCoreExtension());
-    
+
     // auto-escaping strategy
     const guessEscapingStrategyName = (templateName: string): string | null => {
         let extension = extname(templateName);
@@ -304,7 +290,6 @@ export const createRuntime = (
             };
 
     const cache: TwingCache | null = options.cache || null;
-    const emitsSourceMap = options.source_map || false;
     const eventEmitter = new EventEmitter();
     const globals: Map<string, any> = new Map();
     const loadedTemplates: Map<string, TwingTemplate> = new Map();
@@ -322,15 +307,12 @@ export const createRuntime = (
     let isSandboxed = options.sandboxed ? true : false;
     let lexer: TwingLexer;
     let parser: TwingParser;
-    let sourceMapNode: TwingSourceMapNode | null = null;
-
+    
     const compile = (node: TwingModuleNode): string => {
         const compiler = createCompiler({
             getFunction: runtime.getFunction,
             getTest: runtime.getTest,
             getFilter: runtime.getFilter
-        }, {
-            sourceMap: emitsSourceMap
         });
 
         return compiler.compile(node).source;
@@ -359,7 +341,7 @@ export const createRuntime = (
 
         return loadTemplate(name);
     };
-    
+
     const createTemplateFromString: Runtime["createTemplateFromString"] = (template, name) => {
         const hash: string = createHash("sha256").update(template).digest("hex").toString();
 
@@ -368,7 +350,7 @@ export const createRuntime = (
         } else {
             name = `__string_template__${hash}`;
         }
-        
+
         return createTemplateFromCompiledSource(compileSource(createSource(template, name)), name);
     };
 
@@ -555,9 +537,7 @@ return module.exports;
 
         return createTokenStream(stream.toAst(), stream.source);
     };
-
-    // @ts-ignore
-    // @ts-ignore
+    
     const runtime: Runtime = {
         get charset() {
             return charset;
@@ -622,25 +602,6 @@ return module.exports;
             return candidate;
         },
         ensureTraversable,
-        enterSourceMapBlock: (line, column, nodeType, source, outputBuffer) => {
-            outputBuffer.start();
-
-            let sourceName = source.resolvedName;
-
-            if (isAbsolute(sourceName)) {
-                sourceName = relative('.', sourceName);
-            }
-
-            source = createSource(source.code, sourceName);
-            
-            const node = createSourceMapNode(line, column - 1, source, nodeType);
-            
-            if (sourceMapNode !== null) {
-                sourceMapNode.addChild(node);
-            }
-
-            sourceMapNode = node;
-        },
         escape: (template, value, strategy, charset, autoEscape) => {
             if (typeof value === "boolean") {
                 return Promise.resolve(value);
@@ -681,26 +642,14 @@ return module.exports;
             return getFilter(extensionSet.filters, name);
         },
         getLoader: () => loader,
-        getSourceMap: () => {
-            let sourceMap: string | null = null;
-
-            if (sourceMapNode !== null) {
-                const sourceNode = sourceMapNode.toSourceNode();
-                const codeAndMap = sourceNode.toStringWithSourceMap();
-
-                sourceMap = codeAndMap.map.toString();
-            }
-
-            return sourceMap;
-        },
         getTest: (name) => {
             return getTest(extensionSet.tests, name);
         },
         getFunction: (name) => {
             return getFunction(extensionSet.functions, name);
         },
-        include: (template, context, outputBuffer, templates, variables, withContext, ignoreMissing, sandboxed, line) => {
-            return include(template, context, outputBuffer, templates, variables, withContext, ignoreMissing, sandboxed)
+        include: (template, context, outputBuffer, sourceMapRunTime, templates, variables, withContext, ignoreMissing, sandboxed, line) => {
+            return include(template, context, outputBuffer, sourceMapRunTime, templates, variables, withContext, ignoreMissing, sandboxed)
                 .catch((error: TwingError) => {
                     if (error.line === undefined) {
                         error.line = line;
@@ -711,16 +660,6 @@ return module.exports;
         },
         isIn,
         iterate,
-        leaveSourceMapBlock: (outputBuffer: TwingOutputBuffer) => {
-            // if we are leaving source map block, then sourceMapNode is not null anymore 
-            sourceMapNode!.setContent(outputBuffer.getAndFlush() as string);
-
-            const parent = sourceMapNode!.parent;
-            
-            if (parent) {
-                sourceMapNode = parent;
-            }
-        },
         loadTemplate,
         merge: mergeIterables,
         mergeGlobals: (context) => {
@@ -768,7 +707,7 @@ return module.exports;
                             if (name === null) {
                                 return '';
                             }
-                            
+
                             return name;
                         }), undefined, from);
                     }

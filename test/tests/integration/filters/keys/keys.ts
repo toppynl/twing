@@ -5,5 +5,5 @@ runTest({
     templates: {
         'index.twig': `{{ {0: "a", "1": "b"}|keys }}`
     },
-    expectation: `0,1`
+    trimmedExpectation: `0,1`
 });

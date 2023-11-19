@@ -24,7 +24,6 @@ export const createSpacelessNode = (
         ...baseNode,
         compile: (compiler) => {
             compiler
-                .addSourceMapEnter(spacelessNode)
                 .write("outputBuffer.start();\n")
                 .subCompile(baseNode.children.body)
             ;
@@ -34,7 +33,6 @@ export const createSpacelessNode = (
             
             compiler
                 .write(';\n')
-                .addSourceMapLeave()
             ;
         }
     };

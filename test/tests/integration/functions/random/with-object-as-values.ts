@@ -8,7 +8,7 @@ runTest({
 {{ random1 == 1 or random1 == 2 }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 1
 `
 });
@@ -24,7 +24,7 @@ runTest({
     context: Promise.resolve({
        foo: new (class {}) 
     }),
-    expectation: `
+    trimmedExpectation: `
 1
 `
 });

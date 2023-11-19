@@ -10,7 +10,7 @@ tape('createEnvironment ', ({test}) => {
                 createArrayLoader({})
             );
 
-            return environment.render('foo')
+            return environment.render('foo', {})
                 .then(() => fail)
                 .catch((error: any) => {
                     same((error as Error).name, 'TwingTemplateLoadingError');

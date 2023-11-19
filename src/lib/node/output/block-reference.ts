@@ -20,7 +20,7 @@ export const createBlockReferenceNode = (
         name
     }, {}, (compiler) => {
         compiler
-            .write(`await template.getTraceableRenderBlock(${line}, template.source)('${name}', context.clone(), outputBuffer, blocks)`)
+            .write(`await template.getTraceableRenderBlock(${line}, template.source)('${name}', context.clone(), outputBuffer, blocks, true, sourceMapRuntime)`)
         ;
     }, line, column, tag);
 

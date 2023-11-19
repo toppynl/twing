@@ -14,6 +14,7 @@ export type TwingCallableWrapperOptions = {
     needs_template?: boolean;
     needs_context?: boolean;
     needs_output_buffer?: boolean;
+    needs_source_map_runtime?: boolean;
     is_variadic?: boolean;
     is_safe?: Array<any>;
     is_safe_callback?: (argumentsNode: TwingArrayNode) => Safe;
@@ -37,6 +38,7 @@ export interface TwingCallableWrapper<Callable extends TwingCallable> {
     nativeArguments: Array<string>;
     readonly needsContext: boolean;
     readonly needsOutputBuffer: boolean;
+    readonly needsSourceMapRuntime: boolean;
     readonly needsTemplate: boolean;
 
     getSafe(argumentsNode: TwingArrayNode): Safe;
@@ -85,6 +87,9 @@ export const createCallableWrapper = <Callable extends TwingCallable>(
         },
         get needsOutputBuffer() {
             return options.needs_output_buffer || false;
+        },
+        get needsSourceMapRuntime() {
+            return options.needs_source_map_runtime || false;
         },
         get needsTemplate() {
             return options.needs_template || false;

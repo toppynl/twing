@@ -20,7 +20,7 @@ runTest({
         someVar: '<br />',
         someFalseVar: false
     }),
-    expectation: `
+    trimmedExpectation: `
 <br />
 &lt;br /&gt;
 &lt;br /&gt;

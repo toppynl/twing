@@ -8,7 +8,7 @@ runTest({
 {{ dump(false) }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 bool(true)
 
 bool(false)
