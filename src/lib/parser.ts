@@ -1420,8 +1420,13 @@ export const createParser = (
 
                     break;
                 case TokenType.COMMENT_START:
-                    stream.next();
-                    token = stream.expect(TokenType.TEXT);
+                    token = stream.next();
+                    
+                    if (stream.test(TokenType.TEXT)) {
+                        // non-empty comment
+                        token = stream.expect(TokenType.TEXT);
+                    }
+                    
                     stream.expect(TokenType.COMMENT_END);
                     children[i++] = createCommentNode(token.value, token.line, token.column);
 

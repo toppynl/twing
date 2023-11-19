@@ -1,4 +1,5 @@
 import "./autoescape";
+import "./comments";
 import "./comparison";
 import "./compatibility";
 import "./compilation";
