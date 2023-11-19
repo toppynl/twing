@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": '{{ cycle(true, 1) }}'
     },
-    expectation: '1'
+    trimmedExpectation: '1'
 });

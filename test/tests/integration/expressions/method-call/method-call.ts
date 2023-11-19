@@ -143,7 +143,7 @@ runTest({
     context: Promise.resolve({
         foo: new AnotherFoo()
     }),
-    expectation: `foo`
+    trimmedExpectation: `foo`
 });
 
 runTest({
@@ -154,7 +154,7 @@ runTest({
     context: Promise.resolve({
         foo: new AnotherFoo()
     }),
-    expectation: `getBar`
+    trimmedExpectation: `getBar`
 });
 
 runTest({
@@ -165,7 +165,7 @@ runTest({
     context: Promise.resolve({
         foo: new AnotherFoo()
     }),
-    expectation: `isOof`
+    trimmedExpectation: `isOof`
 });
 
 runTest({
@@ -176,7 +176,7 @@ runTest({
     context: Promise.resolve({
         foo: new AnotherFoo()
     }),
-    expectation: `hasFooBar`
+    trimmedExpectation: `hasFooBar`
 });
 
 runTest({
@@ -187,5 +187,5 @@ runTest({
     context: Promise.resolve({
         foo: new AnotherFoo()
     }),
-    expectation: `getFoo getFoo`
+    trimmedExpectation: `getFoo getFoo`
 });

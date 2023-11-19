@@ -7,7 +7,7 @@ import {TwingBaseNode} from "../../node";
 import {TwingConstantNode, createConstantNode} from "./constant";
 import {TwingArrayNode, getKeyValuePairs} from "./array";
 import {TwingCompiler} from "../../compiler";
-import {TwingCallableArgument} from "../../callable-wrapper";
+import {TwingCallableArgument, TwingCallableWrapper} from "../../callable-wrapper";
 import type {TwingFilterNode} from "./call/filter";
 import type {TwingFunctionNode} from "./call/function";
 import type {TwingTestNode} from "./call/test";
@@ -41,18 +41,14 @@ export interface TwingBaseCallNode<Type extends string> extends TwingBaseExpress
         needsTemplate: boolean,
         needsContext: boolean,
         needsOutputBuffer: boolean,
+        needsSourceMapRuntime: boolean,
         isVariadic: boolean
     ) => void;
     compileCallable: (
         compiler: TwingCompiler,
         name: string,
         type: "filter" | "function" | "test",
-        nativeArguments: Array<string>,
-        acceptedArgument: Array<TwingCallableArgument>,
-        needsTemplate: boolean,
-        needsContext: boolean,
-        needsOutputBuffer: boolean,
-        isVariadic: boolean
+        callableWrapper: TwingCallableWrapper<any>
     ) => void;
 }
 
@@ -76,7 +72,7 @@ export const createBaseCallNode = <Type extends string>(
     ): Array<TwingBaseNode> => {
         const callType = baseNode.attributes.type;
         const callName = baseNode.attributes.operatorName;
-        const parameters: Map<string | number, { 
+        const parameters: Map<string | number, {
             key: TwingConstantNode;
             value: TwingBaseExpressionNode;
         }> = new Map();
@@ -84,7 +80,7 @@ export const createBaseCallNode = <Type extends string>(
         let named = false;
 
         const keyPairs = getKeyValuePairs(argumentsNode);
-        
+
         for (let {key, value} of keyPairs) {
             let name = key.attributes.value as string | number;
 
@@ -163,36 +159,33 @@ export const createBaseCallNode = <Type extends string>(
 
         if (parameters.size > 0) {
             const unknownParameter = [...parameters.values()][0];
-            
+
             throw new TwingCompilationError(`Unknown argument${parameters.size > 1 ? 's' : ''} "${[...parameters.keys()].join('", "')}" for ${callType} "${callName}(${names.join(', ')})".`, unknownParameter.key.line);
         }
 
         return arguments_;
     }
-    
+
     const compileCallable: TwingBaseCallNode<Type>["compileCallable"] = (
         compiler,
         name,
         type,
-        nativeArguments,
-        acceptedArguments,
-        needsTemplate,
-        needsContext,
-        needsOutputBuffer,
-        isVariadic
+        callableWrapper
     ) => {
+        const {nativeArguments, acceptedArguments, needsTemplate, needsContext, needsOutputBuffer, needsSourceMapRuntime, isVariadic} = callableWrapper;
+
         compiler
             .write(`await runtime.get${capitalize(type)}('${name}').getTraceableCallable(${baseNode.line}, template.source)`)
             .write('(...[\n')
-            ;
+        ;
 
-        compileArguments(compiler, nativeArguments, acceptedArguments, needsTemplate, needsContext, needsOutputBuffer, isVariadic);
+        compileArguments(compiler, nativeArguments, acceptedArguments, needsTemplate, needsContext, needsOutputBuffer, needsSourceMapRuntime, isVariadic);
 
         compiler
             .write('\n')
             .write('])');
     };
-    
+
     const compileArguments: TwingBaseCallNode<Type>["compileArguments"] = (
         compiler,
         nativeArguments,
@@ -200,6 +193,7 @@ export const createBaseCallNode = <Type extends string>(
         needsTemplate,
         needsContext,
         needsOutputBuffer,
+        needsSourceMapRuntime,
         isVariadic
     ) => {
         const {operand, arguments: callArguments} = node.children;
@@ -228,6 +222,16 @@ export const createBaseCallNode = <Type extends string>(
             }
 
             compiler.write('outputBuffer');
+
+            first = false;
+        }
+
+        if (needsSourceMapRuntime) {
+            if (!first) {
+                compiler.write(',\n');
+            }
+
+            compiler.write('sourceMapRuntime');
 
             first = false;
         }

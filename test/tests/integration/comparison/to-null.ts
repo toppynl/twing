@@ -7,7 +7,7 @@ runTest({
 {{ null == null ? 1 : 0 }}
 `
    },
-    expectation: `
+    trimmedExpectation: `
 1
 `
 });

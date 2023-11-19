@@ -40,8 +40,10 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
                 .write('await runtime.include(').write('\n')
                 .write('template,').write('\n')
                 .write('context,').write('\n')
-                .write('outputBuffer,').write('\n');
-
+                .write('outputBuffer,').write('\n')
+                .write('sourceMapRuntime,').write('\n')
+            ;
+            
             addGetTemplate(compiler);
 
             compiler

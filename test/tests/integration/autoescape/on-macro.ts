@@ -10,5 +10,5 @@ runTest({
 {{ _self.foo() }}
 `
     },
-    expectation: '<br/>'
+    trimmedExpectation: '<br/>'
 });

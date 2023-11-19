@@ -404,6 +404,7 @@ export const createCoreExtension = (): TwingExtension => {
                     needs_template: true,
                     needs_context: true,
                     needs_output_buffer: true,
+                    needs_source_map_runtime: true,
                     is_safe: ['all']
                 }),
                 createFunction('max', max, [], {

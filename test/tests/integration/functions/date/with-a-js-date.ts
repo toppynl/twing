@@ -11,5 +11,5 @@ runTest({
     context: Promise.resolve({
         date: new Date('2000-01-01T00:00:00') // this is UTC
     }),
-    expectation: 'January 1, 2000 00:00'
+    trimmedExpectation: 'January 1, 2000 00:00'
 });

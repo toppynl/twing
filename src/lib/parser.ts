@@ -74,7 +74,7 @@ export type TwingParserOptions = {
     strict: boolean;
 };
 
-type ParseTest = [tag: string | any, test: (token: Token) => boolean]; // todo: remove any
+type ParseTest = [tag: string, test: (token: Token) => boolean];
 
 export interface TwingParser {
     parent: TwingBaseNode | null;
@@ -1349,6 +1349,7 @@ export const createParser = (
             switch (stream.current.type) {
                 case TokenType.TEXT:
                     token = stream.next();
+                    
                     children[i++] = createTextNode(token.value, token.line, token.column);
 
                     break;
@@ -1369,8 +1370,7 @@ export const createParser = (
                     if (token.type !== TokenType.NAME) {
                         throw new TwingParsingError('A block must start with a tag name.', token.line, token.column, stream.source);
                     }
-
-                    // todo: what is the test case of the following scenario
+                    
                     if ((test !== null) && test(token)) {
                         if (dropNeedle) {
                             stream.next();

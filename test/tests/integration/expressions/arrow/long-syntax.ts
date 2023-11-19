@@ -11,7 +11,7 @@ runTest({
 {{ sizes|map((value, key) => "#{key}:#{value}")|join(', ') }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 34, 36, 38, 40, 42
 40, 42
 0:34, 1:36, 2:38, 3:40, 4:42`

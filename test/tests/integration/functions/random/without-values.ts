@@ -8,7 +8,7 @@ runTest({
 {{ random(max=0) == 0 }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 1
 1
 `

@@ -39,12 +39,7 @@ export const createTestNode = (
                 compiler,
                 name,
                 callType,
-                test.nativeArguments,
-                test.acceptedArguments,
-                test.needsTemplate,
-                test.needsContext,
-                test.needsOutputBuffer,
-                test.isVariadic
+                test
             );
         }
     };

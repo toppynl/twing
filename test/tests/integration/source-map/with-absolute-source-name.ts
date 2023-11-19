@@ -20,5 +20,5 @@ runTest({
         originalColumn: 15,
         name: 'text'
     }],
-    expectation: `5`
+    trimmedExpectation: `5`
 });

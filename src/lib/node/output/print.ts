@@ -13,27 +13,30 @@ export const createPrintNode = (
     line: number,
     column: number
 ): TwingPrintNode => {
-    const node: TwingPrintNode = createBaseOutputNode(printNodeTYpe, {}, {
+    const outputNode: TwingPrintNode = createBaseOutputNode(printNodeTYpe, {}, {
         expr: expression
     }, (compiler) => {
-        const {expr} = node.children;
+        const {expr} = outputNode.children;
 
         compiler
             .subCompile(expr)
         ;
     }, line, column, null);
 
-    return {
-        ...node,
+    const printNode: TwingPrintNode = {
+        ...outputNode,
         compile: (compiler) => {
-            compiler.addSourceMapEnter(node);
-            
-            node.compile(compiler);
-            
+            compiler.addSourceMapEnter(printNode);
+
+            outputNode.compile(compiler);
+
             compiler
                 .write(';\n')
-                .addSourceMapLeave();
+                .addSourceMapLeave()
+            ;
         }
     };
+
+    return printNode;
 };
 

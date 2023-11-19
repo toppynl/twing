@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": '{{ [] is defined ? "OK" : "KO" }}'
     },
-    expectation: 'OK'
+    trimmedExpectation: 'OK'
 });

@@ -9,5 +9,5 @@ runTest({
 {{ sizes|filter(v => (v > 38))|join(', ') }}
 `
     },
-    expectation: '40, 42'
+    trimmedExpectation: '40, 42'
 });

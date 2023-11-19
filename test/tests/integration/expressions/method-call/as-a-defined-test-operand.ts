@@ -16,7 +16,7 @@ runTest({
             }
         }
     }),
-    expectation: `
+    trimmedExpectation: `
 OK
 OK
 OK

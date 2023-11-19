@@ -8,5 +8,5 @@ runTest({
     context: Promise.resolve({
         foo: '<br/>'
     }),
-    expectation: '&lt;br/&gt;'
+    trimmedExpectation: '&lt;br/&gt;'
 });

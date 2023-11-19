@@ -35,7 +35,7 @@ runTest({
     context: Promise.resolve({
         foo: new (class{})
     }),
-    expectation: `
+    trimmedExpectation: `
 0
 1
 1

@@ -34,12 +34,7 @@ export const createFunctionNode = (
                 compiler,
                 name,
                 "function",
-                twingFunction.nativeArguments,
-                twingFunction.acceptedArguments,
-                twingFunction.needsTemplate,
-                twingFunction.needsContext,
-                twingFunction.needsOutputBuffer,
-                twingFunction.isVariadic
+                twingFunction
             );
         }
     };

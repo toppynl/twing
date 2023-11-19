@@ -14,7 +14,7 @@ runTest({
         buffer: Buffer.from('Äé'),
         emptyBuffer: Buffer.from('')
     }),
-    expectation: `
+    trimmedExpectation: `
 1
 1
 `
@@ -34,7 +34,7 @@ runTest({
     environmentOptions: {
         charset: 'ISO-8859-1'
     },
-    expectation: `
+    trimmedExpectation: `
 1
 `
 });

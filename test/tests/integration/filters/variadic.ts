@@ -18,7 +18,7 @@ runTest({
             is_variadic: true
         })
     ],
-    expectation: `
+    trimmedExpectation: `
 5=>
 5=>1
 5=>1,2

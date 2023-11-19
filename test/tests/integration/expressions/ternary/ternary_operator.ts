@@ -11,7 +11,7 @@ runTest({
 {{ 1 == 1 ? 'foo<br />':'' }}
 {{ foo ~ (bar ? ('-' ~ bar) : '') }}`
     },
-    expectation: `
+    trimmedExpectation: `
 YES
 NO
 YES1

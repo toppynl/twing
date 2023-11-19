@@ -7,7 +7,7 @@ runTest({
 {{ "foo"|convert_encoding("ISO-8859-1", "UTF-8") == "foo" }}
 `
    },
-    expectation: `
+    trimmedExpectation: `
 1
 `
 });

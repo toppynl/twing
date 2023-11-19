@@ -13,7 +13,7 @@ runTest({
     sandboxSecurityPolicyTags: [
         'block'
     ],
-    expectation: '5'
+    trimmedExpectation: '5'
 });
 
 runTest({

@@ -9,7 +9,7 @@ runTest({
 {{ dump(5.5) }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 int(0)
 
 int(5)

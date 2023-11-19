@@ -9,6 +9,6 @@ runTest({
 {{ foo.bar|default() }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 `
 });

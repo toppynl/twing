@@ -37,12 +37,7 @@ export const createFilterNode = (
                 compiler,
                 name,
                 'filter',
-                filter.nativeArguments,
-                filter.acceptedArguments,
-                filter.needsTemplate,
-                filter.needsContext,
-                filter.needsOutputBuffer,
-                filter.isVariadic
+                filter
             );
         }
     };

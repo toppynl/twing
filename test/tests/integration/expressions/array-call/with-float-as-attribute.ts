@@ -12,6 +12,6 @@ for (const testCase of [['0.1', '0'], ['1.6', '1']]) {
                 1: '1'
             }
         }),
-        expectation: `${testCase[1]}`
+        trimmedExpectation: `${testCase[1]}`
     });
 }

@@ -8,7 +8,7 @@ runTest({
 {{ random1 == 1 or random1 == 2 }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 1
 `
 });

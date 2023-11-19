@@ -11,5 +11,5 @@ runTest({
 `
     },
     context: Promise.resolve({}),
-    expectation: `OKOK`
+    trimmedExpectation: `OKOK`
 });

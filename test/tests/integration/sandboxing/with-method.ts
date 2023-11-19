@@ -18,7 +18,7 @@ runTest({
             bar: () => 5
         }
     }),
-    expectation: `5`
+    trimmedExpectation: `5`
 });
 
 runTest({

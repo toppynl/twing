@@ -21,7 +21,7 @@ runTest({
 {{ date1 == 2 ? 1 : 0 }}
 `
    },
-    expectation: `
+    trimmedExpectation: `
 1
 0
 0

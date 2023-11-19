@@ -19,10 +19,10 @@ export type IntegrationTest = {
     context?: Record<string, any> | Promise<Record<string, any>>;
     description: string;
     environmentOptions?: TwingEnvironmentOptions;
-    expectation?: string;
     expectedErrorMessage?: string | null;
     expectedDeprecationMessages?: Array<string> | null;
     expectedSourceMapMappings?: Array<MappingItem>;
+    expectation?: string;
     globals?: Record<string, any>;
     parserOptions?: TwingParserOptions;
     sandboxPolicy?: TwingSandboxSecurityPolicy;
@@ -31,6 +31,7 @@ export type IntegrationTest = {
     sandboxSecurityPolicyFunctions?: Array<string>;
     sandboxSecurityPolicyProperties?: Map<Function, Array<string>>;
     sandboxSecurityPolicyMethods?: Map<Function, Array<string>>;
+    trimmedExpectation?: string;
 } & ({
     templates: {
         'index.twig': string;
@@ -45,7 +46,7 @@ export const createIntegrationTest = (
     return {
         description: testInstance.getDescription(),
         context: Promise.resolve(testInstance.getContext()),
-        expectation: testInstance.getExpected(),
+        trimmedExpectation: testInstance.getExpected(),
         templates: testInstance.getTemplates() as any,
         expectedErrorMessage: testInstance.getExpectedErrorMessage(),
         environmentOptions: testInstance.getEnvironmentOptions(),

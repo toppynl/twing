@@ -75,7 +75,8 @@ export const createMethodCallNode = (
                     .write('],').write('\n')
                     .render(baseNode.line).write(',').write('\n')
                     .write('context,').write('\n')
-                    .write('template.source').write('\n')
+                    .write('template.source,').write('\n')
+                    .write('sourceMapRuntime').write('\n')
                     .write(')')
                 ;
             }

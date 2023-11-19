@@ -123,6 +123,7 @@ export interface TwingOutputBuffer {
      *
      * In human terms: appends the top-most buffer to the second-top-most buffer, removes the top-most buffer and returns its content
      *
+     * ```text
      * ┌─────────┐
      * │   oof   │
      * ├─────────┤    ┌─────────┐
@@ -130,6 +131,7 @@ export interface TwingOutputBuffer {
      * ├─────────┤    ├─────────┤
      * │   foo   │    │   foo   │ => oof
      * └─────────┘    └─────────┘
+     * ```
      *
      * @returns {string}
      */

@@ -23,7 +23,7 @@ for (const [value, expectation] of owaspTestCases) {
         templates: {
             "index.twig": `{{ value|escape("js") == value ? "true" : "false" }}`
         },
-        expectation: `${expectation}`,
+        trimmedExpectation: `${expectation}`,
         context: Promise.resolve({
             value
         }),
@@ -74,7 +74,7 @@ for (const key in specialCharacters) {
         templates: {
             "index.twig": `{{ key|escape("js") }}`
         },
-        expectation: `${value}`,
+        trimmedExpectation: `${value}`,
         context: Promise.resolve({
             key
         }),
@@ -89,7 +89,7 @@ runTest({
     templates: {
         "index.twig": `{{ "123"|escape("js") }}`
     },
-    expectation: `123`,
+    trimmedExpectation: `123`,
     environmentOptions: {
         autoEscapingStrategy: null
     }
@@ -100,7 +100,7 @@ runTest({
     templates: {
         "index.twig": `{{ ""|escape("js") }}`
     },
-    expectation: ``,
+    trimmedExpectation: ``,
     environmentOptions: {
         autoEscapingStrategy: null
     }

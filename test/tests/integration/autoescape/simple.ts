@@ -13,7 +13,7 @@ runTest({
     environmentOptions: {
         autoEscapingStrategy: "html"
     },
-    expectation: `
+    trimmedExpectation: `
 &lt;br/&gt;
 `
 })

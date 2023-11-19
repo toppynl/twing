@@ -12,6 +12,6 @@ for (const testCase of [['true', '1'], ['false', '0']]) {
                 1: '1'
             }
         }),
-        expectation: `${testCase[1]}`
+        trimmedExpectation: `${testCase[1]}`
     });
 }

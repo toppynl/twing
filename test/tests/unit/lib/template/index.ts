@@ -48,7 +48,7 @@ const createCandidate = (definition?: {
         }),
         () => Promise.resolve(null),
         () => Promise.resolve(new Map()),
-        () => false
+        false
     );
 };
 

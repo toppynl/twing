@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": `{{ 5|join }}`
     },
-    expectation: ''
+    trimmedExpectation: ''
 });

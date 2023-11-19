@@ -26,7 +26,7 @@ runTest({
 {{ "foo" == "foo"|escape }}
 `
    },
-    expectation: `
+    trimmedExpectation: `
 1
 0
 1

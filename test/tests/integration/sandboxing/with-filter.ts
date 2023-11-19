@@ -13,7 +13,7 @@ runTest({
     sandboxSecurityPolicyFilters: [
         'upper'
     ],
-    expectation: '5'
+    trimmedExpectation: '5'
 });
 
 runTest({

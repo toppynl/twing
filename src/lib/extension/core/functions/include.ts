@@ -9,6 +9,7 @@ import {TwingOutputBuffer} from "../../../output-buffer";
 import {TwingContext} from "../../../context";
 import {isMapLike} from "../../../helpers/map-like";
 import {createMarkup, TwingMarkup} from "../../../markup";
+import {TwingSourceMapRuntime} from "../../../source-map-runtime";
 
 /**
  * Renders a template.
@@ -29,6 +30,7 @@ export function include(
     template: TwingTemplate, 
     context: TwingContext<any, any>, 
     outputBuffer: TwingOutputBuffer, 
+    sourceMapRuntime: TwingSourceMapRuntime,
     templates: string | Map<number, string | TwingTemplate> | TwingTemplate, 
     variables: any, 
     withContext: boolean, 
@@ -83,7 +85,7 @@ export function include(
 
     return resolveTemplate(templates)
         .then((template) => {
-            const promise = template ? template.render(variables, outputBuffer) : Promise.resolve('');
+            const promise = template ? template.render(variables, outputBuffer, sourceMapRuntime) : Promise.resolve('');
 
             return promise.then((result) => {
                 return createMarkup(result);

@@ -5,5 +5,5 @@ runTest({
     templates: {
         'index.twig': '{% for x in [1] if x > 0 %}{% for y in [1] %}{{ loop.last }}{% endfor %}{% endfor %}'
     },
-    expectation: '1'
+    trimmedExpectation: '1'
 });

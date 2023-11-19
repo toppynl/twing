@@ -66,7 +66,7 @@ export const createBlockFunctionNode = (
         }
 
         if (!baseNode.children.template) {
-            compiler.write(', blocks');
+            compiler.write(', blocks, true, sourceMapRuntime');
         }
 
         return compiler.write(')');

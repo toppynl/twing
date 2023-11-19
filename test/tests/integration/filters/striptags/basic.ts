@@ -10,7 +10,7 @@ runTest({
 {{ "<a><div><span>content</span></div></a>"|striptags("<div><span>") }}
 `
     },
-    expectation: `
+    trimmedExpectation: `
 content
 <div>content</div>
 <div><span>content</span></div>

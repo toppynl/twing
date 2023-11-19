@@ -17,7 +17,7 @@ runTest({
 {{ array == "" ? 1 : 0 }}
 `
    },
-    expectation: `
+    trimmedExpectation: `
 0
 1
 1

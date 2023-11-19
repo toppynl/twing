@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": '{{ true|escape }}'
     },
-    expectation: '1'
+    trimmedExpectation: '1'
 });
