@@ -31,7 +31,7 @@ import {parseRegularExpression} from "./helpers/parse-regular-expression";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
 import {createContext} from "./context";
 import {basename, extname} from "path";
-import {createHash} from "crypto";
+import * as createHash from "create-hash";
 import {isACompilationError} from "./error/compilation";
 import type {TwingParsingError} from "./error/parsing";
 import {TwingModuleNode} from "./node/module";

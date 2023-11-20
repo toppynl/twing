@@ -1,5 +1,3 @@
-import {isNumber} from "util";
-
 export function sliceMap(map: Map<any, any>, start: number, length: number, preserveKeys: boolean) {
     let result = new Map();
     let index: number = 0;
@@ -15,7 +13,7 @@ export function sliceMap(map: Map<any, any>, start: number, length: number, pres
 
             // Note that array_slice() will reorder and reset the ***numeric*** array indices by default. [...]
             // see http://php.net/manual/en/function.array-slice.php
-            if (isNumber(key)) {
+            if (typeof key === "number") {
                 newKey = preserveKeys ? key : keyIndex;
 
                 keyIndex++;

@@ -19,10 +19,11 @@
   },
   "main": "dist/cjs/index.js",
   "types": "dist/types/index.d.ts",
+  "jsdelivr": "dist/lib.min.js",
   "exports": {
-    "import": "dist/es/index.js",
-    "default": "dist/cjs/index.js",
-    "types": "dist/types/index.d.ts"
+    "import": "./dist/es/index.js",
+    "default": "./dist/cjs/index.js",
+    "types": "./dist/types/index.d.ts"
   },
   "files": [
     "dist"
@@ -36,7 +37,7 @@
     "prebuild:test:browser": "npm run prebuild:test",
     "test": "node dist/test",
     "test:browser": "browserify dist/test/index.js | tape-run --sandbox=false",
-    "build": "npm run build:cjs && npm run build:es && npm run build:types",
+    "build": "npm run build:cjs && npm run build:es && npm run build:types && npm run bundle",
     "build:cjs": "rimraf dist/cjs && tsc --project . --module commonjs --outDir dist/cjs",
     "build:es": "rimraf dist/es && tsc --project . --module es6 --outDir dist/es",
     "build:test": "rimraf dist && tsc --project test --outDir dist",
@@ -45,6 +46,7 @@
   },
   "dependencies": {
     "capitalize": "^1.0.0",
+    "create-hash": "^1.2.0",
     "esrever": "^0.2.0",
     "htmlspecialchars": "^1.0.5",
     "iconv-lite": "^0.4.19",
@@ -62,6 +64,7 @@
     "utf8-binary-cutter": "^0.9.2"
   },
   "devDependencies": {
+    "@types/create-hash": "^1.2.5",
     "@types/locutus": "0.0.5",
     "@types/luxon": "^1.4.0",
     "@types/node": "^10.17.60",
