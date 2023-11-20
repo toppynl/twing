@@ -1,6 +1,6 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 
 /**
@@ -15,7 +15,7 @@ export const column = (thing: any, columnKey: any): Promise<Array<any>> => {
     let map: Map<any, any>;
 
     if (!isTraversable(thing) || isPlainObject(thing)) {
-        return Promise.reject(new TwingRuntimeError(`The column filter only works with arrays or "Traversable", got "${typeof thing}" as first argument.`));
+        return Promise.reject(createRuntimeError(`The column filter only works with arrays or "Traversable", got "${typeof thing}" as first argument.`));
     } else {
         map = iteratorToMap(thing);
     }

@@ -99,7 +99,7 @@ tape('createTemplate', ({test}) => {
             });
 
             stream.on("end", () => {
-                same(error?.message, 'An exception has been thrown during the rendering of a template ("I am Error").');
+                same(error?.message, 'An exception has been thrown during the rendering of a template ("I am Error") in "name".');
 
                 end();
             });
@@ -131,7 +131,7 @@ tape('createTemplate', ({test}) => {
             return template.render({})
                 .then(fail)
                 .catch((error: Error) => {
-                    same(error.message, 'An exception has been thrown during the rendering of a template ("I am Error").');
+                    same(error.message, 'An exception has been thrown during the rendering of a template ("I am Error") in "name".');
                 })
                 .finally(end);
         });

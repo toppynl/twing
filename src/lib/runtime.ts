@@ -9,7 +9,7 @@ import {iterate, IterateCallback} from "./helpers/iterate";
 import type {TwingMarkup} from "./markup";
 import {TwingTest} from "./test";
 import {TwingGetAttributeCallType} from "./node/expression/attribute-accessor";
-import {TwingRuntimeError} from "./error/runtime";
+import {createRuntimeError} from "./error/runtime";
 import {compare} from "./helpers/compare";
 import {constant} from "./extension/core/functions/constant";
 import {iteratorToMap} from "./helpers/iterator-to-map";
@@ -33,13 +33,13 @@ import {createContext} from "./context";
 import {basename, extname} from "path";
 import {createHash} from "crypto";
 import {isACompilationError} from "./error/compilation";
-import {TwingParsingError} from "./error/parsing";
+import type {TwingParsingError} from "./error/parsing";
 import {TwingModuleNode} from "./node/module";
 import {createCompiler} from "./compiler";
 import {TwingTokenStream, createTokenStream} from "./token-stream";
 import {createParser, TwingParser, TwingParserOptions} from "./parser";
 import {TwingLexer} from "./lexer";
-import {isATemplateLoadingError, TwingTemplateLoadingError} from "./error/loader";
+import {createTemplateLoadingError, isATemplateLoadingError, TwingTemplateLoadingError} from "./error/loader";
 import {EventEmitter} from "events";
 import {TwingCache} from "./cache";
 import type {TwingExtensionSet} from "./extension-set";
@@ -67,7 +67,7 @@ export interface TwingRuntime {
     readonly createTemplate: typeof createTemplate;
     readonly dateFormat: string;
     readonly dateIntervalFormat: string;
-    readonly Error: typeof TwingRuntimeError;
+    readonly createError: typeof createRuntimeError;
     isSandboxed: boolean;
     readonly defaultNumberFormats: TwingNumberFormat;
     readonly isStrictVariables: boolean;
@@ -499,7 +499,7 @@ return module.exports;
             }
 
             if (content === null) {
-                throw new TwingTemplateLoadingError(name);
+                throw createTemplateLoadingError(name);
             }
 
             const templateModule = getTemplateModule(content);
@@ -574,8 +574,8 @@ return module.exports;
         get dateIntervalFormat() {
             return dateIntervalFormat;
         },
-        get Error() {
-            return TwingRuntimeError;
+        get createError() {
+            return createRuntimeError;
         },
         get defaultNumberFormats() {
             return defaultNumberFormats;
@@ -652,7 +652,7 @@ return module.exports;
                     strategyHandler = escapingStrategyHandlers[strategy];
 
                     if (strategyHandler === undefined) {
-                        return Promise.reject(new TwingRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(escapingStrategyHandlers).sort().join(', ')}).`));
+                        return Promise.reject(createRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(escapingStrategyHandlers).sort().join(', ')}).`));
                     }
                 }
 
@@ -729,7 +729,7 @@ return module.exports;
                     if (names.length === 1) {
                         throw caughtError;
                     } else {
-                        throw new TwingTemplateLoadingError((names as Array<string | null>).map((name) => {
+                        throw createTemplateLoadingError((names as Array<string | null>).map((name) => {
                             if (name === null) {
                                 return '';
                             }

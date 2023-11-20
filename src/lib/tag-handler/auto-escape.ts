@@ -1,4 +1,4 @@
-import {TwingParsingError} from "../error/parsing";
+import {createParsingError} from "../error/parsing";
 import {createAutoEscapeNode} from "../node/auto-escape";
 import {Token, TokenType} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
@@ -27,7 +27,7 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
                     ) {
                         const {line, column} = expression;
 
-                        throw new TwingParsingError('An escaping strategy must be a string or false.', line, column, stream.source);
+                        throw createParsingError('An escaping strategy must be a string or false.', line, column, stream.source);
                     }
 
                     const {value} = expression.attributes;

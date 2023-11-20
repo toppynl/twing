@@ -303,7 +303,7 @@ export const createModuleNode = (
 
                 compiler
                     .write(`if (!trait_${i}.canBeUsedAsATrait) {\n`)
-                    .write('throw new runtime.Error(\'Template ')
+                    .write('throw runtime.createError(\'Template ')
                     .subCompile(template)
                     .write(' cannot be used as a trait.\', ')
                     .render(template.line)
@@ -317,7 +317,7 @@ export const createModuleNode = (
                         .write(`if (!traits_${i}.has(`)
                         .string(key)
                         .write(")) {\n")
-                        .write('throw new runtime.Error(\'Block ')
+                        .write('throw runtime.createError(\'Block ')
                         .string(key as string)
                         .write(' is not defined in trait ')
                         .subCompile(template)

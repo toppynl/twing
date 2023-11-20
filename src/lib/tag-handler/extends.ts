@@ -9,7 +9,7 @@
  * </ul>
  * </pre>
  */
-import {TwingParsingError} from "../error/parsing";
+import {createParsingError} from "../error/parsing";
 import {TokenType} from "twig-lexer";
 import type {TwingTagHandler} from "../tag-handler";
 
@@ -23,13 +23,13 @@ export const createExtendsTagHandler = (): TwingTagHandler => {
                 const {line, column} = token;
 
                 if (parser.peekBlockStack()) {
-                    throw new TwingParsingError('Cannot use "extend" in a block.', line, column, stream.source);
+                    throw createParsingError('Cannot use "extend" in a block.', line, column, stream.source);
                 } else if (!parser.isMainScope()) {
-                    throw new TwingParsingError('Cannot use "extend" in a macro.', line, column, stream.source);
+                    throw createParsingError('Cannot use "extend" in a macro.', line, column, stream.source);
                 }
 
                 if (parser.parent !== null) {
-                    throw new TwingParsingError('Multiple extends tags are forbidden.', line, column, stream.source);
+                    throw createParsingError('Multiple extends tags are forbidden.', line, column, stream.source);
                 }
 
                 parser.parent = parser.parseExpression(stream);

@@ -1,7 +1,7 @@
 import {iconv} from "../../../helpers/iconv";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 import type {TwingTemplate} from "../../../template";
 
 const runes = require('runes');
@@ -78,7 +78,7 @@ export function random(template: TwingTemplate, values: any | null, max: number 
         }
 
         if (values.length < 1) {
-            throw new TwingRuntimeError('The random function cannot pick from an empty array.');
+            throw createRuntimeError('The random function cannot pick from an empty array.');
         }
 
         return values[array_rand(values, 1)];

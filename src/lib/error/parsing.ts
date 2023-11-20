@@ -1,5 +1,5 @@
 import type {TwingSource} from "../source";
-import {TwingBaseError} from "./base";
+import {createBaseError, TwingBaseError} from "./base";
 
 const Levenshtein = require('levenshtein');
 
@@ -15,30 +15,36 @@ export interface TwingParsingError extends TwingBaseError<typeof parsingErrorNam
     addSuggestions(name: string, items: Array<string>): void;
 }
 
-export class TwingParsingError extends TwingBaseError<typeof parsingErrorName> {
-    constructor(message: string, line?: number, column?: number, source?: TwingSource, previous?: Error) {
-        super(parsingErrorName, message, line, column, source, previous);
-    }
+export const createParsingError = (
+    message: string, line?: number, column?: number, source?: TwingSource, previous?: Error
+): TwingParsingError => {
+    const baseError = createBaseError(parsingErrorName, message, line, column, source, previous);
 
-    addSuggestions(name: string, items: Array<string>) {
-        const alternatives: string[] = [];
+    Error.captureStackTrace(baseError, createParsingError);
 
-        let levenshtein;
+    return Object.create(baseError, {
+        addSuggestions: {
+            value: (name: string, items: Array<string>) => {
+                const alternatives: string[] = [];
 
-        for (const item of items) {
-            levenshtein = new Levenshtein(name, item);
+                let levenshtein;
 
-            if (levenshtein.distance <= (name.length / 3) || item.indexOf(name) > -1) {
-                alternatives.push(item);
+                for (const item of items) {
+                    levenshtein = new Levenshtein(name, item);
+
+                    if (levenshtein.distance <= (name.length / 3) || item.indexOf(name) > -1) {
+                        alternatives.push(item);
+                    }
+                }
+
+                if (alternatives.length < 1) {
+                    return;
+                }
+
+                alternatives.sort();
+
+                baseError.appendMessage(` Did you mean "${alternatives.join(', ')}"?`);
             }
         }
-
-        if (alternatives.length < 1) {
-            return;
-        }
-
-        alternatives.sort();
-
-        this.appendMessage(` Did you mean "${alternatives.join(', ')}"?`);
-    }
-}
+    });
+};

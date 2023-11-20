@@ -3,7 +3,7 @@
  */
 import {Lexer, TokenType} from "twig-lexer";
 import {TwingTokenStream, createTokenStream} from "./token-stream";
-import {TwingParsingError} from "./error/parsing";
+import {createParsingError} from "./error/parsing";
 import type {TwingOperator} from "./operator";
 import type {TwingSource} from "./source";
 import {SyntaxError} from "twig-lexer/dist/types/lib/SyntaxError";
@@ -72,7 +72,7 @@ export class TwingLexer extends Lexer {
         } catch (error: any) {
             const {message, line, column} = (error as SyntaxError);
 
-            throw new TwingParsingError(message, line, column, source, error);
+            throw createParsingError(message, line, column, source, error);
         }
     }
 }

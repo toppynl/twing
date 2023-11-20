@@ -1,5 +1,5 @@
 import {createBaseNode} from "../node";
-import {TwingParsingError} from "../error/parsing";
+import {createParsingError} from "../error/parsing";
 import {createBlockNode} from "../node/block";
 import {createPrintNode} from "../node/output/print";
 import {createBlockReferenceNode} from "../node/output/block-reference";
@@ -29,7 +29,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                 let block = parser.getBlock(name);
 
                 if (block !== null) {
-                    throw new TwingParsingError(`The block '${name}' has already been defined at {${block.line}:${block.column}}.`, line, column, stream.source);
+                    throw createParsingError(`The block '${name}' has already been defined at {${block.line}:${block.column}}.`, line, column, stream.source);
                 }
 
                 block = createBlockNode(name, createBaseNode(null), line, column);
@@ -53,7 +53,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                         if (value !== name) {
                             const {line, column} = token;
 
-                            throw new TwingParsingError(`Expected endblock for block "${name}" (but "${value}" given).`, line, column, stream.source);
+                            throw createParsingError(`Expected endblock for block "${name}" (but "${value}" given).`, line, column, stream.source);
                         }
                     }
                 } else {

@@ -1,4 +1,4 @@
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 
 const phpRound = require('locutus/php/math/round');
 const phpCeil = require('locutus/php/math/ceil');
@@ -20,7 +20,7 @@ export const round = (value: any, precision: number, method: string): Promise<nu
         }
 
         if (method !== 'ceil' && method !== 'floor') {
-            throw new TwingRuntimeError('The round filter only supports the "common", "ceil", and "floor" methods.');
+            throw createRuntimeError('The round filter only supports the "common", "ceil", and "floor" methods.');
         }
 
         const intermediateValue = value * Math.pow(10, precision);

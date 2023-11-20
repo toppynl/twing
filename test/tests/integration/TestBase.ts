@@ -15,7 +15,6 @@ import {TwingTemplate} from "../../../src/lib/template";
 import {IntegrationTest} from "./test";
 import {TwingTagHandler} from "../../../src/lib/tag-handler";
 import {MappingItem, RawSourceMap, SourceMapConsumer} from "source-map";
-import {isATwingError} from "../../../src/lib/error";
 import {createFilesystemCache} from "../../../src/lib/cache/filesystem";
 import * as fs from "fs";
 import {TwingCache} from "../../../src/lib/cache";
@@ -426,12 +425,8 @@ export const runTest = async (
                     fail(`${description}: should throw an error`);
                 } catch (error: any) {
                     console.timeEnd(description);
-
-                    if (isATwingError(error)) {
-                        same(error.toString(), expectedErrorMessage, `${description}: throws error`);
-                    } else {
-                        same(error.message, expectedErrorMessage, `${description}: throws error`);
-                    }
+                    
+                    same(`${error.name}: ${error.message}`, expectedErrorMessage, `${description}: throws error`);
                 }
             }
 

@@ -1,4 +1,4 @@
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 
 const phpTrim = require('locutus/php/strings/trim');
 const phpLeftTrim = require('locutus/php/strings/ltrim');
@@ -25,7 +25,7 @@ export const trim = (string: string, characterMask: string | null, side: string)
             case 'right':
                 return phpRightTrim(string, characterMask);
             default:
-                throw new TwingRuntimeError('Trimming side must be "left", "right" or "both".');
+                throw createRuntimeError('Trimming side must be "left", "right" or "both".');
         }
     };
 
