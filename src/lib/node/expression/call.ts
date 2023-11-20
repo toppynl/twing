@@ -13,53 +13,52 @@ import type {TwingFunctionNode} from "./call/function";
 import type {TwingTestNode} from "./call/test";
 import {TwingCompilationError} from "../../error/compilation";
 
+const array_merge = require('locutus/php/array/array_merge');
+const snakeCase = require('snake-case');
+const capitalize = require('capitalize');
+
 export type TwingCallNode =
     | TwingFilterNode
     | TwingFunctionNode
     | TwingTestNode
     ;
 
-const array_merge = require('locutus/php/array/array_merge');
-const snakeCase = require('snake-case');
-const capitalize = require('capitalize');
+type CallType = "filter" | "function" | "test";
 
-type BaseCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
-    type: 'filter' | 'function' | 'test';
+type TwingBaseCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
     operatorName: string;
 };
 
-export type TwingBaseCallNodeChildren = {
-    operand?: TwingBaseNode;
+export type TwingBaseCallNodeChildren<OperandType extends TwingBaseNode | undefined> = {
     arguments: TwingArrayNode;
-};
+} & (OperandType extends TwingBaseNode ? {
+    operand: OperandType;
+} : {});
 
-export interface TwingBaseCallNode<Type extends string> extends TwingBaseExpressionNode<Type, BaseCallNodeAttributes, TwingBaseCallNodeChildren> {
-    compileArguments: (
-        compiler: TwingCompiler,
-        nativeArguments: Array<string>,
-        acceptedArguments: Array<TwingCallableArgument>,
-        needsTemplate: boolean,
-        needsContext: boolean,
-        needsOutputBuffer: boolean,
-        needsSourceMapRuntime: boolean,
-        isVariadic: boolean
-    ) => void;
-    compileCallable: (
-        compiler: TwingCompiler,
-        name: string,
-        type: "filter" | "function" | "test",
-        callableWrapper: TwingCallableWrapper<any>
-    ) => void;
+export interface TwingBaseCallNode<Type extends CallType, OperandType extends TwingBaseNode | undefined> extends TwingBaseExpressionNode<Type, TwingBaseCallNodeAttributes, TwingBaseCallNodeChildren<OperandType>> {
+
 }
 
-export const createBaseCallNode = <Type extends string>(
+export const createBaseCallNode = <Type extends CallType, OperandType extends TwingBaseNode | undefined>(
     type: Type,
-    attributes: BaseCallNodeAttributes,
-    children: TwingBaseCallNodeChildren,
+    operatorName: string,
+    operand: OperandType,
+    callArguments: TwingArrayNode,
     line: number,
     column: number
-): TwingBaseCallNode<Type> => {
-    const baseNode = createBaseExpressionNode<Type, BaseCallNodeAttributes, TwingBaseCallNodeChildren>(type, attributes, children, line, column);
+): TwingBaseCallNode<Type, OperandType> => {
+    let children = {
+        arguments: callArguments
+    } as TwingBaseCallNodeChildren<OperandType>;
+    
+    if (operand !== undefined) {
+        (children as TwingBaseCallNodeChildren<TwingBaseNode>).operand = operand;
+    }
+    
+    const baseNode: TwingBaseExpressionNode<Type, TwingBaseCallNodeAttributes, typeof children> = createBaseExpressionNode(type, {
+        type,
+        operatorName
+    }, children, line, column);
 
     const normalizeName = (name: string) => {
         return snakeCase(name).toLowerCase();
@@ -70,7 +69,7 @@ export const createBaseCallNode = <Type extends string>(
         acceptedArguments: Array<TwingCallableArgument>,
         isVariadic: boolean
     ): Array<TwingBaseNode> => {
-        const callType = baseNode.attributes.type;
+        const callType = type;
         const callName = baseNode.attributes.operatorName;
         const parameters: Map<string | number, {
             key: TwingConstantNode;
@@ -166,16 +165,15 @@ export const createBaseCallNode = <Type extends string>(
         return arguments_;
     }
 
-    const compileCallable: TwingBaseCallNode<Type>["compileCallable"] = (
-        compiler,
-        name,
-        type,
-        callableWrapper
-    ) => {
+    const compileCallable = (
+        compiler: TwingCompiler,
+        callableWrapper: TwingCallableWrapper<any>
+    ): void => {
+        const {operatorName} = node.attributes;
         const {nativeArguments, acceptedArguments, needsTemplate, needsContext, needsOutputBuffer, needsSourceMapRuntime, isVariadic} = callableWrapper;
 
         compiler
-            .write(`await runtime.get${capitalize(type)}('${name}').getTraceableCallable(${baseNode.line}, template.source)`)
+            .write(`await runtime.get${capitalize(type)}('${operatorName}').getTraceableCallable(${baseNode.line}, template.source)`)
             .write('(...[\n')
         ;
 
@@ -186,16 +184,16 @@ export const createBaseCallNode = <Type extends string>(
             .write('])');
     };
 
-    const compileArguments: TwingBaseCallNode<Type>["compileArguments"] = (
-        compiler,
-        nativeArguments,
-        acceptedArguments,
-        needsTemplate,
-        needsContext,
-        needsOutputBuffer,
-        needsSourceMapRuntime,
-        isVariadic
-    ) => {
+    const compileArguments = (
+        compiler: TwingCompiler,
+        nativeArguments: Array<string>,
+        acceptedArguments: Array<TwingCallableArgument>,
+        needsTemplate: boolean,
+        needsContext: boolean,
+        needsOutputBuffer: boolean,
+        needsSourceMapRuntime: boolean,
+        isVariadic: boolean
+    ): void => {
         const {operand, arguments: callArguments} = node.children;
 
         let first: boolean = true;
@@ -271,12 +269,39 @@ export const createBaseCallNode = <Type extends string>(
 
             first = false;
         }
-    }
+    };
 
-    const node = {
+    const node: TwingBaseCallNode<Type, OperandType> = {
         ...baseNode,
-        compileArguments,
-        compileCallable
+        compile: (compiler) => {
+            const {operatorName} = node.attributes;
+            const {environment} = compiler;
+
+            let callableWrapper: TwingCallableWrapper<any> | null = null;
+
+            switch (type) {
+                case "filter":
+                    callableWrapper = environment.getFilter(operatorName);
+                    break;
+
+                case "function":
+                    callableWrapper = environment.getFunction(operatorName);
+                    break;
+
+                case "test":
+                    callableWrapper = environment.getTest(operatorName);
+                    break;
+            }
+
+            if (callableWrapper === null) {
+                throw new TwingCompilationError(`Unknown ${type} "${operatorName}".`, baseNode.line);
+            }
+
+            compileCallable(
+                compiler,
+                callableWrapper
+            );
+        }
     };
 
     return node;
