@@ -262,6 +262,7 @@ export type {TwingTemplate} from "./lib/template";
 export type {TwingTest} from "./lib/test";
 export type {TwingTokenStream} from "./lib/token-stream";
 
+export {createCompiler} from "./lib/compiler";
 export {createEnvironment} from "./lib/environment";
 export {createExtensionSet} from "./lib/extension-set";
 export {createFilter} from "./lib/filter";

@@ -22,10 +22,10 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
             return node;
         } else {
             // look for tags
-            const nodeTag = node.getNodeTag();
+            const {tag} = node;
 
-            if (nodeTag && !(tags.has(nodeTag))) {
-                tags.set(nodeTag, node);
+            if (tag && !(tags.has(tag))) {
+                tags.set(tag, node);
             }
 
             // look for filters

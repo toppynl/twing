@@ -113,6 +113,7 @@ tape('library index', ({same, end}) => {
         'createUseTagHandler',
         'createVerbatimTagHandler',
         'createWithTagHandler',
+        'createCompiler',
         'createEnvironment',
         'createExtensionSet',
         'createFilter',
