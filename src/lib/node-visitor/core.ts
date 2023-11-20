@@ -17,14 +17,14 @@ import {filterNodeType, TwingFilterNode} from "../node/expression/call/filter";
  */
 export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     const enteredNodes: Array<TwingBaseExpressionNode> = [];
-    
+
     const enterDefaultFilterNode = (node: TwingFilterNode): TwingBaseExpressionNode => {
         const {line, column} = node;
         const {arguments: methodArguments} = node.children;
-        const operand = node.children.operand!;
+        const {operand} = node.children;
 
         let newNode: TwingBaseExpressionNode;
-        
+
         if (operand.is("name") || operand.is("get_attribute")) {
             const testNode = createTestNode(
                 operand,
@@ -38,17 +38,17 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
             const falseNode = values.length > 0 ? values[0] : createConstantNode('', line, column);
 
             newNode = createConditionalNode(testNode, node, falseNode, line, column);
-            
+
         } else {
             newNode = node;
         }
-        
+
         return newNode;
     };
 
     const enterDefinedTestNode = (node: TwingTestNode): TwingTestNode => {
-        const operand = node.children.operand!;
-        
+        const {operand} = node.children;
+
         if (
             !operand.is("name") &&
             !operand.is("get_attribute") &&
@@ -134,7 +134,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
         enterNode: (node) => {
             if (!enteredNodes.includes(node)) {
                 enteredNodes.push(node);
-                
+
                 if (node.is(filterNodeType)) {
                     if (node.attributes.operatorName === "default") {
                         return enterDefaultFilterNode(node);
