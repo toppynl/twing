@@ -1,4 +1,4 @@
-import {BaseSandboxSecurityError} from "./security-error";
+import {BaseSandboxSecurityError, createBaseSandboxSecurityError} from "./security-error";
 import type {TwingSource} from "../source";
 
 /**
@@ -8,8 +8,14 @@ export interface TwingSandboxSecurityNotAllowedFilterError extends BaseSandboxSe
     readonly filterName: string;
 }
 
-export class TwingSandboxSecurityNotAllowedFilterError extends BaseSandboxSecurityError {
-    constructor(message: string, public readonly filterName: string, line?: number, source?: TwingSource) {
-        super(message, line, source);
-    }
-}
+export const createSandboxSecurityNotAllowedFilterError = (message: string, filterName: string, line?: number, source?: TwingSource): TwingSandboxSecurityNotAllowedFilterError => {
+    const error = createBaseSandboxSecurityError(message, line, source);
+
+    Error.captureStackTrace(error, createSandboxSecurityNotAllowedFilterError);
+
+    return Object.assign(error, {
+        get filterName() {
+            return filterName;
+        }
+    });
+};

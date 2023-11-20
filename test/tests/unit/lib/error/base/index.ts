@@ -1,12 +1,13 @@
 import * as tape from "tape";
-import {TwingBaseError} from "../../../../../../src/lib/error/base";
+import {createBaseError} from "../../../../../../src/lib/error/base";
 
-tape('TwingBaseError', ({test}) => {
+tape('createBaseError', ({test}) => {
     test('creates a valid TwingRuntimeError', ({same, end}) => {
         const previousError = 'I am Error';
-        const error = new TwingBaseError('name', 'message', undefined, undefined, undefined, previousError);
+        const error = createBaseError('name', 'message', undefined, undefined, undefined, previousError);
 
         same(error.previous, previousError);
+        same(error.rootMessage, 'message');
 
         end();
     })

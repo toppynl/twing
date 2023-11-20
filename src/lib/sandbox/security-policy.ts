@@ -1,8 +1,8 @@
-import {TwingSandboxSecurityNotAllowedFilterError} from "./security-not-allowed-filter-error";
-import {TwingSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag-error";
-import {TwingSandboxSecurityNotAllowedFunctionError} from "./security-not-allowed-function-error";
-import {TwingSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
-import {TwingSandboxSecurityNotAllowedMethodError} from "./security-not-allowed-method-error";
+import {createSandboxSecurityNotAllowedFilterError} from "./security-not-allowed-filter-error";
+import {createSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag-error";
+import {createSandboxSecurityNotAllowedFunctionError} from "./security-not-allowed-function-error";
+import {createSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
+import {createSandboxSecurityNotAllowedMethodError} from "./security-not-allowed-method-error";
 import {isAMarkup, TwingMarkup} from "../markup";
 
 export interface TwingSandboxSecurityPolicy {
@@ -59,7 +59,7 @@ export const createSandboxSecurityPolicy = (
                 if (!allowed) {
                     const constructorName = candidate.constructor.name || '(anonymous)';
                     
-                    throw new TwingSandboxSecurityNotAllowedMethodError(`Calling "${method}" method on an instance of ${constructorName} is not allowed.`);
+                    throw createSandboxSecurityNotAllowedMethodError(`Calling "${method}" method on an instance of ${constructorName} is not allowed.`);
                 }
             },
             checkPropertyAllowed: (candidate, property) => {
@@ -76,25 +76,25 @@ export const createSandboxSecurityPolicy = (
                 if (!allowed) {
                     const constructorName = candidate.constructor.name || '(anonymous)';
 
-                    throw new TwingSandboxSecurityNotAllowedPropertyError(`Calling "${property}" property on an instance of ${constructorName} is not allowed.`);
+                    throw createSandboxSecurityNotAllowedPropertyError(`Calling "${property}" property on an instance of ${constructorName} is not allowed.`);
                 }
             },
             checkSecurity: (tags, filters, functions) => {
                 for (const tag of tags) {
                     if (!allowedTags.includes(tag)) {
-                        throw new TwingSandboxSecurityNotAllowedTagError(`Tag "${tag}" is not allowed.`, tag);
+                        throw createSandboxSecurityNotAllowedTagError(`Tag "${tag}" is not allowed.`, tag);
                     }
                 }
 
                 for (const filterName of filters) {
                     if (!allowedFilters.includes(filterName)) {
-                        throw new TwingSandboxSecurityNotAllowedFilterError(`Filter "${filterName}" is not allowed.`, filterName);
+                        throw createSandboxSecurityNotAllowedFilterError(`Filter "${filterName}" is not allowed.`, filterName);
                     }
                 }
 
                 for (const function_ of functions) {
                     if (!allowedFunctions.includes(function_)) {
-                        throw new TwingSandboxSecurityNotAllowedFunctionError(`Function "${function_}" is not allowed.`, function_);
+                        throw createSandboxSecurityNotAllowedFunctionError(`Function "${function_}" is not allowed.`, function_);
                     }
                 }
             }

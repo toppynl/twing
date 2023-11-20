@@ -1,6 +1,6 @@
 import {mergeIterables} from "../../../helpers/merge-iterables";
 import {isTraversable} from "../../../helpers/is-traversable";
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 
 /**
@@ -23,13 +23,13 @@ export const merge = (iterable1: any, source: any): Promise<Map<any, any>> => {
     const isIterable1NullOrUndefined = (iterable1 === null) || (iterable1 === undefined);
 
     if (isIterable1NullOrUndefined || (!isTraversable(iterable1) && (typeof iterable1 !== 'object'))) {
-        return Promise.reject(new TwingRuntimeError(`The merge filter only works on arrays or "Traversable", got "${!isIterable1NullOrUndefined ? typeof iterable1 : iterable1}".`));
+        return Promise.reject(createRuntimeError(`The merge filter only works on arrays or "Traversable", got "${!isIterable1NullOrUndefined ? typeof iterable1 : iterable1}".`));
     }
 
     const isSourceNullOrUndefined = (source === null) || (source === undefined);
 
     if (isSourceNullOrUndefined || (!isTraversable(source) && (typeof source !== 'object'))) {
-        return Promise.reject(new TwingRuntimeError(`The merge filter only accepts arrays or "Traversable" as source, got "${!isSourceNullOrUndefined ? typeof source : source}".`));
+        return Promise.reject(createRuntimeError(`The merge filter only accepts arrays or "Traversable" as source, got "${!isSourceNullOrUndefined ? typeof source : source}".`));
     }
 
     return Promise.resolve(mergeIterables(iteratorToMap(iterable1), iteratorToMap(source)));

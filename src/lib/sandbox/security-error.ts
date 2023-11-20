@@ -4,7 +4,7 @@ import type {TwingSandboxSecurityNotAllowedMethodError} from "./security-not-all
 import type {TwingSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
 import type {TwingSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag-error";
 import type {TwingSource} from "../source";
-import {TwingBaseError} from "../error/base";
+import {createBaseError, TwingBaseError} from "../error/base";
 
 export type TwingSandboxSecurityError =
     | TwingSandboxSecurityNotAllowedFilterError
@@ -22,8 +22,10 @@ export const sandboxSecurityErrorName = 'TwingSandboxSecurityError';
 export interface BaseSandboxSecurityError extends TwingBaseError<typeof sandboxSecurityErrorName> {
 }
 
-export class BaseSandboxSecurityError extends TwingBaseError<typeof sandboxSecurityErrorName> {
-    constructor(message: string, line?: number, source?: TwingSource) {
-        super(sandboxSecurityErrorName, message, line, undefined, source);
-    }
+export const createBaseSandboxSecurityError = (message: string, line?: number, source?: TwingSource) => {
+    const error = createBaseError(sandboxSecurityErrorName, message, line, undefined, source);
+    
+    Error.captureStackTrace(error, createBaseSandboxSecurityError);
+    
+    return error;
 }

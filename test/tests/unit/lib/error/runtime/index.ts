@@ -1,9 +1,9 @@
 import * as tape from "tape";
-import {isARuntimeError, TwingRuntimeError} from "../../../../../../src/lib/error/runtime";
+import {createRuntimeError, isARuntimeError} from "../../../../../../src/lib/error/runtime";
 
-tape('TwingRuntimeError', ({test}) => {
+tape('createRuntimeError', ({test}) => {
     test('creates a valid TwingRuntimeError', ({same, end}) => {
-        const error = new TwingRuntimeError('foo');
+        const error = createRuntimeError('foo');
 
         same(isARuntimeError(error), true);
 

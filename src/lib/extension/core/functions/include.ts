@@ -3,7 +3,7 @@ import {mergeIterables} from "../../../helpers/merge-iterables";
 import {isATemplateLoadingError} from "../../../error/loader";
 import type {TwingTemplate} from "../../../template";
 import {isTraversable} from "../../../helpers/is-traversable";
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 import {TwingOutputBuffer} from "../../../output-buffer";
 import {TwingContext} from "../../../context";
@@ -44,7 +44,7 @@ export function include(
     if (!isPlainObject(variables) && !isTraversable(variables)) {
         const isVariablesNullOrUndefined = variables === null || variables === undefined;
         
-        return Promise.reject(new TwingRuntimeError(`Variables passed to the "include" function or tag must be iterable, got "${!isVariablesNullOrUndefined ? typeof variables : variables}".`, undefined, from));
+        return Promise.reject(createRuntimeError(`Variables passed to the "include" function or tag must be iterable, got "${!isVariablesNullOrUndefined ? typeof variables : variables}".`, undefined, from));
     }
 
     variables = iteratorToMap(variables);

@@ -47,7 +47,7 @@ export const createWithNode = (
                     .write(";\n")
                     .write(`if (typeof (tmp) !== 'object') {\n`)
                     
-                    .write('throw new runtime.Error(\'Variables passed to the "with" tag must be a hash.\', ')
+                    .write('throw runtime.createError(\'Variables passed to the "with" tag must be a hash.\', ')
                     .render(baseNode.line)
                     .write(", template.source);\n")
                     

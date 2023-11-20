@@ -5,7 +5,7 @@ import {cloneBlockReferenceExpressionNode} from "../node/expression/block-functi
 import {createConstantNode} from "../node/expression/constant";
 import {cloneMethodCallNode} from "../node/expression/method-call";
 import {TwingBaseExpressionNode} from "../node/expression";
-import {TwingParsingError} from "../error/parsing";
+import {createParsingError} from "../error/parsing";
 import {createTestNode, testNodeType, TwingTestNode} from "../node/expression/call/test";
 import {createArrayNode, getKeyValuePairs} from "../node/expression/array";
 import {createConditionalNode} from "../node/expression/conditional";
@@ -58,7 +58,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
             !operand.is("method_call") &&
             !(operand.is(functionNodeType) && (operand.attributes.operatorName === 'constant'))
         ) {
-            throw new TwingParsingError('The "defined" test only works with simple variables.', node.line);
+            throw createParsingError('The "defined" test only works with simple variables.', node.line);
         }
 
         let newOperand: TwingBaseExpressionNode;

@@ -7,7 +7,7 @@
  * {% endmacro %}
  * </pre>
  */
-import {TwingParsingError} from "../error/parsing";
+import {createParsingError} from "../error/parsing";
 import {createBodyNode} from "../node/body";
 import {createMacroNode, VARARGS_NAME} from "../node/macro";
 import {Token, TokenType} from "twig-lexer";
@@ -29,7 +29,7 @@ export const createMacroTagHandler = (): TwingTagHandler => {
                     const {value: argumentName} = key.attributes;
 
                     if (argumentName === VARARGS_NAME) {
-                        throw new TwingParsingError(`The argument "${VARARGS_NAME}" in macro "${name}" cannot be defined because the variable "${VARARGS_NAME}" is reserved for arbitrary arguments.`, macroArgument.line);
+                        throw createParsingError(`The argument "${VARARGS_NAME}" in macro "${name}" cannot be defined because the variable "${VARARGS_NAME}" is reserved for arbitrary arguments.`, macroArgument.line);
                     }
                 }
 
@@ -48,7 +48,7 @@ export const createMacroTagHandler = (): TwingTagHandler => {
                     if (value != name) {
                         const {line, column} = nextToken;
 
-                        throw new TwingParsingError(`Expected endmacro for macro "${name}" (but "${value}" given).`, line, column, stream.source);
+                        throw createParsingError(`Expected endmacro for macro "${name}" (but "${value}" given).`, line, column, stream.source);
                     }
                 }
 

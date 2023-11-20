@@ -1,5 +1,5 @@
 import type {TwingSource} from "./source";
-import {TwingParsingError} from "./error/parsing";
+import {createParsingError} from "./error/parsing";
 import {Token, TokenStream, TokenType, astVisitor} from "twig-lexer";
 import {typeToEnglish} from "./lexer";
 
@@ -62,7 +62,7 @@ export const createTokenStream = (
             if (!token.test(type, value || undefined)) {
                 const {line, column} = token;
 
-                throw new TwingParsingError(
+                throw createParsingError(
                     message ? `${message}.` : `Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}" ("${typeToEnglish(type)}" expected${value ? ` with value "${value}"` : ''}).`,
                     line,
                     column,

@@ -1,5 +1,5 @@
 import type {TwingSource} from "../source";
-import {TwingBaseError} from "./base";
+import {createBaseError, TwingBaseError} from "./base";
 
 export const compilationErrorName = 'TwingCompilationError';
 
@@ -11,8 +11,10 @@ export interface TwingCompilationError extends TwingBaseError<typeof compilation
 
 }
 
-export class TwingCompilationError extends TwingBaseError<typeof compilationErrorName> {
-    constructor(message: string, line?: number, source?: TwingSource, previous?: Error) {
-        super(compilationErrorName, message, line, undefined, source, previous);
-    }
-}
+export const createCompilationError = (message: string, line?: number, source?: TwingSource, previous?: Error): TwingCompilationError => {
+    const error = createBaseError(compilationErrorName, message, line, undefined, source, previous);
+    
+    Error.captureStackTrace(error, createCompilationError);
+    
+    return error;
+};

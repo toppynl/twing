@@ -11,7 +11,7 @@ import {TwingCallableArgument, TwingCallableWrapper} from "../../callable-wrappe
 import type {TwingFilterNode} from "./call/filter";
 import type {TwingFunctionNode} from "./call/function";
 import type {TwingTestNode} from "./call/test";
-import {TwingCompilationError} from "../../error/compilation";
+import {createCompilationError} from "../../error/compilation";
 
 const array_merge = require('locutus/php/array/array_merge');
 const snakeCase = require('snake-case');
@@ -87,7 +87,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
                 named = true;
                 name = normalizeName(name);
             } else if (named) {
-                throw new TwingCompilationError(`Positional arguments cannot be used after named arguments for ${callType} "${callName}".`, baseNode.line);
+                throw createCompilationError(`Positional arguments cannot be used after named arguments for ${callType} "${callName}".`, baseNode.line);
             }
 
             parameters.set(name, {
@@ -112,7 +112,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
 
             if (parameter) {
                 if (parameters.has(position)) {
-                    throw new TwingCompilationError(`Argument "${name}" is defined twice for ${callType} "${callName}".`, baseNode.line);
+                    throw createCompilationError(`Argument "${name}" is defined twice for ${callType} "${callName}".`, baseNode.line);
                 }
 
                 arguments_ = array_merge(arguments_, optionalArguments);
@@ -131,7 +131,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
                 } else if (callableParameter.defaultValue !== undefined) {
                     arguments_.push(createConstantNode(callableParameter.defaultValue, line, column));
                 } else {
-                    throw new TwingCompilationError(`Value for argument "${name}" is required for ${callType} "${callName}".`, baseNode.line);
+                    throw createCompilationError(`Value for argument "${name}" is required for ${callType} "${callName}".`, baseNode.line);
                 }
             }
         }
@@ -159,7 +159,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
         if (parameters.size > 0) {
             const unknownParameter = [...parameters.values()][0];
 
-            throw new TwingCompilationError(`Unknown argument${parameters.size > 1 ? 's' : ''} "${[...parameters.keys()].join('", "')}" for ${callType} "${callName}(${names.join(', ')})".`, unknownParameter.key.line);
+            throw createCompilationError(`Unknown argument${parameters.size > 1 ? 's' : ''} "${[...parameters.keys()].join('", "')}" for ${callType} "${callName}(${names.join(', ')})".`, unknownParameter.key.line);
         }
 
         return arguments_;
@@ -294,7 +294,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
             }
 
             if (callableWrapper === null) {
-                throw new TwingCompilationError(`Unknown ${type} "${operatorName}".`, baseNode.line);
+                throw createCompilationError(`Unknown ${type} "${operatorName}".`, baseNode.line);
             }
 
             compileCallable(

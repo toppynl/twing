@@ -1,4 +1,4 @@
-import {TwingParsingError} from "../error/parsing";
+import {createParsingError} from "../error/parsing";
 import {createSandboxNode} from "../node/sandbox";
 import {getChildren} from "../node";
 import {isMadeOfWhitespaceOnly} from "../helpers/is-made-of-whitespace-only";
@@ -25,7 +25,7 @@ export const createSandboxTagHandler = (): TwingTagHandler => {
                     for (const [, child] of getChildren(body)) {
                         if (!(child.is("text") && isMadeOfWhitespaceOnly(child.attributes.data))) {
                             if (!child.is("include")) {
-                                throw new TwingParsingError('Only "include" tags are allowed within a "sandbox" section.', child.line, child.column, stream.source);
+                                throw createParsingError('Only "include" tags are allowed within a "sandbox" section.', child.line, child.column, stream.source);
                             }
                         }
                     }

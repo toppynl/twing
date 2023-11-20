@@ -1,6 +1,6 @@
 import {DateTime, Duration} from "luxon";
 import {modifyDate} from "../../../helpers/modify-date";
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 import {TwingTemplate} from "../../../template";
 
 /**
@@ -73,7 +73,7 @@ export const createDate = (
         }
 
         if (!result || !result.isValid) {
-            throw new TwingRuntimeError(`Failed to parse date "${input}".`);
+            throw createRuntimeError(`Failed to parse date "${input}".`);
         }
         
         // now let's apply timezone

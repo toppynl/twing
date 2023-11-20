@@ -1,5 +1,5 @@
 import {isMapLike} from "./map-like";
-import {TwingRuntimeError} from "../error/runtime";
+import {createRuntimeError} from "../error/runtime";
 import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
@@ -98,7 +98,7 @@ export const getAttribute = (
                     message = `Impossible to access an attribute ("${attribute}") on a ${typeof object} variable ("${object}").`;
                 }
 
-                throw new TwingRuntimeError(message);
+                throw createRuntimeError(message);
             }
         }
         
@@ -120,7 +120,7 @@ export const getAttribute = (
                 message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
             }
 
-            throw new TwingRuntimeError(message);
+            throw createRuntimeError(message);
         }
         
         // object property
@@ -213,7 +213,7 @@ export const getAttribute = (
                 return;
             }
 
-            throw new TwingRuntimeError(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
+            throw createRuntimeError(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
         }
 
         if (shouldTestExistence) {

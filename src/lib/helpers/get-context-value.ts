@@ -1,5 +1,5 @@
 import type {TwingContext} from "../context";
-import {TwingRuntimeError} from "../error/runtime";
+import {createRuntimeError} from "../error/runtime";
 import type {TwingTemplate} from "../template";
 
 export const getContextValue = (
@@ -41,7 +41,7 @@ export const getContextValue = (
             result = context.get(name);
 
             if (result === undefined) {
-                return Promise.reject(new TwingRuntimeError(`Variable "${name}" does not exist.`));
+                return Promise.reject(createRuntimeError(`Variable "${name}" does not exist.`));
             }
         }
     }

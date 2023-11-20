@@ -1,4 +1,4 @@
-import {TwingTemplateLoadingError} from "../../../error/loader";
+import {createTemplateLoadingError} from "../../../error/loader";
 import {TwingTemplate} from "../../../template";
 
 /**
@@ -17,7 +17,7 @@ export const source = (template: TwingTemplate, name: string, ignoreMissing: boo
     return environment.getLoader().getSourceContext(name, from)
         .then((source) => {
             if (!ignoreMissing && (source === null)) {
-                throw new TwingTemplateLoadingError(name);
+                throw createTemplateLoadingError(name);
             }
 
             return source?.code || null;

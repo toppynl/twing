@@ -1,4 +1,4 @@
-import {TwingRuntimeError} from "./error/runtime";
+import {createRuntimeError} from "./error/runtime";
 import {TwingSource} from "./source";
 import {isATwingError, TwingError} from "./error";
 import {createOutputBuffer, TwingOutputBuffer} from './output-buffer';
@@ -144,10 +144,10 @@ export const createTemplate = (
                     }
 
                     if (isATemplateLoadingError(error)) {
-                        error = new TwingRuntimeError(error.message, error.line, error.source, error);
+                        error = createRuntimeError(error.rootMessage, error.line, error.source, error);
                     }
                 } else {
-                    error = new TwingRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, undefined, source, error);
+                    error = createRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, undefined, source, error);
                 }
 
                 throw error;
@@ -173,7 +173,7 @@ export const createTemplate = (
                         if (parent !== null) {
                             return parent.displayBlock(name, context, outputBuffer, blocks, false, sourceMapRuntime);
                         } else {
-                            throw new TwingRuntimeError(`The template has no parent and no traits defining the "${name}" block.`, undefined, source);
+                            throw createRuntimeError(`The template has no parent and no traits defining the "${name}" block.`, undefined, source);
                         }
                     });
             }
@@ -247,7 +247,7 @@ export const createTemplate = (
                 if (handler) {
                     return handler(outputBuffer, sourceMapRuntime, ...args);
                 } else {
-                    throw new TwingRuntimeError(`Macro "${name}" is not defined in template "${template.templateName}".`, line, source);
+                    throw createRuntimeError(`Macro "${name}" is not defined in template "${template.templateName}".`, line, source);
                 }
             });
         },
@@ -284,9 +284,9 @@ export const createTemplate = (
                         } else if (blocks.has(name)) {
                             const [blockTemplate] = blocks.get(name)!;
 
-                            throw new TwingRuntimeError(`Block "${name}" should not call parent() in "${blockTemplate.templateName}" as the block does not exist in the parent template "${template.templateName}".`, undefined, blockTemplate.source);
+                            throw createRuntimeError(`Block "${name}" should not call parent() in "${blockTemplate.templateName}" as the block does not exist in the parent template "${template.templateName}".`, undefined, blockTemplate.source);
                         } else {
-                            throw new TwingRuntimeError(`Block "${name}" on template "${template.templateName}" does not exist.`, undefined, template.source);
+                            throw createRuntimeError(`Block "${name}" on template "${template.templateName}" does not exist.`, undefined, template.source);
                         }
                     });
 
@@ -317,7 +317,7 @@ export const createTemplate = (
                             error.source = source;
                         }
                     } else {
-                        throw new TwingRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, line, source, error);
+                        throw createRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, line, source, error);
                     }
 
                     throw error;

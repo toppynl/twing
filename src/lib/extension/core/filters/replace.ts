@@ -1,6 +1,6 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToHash} from "../../../helpers/iterator-to-hash";
-import {TwingRuntimeError} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
 
 const phpStrtr = require('locutus/php/strings/strtr');
 
@@ -17,7 +17,7 @@ export const replace = (value: string | null, from: any): Promise<string> => {
         if (isTraversable(from)) {
             from = iteratorToHash(from);
         } else if (typeof from !== 'object') {
-            throw new TwingRuntimeError(`The "replace" filter expects an hash or "Iterable" as replace values, got "${typeof from}".`);
+            throw createRuntimeError(`The "replace" filter expects an hash or "Iterable" as replace values, got "${typeof from}".`);
         }
 
         if (value === null) {
