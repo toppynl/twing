@@ -10,7 +10,7 @@ export interface TwingSandboxSecurityPolicy {
      * @param {any | TwingMarkup} candidate
      * @param {string} method
      *
-     * @throws TwingSandboxSecurityNotAllowedMethodError When the method is not allowed on the passed object
+     * @throws {@link TwingSandboxSecurityNotAllowedMethodError} When the method is not allowed on the passed object
      */
     checkMethodAllowed(candidate: any | TwingMarkup, method: string): void;
 

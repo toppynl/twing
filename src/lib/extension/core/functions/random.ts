@@ -14,7 +14,7 @@ const array_rand = require('locutus/php/array/array_rand');
  * - a random character from a string
  * - a random integer between 0 and the integer parameter.
  *
- * @param {Runtime} template
+ * @param {TwingRuntime} template
  * @param {*} values The values to pick a random item from
  * @param {number} max Maximum value used when values is an integer
  *

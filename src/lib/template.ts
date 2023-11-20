@@ -6,7 +6,7 @@ import {iteratorToMap} from "./helpers/iterator-to-map";
 import {mergeIterables} from "./helpers/merge-iterables";
 import {createContext, TwingContext} from "./context";
 import {isMapLike} from "./helpers/map-like";
-import {Runtime} from "./runtime";
+import {TwingRuntime} from "./runtime";
 import {isATemplateLoadingError} from "./error/loader";
 import {PassThrough, Readable, Writable} from "stream";
 import {TwingSourceMapRuntime} from "./source-map-runtime";
@@ -22,7 +22,7 @@ export interface TwingTemplate {
     readonly blockHandlers: Map<string, TemplateBlockHandler>;
     readonly canBeUsedAsATrait: boolean;
     readonly macroHandlers: Map<string, TemplateMacroHandler>;
-    readonly runtime: Runtime;
+    readonly runtime: TwingRuntime;
     readonly source: TwingSource;
     readonly templateName: string;
 
@@ -78,7 +78,7 @@ export interface TwingTemplate {
         line: number,
         index?: number
     ): Promise<TwingTemplate | null>;
-
+    
     render(context: Record<string, any>, outputBuffer?: TwingOutputBuffer, sourceMapRuntime?: TwingSourceMapRuntime): Promise<string>;
 
     renderBlock(
@@ -99,7 +99,7 @@ export interface TwingTemplate {
 }
 
 export const createTemplate = (
-    runtime: Runtime,
+    runtime: TwingRuntime,
     source: TwingSource,
     blockHandlers: Map<string, TemplateBlockHandler>,
     macroHandlers: Map<string, TemplateMacroHandler>,

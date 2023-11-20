@@ -38,7 +38,7 @@ const createCandidate = (definition?: {
             createExtensionSet(),
             {}
         ),
-        createSource('code', 'name'),
+        createSource('name', 'code'),
         new Map(),
         new Map(),
         definition?.display || ((_context, outputBuffer) => {

@@ -100,7 +100,7 @@ export const createFilesystemLoader = (
         const [namespace, shortname] = parseName(name);
 
         const paths = pathsByNamespace.get(namespace);
-        
+
         if (!paths) {
             return Promise.resolve(null);
         }
@@ -112,7 +112,7 @@ export const createFilesystemLoader = (
                 if (!isAbsolute(path)) {
                     path = join(actualRootPath, path);
                 }
-                
+
                 const stats = await stat(join(path, shortname));
 
                 if (stats && stats.isFile()) {
@@ -136,7 +136,7 @@ export const createFilesystemLoader = (
     const getNamespaces: TwingFilesystemLoader["getNamespaces"] = () => {
         return [...pathsByNamespace.keys()];
     };
-    
+
     const normalizeName = (name: string) => {
         return name.replace(/\\/g, '/').replace(/\/{2,}/g, '/')
     };
@@ -243,7 +243,7 @@ export const createFilesystemLoader = (
                                 if (error) {
                                     reject(error);
                                 } else {
-                                    resolve(createSource(data!.toString(), name, path));
+                                    resolve(createSource(name, data!.toString(), path));
                                 }
                             });
                         });

@@ -22,7 +22,7 @@ export const createArrayLoader = (
                         return null;
                     }
 
-                    return createSource(registry.get(name), name);
+                    return createSource(name, registry.get(name));
                 });
         },
         exists(name) {

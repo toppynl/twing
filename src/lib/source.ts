@@ -5,8 +5,8 @@ export interface TwingSource {
 }
 
 export const createSource = (
-    code: string,
     name: string,
+    code: string,
     resolvedName?: string
 ): TwingSource => {
     return {

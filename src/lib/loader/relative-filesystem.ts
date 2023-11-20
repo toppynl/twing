@@ -45,14 +45,13 @@ export const createRelativeFilesystemLoader = (
             .then((path) => {
                 if (path === null) {
                     return null;
-                }
-                else {
+                } else {
                     return new Promise<TwingSource>((resolve, reject) => {
                         filesystem.readFile(path!, (error, data) => {
                             if (error) {
                                 reject(error);
                             } else {
-                                resolve(createSource(data!.toString(), name, path!));
+                                resolve(createSource(name, data!.toString(), path!));
                             }
                         });
                     });
@@ -101,7 +100,7 @@ export const createRelativeFilesystemLoader = (
     const findTemplate = (name: string, from: TwingSource | null): Promise<string | null> => {
         let _do = (): Promise<string | null> => {
             name = normalizeName(resolvePathFromSource(name, from));
-            
+
             const template = cache.get(name);
 
             if (template) {
