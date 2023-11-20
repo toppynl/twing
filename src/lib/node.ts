@@ -85,11 +85,10 @@ export interface TwingBaseNode<
     readonly isACaptureNode: boolean;
     readonly isAnOutputNode: boolean;
     readonly line: number;
+    readonly tag: string | null;
     readonly type: Type;
     
     compile(compiler: TwingCompiler): void;
-
-    getNodeTag(): string | null;
     
     toString(): string; // todo: remove - move it to a development helper and check usage in the parser 
 
@@ -129,9 +128,9 @@ export const createBaseNode = <
         children,
         column,
         line,
+        tag,
         isACaptureNode: false,
         isAnOutputNode: false,
-        getNodeTag: () => tag,
         compile: (compiler) => {
             for (const [, child] of getChildren(node)) {
                 child.compile(compiler);
