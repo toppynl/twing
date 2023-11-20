@@ -4,7 +4,7 @@ import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
 import type {TwingGetAttributeCallType} from "../node/expression/attribute-accessor";
-import type {Runtime} from "../runtime";
+import type {TwingRuntime} from "../runtime";
 
 const isBool = require('locutus/php/var/is_bool');
 const isFloat = require('locutus/php/var/is_float');
@@ -13,7 +13,7 @@ const isObject = require('isobject');
 /**
  * Returns the attribute value for a given array/object.
  *
- * @param {Runtime} runtime
+ * @param {TwingRuntime} runtime
  * @param {*} object The object or array from where to get the item
  * @param {*} attribute The item to get from the array or object
  * @param {Map<any, any>} _arguments A map of arguments to pass if the item is an object method
@@ -27,7 +27,7 @@ const isObject = require('isobject');
  * @throw {TwingErrorRuntime} if the attribute does not exist and Twing is running in strict mode and isDefinedTest is false
  */
 export const getAttribute = (
-    runtime: Runtime,
+    runtime: TwingRuntime,
     object: any,
     attribute: any,
     _arguments: Map<any, any>,

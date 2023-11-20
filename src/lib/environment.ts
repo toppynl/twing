@@ -7,9 +7,8 @@ import {TwingLoader} from "./loader";
 import {TwingTest} from "./test";
 import {TwingFunction} from "./function";
 import {TwingTemplate} from "./template";
-import {TwingCache} from "./cache";
 import {TwingOperator} from "./operator";
-import type {CreateRuntimeOptions, NumberFormat} from "./runtime";
+import type {TwingRuntimeOptions} from "./runtime";
 import {createRuntime} from "./runtime";
 import {EscapingStrategyHandler} from "./escaping-strategy";
 import {createHtmlEscapingStrategyHandler} from "./escaping-stragegy/html";
@@ -20,25 +19,11 @@ import {createHtmlAttributeEscapingStrategyHandler} from "./escaping-stragegy/ht
 import {TwingSource} from "./source";
 import {TwingTokenStream} from "./token-stream";
 import {TwingExtension} from "./extension";
-import {TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
 import {TwingModuleNode} from "./node/module";
 import {RawSourceMap} from "source-map";
 import {createSourceMapRuntime} from "./source-map-runtime";
 
-export type TwingEnvironmentOptions = {
-    autoEscapingStrategy?: "css" | "html" | "js" | "name" | string | null;
-    autoReload?: boolean;
-    cache?: TwingCache | false;
-    charset?: string;
-    dateFormat?: string;
-    dateIntervalFormat?: string;
-    numberFormat?: NumberFormat;
-    parserOptions?: TwingParserOptions;
-    strictVariables?: boolean;
-    sandboxPolicy?: TwingSandboxSecurityPolicy;
-    sandboxed?: boolean;
-    timezone?: string;
-};
+export type TwingEnvironmentOptions = TwingRuntimeOptions;
 
 export interface TwingEnvironment {
     /**
@@ -83,6 +68,8 @@ export interface TwingEnvironment {
 
     /**
      * Register the passed listener...
+     * 
+     * When a template is encountered, Twing environment emits a `template` event with the name of the encountered template and the source of the template that initiated the loading.
      */
     on(eventName: "load", listener: (name: string, from: TwingSource | null) => void): void;
 
@@ -97,12 +84,13 @@ export interface TwingEnvironment {
     parse(stream: TwingTokenStream, options: TwingParserOptions): TwingModuleNode;
 
     /**
-     * Convenient method...
-     * @param name
-     * @param context
+     * Convenient method that renders a template from its name.
      */
     render(name: string, context: Record<string, any>): Promise<string>;
 
+    /**
+     * Convenient method that renders a template from its name and returns both the render result and its belonging source map.
+     */
     renderWithSourceMap(name: string, context: Record<string, any>): Promise<{
         data: string;
         sourceMap: RawSourceMap;
@@ -135,10 +123,16 @@ export interface TwingEnvironment {
     tokenize(source: TwingSource): TwingTokenStream;
 }
 
-export const createEnvironment = (
+/**
+ * Creates an instance of {@link TwingEnvironment} backed by the passed loader.
+ * 
+ * @param loader
+ * @param options
+ */
+export function createEnvironment(
     loader: TwingLoader,
     options?: TwingEnvironmentOptions
-): TwingEnvironment => {
+): TwingEnvironment {
     const cssEscapingStrategy = createCssEscapingStrategyHandler();
     const htmlEscapingStrategy = createHtmlEscapingStrategyHandler();
     const htmlAttributeEscapingStrategy = createHtmlAttributeEscapingStrategyHandler();
@@ -154,14 +148,14 @@ export const createEnvironment = (
     };
     const extensionSet = createExtensionSet();
 
-    const createRuntimeOptions: CreateRuntimeOptions = {
+    const createRuntimeOptions: TwingRuntimeOptions = {
         autoEscapingStrategy: options?.autoEscapingStrategy,
         autoReload: options?.autoReload,
         cache: options?.cache,
         charset: options?.charset,
         dateFormat: options?.dateFormat,
         dateIntervalFormat: options?.dateIntervalFormat,
-        numberFormats: options?.numberFormat,
+        numberFormat: options?.numberFormat,
         parserOptions: options?.parserOptions,
         sandboxed: options?.sandboxed,
         sandboxPolicy: options?.sandboxPolicy,
@@ -207,9 +201,9 @@ export const createEnvironment = (
                 })
                 .then((data) => {
                     const {sourceNode} = sourceMapRuntime;
-                    
+
                     const {map} = sourceNode.toStringWithSourceMap();
-                    
+
                     return {
                         data,
                         sourceMap: JSON.parse(map.toString())

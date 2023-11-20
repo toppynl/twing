@@ -51,25 +51,25 @@ import {getContextValue} from "./helpers/get-context-value";
 import {createCoreExtension} from "./extension/core";
 import {TwingSourceMapRuntime} from "./source-map-runtime";
 
-export type TwingTemplateFactory = (runtime: Runtime) => TwingTemplate;
+export type TwingTemplateFactory = (runtime: TwingRuntime) => TwingTemplate;
 export type TwingTemplateModule = {
     0: TwingTemplateFactory;
 } & Record<string, TwingTemplateFactory>;
 
-export type NumberFormat = {
+export type TwingNumberFormat = {
     numberOfDecimals: number;
     decimalPoint: string;
     thousandSeparator: string;
 };
 
-export interface Runtime {
+export interface TwingRuntime {
     readonly charset: string;
     readonly createTemplate: typeof createTemplate;
     readonly dateFormat: string;
     readonly dateIntervalFormat: string;
     readonly Error: typeof TwingRuntimeError;
     isSandboxed: boolean;
-    readonly defaultNumberFormats: NumberFormat;
+    readonly defaultNumberFormats: TwingNumberFormat;
     readonly isStrictVariables: boolean;
     readonly timezone: string;
 
@@ -116,12 +116,12 @@ export interface Runtime {
     ensureToStringAllowed<T>(candidate: T): T;
 
     ensureTraversable<T>(candidate: T[]): T[] | [];
-    
+
     escape(template: TwingTemplate, value: string | boolean | TwingMarkup | null | undefined, strategy: EscapingStrategy, charset: string | null, autoEscape?: boolean): Promise<string | boolean>;
 
     evaluate(value: any): boolean;
 
-    getAttribute(runtime: Runtime, target: any, attribute: any, methodArguments: Map<any, any>, type: TwingGetAttributeCallType, shouldTestExistence: boolean, shouldIgnoreStrictCheck: boolean): any;
+    getAttribute(runtime: TwingRuntime, target: any, attribute: any, methodArguments: Map<any, any>, type: TwingGetAttributeCallType, shouldTestExistence: boolean, shouldIgnoreStrictCheck: boolean): any;
 
     getContextValue(template: TwingTemplate, context: TwingContext<any, any>, name: string, isAlwaysDefined: boolean, shouldIgnoreStrictCheck: boolean, shouldTestExistence: boolean): Promise<any>;
 
@@ -173,7 +173,7 @@ export interface Runtime {
     isIn(a: any, b: any): boolean;
 
     iterate(iterator: any, cb: IterateCallback): Promise<void>;
-    
+
     loadTemplate(name: string, index?: number, from?: TwingSource | null): Promise<TwingTemplate>;
 
     merge<V>(iterable1: Map<any, V>, iterable2: Map<any, V>): Map<any, V>;
@@ -229,17 +229,43 @@ export interface Runtime {
     tokenize(source: TwingSource): TwingTokenStream;
 }
 
-export type CreateRuntimeOptions = {
-    autoReload?: boolean;
+export type TwingRuntimeOptions = {
+    /**
+     * Sets the default auto-escaping strategy (`"name"`, `"html"`, `"js"`, `"css"`, `"url"`, `"html_attr"`), or disables auto-escaping entirely when set to `null`.
+     * 
+     * The `"name"` escaping strategy infers the escaping strategy from the template filename extension.
+     * 
+     * Defaults to `"html"`.
+     */
     autoEscapingStrategy?: string | null;
-    cache?: TwingCache | false;
+    /**
+     * Controls whether the templates are recompiled whenever their content changes or not.
+     * 
+     * When set to `true`, templates are recompiled whenever their content changes instead of fetching them from the persistent cache. Note that this won't invalidate the environment inner cache but only the cache passed using the `cache` option. Defaults to `false`.
+     */
+    autoReload?: boolean;
+    /**
+     * The persistent cache instance.
+     */
+    cache?: TwingCache;
+    /**
+     * The default charset. Defaults to "UTF-8".
+     */
     charset?: string;
     dateFormat?: string;
     dateIntervalFormat?: string;
-    numberFormats?: NumberFormat;
+    numberFormat?: TwingNumberFormat;
     parserOptions?: TwingParserOptions;
     sandboxed?: boolean;
     sandboxPolicy?: TwingSandboxSecurityPolicy;
+    /**
+     * Controls whether accessing invalid variables (variables and or attributes/methods that do not exist) triggers a runtime error.
+     *
+     * When set to `true`, accessing invalid variables triggers a runtime error.
+     * When set to `false`, accessing invalid variables returns `null`.
+     * 
+     * Defaults to `false`.
+     */
     strictVariables?: boolean;
     timezone?: string;
 };
@@ -248,8 +274,8 @@ export const createRuntime = (
     loader: TwingLoader,
     escapingStrategyHandlers: Record<string, EscapingStrategyHandler>,
     extensionSet: TwingExtensionSet,
-    options: CreateRuntimeOptions
-): Runtime => {
+    options: TwingRuntimeOptions
+): TwingRuntime => {
     extensionSet.addExtension(createCoreExtension());
 
     // auto-escaping strategy
@@ -298,7 +324,7 @@ export const createRuntime = (
     const charset = options.charset || 'UTF-8';
     const dateFormat = options.dateFormat || 'F j, Y H:i';
     const dateIntervalFormat = options.dateIntervalFormat || '%d days';
-    const defaultNumberFormats: NumberFormat = options.numberFormats || {
+    const defaultNumberFormats: TwingNumberFormat = options.numberFormat || {
         decimalPoint: '.',
         numberOfDecimals: 0,
         thousandSeparator: ','
@@ -307,7 +333,7 @@ export const createRuntime = (
     let isSandboxed = options.sandboxed ? true : false;
     let lexer: TwingLexer;
     let parser: TwingParser;
-    
+
     const compile = (node: TwingModuleNode): string => {
         const compiler = createCompiler({
             getFunction: runtime.getFunction,
@@ -334,7 +360,7 @@ export const createRuntime = (
         }
     };
 
-    const createTemplateFromCompiledSource: Runtime["createTemplateFromCompiledSource"] = (compiledSource, name) => {
+    const createTemplateFromCompiledSource: TwingRuntime["createTemplateFromCompiledSource"] = (compiledSource, name) => {
         const templatesModule = getTemplateModule(compiledSource);
 
         registerTemplatesModule(templatesModule, name);
@@ -342,8 +368,8 @@ export const createRuntime = (
         return loadTemplate(name);
     };
 
-    const createTemplateFromString: Runtime["createTemplateFromString"] = (template, name) => {
-        const hash: string = createHash("sha256").update(template).digest("hex").toString();
+    const createTemplateFromString: TwingRuntime["createTemplateFromString"] = (code, name) => {
+        const hash: string = createHash("sha256").update(code).digest("hex").toString();
 
         if (name !== null) {
             name = `${name} (string template ${hash})`;
@@ -351,7 +377,7 @@ export const createRuntime = (
             name = `__string_template__${hash}`;
         }
 
-        return createTemplateFromCompiledSource(compileSource(createSource(template, name)), name);
+        return createTemplateFromCompiledSource(compileSource(createSource(name, code)), name);
     };
 
     const getTemplateHash = async (name: string, index: number, from: TwingSource | null): Promise<string | null> => {
@@ -378,7 +404,7 @@ return module.exports;
         return resolver();
     };
 
-    const loadTemplate: Runtime["loadTemplate"] = async (name, index = 0, from = null) => {
+    const loadTemplate: TwingRuntime["loadTemplate"] = async (name, index = 0, from = null) => {
         eventEmitter.emit('load', name, from);
 
         const cacheKey: string = name + (index !== 0 ? '_' + index : '');
@@ -482,7 +508,7 @@ return module.exports;
         }
     }
 
-    const parse: Runtime["parse"] = (stream, options) => {
+    const parse: TwingRuntime["parse"] = (stream, options) => {
         if (!parser) {
             parser = createParser(
                 extensionSet.unaryOperators,
@@ -537,8 +563,8 @@ return module.exports;
 
         return createTokenStream(stream.toAst(), stream.source);
     };
-    
-    const runtime: Runtime = {
+
+    const runtime: TwingRuntime = {
         get charset() {
             return charset;
         },
@@ -591,7 +617,7 @@ return module.exports;
         createContext: (container) => createContext(container),
         createMarkup,
         createRange,
-        createSource: (name, code, resolvedName?) => createSource(code, name, resolvedName),
+        createSource,
         createTemplateFromCompiledSource,
         createTemplateFromString,
         ensureToStringAllowed: (candidate) => {

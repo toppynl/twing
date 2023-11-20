@@ -136,7 +136,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
             test('with from defined', async ({same, end}) => {
                 const loader = createRelativeFilesystemLoader(createFilesystem());
 
-                const source = await loader.getSourceContext('normal_one/index.html', createSource('', 'index.html.twig', 'fixtures/index.html.twig'))
+                const source = await loader.getSourceContext('normal_one/index.html', createSource('fixtures/index.html.twig', 'index.html.twig', ''))
 
                 same(source?.name, 'normal_one/index.html');
                 same(source?.resolvedName, resolve('fixtures/normal_one/index.html'));
@@ -154,7 +154,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
             });
 
             try {
-                await loader.getSourceContext('named_one/index.html', createSource('', 'fixtures/index.html'));
+                await loader.getSourceContext('named_one/index.html', createSource('fixtures/index.html', ''));
 
                 fail();
             } catch (error) {
@@ -180,7 +180,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
             end();
         });
-        
+
         test('normalizes template name', async ({test}) => {
             let loader = createRelativeFilesystemLoader(createFilesystem());
 
@@ -201,7 +201,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
             for (const [name, expected] of names) {
                 test(name, async ({same, end}) => {
-                    const source = await loader.getSourceContext(name, createSource('', 'fixtures/foo.html'));
+                    const source = await loader.getSourceContext(name, createSource('fixtures/foo.html', ''));
 
                     const foo = source && relative('.', source.resolvedName);
 
@@ -215,16 +215,16 @@ tape('createRelativeFilesystemLoader', ({test}) => {
         test('uses the cache', async ({same, end}) => {
             const filesystem = createFilesystem();
             let loader = createRelativeFilesystemLoader(filesystem);
-            
+
             const statSpy = spy(filesystem, "stat");
-            
-            await loader.getSourceContext('named_one/index.html', createSource('', 'fixtures/index.html'));
-            await loader.getSourceContext('named_one/index.html', createSource('', 'fixtures/index.html'));
+
+            await loader.getSourceContext('named_one/index.html', createSource('fixtures/index.html', ''));
+            await loader.getSourceContext('named_one/index.html', createSource('fixtures/index.html', ''));
 
             same(statSpy.callCount, 1);
-            
+
             statSpy.restore();
-            
+
             end();
         });
     });
@@ -241,7 +241,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
         test('with from defined', async ({same, end}) => {
             const loader = createRelativeFilesystemLoader(createFilesystem());
 
-            same(await loader.resolve('partial.html.twig', createSource('', 'index.html.twig', 'fixtures/index.html.twig')), resolve('fixtures/partial.html.twig'));
+            same(await loader.resolve('partial.html.twig', createSource('index.html.twig', '', 'fixtures/index.html.twig')), resolve('fixtures/partial.html.twig'));
 
             end();
         });
@@ -254,7 +254,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
         const filesystem = createFilesystem();
         const loader = createRelativeFilesystemLoader(filesystem);
-        const source = createSource('', resolvePath('index.html'));
+        const source = createSource(resolvePath('index.html'), '');
 
         same(await loader.exists('normal_one/index.html', source), true);
         same(await loader.exists('foo', source), false);
@@ -279,7 +279,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
     test('isFresh', async ({test}) => {
         test('with template changed after the passed time', async ({same, end}) => {
             const loader = createRelativeFilesystemLoader(createFilesystem());
-            
+
             same(await loader.isFresh('fixtures/normal_one/index.html', 0, null), false);
 
             end();
@@ -303,7 +303,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
         test('with missing template', async ({same, end}) => {
             const loader = createRelativeFilesystemLoader(createFilesystem());
-            
+
             same(await loader.isFresh('fixtures/missing.html', new Date().getTime(), null), true);
 
             end();

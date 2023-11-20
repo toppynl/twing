@@ -65,7 +65,7 @@ tape('createRuntime ', ({test}) => {
             const cachedTemplates: Map<string, string> = new Map();
 
             stub(loader, "getSourceContext").callsFake(() => {
-                return Promise.resolve(createSource(`${count}`, 'foo'));
+                return Promise.resolve(createSource('foo', `${count}`));
             });
 
             const isFreshStub = stub(loader, "isFresh").callsFake(() => {

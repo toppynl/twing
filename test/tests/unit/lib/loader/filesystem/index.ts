@@ -141,7 +141,7 @@ const createFilesystem = () => {
             callback(null, stats);
         }
     };
-    
+
     return filesystem;
 };
 
@@ -288,7 +288,7 @@ tape('loader filesystem', ({test}) => {
             ];
 
             for (const [name, expected] of names) {
-                same(await loader.getSourceContext(name, null), createSource('named path', name, resolve(fixturesPath, expected)));
+                same(await loader.getSourceContext(name, null), createSource(name, 'named path', resolve(fixturesPath, expected)));
             }
 
             end();
@@ -296,7 +296,7 @@ tape('loader filesystem', ({test}) => {
 
         test('propagates filesystem readFile errors', async ({same, fail, end}) => {
             const filesystem = createFilesystem();
-            
+
             const loader = createFilesystemLoader(filesystem, fixturesPath);
 
             const readFileStub = stub(filesystem, "readFile").callsFake((_path, callback) => {
@@ -334,9 +334,9 @@ tape('loader filesystem', ({test}) => {
 
         test('returns a source on found template with absolute root path', async ({same, end}) => {
             const loader = createFilesystemLoader(createFilesystem(), '/fixtures');
-            
+
             same((await loader.getSourceContext('named_one/index.html', null))?.code, 'named path');
-            
+
             end();
         });
     });
@@ -467,7 +467,7 @@ tape('loader filesystem', ({test}) => {
 
             return environment;
         };
-        
+
         const loader = createFilesystemLoader(createFilesystem(), fixturesPath);
         const environment = createMockedEnvironment(loader);
 
