@@ -18,7 +18,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: The "replace" filter expects an hash or "Iterable" as replace values, got "boolean" in "index.twig" at line 2.';
+        return 'TwingRuntimeError: The "replace" filter expects an hash or "Iterable" as replace values, got "boolean" in "index.twig" at line 2, column 17.';
     }
 
     getContext() {

@@ -26,18 +26,18 @@ export const date = (
 ): Promise<string> => {
     return createDate(template, date, timezone)
         .then((date) => {
-            const {runtime} = template;
+            const {environment} = template;
 
             if (date instanceof Duration) {
                 if (format === null) {
-                    format = runtime.dateIntervalFormat;
+                    format = environment.dateIntervalFormat;
                 }
 
                 return Promise.resolve(formatDuration(date, format));
             }
 
             if (format === null) {
-                format = runtime.dateFormat;
+                format = environment.dateFormat;
             }
 
             return Promise.resolve(formatDateTime(date, format));

@@ -28,6 +28,7 @@ export const createFilterTagHandler = (): TwingTagHandler => {
 
                 const name = parser.getVarName();
                 const blockFunctionNode = createBlockFunctionNode(createConstantNode(name, line, column), null, line, column, tag);
+                
                 const filterNode = parser.parseFilterExpressionRaw(stream, blockFunctionNode, tag);
                 
                 stream.expect(TokenType.TAG_END);

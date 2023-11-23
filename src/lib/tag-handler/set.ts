@@ -25,7 +25,7 @@ export const createSetTagHandler = (): TwingTagHandler => {
                     if (getChildrenCount(names) !== getChildrenCount(values)) {
                         const {line, column} = stream.current;
                         
-                        throw createParsingError('When using set, you must have the same number of variables and assignments.', line, column, stream.source);
+                        throw createParsingError('When using set, you must have the same number of variables and assignments.', {line, column}, stream.source.resolvedName);
                     }
                 }
                 else {
@@ -34,7 +34,7 @@ export const createSetTagHandler = (): TwingTagHandler => {
                     if (getChildrenCount(names) > 1) {
                         const {line, column} = stream.current;
 
-                        throw createParsingError('When using set with a block, you cannot have a multi-target.', line, column, stream.source);
+                        throw createParsingError('When using set with a block, you cannot have a multi-target.', {line, column}, stream.source.resolvedName);
                     }
 
                     stream.expect(TokenType.TAG_END);

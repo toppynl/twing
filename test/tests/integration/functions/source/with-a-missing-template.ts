@@ -5,7 +5,7 @@ runTest({
     templates: {
         "index.twig": '{{ source("foo") }}'
     },
-    expectedErrorMessage: 'TwingRuntimeError: Unable to find template "foo" in "index.twig" at line 1.'
+    expectedErrorMessage: 'TwingRuntimeError: Unable to find template "foo" in "index.twig" at line 1, column 4.'
 });
 
 runTest({

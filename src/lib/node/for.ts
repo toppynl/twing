@@ -3,6 +3,10 @@ import type {TwingAssignmentNode} from "./expression/assignment";
 import {createForLoopNode} from "./for-loop";
 import {createIfNode} from "./if";
 import type {TwingBaseExpressionNode} from "./expression";
+import {TwingContext} from "../context";
+import {ensureTraversable} from "../helpers/ensure-traversable";
+import {count} from "../helpers/count";
+import {iterate} from "../helpers/iterate";
 
 export type TwingForNodeAttributes = TwingBaseNodeAttributes & {
     hasAnIf: boolean;
@@ -37,7 +41,7 @@ export const createForNode = (
 
     bodyChildren[i++] = body;
     bodyChildren[i++] = loop;
-    
+
     let actualBody: TwingBaseNode = createBaseNode(null, {}, bodyChildren, line, column);
 
     if (ifExpression) {
@@ -49,7 +53,7 @@ export const createForNode = (
         ifChildren[i++] = actualBody;
 
         actualBody = createIfNode(createBaseNode(null, {}, ifChildren, line, column), null, line, column);
-        
+
         loop.attributes.hasAnIf = true;
     }
 
@@ -62,7 +66,7 @@ export const createForNode = (
 
     if (elseNode) {
         children.else = elseNode;
-        
+
         loop.attributes.hasAnElse = true;
     }
 
@@ -72,96 +76,75 @@ export const createForNode = (
 
     const node: TwingForNode = {
         ...baseNode,
-        compile: (compiler) => {
-            const {sequence, body, else: elseNode, valueTarget, keyTarget} = node.children;
+        execute: async (...args) => {
+            const [, context] = args;
+            const {sequence: sequenceNode, body, else: elseNode, valueTarget: targetValueNode, keyTarget: targetKeyNode} = node.children;
             const {hasAnIf} = node.attributes;
 
-            compiler
-                .write("context.set('_parent', context.clone());\n\n")
-                .write('await (async () => {\n')
-                .write('let sequence = runtime.ensureTraversable(')
-                .subCompile(sequence)
-                .write(");\n\n")
-                .write('if (sequence === context) {\n')
-                .write("context.set('_seq', context.clone());\n")
-                .write("}\n")
-                .write("else {\n")
-                .write("context.set('_seq', sequence);\n")
-                .write("}\n")
-                .write("})();\n\n")
-            ;
+            context.set('_parent', context.clone());
 
-            if (elseNode) {
-                compiler.write("context.set('_iterated', false);\n");
+            const executedSequence: TwingContext<any, any> | any = await sequenceNode.execute(...args);
+
+            let sequence = ensureTraversable(executedSequence);
+
+            if (sequence === context) {
+                context.set('_seq', context.clone());
+            } else {
+                context.set('_seq', sequence);
             }
 
-            compiler
-                .write("context.set('loop', new Map([\n")
-                .write("  ['parent', context.get('_parent')],\n")
-                .write("  ['index0', 0],\n")
-                .write("  ['index', 1],\n")
-                .write("  ['first', true]\n")
-                .write("]));\n")
-            ;
+            if (elseNode) {
+                context.set('_iterated', false);
+            }
+
+            context.set('loop', new Map([
+                ['parent', context.get('_parent')],
+                ['index0', 0],
+                ['index', 1],
+                ['first', true],
+            ]));
 
             if (!hasAnIf) {
-                compiler
-                    .write("if (typeof context.get('_seq') === 'object') {\n")
-                    .write("let length = runtime.count(context.get('_seq'));\n")
-                    .write("let loop = context.get('loop');\n")
-                    .write("loop.set('revindex0', length - 1);\n")
-                    .write("loop.set('revindex', length);\n")
-                    .write("loop.set('length', length);\n")
-                    .write("loop.set('last', (length === 1));\n")
-                    .write("}\n")
-                ;
+                const length = count(context.get('_seq'));
+
+                const loop: Map<string, any> = context.get('loop');
+
+                loop.set('revindex0', length - 1);
+                loop.set('revindex', length);
+                loop.set('length', length);
+                loop.set('last', (length === 1));
             }
 
-            compiler
-                .write("await runtime.iterate(context.get('_seq'), async (__key__, __value__) => {\n")
-                .subCompile(keyTarget) //, false
-                .write(' = __key__;\n')
-                .subCompile(valueTarget) //, false
-                .write(' = __value__;\n')
-                .subCompile(body)
-                .write("});\n")
-            ;
+            const targetKey = await targetKeyNode.execute(...args);
+            const targetValue = await targetValueNode.execute(...args);
+
+            await iterate(context.get('_seq'), async (key, value) => {
+                context.set(targetKey, key);
+                context.set(targetValue, value);
+
+                await body.execute(...args);
+            });
 
             if (elseNode) {
-                compiler
-                    .write("if (context.get('_iterated') === false) {\n")
-                    .subCompile(elseNode)
-                    .write("}\n")
-                ;
+                if (context.get('_iterated') === false) {
+                    await elseNode.execute(...args);
+                }
             }
 
-            compiler
-                .write("(() => {\n")
-                .write(`let parent = context.get('_parent');\n`)
-            ;
+            const parent = context.get('_parent');
 
-            // remove some "private" loop variables (needed for nested loops)
-            compiler
-                .write('context.delete(\'_seq\');\n')
-                .write('context.delete(\'_iterated\');\n')
-                .write('context.delete(\'' + keyTarget.attributes.name + '\');\n')
-                .write('context.delete(\'' + valueTarget.attributes.name + '\');\n')
-                .write('context.delete(\'_parent\');\n')
-                .write('context.delete(\'loop\');\n')
-            ;
+            context.delete('_seq');
+            context.delete('_iterated');
+            context.delete(keyTarget.attributes.name);
+            context.delete(valueTarget.attributes.name);
+            context.delete('_parent');
+            context.delete('loop');
 
-            // keep the values set in the inner context for variables defined in the outer context
-            compiler
-                .write(`for (let [k, v] of parent) {\n`)
-                .write('if (!context.has(k)) {\n')
-                .write(`context.set(k, v);\n`)
-                .write('}\n')
-                .write('}\n')
-            ;
-
-            compiler
-                .write("})();\n")
-            ;
+            for (const [key, value] of parent) {
+                if (!context.has(key)) {
+                    context.set(key, value);
+                }
+            }
         }
     };
 

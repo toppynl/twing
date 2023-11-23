@@ -25,14 +25,16 @@ export const createCheckToStringNode = (
 
     return {
         ...baseNode,
-        compile: (compiler) => {
+        execute: (...args) => {
+            const [template] = args;
             const {expr} = baseNode.children;
             
-            compiler
-                .write('runtime.ensureToStringAllowed( //').write(expr.type).write('\n')
-                .subCompile(expr).write('\n')
-                .write(')')
-            ;
+            return expr.execute(...args)
+                .then((value) => {
+                    template.assertToStringAllowed(value);
+
+                    return value;
+                });
         }
     }
 };

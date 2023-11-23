@@ -1,5 +1,5 @@
 import {runTest} from "../TestBase";
-import {createFunction} from "../../../../src";
+import {createFunction} from "../../../../src/lib";
 
 runTest({
     description: "Source map supports custom function",

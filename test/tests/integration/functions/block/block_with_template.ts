@@ -1,38 +1,28 @@
-import TestBase, {runTest} from "../../TestBase";
-import {createIntegrationTest} from "../../test";
+import {runTest} from "../../TestBase";
 import {createEnvironment} from "../../../../../src/lib/environment";
 import {createArrayLoader} from "../../../../../src/lib/loader/array";
 
-class Test extends TestBase {
-    getDescription() {
-        return '"block" function with a template argument';
-    }
-
-    getTemplates() {
-        return {
-            'index.twig': `
+runTest(({
+    description: '"block" function with a template argument',
+    templates: {
+        'index.twig': `
 {{ block('foo', 'included.twig') }}
 {{ block('foo', included_loaded) }}
 {{ block('foo', included_loaded_internal) }}
 {% set output = block('foo', 'included.twig') %}
 {{ output }}
 {% block foo %}NOT FOO{% endblock %}`,
-            'included.twig': `
+        'included.twig': `
 {% block foo %}FOO{% endblock %}`
-        };
-    }
-
-    getExpected() {
-        return `
+    },
+    trimmedExpectation: `
 FOO
 FOO
 FOO
 FOO
 NOT FOO
-`;
-    }
-
-    async getContext() {
+`,
+    context: new Promise((resolve) => {
         const environment = createEnvironment(
             createArrayLoader({
                 'included.twig': `
@@ -40,14 +30,51 @@ NOT FOO
             })
         );
 
-        return environment.loadTemplate('included.twig')
+        resolve(environment.loadTemplate('included.twig')
             .then((template) => {
                 return {
                     included_loaded: template,
                     included_loaded_internal: template
                 }
-            });
-    }
-}
+            }));
+    }),
+    type: "template"
+}));
 
-runTest(createIntegrationTest(new Test()));
+runTest(({
+    description: '"block" function with a template argument',
+    templates: {
+        'index.twig': `
+{{ block('foo', 'included.twig') }}
+{{ block('foo', included_loaded) }}
+{{ block('foo', included_loaded_internal) }}
+{% set output = block('foo', 'included.twig') %}
+{{ output }}
+{% block foo %}NOT FOO{% endblock %}`,
+        'included.twig': `
+{% block foo %}FOO{% endblock %}`
+    },
+    trimmedExpectation: `
+FOO
+FOO
+FOO
+FOO
+NOT FOO
+`,
+    context: new Promise((resolve) => {
+        const environment = createEnvironment(createArrayLoader({
+            'included.twig': `
+{% block foo %}FOO{% endblock %}`
+        }));
+
+        resolve(environment.loadTemplate('included.twig')
+            .then((template) => {
+                
+                return {
+                    included_loaded: template,
+                    included_loaded_internal: template
+                };
+            }));
+    }),
+    type: "execution context"
+}));

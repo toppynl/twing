@@ -1,5 +1,4 @@
 import {runTest} from "../TestBase";
-import {createFilter} from "../../../../src/lib/filter";
 
 runTest({
     description: 'Auto-escaping on non-existing filter',
@@ -13,7 +12,5 @@ runTest({
     parserOptions: {
         strict: false
     },
-    additionalFiltersAtCompileTime: [
-        createFilter('unknownAtParseTime', (value) => Promise.resolve(value), [])
-    ]
+    expectedErrorMessage: 'TwingRuntimeError: Unknown filter "unknownAtParseTime" in "index.twig" at line 1, column 8.'
 });

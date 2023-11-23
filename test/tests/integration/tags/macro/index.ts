@@ -11,3 +11,4 @@ import "./self_import";
 import "./special_chars";
 import "./super_globals";
 import "./with_a_different_endmacro_name";
+import "./with-varargs";

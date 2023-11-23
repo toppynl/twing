@@ -22,7 +22,7 @@ BAR`
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "nothing" does not exist in "index.twig" at line 5.'
+        return 'TwingRuntimeError: Variable "nothing" does not exist in "index.twig" at line 5, column 12.'
     }
 }
 

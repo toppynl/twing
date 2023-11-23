@@ -1,5 +1,9 @@
-import {BaseSandboxSecurityError, createBaseSandboxSecurityError} from "./security-error";
-import type {TwingSource} from "../source";
+import {
+    BaseSandboxSecurityError,
+    createBaseSandboxSecurityError,
+    TwingSandboxSecurityError
+} from "./security-error";
+import {ErrorLocation} from "../error/base";
 
 /**
  * Exception thrown when a not allowed filter is used in a template.
@@ -8,8 +12,8 @@ export interface TwingSandboxSecurityNotAllowedFilterError extends BaseSandboxSe
     readonly filterName: string;
 }
 
-export const createSandboxSecurityNotAllowedFilterError = (message: string, filterName: string, line?: number, source?: TwingSource): TwingSandboxSecurityNotAllowedFilterError => {
-    const error = createBaseSandboxSecurityError(message, line, source);
+export const createSandboxSecurityNotAllowedFilterError = (message: string, filterName: string, location?: ErrorLocation, source?: string): TwingSandboxSecurityNotAllowedFilterError => {
+    const error = createBaseSandboxSecurityError(message, location, source);
 
     Error.captureStackTrace(error, createSandboxSecurityNotAllowedFilterError);
 
@@ -18,4 +22,8 @@ export const createSandboxSecurityNotAllowedFilterError = (message: string, filt
             return filterName;
         }
     });
+};
+
+export const isASandboxSecurityNotAllowedFilterError = (candidate: TwingSandboxSecurityError): candidate is TwingSandboxSecurityNotAllowedFilterError => {
+    return (candidate as TwingSandboxSecurityNotAllowedFilterError).filterName !== undefined;
 };

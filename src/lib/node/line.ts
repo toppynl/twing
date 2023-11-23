@@ -18,9 +18,6 @@ export const createLineNode = (
     }, {}, line, column, tag);
 
     return {
-        ...baseNode,
-        compile: () => {
-            // noop
-        }
+        ...baseNode
     };
 };

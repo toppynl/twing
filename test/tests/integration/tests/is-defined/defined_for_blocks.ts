@@ -20,10 +20,10 @@ class Test extends TestBase {
 {% block icon %}icon{% endblock %}
 {% block body %}
     {{ parent() }}
-    {{ block('foo') is defined ? 'ok' : 'ko' }}
-    {{ block('footer') is defined ? 'ok' : 'ko' }}
-    {{ block('icon') is defined ? 'ok' : 'ko' }}
-    {{ block('block1') is defined ? 'ok' : 'ko' }}
+    index::foo {{ block('foo') is defined ? 'ok' : 'ko' }}
+    index::footer {{ block('footer') is defined ? 'ok' : 'ko' }}
+    index::icon {{ block('icon') is defined ? 'ok' : 'ko' }}
+    index::block1 {{ block('block1') is defined ? 'ok' : 'ko' }}
     {%- embed 'embed' %}
         {% block content %}content{% endblock %}
     {% endembed %}
@@ -31,11 +31,11 @@ class Test extends TestBase {
 {% use 'blocks' %}`,
             'blocks': `{% block block1 %}{%endblock %}
 `,
-            'embed': `{{ block('icon') is defined ? 'ok' : 'ko' }}
-{{ block('content') is defined ? 'ok' : 'ko' }}
-{{ block('block1') is defined ? 'ok' : 'ko' }}`,
+            'embed': `embed::icon {{ block('icon') is defined ? 'ok' : 'ko' }}
+embed::content {{ block('content') is defined ? 'ok' : 'ko' }}
+embed::block1 {{ block('block1') is defined ? 'ok' : 'ko' }}`,
             'parent': `{% block body %}
-    {{ block('icon') is defined ? 'ok' : 'ko' -}}
+    parent::icon {{ block('icon') is defined ? 'ok' : 'ko' -}}
 {% endblock %}
 {% block footer %}{% endblock %}`
         };
@@ -43,13 +43,13 @@ class Test extends TestBase {
 
     getExpected() {
         return `
-ok
-    ko
-    ok
-    ok
-    okko
-ok
-ko
+parent::icon ok
+    index::foo ko
+    index::footer ok
+    index::icon ok
+    index::block1 okembed::icon ko
+embed::content ok
+embed::block1 ko
 `;
     }
 }

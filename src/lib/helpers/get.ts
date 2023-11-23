@@ -1,5 +1,5 @@
 import {iteratorToMap} from "./iterator-to-map";
-import {isMapLike} from "./map-like";
+import {isAMapLike} from "./map-like";
 
 /**
  * Return the value of a property of an object, providing array to Map conversion.
@@ -10,7 +10,7 @@ import {isMapLike} from "./map-like";
 export function get(object: any, property: any): any {
     let result: any;
 
-    if (isMapLike(object) && (object as Map<any, any>).has(property)) {
+    if (isAMapLike(object) && (object as Map<any, any>).has(property)) {
         result = object.get(property);
     }
     else {

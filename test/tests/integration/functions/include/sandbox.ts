@@ -24,7 +24,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingSandboxSecurityError: Filter "e" is not allowed in "foo.twig" at line 2.';
+        return 'TwingSandboxSecurityError: Filter "e" is not allowed in "foo.twig" at line 2, column 8.';
     }
 }
 
@@ -45,5 +45,5 @@ runTest({
             allowedFunctions: ['include']
         })
     },
-    expectedErrorMessage: 'TwingSandboxSecurityError: Filter "e" is not allowed in "foo.twig" at line 2.'
+    expectedErrorMessage: 'TwingSandboxSecurityError: Filter "e" is not allowed in "foo.twig" at line 2, column 8.'
 });

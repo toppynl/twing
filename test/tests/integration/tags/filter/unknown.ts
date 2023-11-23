@@ -10,5 +10,5 @@ runTest({
     templates: {
         'index.twig': '{% filter foo %}{% endfilter %}'
     },
-    expectedErrorMessage: 'TwingCompilationError: Unknown filter "foo" in "index.twig" at line 1.'
+    expectedErrorMessage: 'TwingRuntimeError: Unknown filter "foo" in "index.twig" at line 1, column 11.'
 });

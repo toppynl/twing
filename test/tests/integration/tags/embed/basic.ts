@@ -1,14 +1,9 @@
-import TestBase, {runTest} from "../../TestBase";
-import {createIntegrationTest} from "../../test";
+import {runTest} from "../../TestBase";
 
-class Test extends TestBase {
-    getDescription() {
-        return '"embed" tag';
-    }
-
-    getTemplates() {
-        return {
-            'foo.twig': `
+runTest({
+    description: '"embed" tag',
+    templates: {
+        'foo.twig': `
 A
 {% block c1 %}
     block1
@@ -18,7 +13,7 @@ B
     block2
 {% endblock %}
 C`,
-            'index.twig': `
+        'index.twig': `
 FOO
 {% embed "foo.twig" %}
     {% block c1 %}
@@ -28,11 +23,8 @@ FOO
 {% endembed %}
 
 BAR`
-        };
-    }
-
-    getExpected() {
-        return `
+    },
+    trimmedExpectation: `
 FOO
 
 A
@@ -43,9 +35,8 @@ A
     block2
 C
 BAR
-`;
-    }
+`,
+    type: "execution context"
+});
 
-}
 
-runTest(createIntegrationTest(new Test));

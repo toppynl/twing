@@ -1,30 +1,23 @@
-import TestBase, {runTest} from "../../TestBase";
-import {createIntegrationTest} from "../../test";
+import {runTest} from "../../TestBase";
 import {createEnvironment} from "../../../../../src/lib/environment";
 import {createArrayLoader} from "../../../../../src/lib/loader/array";
 
-class Test extends TestBase {
-    getTemplates() {
-        return {
-            'foo.twig': `
+runTest({
+    description: '"extends" tag with template instance',
+    templates: {
+        'foo.twig': `
 {% block content %}BAR{% endblock %}`,
-            'index.twig': `
+        'index.twig': `
 {% extends foo %}
 
 {% block content %}
     {{ parent() }}FOO
 {% endblock %}`
-        };
-    }
-
-    getExpected() {
-        return `
+    },
+    trimmedExpectation: `
 BARFOO
-`;
-    }
-
-
-    async getContext() {
+`,
+    context: new Promise((resolve) => {
         const environment = createEnvironment(
             createArrayLoader({
                 'foo.twig': `
@@ -32,13 +25,47 @@ BARFOO
             })
         );
 
-        return environment.loadTemplate('foo.twig')
+        resolve(environment.loadTemplate('foo.twig')
             .then((template) => {
                 return {
                     foo: template
                 }
-            });
-    }
-}
+            })
+        );
+    }),
+    type: "template"
+});
 
-runTest(createIntegrationTest(new Test));
+runTest({
+    description: '"extends" tag with template instance',
+    templates: {
+        'foo.twig': `
+{% block content %}BAR{% endblock %}`,
+        'index.twig': `
+{% extends foo %}
+
+{% block content %}
+    {{ parent() }}FOO
+{% endblock %}`
+    },
+    trimmedExpectation: `
+BARFOO
+`,
+    context: new Promise((resolve) => {
+        const environment = createEnvironment(
+            createArrayLoader({
+                'foo.twig': `
+{% block content %}BAR{% endblock %}`
+            })
+        );
+
+        resolve(environment.loadTemplate('foo.twig')
+            .then((template) => {
+                return {
+                    foo: template
+                };
+            })
+        );
+    }),
+    type: "execution context"
+});

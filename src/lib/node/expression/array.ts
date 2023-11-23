@@ -11,6 +11,7 @@ const array_chunk = require('locutus/php/array/array_chunk');
 export interface TwingBaseArrayNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, Record<number, TwingBaseExpressionNode>> {
 }
 
+// todo: find an elegant way to type the items of the array
 export interface TwingArrayNode extends TwingBaseArrayNode<"array"> {
 }
 
@@ -47,27 +48,17 @@ export const createBaseArrayNode = <Type extends string>(
 
     const node: TwingBaseArrayNode<Type> = {
         ...baseNode,
-        compile: (compiler) => {
-            compiler.write('new Map([');
+        execute: (...args): Promise<Map<string, any>> => {
+            const keyValuePairs = getKeyValuePairs(node);
+            const promises = keyValuePairs.map(async ({key, value}) => {
+                return await Promise.all([
+                    key.execute(...args),
+                    value.execute(...args)
+                ]);
+            });
 
-            let first = true;
-
-            for (const pair of getKeyValuePairs(node)) {
-                if (!first) {
-                    compiler.write(', ');
-                }
-
-                first = false;
-
-                compiler
-                    .write('[')
-                    .subCompile(pair.key)
-                    .write(', ')
-                    .subCompile(pair.value)
-                    .write(']')
-            }
-
-            compiler.write('])');
+            return Promise.all(promises)
+                .then((entries) => new Map(entries));
         }
     };
 

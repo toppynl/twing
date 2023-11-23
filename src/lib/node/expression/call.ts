@@ -6,16 +6,17 @@ import {
 import {TwingBaseNode} from "../../node";
 import {TwingConstantNode, createConstantNode} from "./constant";
 import {TwingArrayNode, getKeyValuePairs} from "./array";
-import {TwingCompiler} from "../../compiler";
 import {TwingCallableArgument, TwingCallableWrapper} from "../../callable-wrapper";
 import type {TwingFilterNode} from "./call/filter";
 import type {TwingFunctionNode} from "./call/function";
 import type {TwingTestNode} from "./call/test";
-import {createCompilationError} from "../../error/compilation";
+import {getFilter} from "../../helpers/get-filter";
+import {getTest} from "../../helpers/get-test";
+import {getFunction} from "../../helpers/get-function";
+import {createRuntimeError} from "../../error/runtime";
 
 const array_merge = require('locutus/php/array/array_merge');
 const snakeCase = require('snake-case');
-const capitalize = require('capitalize');
 
 export type TwingCallNode =
     | TwingFilterNode
@@ -29,34 +30,32 @@ type TwingBaseCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
     operatorName: string;
 };
 
-export type TwingBaseCallNodeChildren<OperandType extends TwingBaseNode | undefined> = {
+export type TwingBaseCallNodeChildren = {
     arguments: TwingArrayNode;
-} & (OperandType extends TwingBaseNode ? {
-    operand: OperandType;
-} : {});
+    operand?: TwingBaseNode;
+};
 
-export interface TwingBaseCallNode<Type extends CallType, OperandType extends TwingBaseNode | undefined> extends TwingBaseExpressionNode<Type, TwingBaseCallNodeAttributes, TwingBaseCallNodeChildren<OperandType>> {
+export interface TwingBaseCallNode<Type extends CallType> extends TwingBaseExpressionNode<Type, TwingBaseCallNodeAttributes, TwingBaseCallNodeChildren> {
 
 }
 
-export const createBaseCallNode = <Type extends CallType, OperandType extends TwingBaseNode | undefined>(
+export const createBaseCallNode = <Type extends CallType>(
     type: Type,
     operatorName: string,
-    operand: OperandType,
+    operand: TwingBaseNode | null,
     callArguments: TwingArrayNode,
     line: number,
     column: number
-): TwingBaseCallNode<Type, OperandType> => {
-    let children = {
+): TwingBaseCallNode<typeof type> => {
+    let children: TwingBaseCallNodeChildren = {
         arguments: callArguments
-    } as TwingBaseCallNodeChildren<OperandType>;
-    
-    if (operand !== undefined) {
-        (children as TwingBaseCallNodeChildren<TwingBaseNode>).operand = operand;
+    };
+
+    if (operand !== null) {
+        children.operand = operand;
     }
-    
-    const baseNode: TwingBaseExpressionNode<Type, TwingBaseCallNodeAttributes, typeof children> = createBaseExpressionNode(type, {
-        type,
+
+    const baseNode: TwingBaseExpressionNode<typeof type, TwingBaseCallNodeAttributes, typeof children> = createBaseExpressionNode(type, {
         operatorName
     }, children, line, column);
 
@@ -87,7 +86,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
                 named = true;
                 name = normalizeName(name);
             } else if (named) {
-                throw createCompilationError(`Positional arguments cannot be used after named arguments for ${callType} "${callName}".`, baseNode.line);
+                throw createRuntimeError(`Positional arguments cannot be used after named arguments for ${callType} "${callName}".`, baseNode);
             }
 
             parameters.set(name, {
@@ -112,7 +111,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
 
             if (parameter) {
                 if (parameters.has(position)) {
-                    throw createCompilationError(`Argument "${name}" is defined twice for ${callType} "${callName}".`, baseNode.line);
+                    throw createRuntimeError(`Argument "${name}" is defined twice for ${callType} "${callName}".`, baseNode);
                 }
 
                 arguments_ = array_merge(arguments_, optionalArguments);
@@ -131,7 +130,7 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
                 } else if (callableParameter.defaultValue !== undefined) {
                     arguments_.push(createConstantNode(callableParameter.defaultValue, line, column));
                 } else {
-                    throw createCompilationError(`Value for argument "${name}" is required for ${callType} "${callName}".`, baseNode.line);
+                    throw createRuntimeError(`Value for argument "${name}" is required for ${callType} "${callName}".`, baseNode);
                 }
             }
         }
@@ -159,148 +158,82 @@ export const createBaseCallNode = <Type extends CallType, OperandType extends Tw
         if (parameters.size > 0) {
             const unknownParameter = [...parameters.values()][0];
 
-            throw createCompilationError(`Unknown argument${parameters.size > 1 ? 's' : ''} "${[...parameters.keys()].join('", "')}" for ${callType} "${callName}(${names.join(', ')})".`, unknownParameter.key.line);
+            throw createRuntimeError(`Unknown argument${parameters.size > 1 ? 's' : ''} "${[...parameters.keys()].join('", "')}" for ${callType} "${callName}(${names.join(', ')})".`, unknownParameter.key);
         }
 
         return arguments_;
     }
 
-    const compileCallable = (
-        compiler: TwingCompiler,
-        callableWrapper: TwingCallableWrapper<any>
-    ): void => {
-        const {operatorName} = node.attributes;
-        const {nativeArguments, acceptedArguments, needsTemplate, needsContext, needsOutputBuffer, needsSourceMapRuntime, isVariadic} = callableWrapper;
-
-        compiler
-            .write(`await runtime.get${capitalize(type)}('${operatorName}').getTraceableCallable(${baseNode.line}, template.source)`)
-            .write('(...[\n')
-        ;
-
-        compileArguments(compiler, nativeArguments, acceptedArguments, needsTemplate, needsContext, needsOutputBuffer, needsSourceMapRuntime, isVariadic);
-
-        compiler
-            .write('\n')
-            .write('])');
-    };
-
-    const compileArguments = (
-        compiler: TwingCompiler,
-        nativeArguments: Array<string>,
-        acceptedArguments: Array<TwingCallableArgument>,
-        needsTemplate: boolean,
-        needsContext: boolean,
-        needsOutputBuffer: boolean,
-        needsSourceMapRuntime: boolean,
-        isVariadic: boolean
-    ): void => {
-        const {operand, arguments: callArguments} = node.children;
-
-        let first: boolean = true;
-
-        if (needsTemplate) {
-            compiler.write('template');
-
-            first = false;
-        }
-
-        if (needsContext) {
-            if (!first) {
-                compiler.write(',\n');
-            }
-
-            compiler.write('context');
-
-            first = false;
-        }
-
-        if (needsOutputBuffer) {
-            if (!first) {
-                compiler.write(',\n');
-            }
-
-            compiler.write('outputBuffer');
-
-            first = false;
-        }
-
-        if (needsSourceMapRuntime) {
-            if (!first) {
-                compiler.write(',\n');
-            }
-
-            compiler.write('sourceMapRuntime');
-
-            first = false;
-        }
-
-        for (const nativeArgument of nativeArguments) {
-            if (!first) {
-                compiler.write(',\n');
-            }
-
-            compiler.string(nativeArgument);
-
-            first = false;
-        }
-
-        if (operand) {
-            if (!first) {
-                compiler.write(',\n');
-            }
-
-            compiler.subCompile(operand);
-
-            first = false;
-        }
-
-        const argumentNodes = getArguments(
-            callArguments,
-            acceptedArguments,
-            isVariadic
-        );
-
-        for (const node of argumentNodes) {
-            if (!first) {
-                compiler.write(',\n');
-            }
-
-            compiler.subCompile(node);
-
-            first = false;
-        }
-    };
-
-    const node: TwingBaseCallNode<Type, OperandType> = {
+    const node: TwingBaseCallNode<typeof type> = {
         ...baseNode,
-        compile: (compiler) => {
+        execute: async (...args) => {
+            const [template, context, outputBuffer, , , sourceMapRuntime] = args;
+            const {environment} = template;
             const {operatorName} = node.attributes;
-            const {environment} = compiler;
 
-            let callableWrapper: TwingCallableWrapper<any> | null = null;
+            let callableWrapper: TwingCallableWrapper<any> | null;
 
             switch (type) {
                 case "filter":
-                    callableWrapper = environment.getFilter(operatorName);
+                    callableWrapper = getFilter(environment.filters, operatorName);
                     break;
 
                 case "function":
-                    callableWrapper = environment.getFunction(operatorName);
+                    callableWrapper = getFunction(environment.functions, operatorName);
                     break;
-
-                case "test":
-                    callableWrapper = environment.getTest(operatorName);
+                
+                // for some reason, using `case "test"` makes the compiler assume that callableWrapper is used
+                // before it is assigned a value; this is probably a bug of the compiler
+                default:
+                    callableWrapper = getTest(environment.tests, operatorName);
                     break;
             }
 
             if (callableWrapper === null) {
-                throw createCompilationError(`Unknown ${type} "${operatorName}".`, baseNode.line);
+                throw createRuntimeError(`Unknown ${type} "${operatorName}".`, baseNode);
             }
 
-            compileCallable(
-                compiler,
-                callableWrapper
+            const {operand, arguments: callArguments} = node.children;
+
+            const argumentNodes = getArguments(
+                callArguments,
+                callableWrapper.acceptedArguments,
+                callableWrapper.isVariadic
             );
+
+            const actualArguments: Array<any> = [];
+
+            if (callableWrapper!.needsTemplate) {
+                actualArguments.push(template);
+            }
+
+            if (callableWrapper!.needsContext) {
+                actualArguments.push(context);
+            }
+
+            if (callableWrapper!.needsOutputBuffer) {
+                actualArguments.push(outputBuffer);
+            }
+
+            if (callableWrapper!.needsSourceMapRuntime) {
+                actualArguments.push(sourceMapRuntime);
+            }
+
+            actualArguments.push(...callableWrapper!.nativeArguments);
+
+            if (operand) {
+                actualArguments.push(await operand.execute(...args));
+            }
+
+            const providedArguments = await Promise.all([
+                ...argumentNodes.map((node) => node.execute(...args))
+            ]);
+
+            actualArguments.push(...providedArguments);
+
+            const traceableCallable = callableWrapper.getTraceableCallable(node.line, node.column, template.templateName);
+
+            return traceableCallable(...actualArguments);
         }
     };
 

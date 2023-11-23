@@ -1,7 +1,7 @@
-import {isMapLike} from "./map-like";
+import {isAMapLike} from "./map-like";
 
 export const evaluate = (value: any): boolean => {
-    if (value === '0' || (isMapLike(value) && value.size === 0)) {
+    if (value === '0' || (isAMapLike(value) && value.size === 0)) {
         return false;
     }
     else if (Number.isNaN(value)) {

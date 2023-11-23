@@ -11,9 +11,7 @@ import {TwingSandboxSecurityPolicy} from "../../../src/lib/sandbox/security-poli
 
 export type IntegrationTest = {
     additionalFilters?: Array<TwingFilter>;
-    additionalFiltersAtCompileTime?: Array<TwingFilter>;
     additionalFunctions?: Array<TwingFunction>;
-    additionalFunctionsAtCompileTime?: Array<TwingFunction>;
     additionalNodeVisitors?: Array<TwingNodeVisitor>;
     additionalTests?: Array<TwingTest>;
     context?: Record<string, any> | Promise<Record<string, any>>;
@@ -32,6 +30,7 @@ export type IntegrationTest = {
     sandboxSecurityPolicyProperties?: Map<Function, Array<string>>;
     sandboxSecurityPolicyMethods?: Map<Function, Array<string>>;
     trimmedExpectation?: string;
+    type?: "template" | "execution context"; // todo: remove when moved to execution context only
 } & ({
     templates: {
         'index.twig': string;
@@ -54,7 +53,8 @@ export const createIntegrationTest = (
         sandboxSecurityPolicyTags: testInstance.getSandboxSecurityPolicyTags(),
         sandboxSecurityPolicyFilters: testInstance.getSandboxSecurityPolicyFilters(),
         sandboxSecurityPolicyFunctions: testInstance.getSandboxSecurityPolicyFunctions(),
-        expectedDeprecationMessages: testInstance.getExpectedDeprecationMessages()
+        expectedDeprecationMessages: testInstance.getExpectedDeprecationMessages(),
+        type: testInstance.getType()
     };
 };
 

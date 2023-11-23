@@ -1,5 +1,4 @@
 import {runTest} from "../TestBase";
-import {createFunction} from "../../../../src/lib/function";
 
 runTest({
     description: 'Auto-escaping on non-existing function',
@@ -13,11 +12,5 @@ runTest({
     parserOptions: {
         strict: false
     },
-    additionalFunctionsAtCompileTime: [
-        createFunction('unknownAtParseTime', (value) => Promise.resolve(value), [
-            {
-                name: 'value'
-            }
-        ])
-    ]
+    expectedErrorMessage: 'TwingRuntimeError: Unknown function "unknownAtParseTime" in "index.twig" at line 1, column 4.'
 });

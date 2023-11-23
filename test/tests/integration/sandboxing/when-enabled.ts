@@ -11,7 +11,7 @@ runTest({
             toString: () => 'foo'
         }
     }),
-    expectedErrorMessage: `TwingSandboxSecurityError: Tag "do" is not allowed in "index.twig" at line 1.`,
+    expectedErrorMessage: `TwingSandboxSecurityError: Tag "do" is not allowed in "index.twig" at line 1, column 4.`,
     environmentOptions: {
         sandboxed: true
     },

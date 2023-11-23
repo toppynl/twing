@@ -10,10 +10,12 @@ export const createFlushNode = (
 ): TwingFlushNode => {
     return {
         ...createBaseNode("flush", {}, {}, line, column, tag),
-        compile: (compiler) => {
-            compiler
-                .write("outputBuffer.flush();\n")
-            ;
+        execute: (...args) => {
+            const outputBuffer = args[2];
+
+            outputBuffer.flush();
+
+            return Promise.resolve();
         }
     }
 };

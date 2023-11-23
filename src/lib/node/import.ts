@@ -1,6 +1,7 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
-import {TwingBaseExpressionNode} from "./expression";
+import type {TwingBaseExpressionNode} from "./expression";
 import type {TwingAssignmentNode} from "./expression/assignment";
+import type {TwingTemplate} from "../template";
 
 export type TwingImportNodeAttributes = TwingBaseNodeAttributes & {
     global: boolean;
@@ -27,39 +28,35 @@ export const createImportNode = (
         var: aliasName
     }, line, column, tag);
 
-    return {
+    const node: TwingImportNode = {
         ...baseNode,
-        compile: (compiler) => {
+        execute: async (...args) => {
+            const [template, , , , aliases] = args;
             const {var: varName, expr} = baseNode.children;
+
             const {global} = baseNode.attributes;
 
-            compiler
-                .write('aliases.proxy[')
-                .render(varName.attributes.name)
-                .write('] = ')
-            ;
-
-            if (global) {
-                compiler
-                    .write('template.aliases.proxy[')
-                    .render(varName.attributes.name)
-                    .write('] = ')
-                ;
-            }
+            let aliasValue: TwingTemplate;
 
             if (expr.is("name") && expr.attributes.name === '_self') {
-                compiler.write('template');
+                aliasValue = template;
             } else {
-                compiler
-                    .write('await template.loadTemplate(')
-                    .subCompile(expr)
-                    .write(', ')
-                    .render(baseNode.line)
-                    .write(')')
-                ;
+                const templateName = await expr.execute(...args);
+
+                aliasValue = (await template.loadTemplate(
+                    templateName,
+                    node.line,
+                    node.column
+                ))!; // todo: handle null
             }
 
-            compiler.write(";\n");
+            aliases.set(varName.attributes.name, aliasValue);
+
+            if (global) {
+                template.aliases.set(varName.attributes.name, aliasValue);
+            }
         }
     };
+
+    return node;
 };

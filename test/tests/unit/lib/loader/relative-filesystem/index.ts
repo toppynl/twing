@@ -136,7 +136,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
             test('with from defined', async ({same, end}) => {
                 const loader = createRelativeFilesystemLoader(createFilesystem());
 
-                const source = await loader.getSourceContext('normal_one/index.html', createSource('fixtures/index.html.twig', 'index.html.twig', ''))
+                const source = await loader.getSourceContext('normal_one/index.html', 'fixtures/index.html.twig')
 
                 same(source?.name, 'normal_one/index.html');
                 same(source?.resolvedName, resolve('fixtures/normal_one/index.html'));
@@ -154,7 +154,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
             });
 
             try {
-                await loader.getSourceContext('named_one/index.html', createSource('fixtures/index.html', ''));
+                await loader.getSourceContext('named_one/index.html', 'fixtures/index.html');
 
                 fail();
             } catch (error) {
@@ -201,7 +201,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
             for (const [name, expected] of names) {
                 test(name, async ({same, end}) => {
-                    const source = await loader.getSourceContext(name, createSource('fixtures/foo.html', ''));
+                    const source = await loader.getSourceContext(name, 'fixtures/foo.html');
 
                     const foo = source && relative('.', source.resolvedName);
 
@@ -218,8 +218,8 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
             const statSpy = spy(filesystem, "stat");
 
-            await loader.getSourceContext('named_one/index.html', createSource('fixtures/index.html', ''));
-            await loader.getSourceContext('named_one/index.html', createSource('fixtures/index.html', ''));
+            await loader.getSourceContext('named_one/index.html', 'fixtures/index.html');
+            await loader.getSourceContext('named_one/index.html', 'fixtures/index.html');
 
             same(statSpy.callCount, 1);
 
@@ -241,7 +241,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
         test('with from defined', async ({same, end}) => {
             const loader = createRelativeFilesystemLoader(createFilesystem());
 
-            same(await loader.resolve('partial.html.twig', createSource('index.html.twig', '', 'fixtures/index.html.twig')), resolve('fixtures/partial.html.twig'));
+            same(await loader.resolve('partial.html.twig', 'fixtures/index.html.twig'), resolve('fixtures/partial.html.twig'));
 
             end();
         });
@@ -256,22 +256,22 @@ tape('createRelativeFilesystemLoader', ({test}) => {
         const loader = createRelativeFilesystemLoader(filesystem);
         const source = createSource(resolvePath('index.html'), '');
 
-        same(await loader.exists('normal_one/index.html', source), true);
-        same(await loader.exists('foo', source), false);
+        same(await loader.exists('normal_one/index.html', source.resolvedName), true);
+        same(await loader.exists('foo', source.resolvedName), false);
 
-        await loader.getSourceContext('normal_one/index.html', source);
+        await loader.getSourceContext('normal_one/index.html', source.resolvedName);
 
         const statSpy = spy(filesystem, 'stat');
-        const exists = await loader.exists('normal_one/index.html', source);
+        const exists = await loader.exists('normal_one/index.html', source.resolvedName);
 
         same(exists, true);
         same(statSpy.callCount, 0);
 
         same(await loader.exists('normal_one/index.html', null), false);
-        same(await loader.exists("foo\0.twig", source), false);
-        same(await loader.exists('@foo', source), false);
-        same(await loader.exists('foo', source), false);
-        same(await loader.exists('@foo/bar.twig', source), false);
+        same(await loader.exists("foo\0.twig", source.resolvedName), false);
+        same(await loader.exists('@foo', source.resolvedName), false);
+        same(await loader.exists('foo', source.resolvedName), false);
+        same(await loader.exists('@foo/bar.twig', source.resolvedName), false);
 
         end();
     });
@@ -318,8 +318,8 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
         const source = createSource('', resolvePath('index.html'));
 
-        const key1 = loader.getCacheKey('partial.html.twig', source);
-        const key2 = loader.getCacheKey('../fixtures/partial.html.twig', source);
+        const key1 = loader.getCacheKey('partial.html.twig', source.resolvedName);
+        const key2 = loader.getCacheKey('../fixtures/partial.html.twig', source.resolvedName);
 
         same(key1, key2);
 

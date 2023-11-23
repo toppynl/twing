@@ -4,7 +4,7 @@ import type {TwingArrayNode} from "../array";
 
 export const testNodeType = "test";
 
-export interface TwingTestNode extends TwingBaseCallNode<typeof testNodeType, TwingBaseNode> {
+export interface TwingTestNode extends TwingBaseCallNode<typeof testNodeType> {
 }
 
 export const createTestNode = (

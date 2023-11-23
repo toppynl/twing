@@ -3,12 +3,10 @@ import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 export interface TwingOrNode extends TwingBaseBinaryNode<"or"> {
 }
 
-export const createOrNode = createBinaryNodeFactory<TwingOrNode>("or", '||', {
-    compile: (compiler, baseNode) => {
-        compiler
-            .write('!!')
-        ;
+export const createOrNode = createBinaryNodeFactory<TwingOrNode>("or", {
+    execute: async (baseNode, ...args) => {
+        const {left, right} = baseNode.children;
 
-        baseNode.compile(compiler);
+        return !!(await left.execute(...args) || await right.execute(...args));
     }
 });

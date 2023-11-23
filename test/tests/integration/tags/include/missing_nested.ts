@@ -2,6 +2,10 @@ import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
+    getDescription(): string {
+        return '"include" tag with missing nested template';
+    }
+
     getName() {
         return 'tags/include/missing_nested';
     }
@@ -22,7 +26,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Unable to find template "foo.twig" in "base.twig" at line 3.'
+        return 'TwingRuntimeError: Unable to find template "foo.twig" in "base.twig" at line 3, column 8.'
     }
 }
 

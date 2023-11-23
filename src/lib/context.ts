@@ -1,8 +1,6 @@
 import {iteratorToMap} from "./helpers/iterator-to-map";
 
 export interface TwingContext<K, V> {
-    readonly proxy: Map<K, V>;
-
     readonly size: number;
 
     [Symbol.iterator](): IterableIterator<[K, V]>;
@@ -13,38 +11,17 @@ export interface TwingContext<K, V> {
 
     entries(): IterableIterator<[K, V]>;
 
-    get(key: K): V;
+    get(key: K): V | undefined;
 
     has(key: K): boolean;
 
     set(key: K, value: V): TwingContext<K, V>;
 }
 
-export const isAContext = (candidate: any): candidate is TwingContext<any, any> => {
-    return candidate !== undefined
-        && candidate !== null
-        && (candidate as TwingContext<any, any>).proxy !== undefined
-        && (candidate as TwingContext<any, any>).proxy instanceof Map;
-};
-
-export const createContext = <K, V>(
+export const createContext = <K extends string, V>(
     container: Map<K, V> = new Map()
 ): TwingContext<K, V> => {
-    const proxy = new Proxy(container, {
-        set: (target: Map<any, any>, key: string | number | symbol, value: any): boolean => {
-            target.set(key, value);
-
-            return true;
-        },
-        get(target: Map<any, any>, key: string | number | symbol): any {
-            return target.get(key);
-        }
-    });
-
     const context: TwingContext<K, V> = {
-        get proxy() {
-            return proxy;
-        },
         get size() {
             return container.size;
         },

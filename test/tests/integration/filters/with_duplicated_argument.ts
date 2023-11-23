@@ -17,5 +17,5 @@ runTest({
             }
         ])
     ],
-    expectedErrorMessage: 'TwingCompilationError: Argument "foo" is defined twice for filter "foo" in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingRuntimeError: Argument "foo" is defined twice for filter "foo" in "index.twig" at line 2, column 8.'
 });

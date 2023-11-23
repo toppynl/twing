@@ -14,7 +14,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Unable to find template "foo" in "index.twig" at line 2.';
+        return 'TwingRuntimeError: Unable to find template "foo" in "index.twig" at line 2, column 4.';
     }
 }
 
@@ -25,5 +25,5 @@ runTest({
     templates: {
        "index.twig": '{{ include(["foo", null, "bar"]) }}'
     },
-    expectedErrorMessage: 'TwingRuntimeError: Unable to find one of the following templates: "foo", "", "bar" in "index.twig" at line 1.'
+    expectedErrorMessage: 'TwingRuntimeError: Unable to find one of the following templates: "foo", "", "bar" in "index.twig" at line 1, column 4.'
 });

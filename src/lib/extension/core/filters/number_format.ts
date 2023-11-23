@@ -1,4 +1,4 @@
-import type {TwingTemplate} from "../../../template";
+import {TwingTemplate} from "../../../template";
 
 const phpNumberFormat = require('locutus/php/strings/number_format');
 
@@ -23,18 +23,18 @@ export const numberFormat = (
     decimalPoint: string | null,
     thousandSeparator: string | null
 ): Promise<string> => {
-    const {runtime} = template;
+    const {environment} = template;
     
     if (numberOfDecimals === null) {
-        numberOfDecimals = runtime.defaultNumberFormats.numberOfDecimals;
+        numberOfDecimals = environment.numberFormat.numberOfDecimals;
     }
 
     if (decimalPoint === null) {
-        decimalPoint = runtime.defaultNumberFormats.decimalPoint;
+        decimalPoint = environment.numberFormat.decimalPoint;
     }
 
     if (thousandSeparator === null) {
-        thousandSeparator = runtime.defaultNumberFormats.thousandSeparator;
+        thousandSeparator = environment.numberFormat.thousandSeparator;
     }
     
     return Promise.resolve(phpNumberFormat(number, numberOfDecimals, decimalPoint, thousandSeparator));

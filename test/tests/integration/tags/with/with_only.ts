@@ -16,7 +16,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "baz" does not exist in "index.twig" at line 3.';
+        return 'TwingRuntimeError: Variable "baz" does not exist in "index.twig" at line 3, column 26.';
     }
 
     getContext() {

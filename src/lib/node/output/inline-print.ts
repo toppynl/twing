@@ -16,9 +16,17 @@ export const createInlinePrintNode = (
 ): TwingInlinePrintNode => {
     const outputNode = createBaseOutputNode(inlinePrintNodeType, {}, {
         node
-    }, (compiler) => {
-        compiler.subCompile(node);
     }, line, column, tag);
 
-    return outputNode;
+    const inlinePrintNode: TwingInlinePrintNode = {
+        ...outputNode,
+        execute: (...args) => {
+            const [, , outputBuffer] = args;
+
+            return inlinePrintNode.children.node.execute(...args)
+                .then(outputBuffer.echo);
+        }
+    };
+
+    return inlinePrintNode;
 };

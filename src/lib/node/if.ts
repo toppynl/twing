@@ -1,4 +1,5 @@
 import {TwingBaseNode, createBaseNode, getChildrenCount, TwingBaseNodeAttributes} from "../node";
+import {evaluate} from "../helpers/evaluate";
 
 type TwingIfNodeChildren = {
     tests: TwingBaseNode;
@@ -22,46 +23,34 @@ export const createIfNode = (
     if (elseNode) {
         children.else = elseNode;
     }
-
-    const compile: TwingIfNode["compile"] = (compiler) => {
-        const count = getChildrenCount(testNode);
-
-        for (let i = 0; i < count; i += 2) {
-            if (i > 0) {
-                compiler
-                    .write('}\n')
-                    .write('else if (runtime.evaluate(')
-                ;
-            } else {
-                compiler
-                    .write('if (runtime.evaluate(')
-                ;
-            }
-
-            compiler
-                .subCompile(testNode.children[i])
-                .write(")) {\n")
-                .subCompile(testNode.children[i + 1])
-            ;
-        }
-
-        if (elseNode !== null) {
-            compiler
-                .write("}\n")
-                .write("else {\n")
-                .subCompile(elseNode)
-            ;
-        }
-
-        compiler
-            .write("}\n");
-    };
-
+    
     const baseNode = createBaseNode('if', {}, children, line, column, tag);
 
     const node: TwingIfNode = {
         ...baseNode,
-        compile
+        execute: async (...args) => {
+            const count = getChildrenCount(testNode);
+
+            let index: number = 0;
+            
+            while (index < count) {
+                const condition = testNode.children[index];
+                const conditionResult = await condition.execute(...args);
+                
+                if (evaluate(conditionResult)) {
+                    // the condition is satisfied, we execute the belonging body and return the result
+                    const body = testNode.children[index + 1];
+                    
+                    return body.execute(...args);
+                }
+                
+                index += 2;
+            }
+            
+            if (elseNode !== null) {
+                return elseNode.execute(...args);
+            }
+        }
     };
 
     return node;

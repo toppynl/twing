@@ -23,43 +23,24 @@ export const createArrowFunctionNode = (
 
     return {
         ...baseNode,
-        compile: (compiler) => {
-            compiler.write('async (');
-
-            let i: number = 0;
-
+        execute: (...args) => {
+            const [, context] = args;
+            const {expr} = baseNode.children;
             const assignmentNodes = Object.values(baseNode.children.names.children);
 
-            for (const assignmentNode of assignmentNodes) {
-                if (i > 0) {
-                    compiler.write(', ');
+            return Promise.resolve((...functionArgs: Array<any>): Promise<any> => {
+                let index = 0;
+
+                for (const assignmentNode of assignmentNodes) {
+                    const {name} = assignmentNode.attributes;
+
+                    context.set(name, functionArgs[index]);
+
+                    index++;
                 }
 
-                compiler
-                    .write('$__')
-                    .write(assignmentNode.attributes.name)
-                    .write('__');
-
-                i++;
-            }
-
-            compiler
-                .write(') => {')
-            ;
-
-            for (const nameNode of assignmentNodes) {
-                compiler
-                    .write('context.proxy[\'')
-                    .write(nameNode.attributes.name)
-                    .write('\'] = $__')
-                    .write(nameNode.attributes.name)
-                    .write('__; ');
-            }
-
-            compiler
-                .write('return ')
-                .subCompile(baseNode.children.expr)
-                .write(';}');
+                return expr.execute(...args);
+            });
         }
     };
 };

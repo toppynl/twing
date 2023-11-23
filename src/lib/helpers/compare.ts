@@ -6,7 +6,7 @@
  */
 
 import {DateTime} from "luxon";
-import {isMapLike, MapLike} from "./map-like";
+import {isAMapLike, MapLike} from "./map-like";
 import {isAMarkup, TwingMarkup} from "../markup";
 import {TwingContext} from "../context";
 
@@ -62,7 +62,7 @@ export function compare(
     }
     
     // Map
-    if (isMapLike(firstOperand)) {
+    if (isAMapLike(firstOperand)) {
         return compareToMap(firstOperand, secondOperand);
     }
 
@@ -94,10 +94,10 @@ function compareToMap(
     secondOperand: string | object | DateTime | Map<any, any> | TwingContext<any, any>
 ): boolean {
     if (firstOperand.size === 0) {
-        return isMapLike(secondOperand) && (secondOperand.size === 0);
+        return isAMapLike(secondOperand) && (secondOperand.size === 0);
     }
     else {
-        if (!isMapLike(secondOperand)) {
+        if (!isAMapLike(secondOperand)) {
             return false;
         }
         else if (firstOperand.size !== (secondOperand as Map<any, any>).size) {
@@ -161,7 +161,7 @@ function compareToBoolean(
         }
     }
     
-    if (isMapLike(secondOperand)) {
+    if (isAMapLike(secondOperand)) {
         return firstOperand === (secondOperand as Map<any, any>).size > 0;
     }
     
@@ -214,7 +214,7 @@ function compareToNull(value: Operand) {
         return true;
     }
 
-    if (isMapLike(value)) {
+    if (isAMapLike(value)) {
         return (value as Map<any, any>).size < 1;
     }
 

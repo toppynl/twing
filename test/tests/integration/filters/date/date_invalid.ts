@@ -20,7 +20,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Failed to parse date "2010 -01-28T15:00:00+04:00" in "index.twig" at line 2.';
+        return 'TwingRuntimeError: Failed to parse date "2010 -01-28T15:00:00+04:00" in "index.twig" at line 2, column 16.';
     }
 }
 

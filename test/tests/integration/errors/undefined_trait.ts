@@ -17,7 +17,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Block `foobar` is not defined in trait `foo` in "index.twig" at line 2.';
+        return 'TwingRuntimeError: Block "foobar" is not defined in trait "foo" in "index.twig" at line 2, column 8.';
     }
 }
 

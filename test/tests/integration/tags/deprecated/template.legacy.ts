@@ -24,8 +24,12 @@ class Test extends TestBase {
 
     getExpectedDeprecationMessages() {
         return [
-            'The "index.twig" template is deprecated, use "greeting.twig" instead. ("index.twig" at line 3)'
+            'The "index.twig" template is deprecated, use "greeting.twig" instead. ("index.twig" at line 3, column 4)'
         ];
+    }
+
+    getType(): "template" | "execution context" | undefined {
+        return "execution context";
     }
 }
 

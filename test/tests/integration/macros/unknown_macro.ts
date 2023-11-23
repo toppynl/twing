@@ -17,7 +17,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Macro "unknown" is not defined in template "index.twig" in "index.twig" at line 4.';
+        return 'TwingRuntimeError: Macro "unknown" is not defined in template "index.twig" in "index.twig" at line 4, column 10.';
     }
 }
 

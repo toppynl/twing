@@ -51,7 +51,7 @@ export const createSandboxSecurityPolicy = (
                 for (const [constructorName, methods] of allowedMethods) {
                     if (candidate instanceof constructorName) {
                         allowed = methods.includes(method);
-
+                        
                         break;
                     }
                 }

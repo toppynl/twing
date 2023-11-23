@@ -1,4 +1,3 @@
-import type {TwingCompiler} from "./compiler";
 import type {TwingExpressionNode} from "./node/expression";
 import type {TwingPrintNode} from "./node/output/print";
 import type {TwingBlockReferenceNode} from "./node/output/block-reference";
@@ -30,10 +29,16 @@ import type {TwingWithNode} from "./node/with";
 import type {TwingIfNode} from "./node/if";
 import type {TwingMethodCallNode} from "./node/expression/method-call";
 import type {TwingEscapeNode} from "./node/expression/escape";
+import {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "./template";
+import {TwingContext} from "./context";
+import {TwingOutputBuffer} from "./output-buffer";
+import type {TwingApplyNode} from "./node/apply";
+import {TwingSourceMapRuntime} from "./source-map-runtime";
 
 const var_export = require('locutus/php/var/var_export');
 
 export type TwingNode =
+    | TwingApplyNode
     | TwingAutoEscapeNode
     | TwingBlockNode
     | TwingBlockReferenceNode
@@ -88,8 +93,15 @@ export interface TwingBaseNode<
     readonly tag: string | null;
     readonly type: Type;
     
-    compile(compiler: TwingCompiler): void;
-    
+    execute(
+        template: TwingTemplate,
+        context: TwingContext<any, any>,
+        outputBuffer: TwingOutputBuffer,
+        blocks: TwingTemplateBlockMap,
+        aliases: TwingTemplateAliases,
+        sourceMapRuntime?: TwingSourceMapRuntime
+    ): Promise<any>;
+
     toString(): string; // todo: remove - move it to a development helper and check usage in the parser 
 
     is<Type extends string>(type: Type): this is TwingNode & {
@@ -131,10 +143,14 @@ export const createBaseNode = <
         tag,
         isACaptureNode: false,
         isAnOutputNode: false,
-        compile: (compiler) => {
+        execute: async (...args) => {
+            const output: Array<any> = [];
+            
             for (const [, child] of getChildren(node)) {
-                child.compile(compiler);
+                output.push(await child.execute(...args));
             }
+
+            return output;
         },
         is: (aType) => (aType as string) === node.type,
         toString: () => {

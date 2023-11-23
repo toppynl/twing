@@ -17,13 +17,13 @@
     "type": "git",
     "url": "https://gitlab.com/nightlycommit/twing"
   },
-  "main": "dist/cjs/index.js",
-  "types": "dist/types/index.d.ts",
+  "main": "dist/cjs/lib.js",
+  "types": "dist/types/lib.d.ts",
   "jsdelivr": "dist/lib.min.js",
   "exports": {
-    "import": "./dist/es/index.js",
-    "default": "./dist/cjs/index.js",
-    "types": "./dist/types/index.d.ts"
+    "import": "./dist/es/lib.js",
+    "default": "./dist/cjs/lib.js",
+    "types": "./dist/types/lib.d.ts"
   },
   "files": [
     "dist"
@@ -42,7 +42,7 @@
     "build:es": "rimraf dist/es && tsc --project . --module es6 --outDir dist/es",
     "build:test": "rimraf dist && tsc --project test --outDir dist",
     "build:types": "rimraf dist/types && tsc --project . --declaration true --emitDeclarationOnly true --outDir dist/types",
-    "bundle": "browserify dist/cjs/index.js -g uglifyify -s Twing -o dist/lib.min.js"
+    "bundle": "browserify dist/cjs/lib.js -g uglifyify -s Twing -o dist/lib.min.js"
   },
   "dependencies": {
     "capitalize": "^1.0.0",

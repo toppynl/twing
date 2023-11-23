@@ -1,4 +1,3 @@
-import type {TwingSource} from "./source";
 import type {TwingRuntimeError} from "./error/runtime";
 import type {TwingArrayNode} from "./node/expression/array";
 import {Safe} from "./node-visitor/escaper";
@@ -43,7 +42,7 @@ export interface TwingCallableWrapper<Callable extends TwingCallable> {
 
     getSafe(argumentsNode: TwingArrayNode): Safe;
 
-    getTraceableCallable(line: number, source: TwingSource): Callable;
+    getTraceableCallable(line: number, column: number, source: string): Callable;
 }
 
 export const createCallableWrapper = <Callable extends TwingCallable>(
@@ -105,15 +104,15 @@ export const createCallableWrapper = <Callable extends TwingCallable>(
 
             return [];
         },
-        getTraceableCallable: (line, source) => {
+        getTraceableCallable: (line, column, source) => {
             return ((...args) => {
                 return callable(...args)
                     .catch((error: TwingRuntimeError) => {
-                        if (error.line === undefined) {
-                            error.line = line;
+                        if (error.location === undefined) {
+                            error.location = {line, column};
                         }
 
-                        if (!error.source) {
+                        if (error.source === undefined) {
                             error.source = source;
                         }
 

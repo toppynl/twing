@@ -26,5 +26,5 @@ runTest({
     environmentOptions: {
         sandboxed: true
     },
-    expectedErrorMessage: 'TwingSandboxSecurityError: Function "dump" is not allowed in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingSandboxSecurityError: Function "dump" is not allowed in "index.twig" at line 2, column 4.'
 });

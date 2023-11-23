@@ -27,16 +27,10 @@ export const createBaseConditionalNode = <Type extends string>(
 
     return {
         ...baseNode,
-        compile: (compiler) => {
-            compiler
-                .write('((')
-                .subCompile(baseNode.children.expr1)
-                .write(') ? (')
-                .subCompile(baseNode.children.expr2)
-                .write(') : (')
-                .subCompile(baseNode.children.expr3)
-                .write('))')
-            ;
+        execute: async (...args) => {
+            const {expr1, expr2, expr3} = baseNode.children;
+
+            return (await expr1.execute(...args)) ? expr2.execute(...args) : expr3.execute(...args);
         }
     };
 };

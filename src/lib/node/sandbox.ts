@@ -1,6 +1,8 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
 
-export interface TwingSandboxNode extends TwingBaseNode<"sandbox", TwingBaseNodeAttributes, {
+export const sandboxNodeType = "sandbox";
+
+export interface TwingSandboxNode extends TwingBaseNode<typeof sandboxNodeType, TwingBaseNodeAttributes, {
     body: TwingNode;
 }> {
 }
@@ -11,25 +13,29 @@ export const createSandboxNode = (
     column: number,
     tag: string
 ): TwingSandboxNode => {
-    const baseNode = createBaseNode("sandbox", {}, {
+    const baseNode = createBaseNode(sandboxNodeType, {}, {
         body
     }, line, column, tag);
 
     return {
         ...baseNode,
-        compile: (compiler) => {
-            compiler
-                .write('await (async () => {\n')
-                .write('let alreadySandboxed = runtime.isSandboxed;\n')
-                .write("if (!alreadySandboxed) {\n")
-                .write("runtime.isSandboxed = true;\n")
-                .write("}\n")
-                .subCompile(baseNode.children.body)
-                .write("if (!alreadySandboxed) {\n")
-                .write("runtime.isSandboxed = false;\n")
-                .write("}\n")
-                .write("})();\n")
-            ;
+        execute: (...args) => {
+            const [template] = args;
+            const {environment} = template;
+            const {body} = baseNode.children;
+
+            const alreadySandboxed = environment.isSandboxed;
+            
+            if (!alreadySandboxed) {
+                environment.isSandboxed = true;
+            }
+            
+            return body.execute(...args)
+                .finally(() => {
+                    if (!alreadySandboxed) {
+                        environment.isSandboxed = false;
+                    }
+                });
         }
     };
 };

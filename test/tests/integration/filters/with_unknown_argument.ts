@@ -13,7 +13,7 @@ runTest({
             return Promise.resolve('wrong');
         }, [])
     ],
-    expectedErrorMessage: 'TwingCompilationError: Unknown argument "foo" for filter "foo()" in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingRuntimeError: Unknown argument "foo" for filter "foo()" in "index.twig" at line 2, column 12.'
 });
 
 runTest({
@@ -28,5 +28,5 @@ runTest({
             return Promise.resolve('wrong');
         }, [])
     ],
-    expectedErrorMessage: 'TwingCompilationError: Unknown arguments "foo", "bar" for filter "foo()" in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingRuntimeError: Unknown arguments "foo", "bar" for filter "foo()" in "index.twig" at line 2, column 12.'
 });

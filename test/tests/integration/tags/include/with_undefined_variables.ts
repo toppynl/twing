@@ -15,7 +15,7 @@ export class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "data" does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "data" does not exist in "index.twig" at line 1, column 28.';
     }
 }
 
@@ -31,7 +31,7 @@ export class StrictVariablesSetToFalse extends Test {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variables passed to the "include" function or tag must be iterable, got "null" in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variables passed to the "include" function or tag must be iterable, got "null" in "index.twig" at line 1, column 4.';
     }
 }
 

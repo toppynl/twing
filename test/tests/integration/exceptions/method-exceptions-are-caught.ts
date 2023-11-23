@@ -7,7 +7,7 @@ runTest({
 {{ foo.bar() }}
 `
     },
-    expectedErrorMessage: 'TwingRuntimeError: An exception has been thrown during the rendering of a template ("I am Error") in "index.twig" at line 2.',
+    expectedErrorMessage: 'TwingRuntimeError: An exception has been thrown during the rendering of a template ("I am Error") in "index.twig" at line 2, column 4.',
     context: Promise.resolve({
         foo: {
             bar: () => {

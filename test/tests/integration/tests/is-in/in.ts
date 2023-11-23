@@ -15,7 +15,7 @@ let opendir = function () {
 
 class Test extends TestBase {
     getDescription() {
-        return 'Twig supports the in operator';
+        return 'Twing supports the in operator the in operator';
     }
 
     getTemplates() {

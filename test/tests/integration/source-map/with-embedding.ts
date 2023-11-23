@@ -1,7 +1,7 @@
 import {runTest} from "../TestBase";
 
 runTest({
-    description: 'Source map supports template inheritance',
+    description: 'Source map supports template embedding',
     templates: {
         'index.twig': `{% embed "skeleton.twig" %}
     {% block content -%}

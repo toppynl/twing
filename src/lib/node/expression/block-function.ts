@@ -1,6 +1,6 @@
 import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
 import {TwingBaseNode} from "../../node";
-import {TwingCompiler} from "../../compiler";
+import {TwingTemplate} from "../../template";
 
 type TwingBlockFunctionNodeAttributes = TwingBaseExpressionNodeAttributes & {
     shouldTestExistence: boolean;
@@ -33,53 +33,40 @@ export const createBlockFunctionNode = (
         shouldTestExistence: false
     }, children, line, column, tag);
 
-    const compileTemplateCall = (compiler: TwingCompiler, method: string, needsOutputBuffer: boolean): TwingCompiler => {
-        compiler.write('await ');
-
-        if (!node.children.template) {
-            compiler.write('template');
-        } else {
-            compiler
-                .write('(await template.loadTemplate(')
-                .subCompile(node.children.template)
-                .write(', ')
-                .render(node.line)
-                .write('))')
-            ;
-        }
-
-        compiler.write(`.${method}(${node.line}, template.source)`);
-
-        compileBlockArguments(compiler, needsOutputBuffer);
-
-        return compiler;
-    }
-
-    const compileBlockArguments = (compiler: TwingCompiler, needsOutputBuffer: boolean) => {
-        compiler
-            .write('(')
-            .subCompile(node.children.name)
-            .write(', context.clone()');
-
-        if (needsOutputBuffer) {
-            compiler.write(', outputBuffer');
-        }
-
-        if (!baseNode.children.template) {
-            compiler.write(', blocks, true, sourceMapRuntime');
-        }
-
-        return compiler.write(')');
-    }
-
     const node: TwingBlockFunctionNode = {
         ...baseNode,
-        compile: (compiler) => {
-            if (node.attributes.shouldTestExistence) {
-                compileTemplateCall(compiler, 'getTraceableHasBlock', false);
+        execute: async (...args) => {
+            const [template, context, outputBuffer, blocks, , sourceMapRuntime] = args;
+            const {template: templateNode, name: blockNameNode} = node.children;
+
+            const blockName = await blockNameNode.execute(...args);
+
+            let resolveTemplate: Promise<TwingTemplate>;
+
+            if (templateNode) {
+                const templateName = await templateNode.execute(...args);
+
+                resolveTemplate = template.loadTemplate(templateName, templateNode.line, templateNode.column);
             } else {
-                compileTemplateCall(compiler, 'getTraceableRenderBlock', true);
+                resolveTemplate = Promise.resolve(template)
             }
+
+            return resolveTemplate
+                .then<Promise<boolean | string>>((executionContextOfTheBlock) => {
+                    if (node.attributes.shouldTestExistence) {
+                        const hasBlock = executionContextOfTheBlock.getTraceableMethod(executionContextOfTheBlock.hasBlock, node.line, node.column, template.templateName);
+
+                        return hasBlock(blockName, context.clone(), outputBuffer, blocks);
+                    } else {
+                        const renderBlock = executionContextOfTheBlock.getTraceableMethod(executionContextOfTheBlock.renderBlock, node.line, node.column, template.templateName);
+                        
+                        if (templateNode) {
+                            return renderBlock(blockName, context.clone(), outputBuffer, new Map(), false, sourceMapRuntime);
+                        } else {
+                            return renderBlock(blockName, context.clone(), outputBuffer, blocks, true, sourceMapRuntime);
+                        }
+                    }
+                });
         }
     };
 

@@ -22,23 +22,20 @@ export const createBaseTextNode = <Type extends string>(
 ): BaseTextNode<Type> => {
     const outputNode = createBaseOutputNode(type, {
         data
-    }, {}, (compiler) => {
-        compiler
-            .string(node.attributes.data)
-        ;
-    }, line, column, tag);
+    }, {}, line, column, tag);
 
     const node: BaseTextNode<Type> = {
         ...outputNode,
-        compile: (compiler) => {
-            compiler.addSourceMapEnter(node);
+        execute(...args) {
+            const [template, , outputBuffer, , , sourceMapRuntime] = args;
+
+            sourceMapRuntime?.enterSourceMapBlock(node.line, node.column, node.type, template.source, outputBuffer);
+
+            outputBuffer.echo(node.attributes.data);
             
-            outputNode.compile(compiler);
-            
-            compiler
-                .write(';\n')
-                .addSourceMapLeave()
-            ;
+            sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);
+
+            return Promise.resolve();
         }
     };
 

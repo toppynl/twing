@@ -1,5 +1,4 @@
-import {TwingSource} from "../source";
-import {createBaseError, TwingBaseError} from "./base";
+import {createBaseError, ErrorLocation, TwingBaseError} from "./base";
 
 export const templateLoadingError = 'TwingTemplateLoadingError';
 
@@ -10,16 +9,18 @@ export interface TwingTemplateLoadingError extends TwingBaseError<typeof templat
 
 }
 
-export const createTemplateLoadingError = (name: string | Array<string>, line?: number, source?: TwingSource, previous?: any): TwingTemplateLoadingError => {
+export const createTemplateLoadingError = (names: Array<string | null>, location?: ErrorLocation, source?: string, previous?: any): TwingTemplateLoadingError => {
     let message: string;
-
-    if (typeof name === "string") {
-        message = `Unable to find template "${name}".`;
+    
+    if (names.length === 1) {
+        const name = names[0];
+        
+        message = `Unable to find template "${name ? name : ''}".`;
     } else {
-        message = `Unable to find one of the following templates: "${name.join('", "')}".`;
+        message = `Unable to find one of the following templates: "${names.join('", "')}".`;
     }
     
-    const error = createBaseError(templateLoadingError, message, line, undefined, source, previous);
+    const error = createBaseError(templateLoadingError, message, location, source, previous);
     
     Error.captureStackTrace(error, createTemplateLoadingError);
     

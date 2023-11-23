@@ -18,38 +18,15 @@ export const createDeprecatedNode = (
 
     const node: TwingDeprecatedNode = {
         ...baseNode,
-        compile: (compiler) => {
+        execute: (template, ...args) => {
             const {expr} = node.children;
 
-            compiler
-                .write('{\n')
-            ;
-
-            if (expr.is("constant")) {
-                compiler
-                    .write('console.warn(')
-                    .subCompile(expr)
-                ;
-            } else {
-                compiler.write(`let message = `)
-                    .subCompile(expr)
-                    .write(';\n')
-                    .write(`console.warn(message`)
-                ;
-            }
-
-            compiler
-                .write(' + ')
-                .string(' ("')
-                .write(' + ')
-                .write('template.templateName')
-                .write(' + ')
-                .string(`" at line ${node.line})`)
-                .write(');\n')
-                .write('}\n')
-            ;
+            return expr.execute(template, ...args)
+                .then((message) => {
+                    console.warn(`${message} ("${template.templateName}" at line ${node.line}, column ${node.column})`);
+                });
         }
     };
-    
+
     return node;
 };

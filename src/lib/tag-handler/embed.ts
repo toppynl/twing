@@ -52,10 +52,10 @@ export const createEmbedTagHandler = (): TwingTagHandler => {
                 
                 stream.expect(TokenType.TAG_END);
 
-                const {templateName, index} = module.attributes;
-
+                const {source, index} = module.attributes;
+                
                 return createEmbedNode({
-                    templateName,
+                    templateName: source.name,
                     index,
                     only,
                     ignoreMissing

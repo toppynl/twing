@@ -9,7 +9,7 @@ export interface TwingLoader {
      *
      * @returns {Promise<TwingSource | string>}
      */
-    getSourceContext: (name: string, from: TwingSource | null) => Promise<TwingSource | null>;
+    getSourceContext: (name: string, from: string | null) => Promise<TwingSource | null>;
 
     /**
      * Gets the cache key to use for the cache for a given template name.
@@ -19,7 +19,7 @@ export interface TwingLoader {
      *
      * @returns {Promise<string | null>} The cache key
      */
-    getCacheKey: (name: string, from: TwingSource | null) => Promise<string | null>;
+    getCacheKey: (name: string, from: string | null) => Promise<string | null>;
 
     /**
      * Returns true if the template is still fresh.
@@ -32,7 +32,7 @@ export interface TwingLoader {
      *
      * @throws TwingErrorLoader When name is not found
      */
-    isFresh: (name: string, time: number, from: TwingSource | null) => Promise<boolean | null>;
+    isFresh: (name: string, time: number, from: string | null) => Promise<boolean | null>;
 
     /**
      * Check if we have the source code of a template, given its name.
@@ -42,7 +42,7 @@ export interface TwingLoader {
      *
      * @returns {Promise<boolean>} If the template source code is handled by this loader or not
      */
-    exists: (name: string, from: TwingSource | null) => Promise<boolean>;
+    exists: (name: string, from: string | null) => Promise<boolean>;
 
     /**
      * Resolve the path of a template, given its name, whatever it means in the context of the loader.
@@ -52,5 +52,5 @@ export interface TwingLoader {
      *
      * @returns {Promise<string | null>} The resolved path of the template
      */
-    resolve: (name: string, from: TwingSource | null) => Promise<string | null>;
+    resolve: (name: string, from: string | null) => Promise<string | null>;
 }

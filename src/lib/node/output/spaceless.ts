@@ -16,24 +16,21 @@ export const createSpacelessNode = (
 ): TwingSpacelessNode => {
     const baseNode = createBaseOutputNode(spacelessNodeType, {}, {
         body
-    }, (compiler) => {
-        compiler.write("outputBuffer.getAndClean().replace(/>\\s+</g, '><').trim()")
     }, line, column, tag);
 
     const spacelessNode: TwingSpacelessNode = {
         ...baseNode,
-        compile: (compiler) => {
-            compiler
-                .write("outputBuffer.start();\n")
-                .subCompile(baseNode.children.body)
-            ;
-            
-            baseNode
-                .compile(compiler);
-            
-            compiler
-                .write(';\n')
-            ;
+        execute: (...args) => {
+            const [, , outputBuffer] = args;
+
+            outputBuffer.start();
+
+            return spacelessNode.children.body.execute(...args)
+                .then(() => {
+                    const content = outputBuffer.getAndClean().replace(/>\s+</g, '><').trim();
+
+                    outputBuffer.echo(content);
+                });
         }
     };
 

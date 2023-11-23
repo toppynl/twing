@@ -18,7 +18,7 @@ export class Basic extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingSandboxSecurityError: Calling "toString" method on an instance of Object is not allowed in "foo.twig" at line 2.';
+        return 'TwingSandboxSecurityError: Calling "toString" method on an instance of Object is not allowed in "foo.twig" at line 2, column 8.';
     }
 
     getEnvironmentOptions(): TwingEnvironmentOptions {
@@ -57,7 +57,7 @@ export class Set extends Basic {
     }
 
     getExpectedErrorMessage(): string {
-        return 'TwingSandboxSecurityError: Calling "toString" method on an instance of Object is not allowed in "foo.twig" at line 3.';
+        return 'TwingSandboxSecurityError: Calling "toString" method on an instance of Object is not allowed in "foo.twig" at line 3, column 8.';
     }
 
     getSandboxSecurityPolicyTags(): string[] {

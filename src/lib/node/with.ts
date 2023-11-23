@@ -1,4 +1,8 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
+import {createRuntimeError} from "../error/runtime";
+import {createContext, TwingContext} from "../context";
+import {mergeIterables} from "../helpers/merge-iterables";
+import {iteratorToMap} from "../helpers/iterator-to-map";
 
 export type TwingWithNodeAttributes = TwingBaseNodeAttributes & {
     only: boolean;
@@ -23,57 +27,51 @@ export const createWithNode = (
     const children: TwingWithNodeChildren = {
         body
     };
-    
+
     if (variables) {
         children.variables = variables;
     }
-    
+
     const baseNode = createBaseNode("with", {
         only
     }, children, line, column, tag);
 
     const node: TwingWithNode = {
         ...baseNode,
-        compile: (compiler) => {
-            const {variables, body} = baseNode.children;
+        execute: async (template, context, ...args) => {
+            const {variables: variablesNode, body} = baseNode.children;
             const {only} = baseNode.attributes;
 
-            if (variables) {
-                compiler
-                    .write('{\n')
-                    
-                    .write(`let tmp = `)
-                    .subCompile(variables)
-                    .write(";\n")
-                    .write(`if (typeof (tmp) !== 'object') {\n`)
-                    
-                    .write('throw runtime.createError(\'Variables passed to the "with" tag must be a hash.\', ')
-                    .render(baseNode.line)
-                    .write(", template.source);\n")
-                    
-                    .write("}\n")
-                ;
+            let scopedContext: TwingContext<any, any>;
 
-                if (only) {
-                    compiler.write("context = new Map([['_parent', context]]);\n");
-                } else {
-                    compiler.write("context.set('_parent', context.clone());\n");
+            if (variablesNode) {
+                const variables = await variablesNode.execute(template, context, ...args);
+
+                if (typeof variables !== "object") {
+                    throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, node, template.templateName);
                 }
 
-                compiler
-                    .write(`context = runtime.createContext(runtime.mergeGlobals(runtime.merge(context, runtime.convertToMap(tmp))));\n`)
-                    
-                    .write('}\n\n')
+                if (only) {
+                    scopedContext = createContext();
+                } else {
+                    scopedContext = context.clone();
+                }
+
+                scopedContext = createContext(template.mergeGlobals(
+                    mergeIterables(
+                        scopedContext,
+                        iteratorToMap(variables)
+                    )
+                ))
             } else {
-                compiler.write("context.set('_parent', context.clone());\n");
+                scopedContext = context.clone();
             }
 
-            compiler
-                .subCompile(body)
-                .write("context = context.get('_parent');\n")
-            ;
+            scopedContext.set('_parent', context.clone());
+
+            await body.execute(template, scopedContext, ...args);
         }
     };
-    
+
     return node;
 };

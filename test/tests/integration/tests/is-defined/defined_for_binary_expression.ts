@@ -5,5 +5,5 @@ runTest({
     templates: {
         'index.twig': '{{ (i == 2) is defined }}'
     },
-    expectedErrorMessage: 'TwingParsingError: The "defined" test only works with simple variables in "index.twig" at line 1.'
+    expectedErrorMessage: 'TwingParsingError: The "defined" test only works with simple variables in "index.twig" at line 1, column 16.'
 })

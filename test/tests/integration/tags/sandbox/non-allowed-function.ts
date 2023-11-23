@@ -18,7 +18,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingSandboxSecurityError: Function "dump" is not allowed in "foo.twig" at line 1.';
+        return 'TwingSandboxSecurityError: Function "dump" is not allowed in "foo.twig" at line 1, column 4.';
     }
 }
 

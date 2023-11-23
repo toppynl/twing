@@ -97,7 +97,7 @@ export const createRelativeFilesystemLoader = (
      *
      * @returns {Promise<string>} The template name or null
      */
-    const findTemplate = (name: string, from: TwingSource | null): Promise<string | null> => {
+    const findTemplate = (name: string, from: string | null): Promise<string | null> => {
         let _do = (): Promise<string | null> => {
             name = normalizeName(resolvePathFromSource(name, from));
 
@@ -132,9 +132,9 @@ export const createRelativeFilesystemLoader = (
         return findTemplate(name, from);
     };
 
-    const resolvePathFromSource = (name: string, from: TwingSource | null): string => {
+    const resolvePathFromSource = (name: string, from: string | null): string => {
         if (name && from && !isAbsolute(name)) {
-            name = join(dirname(from.resolvedName), name);
+            name = join(dirname(from), name);
         }
 
         return name;
