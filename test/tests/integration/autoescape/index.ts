@@ -9,3 +9,4 @@ import "./on-name";
 import "./on-unsafe-filter";
 import "./simple";
 import "./when-disabled";
+import "./when-not-set";

@@ -26,5 +26,5 @@ runTest({
     environmentOptions: {
         sandboxed: true
     },
-    expectedErrorMessage: 'TwingSandboxSecurityError: Filter "upper" is not allowed in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingSandboxSecurityError: Filter "upper" is not allowed in "index.twig" at line 2, column 6.'
 });

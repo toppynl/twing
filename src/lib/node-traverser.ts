@@ -17,7 +17,6 @@ export const createNodeTraverser = (
     const visitorsByPriority: Map<number, Map<string, TwingNodeVisitor>> = new Map();
 
     for (const visitor of visitors) {
-        
         let visitors = visitorsByPriority.get(visitor.priority);
 
         if (!visitors) {

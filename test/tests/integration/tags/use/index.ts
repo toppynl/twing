@@ -11,3 +11,4 @@ import "./parent_block2";
 import "./parent_block3";
 import "./use_with_parent";
 import "./with_a_non_supported_template_reference";
+import "./with-a-non-traitable-template";

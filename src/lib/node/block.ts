@@ -19,18 +19,7 @@ export const createBlockNode = (
     const baseNode = createBaseNode("block", {name}, {body}, line, column, tag);
 
     const node: TwingBlockNode = {
-        ...baseNode,
-        compile: (compiler) => {
-            compiler
-                .write(`async (context, outputBuffer, blocks = new Map(), sourceMapRuntime) => {\n`)
-                .write('const aliases = template.aliases.clone();\n')
-            ;
-
-            compiler
-                .subCompile(baseNode.children.body)
-                .write("}")
-            ;
-        }
+        ...baseNode
     };
 
     return node;

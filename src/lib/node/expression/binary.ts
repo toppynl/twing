@@ -1,5 +1,4 @@
 import type {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes} from "../expression";
-import type {TwingCompiler} from "../../compiler";
 import type {TwingNode, TwingNodeType} from "../../node";
 import type {TwingAddNode} from "./binary/add";
 import type {TwingAndNode} from "./binary/and";
@@ -27,6 +26,10 @@ import type {TwingRangeNode} from "./binary/range";
 import type {TwingStartsWithNode} from "./binary/starts-with";
 import type {TwingSubtractNode} from "./binary/subtract";
 import {createBaseExpressionNode} from "../expression";
+import type {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "../../template";
+import type {TwingContext} from "../../context";
+import type {TwingOutputBuffer} from "../../output-buffer";
+import {TwingSourceMapRuntime} from "../../source-map-runtime";
 
 export type TwingBinaryNode =
     | TwingAddNode
@@ -60,13 +63,11 @@ export interface TwingBaseBinaryNode<Type extends string> extends TwingBaseExpre
     left: TwingNode;
     right: TwingNode;
 }> {
-    compileLeftOperand: (compiler: TwingCompiler) => void;
-    compileRightOperand: (compiler: TwingCompiler) => void;
+
 }
 
 export const createBaseBinaryNode = <Type extends string>(
     type: Type,
-    operator: string | null,
     operands: [TwingBaseExpressionNode, TwingBaseExpressionNode],
     line: number,
     column: number
@@ -76,39 +77,23 @@ export const createBaseBinaryNode = <Type extends string>(
         right: operands[1]
     }, line, column);
 
-    const compileLeftOperand: TwingBaseBinaryNode<Type>["compileLeftOperand"] = (compiler) => {
-        compiler
-            .write('(')
-            .subCompile(baseNode.children.left)
-            .write(' ')
-        ;
-    }
-
-    const compileRightOperand: TwingBaseBinaryNode<Type>["compileRightOperand"] = (compiler) => {
-        compiler
-            .write(' ')
-            .subCompile(baseNode.children.right)
-            .write(')')
-        ;
-    }
-
     return {
-        ...baseNode,
-        compileLeftOperand,
-        compileRightOperand,
-        compile: (compiler) => {
-            compileLeftOperand(compiler);
-            compiler.write(operator);
-            compileRightOperand(compiler);
-        }
+        ...baseNode
     }
 };
 
 export const createBinaryNodeFactory = <InstanceType extends TwingBaseBinaryNode<any>>(
     type: TwingNodeType<InstanceType>,
-    operator: string | null,
-    definition?: {
-        compile?: (compiler: TwingCompiler, baseNode: TwingBaseBinaryNode<TwingNodeType<InstanceType>>) => void
+    definition: {
+        execute: (
+            baseNode: TwingBaseBinaryNode<TwingNodeType<InstanceType>>,
+            template: TwingTemplate,
+            context: TwingContext<any, any>,
+            outputBuffer: TwingOutputBuffer,
+            blocks: TwingTemplateBlockMap,
+            aliases: TwingTemplateAliases,
+            sourceMapRuntime?: TwingSourceMapRuntime
+        ) => Promise<any>;
     }
 ) => {
     const factory = (
@@ -116,16 +101,12 @@ export const createBinaryNodeFactory = <InstanceType extends TwingBaseBinaryNode
         line: number,
         column: number
     ): InstanceType => {
-        const baseNode = createBaseBinaryNode(type, operator, operands, line, column);
+        const baseNode = createBaseBinaryNode(type, operands, line, column);
 
         return {
             ...baseNode,
-            compile: (compiler) => {
-                if (definition?.compile) {
-                    return definition.compile(compiler, baseNode);
-                } else {
-                    return baseNode.compile(compiler);
-                }
+            execute: (...args) => {
+                return definition.execute(baseNode, ...args);
             }
         } as InstanceType;
     };

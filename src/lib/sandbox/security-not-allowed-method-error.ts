@@ -1,11 +1,11 @@
 import {BaseSandboxSecurityError, createBaseSandboxSecurityError} from "./security-error";
-import {TwingSource} from "../source";
+import {ErrorLocation} from "../error/base";
 
 export interface TwingSandboxSecurityNotAllowedMethodError extends BaseSandboxSecurityError {
 }
 
-export const createSandboxSecurityNotAllowedMethodError = (message: string, line?: number, source?: TwingSource): TwingSandboxSecurityNotAllowedMethodError => {
-    const error = createBaseSandboxSecurityError(message, line, source);
+export const createSandboxSecurityNotAllowedMethodError = (message: string, location?: ErrorLocation, source?: string): TwingSandboxSecurityNotAllowedMethodError => {
+    const error = createBaseSandboxSecurityError(message, location, source);
 
     Error.captureStackTrace(error, createSandboxSecurityNotAllowedMethodError);
 

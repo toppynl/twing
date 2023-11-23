@@ -1,9 +1,12 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, getChildrenCount} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 import {createConstantNode} from "./expression/constant";
 import {textNodeType} from "./output/text";
+import {createMarkup} from "../markup";
+import {createArgumentsNode} from "./expression/arguments";
 
 export type SetNodeAttributes = TwingBaseNodeAttributes & {
     capture: boolean; // todo: rename
+    safe: boolean;
 };
 
 export interface TwingSetNode extends TwingBaseNode<"set", SetNodeAttributes, {
@@ -39,98 +42,57 @@ export const createSetNode = (
         const {values} = baseNode.children;
 
         if (values.is(textNodeType)) {
-            baseNode.children.values = createConstantNode(values.attributes.data, values.line, values.column);
+            baseNode.children.values = createArgumentsNode({
+                0: createConstantNode(values.attributes.data, values.line, values.column)
+            }, values.line, values.column);
             baseNode.attributes.capture = false;
         }
     }
 
-    return {
+    const node: TwingSetNode = {
         ...baseNode,
-        compile: (compiler) => {
-            const {names, values} = baseNode.children;
-            const {capture, safe} = baseNode.attributes;
+        execute: async (...args) => {
+            const [template, context, outputBuffer] = args;
+            const {environment} = template;
+            const {names: namesNode, values: valuesNode} = node.children;
+            const {capture, safe} = node.attributes;
 
-            if (getChildrenCount(names) > 1) {
-                compiler.write('[');
+            const names: Array<string> = await namesNode.execute(...args);
+
+            const getSafeValue = (value: any) => {
+                if (safe && value !== '') {
+                    return createMarkup(value, environment.charset);
+                } else {
+                    return value;
+                }
+            }
+
+            if (capture) {
+                outputBuffer.start();
+
+                await valuesNode.execute(...args);
+
+                const value = outputBuffer.getAndClean();
+
+                for (const name of names) {
+                    context.set(name, getSafeValue(value));
+                }
+            } else {
+                const values: Array<any> = await valuesNode.execute(...args);
 
                 let index = 0;
 
-                for (const [, node] of Object.entries(names.children)) {
-                    if (index > 0) {
-                        compiler.write(', ');
-                    }
+                for (const name of names) {
+                    const value = values[index];
 
-                    compiler
-                        .subCompile(node)
-                    ;
+                    context.set(name, getSafeValue(value));
 
                     index++;
                 }
-
-                compiler.write(']');
-            } else {
-                if (capture) {
-                    compiler
-                        .write("outputBuffer.start();\n")
-                        .subCompile(values)
-                    ;
-                }
-
-                compiler.subCompile(names); //, false
-
-                if (capture) {
-                    compiler
-                        .write(" = (() => {\n")
-                        
-                        .write("let tmp = outputBuffer.getAndClean();\n")
-                        .write("return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.charset);\n")
-                        
-                        .write("})()")
-                    ;
-                }
             }
-
-            if (!capture) {
-                compiler.write(' = ');
-
-                if (getChildrenCount(values) > 1) {
-                    compiler.write('[');
-
-                    let index = 0;
-
-                    for (const [, value] of Object.entries(values.children)) {
-                        if (index > 0) {
-                            compiler.write(', ');
-                        }
-
-                        compiler
-                            .subCompile(value)
-                        ;
-
-                        index++;
-                    }
-
-                    compiler.write(']');
-                } else {
-                    if (safe) {
-                        compiler
-                            .write("await (async () => {\n")
-                            
-                            .write("let tmp = ")
-                            .subCompile(values)
-                            .write(";\n")
-                            .write("return tmp === '' ? '' : runtime.createMarkup(tmp, runtime.charset);\n")
-                            
-                            .write("})()")
-                        ;
-                    } else {
-                        compiler.subCompile(values);
-                    }
-                }
-            }
-
-            compiler.write(';\n');
         },
         isACaptureNode: true
     };
+
+    return node;
 };

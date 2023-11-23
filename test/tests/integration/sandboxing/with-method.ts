@@ -39,5 +39,5 @@ runTest({
     sandboxSecurityPolicyMethods: new Map([
         [Map, ['bar']]
     ]),
-    expectedErrorMessage: 'TwingSandboxSecurityError: Calling "bar" method on an instance of Object is not allowed in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingSandboxSecurityError: Calling "bar" method on an instance of Object is not allowed in "index.twig" at line 2, column 4.'
 });

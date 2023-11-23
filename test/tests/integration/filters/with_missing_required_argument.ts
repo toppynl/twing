@@ -17,5 +17,5 @@ runTest({
             }
         ])
     ],
-    expectedErrorMessage: 'TwingCompilationError: Value for argument "foo" is required for filter "foo" in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingRuntimeError: Value for argument "foo" is required for filter "foo" in "index.twig" at line 2, column 8.'
 });

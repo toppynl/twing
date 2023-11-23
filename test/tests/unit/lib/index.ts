@@ -1,5 +1,4 @@
-import "./cache";
-import "./compiler";
+//import "./cache";
 import "./environment";
 import "./error";
 import "./helpers";
@@ -8,5 +7,4 @@ import "./loader";
 import "./node";
 import "./node-traverser";
 import "./output-buffer";
-import "./runtime";
-import "./template";
+// import "./template";

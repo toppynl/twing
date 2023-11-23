@@ -1,10 +1,10 @@
-import {isMapLike} from "./map-like";
+import {isAMapLike} from "./map-like";
 import {createRuntimeError} from "../error/runtime";
 import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
 import type {TwingGetAttributeCallType} from "../node/expression/attribute-accessor";
-import type {TwingRuntime} from "../runtime";
+import {TwingEnvironment} from "../environment";
 
 const isBool = require('locutus/php/var/is_bool');
 const isFloat = require('locutus/php/var/is_float');
@@ -13,10 +13,10 @@ const isObject = require('isobject');
 /**
  * Returns the attribute value for a given array/object.
  *
- * @param {TwingRuntime} runtime
+ * @param {TwingEnvironment} environment
  * @param {*} object The object or array from where to get the item
  * @param {*} attribute The item to get from the array or object
- * @param {Map<any, any>} _arguments A map of arguments to pass if the item is an object method
+ * @param {Map<any, any>} methodArguments A map of arguments to pass if the item is an object method
  * @param {string} type The type of attribute (@see Twig_Template constants)
  * @param {boolean} shouldTestExistence Whether this is only a defined check
  * @param {boolean} shouldIgnoreStrictCheck Whether to ignore the strict attribute check or not
@@ -27,21 +27,21 @@ const isObject = require('isobject');
  * @throw {TwingErrorRuntime} if the attribute does not exist and Twing is running in strict mode and isDefinedTest is false
  */
 export const getAttribute = (
-    runtime: TwingRuntime,
+    environment: TwingEnvironment,
     object: any,
     attribute: any,
-    _arguments: Map<any, any>,
+    methodArguments: Map<any, any>,
     type: TwingGetAttributeCallType,
     shouldTestExistence: boolean,
     shouldIgnoreStrictCheck: boolean | null
 ): Promise<any> => {
-    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !runtime.isStrictVariables : shouldIgnoreStrictCheck;
-    
-    const {isSandboxed} = runtime;
-    
+    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !environment.isStrictVariables : shouldIgnoreStrictCheck;
+
+    const {isSandboxed} = environment;
+
     const _do = (): any => {
         let message: string;
-        
+
         // ANY_CALL or ARRAY_CALL
         if (type !== "method") {
             let arrayItem;
@@ -55,20 +55,20 @@ export const getAttribute = (
             }
 
             if (object) {
-                if ((isMapLike(object) && object.has(arrayItem)) || (isPlainObject(object) && Reflect.has(object, arrayItem))) {
+                if ((isAMapLike(object) && object.has(arrayItem)) || (isPlainObject(object) && Reflect.has(object, arrayItem))) {
                     if (shouldTestExistence) {
                         return true;
                     }
 
                     if (type !== "array" && isSandboxed) {
-                        runtime.checkPropertyAllowed(object, attribute);
+                        environment.sandboxPolicy.checkPropertyAllowed(object, attribute);
                     }
-                    
+
                     return get(object, arrayItem);
                 }
             }
 
-            if ((type === "array") || (isMapLike(object)) || (object === null) || (typeof object !== 'object')) {
+            if ((type === "array") || (isAMapLike(object)) || (object === null) || (typeof object !== 'object')) {
                 if (shouldTestExistence) {
                     return false;
                 }
@@ -77,7 +77,7 @@ export const getAttribute = (
                     return;
                 }
 
-                if (isMapLike(object)) {
+                if (isAMapLike(object)) {
                     if ((object as Map<any, any>).size < 1) {
                         message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
                     } else {
@@ -101,9 +101,9 @@ export const getAttribute = (
                 throw createRuntimeError(message);
             }
         }
-        
+
         // ANY_CALL or METHOD_CALL
-        if ((object === null) || (!isObject(object)) || (isMapLike(object))) {
+        if ((object === null) || (!isObject(object)) || (isAMapLike(object))) {
             if (shouldTestExistence) {
                 return false;
             }
@@ -114,7 +114,7 @@ export const getAttribute = (
 
             if (object === null) {
                 message = `Impossible to invoke a method ("${attribute}") on a null variable.`;
-            } else if (isMapLike(object)) {
+            } else if (isAMapLike(object)) {
                 message = `Impossible to invoke a method ("${attribute}") on an array.`;
             } else {
                 message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
@@ -122,7 +122,7 @@ export const getAttribute = (
 
             throw createRuntimeError(message);
         }
-        
+
         // object property
         if (type !== "method") {
             if (Reflect.has(object, attribute) && (typeof object[attribute] !== 'function')) {
@@ -131,13 +131,13 @@ export const getAttribute = (
                 }
 
                 if (isSandboxed) {
-                    runtime.checkPropertyAllowed(object, attribute);
+                    environment.sandboxPolicy.checkPropertyAllowed(object, attribute);
                 }
 
                 return get(object, attribute);
             }
         }
-        
+
         // object method
         // precedence: getXxx() > isXxx() > hasXxx()
         let methods: Array<string> = [];
@@ -157,7 +157,7 @@ export const getAttribute = (
         });
 
         let candidates = new Map();
-        
+
         for (let i = 0; i < methods.length; i++) {
             let method: string = methods[i];
             let lcName: string = lcMethods[i];
@@ -183,7 +183,7 @@ export const getAttribute = (
             } else {
                 continue;
             }
-            
+
             // skip get() and is() methods (in which case, name is empty)
             if (name.length > 0) {
                 if (!candidates.has(name)) {
@@ -199,7 +199,7 @@ export const getAttribute = (
         let itemAsString: string = attribute as string;
         let method: string;
         let lcItem: string;
-        
+
         if (candidates.has(attribute)) {
             method = candidates.get(attribute);
         } else if (candidates.has(lcItem = itemAsString.toLowerCase())) {
@@ -221,10 +221,10 @@ export const getAttribute = (
         }
 
         if (isSandboxed) {
-            runtime.checkMethodAllowed(object, method);
+            environment.sandboxPolicy.checkMethodAllowed(object, method);
         }
 
-        return get(object, method).apply(object, [..._arguments.values()]);
+        return get(object, method).apply(object, [...methodArguments.values()]);
     };
 
     try {

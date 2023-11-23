@@ -21,7 +21,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     const enterDefaultFilterNode = (node: TwingFilterNode): TwingBaseExpressionNode => {
         const {line, column} = node;
         const {arguments: methodArguments} = node.children;
-        const {operand} = node.children;
+        const operand = node.children.operand!;
 
         let newNode: TwingBaseExpressionNode;
 
@@ -47,7 +47,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     };
 
     const enterDefinedTestNode = (node: TwingTestNode): TwingTestNode => {
-        const {operand} = node.children;
+        const operand = node.children.operand!;
 
         if (
             !operand.is("name") &&
@@ -58,7 +58,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
             !operand.is("method_call") &&
             !(operand.is(functionNodeType) && (operand.attributes.operatorName === 'constant'))
         ) {
-            throw createParsingError('The "defined" test only works with simple variables.', node.line);
+            throw createParsingError('The "defined" test only works with simple variables.', node);
         }
 
         let newOperand: TwingBaseExpressionNode;

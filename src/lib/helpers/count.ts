@@ -1,14 +1,10 @@
-export type Countable = {
-    size: number;
-} | any;
-
 /**
  * Count all elements in an object.
  *
  * @param {*} countable
  * @returns {number}
  */
-export const count = (countable: Countable) => {
+export const count = (countable: any) => {
     if (countable.size !== undefined) {
         return countable.size;
     }

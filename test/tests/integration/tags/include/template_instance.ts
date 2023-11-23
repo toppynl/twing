@@ -1,19 +1,16 @@
-import TestBase, {runTest} from "../../TestBase";
-import {createIntegrationTest} from "../../test";
+import {runTest} from "../../TestBase";
 import {createEnvironment} from "../../../../../src/lib/environment";
 import {createArrayLoader} from "../../../../../src/lib/loader/array";
 
-class Test extends TestBase {
-    getTemplates() {
-        return {
-            'foo.twig': `
+runTest(({
+    description: '"include" tag with a template instance',
+    templates: {
+        'foo.twig': `
 BAR`,
-            'index.twig': `
+        'index.twig': `
 {% include foo %} FOO`
-        };
-    }
-
-    async getContext() {
+    },
+    context: new Promise((resolve) => {
         const environment = createEnvironment(
             createArrayLoader({
                 'foo.twig': `
@@ -21,19 +18,45 @@ BAR`
             })
         )
 
-        return environment.loadTemplate('foo.twig')
+        resolve(environment.loadTemplate('foo.twig')
             .then((template) => {
                 return {
                     foo: template
                 };
-            });
-    }
+            })
+        );
+    }),
+    trimmedExpectation: `BAR FOO
+`,
+    type: "template"
+}));
 
-    getExpected() {
-        return `BAR FOO
-`;
-    }
+runTest(({
+    description: '"include" tag with a template instance',
+    templates: {
+        'foo.twig': `
+BAR`,
+        'index.twig': `
+{% include foo %} FOO`
+    },
+    context: new Promise((resolve) => {
+        const environment = createEnvironment(
+            createArrayLoader({
+                'foo.twig': `
+BAR`
+            })
+        )
 
-}
+        resolve(environment.loadTemplate('foo.twig')
+            .then((template) => {
+                return {
+                    foo: template
+                };
+            }));
+    }),
+    expectation: `
 
-runTest(createIntegrationTest(new Test));
+BAR FOO`,
+    type: "execution context"
+}));
+

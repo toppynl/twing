@@ -2,7 +2,7 @@ import {iconv} from "../../../helpers/iconv";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
 import {createRuntimeError} from "../../../error/runtime";
-import type {TwingTemplate} from "../../../template";
+import {TwingTemplate} from "../../../template";
 
 const runes = require('runes');
 const mt_rand = require('locutus/php/math/mt_rand');
@@ -14,7 +14,7 @@ const array_rand = require('locutus/php/array/array_rand');
  * - a random character from a string
  * - a random integer between 0 and the integer parameter.
  *
- * @param {TwingRuntime} template
+ * @param {TwingTemplate} template
  * @param {*} values The values to pick a random item from
  * @param {number} max Maximum value used when values is an integer
  *
@@ -55,7 +55,7 @@ export function random(template: TwingTemplate, values: any | null, max: number 
                 return '';
             }
 
-            let charset = template.runtime.charset;
+            let charset = template.environment.charset;
 
             if (charset !== 'UTF-8') {
                 values = iconv(charset, 'UTF-8', values);

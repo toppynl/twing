@@ -3,14 +3,10 @@ import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 export interface TwingPowerNode extends TwingBaseBinaryNode<"power"> {
 }
 
-export const createPowerNode = createBinaryNodeFactory<TwingPowerNode>("power", null, {
-    compile: (compiler, baseNode) => {
-        compiler
-            .write('Math.pow(')
-            .subCompile(baseNode.children.left)
-            .write(', ')
-            .subCompile(baseNode.children.right)
-            .write(')')
-        ;
+export const createPowerNode = createBinaryNodeFactory<TwingPowerNode>("power", {
+    execute: async (baseNode, ...args) => {
+        const {left, right} = baseNode.children;
+
+        return Math.pow(await left.execute(...args), await right.execute(...args));
     }
 });

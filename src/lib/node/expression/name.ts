@@ -1,5 +1,6 @@
 import type {TwingBaseExpressionNodeAttributes} from "../expression";
 import {createBaseNode, TwingBaseNode} from "../../node";
+import {getContextValue} from "../../helpers/get-context-value";
 
 export type TwingNameNodeAttributes = TwingBaseExpressionNodeAttributes & {
     name: string;
@@ -29,18 +30,24 @@ export const createNameNode = (
 
     const node: TwingNameNode = {
         ...baseNode,
-        compile: (compiler) => {
-            const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = attributes;
+        execute: (template, context) => {
+            const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
-            compiler
-                .write(`await template.getTraceableMethod(runtime.getContextValue, ${node.line}, template.source)(`).write('\n')
-                .write('template,').write('\n')
-                .write('context,').write('\n')
-                .render(name).write(',').write('\n')
-                .render(isAlwaysDefined).write(',').write('\n')
-                .render(shouldIgnoreStrictCheck).write(',').write('\n')
-                .render(shouldTestExistence).write(',').write('\n')
-                .write(')')
+            const traceableGetContextValue = template.getTraceableMethod(
+                getContextValue,
+                node.line,
+                node.column,
+                template.templateName
+            );
+
+            return traceableGetContextValue(
+                template,
+                context,
+                name,
+                isAlwaysDefined,
+                shouldIgnoreStrictCheck,
+                shouldTestExistence
+            );
         }
     };
 

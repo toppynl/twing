@@ -22,7 +22,7 @@ NOT DISPLAYED
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Unable to find template "DOES NOT EXIST" in "bad.twig" at line 2.';
+        return 'TwingRuntimeError: Unable to find template "DOES NOT EXIST" in "bad.twig" at line 2, column 12.';
     }
 }
 

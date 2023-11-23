@@ -1,9 +1,8 @@
-import {createBaseNode} from "../node";
-import {createPrintNode} from "../node/output/print";
-import {createTemporaryNameNode} from "../node/expression/temporary-name";
 import {TokenType} from "twig-lexer";
-import {createSetNode} from "../node/set";
 import type {TwingTagHandler} from "../tag-handler";
+import {createApplyNode} from "../node/apply";
+import {createArrayNode} from "../node/expression/array";
+import {createConstantNode} from "../node/expression/constant";
 
 export const createApplyTagHandler = (): TwingTagHandler => {
     const tag = 'apply';
@@ -13,11 +12,8 @@ export const createApplyTagHandler = (): TwingTagHandler => {
         initialize: (parser) => {
             return (token, stream) => {
                 const {line, column} = token;
-                const name = parser.getVarName();
-
-                let reference = createTemporaryNameNode(name, false, line, column);
                 
-                const filter = parser.parseFilterExpressionRaw(stream, reference, tag);
+                const filterDefinitions = parser.parseFilterDefinitions(stream);
 
                 stream.expect(TokenType.TAG_END);
 
@@ -26,13 +22,13 @@ export const createApplyTagHandler = (): TwingTagHandler => {
                 }, true);
 
                 stream.expect(TokenType.TAG_END);
-
-                reference = createTemporaryNameNode(name, true, line, column);
-
-                return createBaseNode(null, {}, {
-                    0: createSetNode(true, reference, body, line, column, tag),
-                    1: createPrintNode(filter, line, column)
-                });
+                
+                return createApplyNode(createArrayNode(filterDefinitions.map(({name, arguments: filterArgument}) => {
+                    return {
+                        key: createConstantNode(name, line, column),
+                        value: filterArgument
+                    }
+                }), line, column), body, line, column);
             };
         }
     }

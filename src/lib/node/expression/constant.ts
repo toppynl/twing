@@ -18,10 +18,12 @@ export const createConstantNode = (
         value
     }, {}, line, column);
 
-    return {
+    const node: TwingConstantNode = {
         ...parent,
-        compile: (compiler) => {
-            compiler.render(parent.attributes.value);
+        execute: () => {
+            return Promise.resolve(node.attributes.value);
         }
     };
+    
+    return node;
 };

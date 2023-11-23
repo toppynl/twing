@@ -31,8 +31,12 @@ class Test extends TestBase {
 
     getExpectedDeprecationMessages() {
         return [
-            'The "welcome" block is deprecated, use "hello" instead. ("greeting.twig" at line 2)'
+            'The "welcome" block is deprecated, use "hello" instead. ("greeting.twig" at line 2, column 8)'
         ];
+    }
+
+    getType(): "template" | "execution context" | undefined {
+        return "execution context";
     }
 }
 

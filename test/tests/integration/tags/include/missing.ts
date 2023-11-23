@@ -13,7 +13,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Unable to find template "foo.twig" in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Unable to find template "foo.twig" in "index.twig" at line 1, column 4.';
     }
 }
 

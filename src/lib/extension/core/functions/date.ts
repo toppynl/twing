@@ -23,7 +23,7 @@ export const createDate = (
     input: Date | DateTime | number | string | null,
     timezone: string | null | false
 ): Promise<DateTime> => {
-    const defaultTimezone = template.runtime.timezone;
+    const defaultTimezone = template.environment.timezone;
     
     const _do = (): DateTime => {
         let result: DateTime;

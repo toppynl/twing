@@ -3,7 +3,7 @@ import {createIntegrationTest} from "../test";
 
 class Test extends TestBase {
     getDescription() {
-        return 'macro';
+        return '"macro" tag with default values';
     }
 
     getTemplates() {

@@ -1,4 +1,9 @@
-import {TwingBaseIncludeNode, BaseIncludeNodeAttributes, BaseIncludeNodeChildren, createBaseIncludeNode} from "../include";
+import {
+    TwingBaseIncludeNode,
+    BaseIncludeNodeAttributes,
+    BaseIncludeNodeChildren,
+    createBaseIncludeNode
+} from "../include";
 
 export const embedNodeType = "embed";
 
@@ -21,16 +26,10 @@ export const createEmbedNode = (
         embedNodeType,
         attributes,
         children,
-        (compiler) => {
+        (template) => {
             const {templateName, index} = node.attributes;
 
-            compiler
-                .write('await template.loadTemplate(').write('\n')
-                .string(templateName).write(', ').write('\n')
-                .render(node.line).write(', ').write('\n')
-                .string(index).write('\n')
-                .write(')')
-            ;
+            return template.loadTemplate(templateName, node.line, node.column, index);
         },
         line,
         column,

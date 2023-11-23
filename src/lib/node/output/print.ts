@@ -1,9 +1,9 @@
 import {TwingBaseExpressionNode} from "../expression";
 import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
 
-export const printNodeTYpe = "print";
+export const printNodeType = "print";
 
-export interface TwingPrintNode extends TwingBaseOutputNode<typeof printNodeTYpe, {}, {
+export interface TwingPrintNode extends TwingBaseOutputNode<typeof printNodeType, {}, {
     expr: TwingBaseExpressionNode;
 }> {
 }
@@ -13,27 +13,23 @@ export const createPrintNode = (
     line: number,
     column: number
 ): TwingPrintNode => {
-    const outputNode: TwingPrintNode = createBaseOutputNode(printNodeTYpe, {}, {
+    const outputNode: TwingPrintNode = createBaseOutputNode(printNodeType, {}, {
         expr: expression
-    }, (compiler) => {
-        const {expr} = outputNode.children;
-
-        compiler
-            .subCompile(expr)
-        ;
     }, line, column, null);
 
     const printNode: TwingPrintNode = {
         ...outputNode,
-        compile: (compiler) => {
-            compiler.addSourceMapEnter(printNode);
+        execute: (...args) => {
+            const [template, , outputBuffer, , , sourceMapRuntime] = args;
 
-            outputNode.compile(compiler);
+            sourceMapRuntime?.enterSourceMapBlock(printNode.line, printNode.column, printNode.type, template.source, outputBuffer);
+            
+            return printNode.children.expr.execute(...args)
+                .then((result) => {
+                    outputBuffer.echo(result);
 
-            compiler
-                .write(';\n')
-                .addSourceMapLeave()
-            ;
+                    sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);
+                });
         }
     };
 

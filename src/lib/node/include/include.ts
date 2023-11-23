@@ -1,4 +1,9 @@
-import {TwingBaseIncludeNode, BaseIncludeNodeAttributes, BaseIncludeNodeChildren, createBaseIncludeNode} from "../include";
+import {
+    TwingBaseIncludeNode,
+    BaseIncludeNodeAttributes,
+    BaseIncludeNodeChildren,
+    createBaseIncludeNode
+} from "../include";
 import {TwingBaseExpressionNode} from "../expression";
 
 export const includeNodeType = "include";
@@ -21,11 +26,7 @@ export const createIncludeNode = (
         includeNodeType,
         attributes,
         children,
-        (compiler) => {
-            const {expression} = node.children;
-
-            compiler.subCompile(expression);
-        },
+        children.expression.execute,
         line,
         column,
         tag

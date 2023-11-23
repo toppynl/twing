@@ -1,4 +1,4 @@
-import {TwingBaseArrayNode, createBaseArrayNode, getKeyValuePairs} from "./array";
+import {TwingBaseArrayNode, createBaseArrayNode} from "./array";
 import type {TwingBaseExpressionNode} from "../expression";
 
 export const hashNodeType = 'hash'
@@ -21,30 +21,30 @@ export const createHashNode = (
         is: (type) => {
             return type === "hash" || type === "array";
         },
-        compile: (compiler) => {
-            compiler
-                .write('new Map([')
-            ;
-
-            let first = true;
-
-            for (let pair of getKeyValuePairs(baseNode)) {
-                if (!first) {
-                    compiler.write(', ');
-                }
-
-                first = false;
-
-                compiler
-                    .write('[')
-                    .subCompile(pair.key)
-                    .write(', ')
-                    .subCompile(pair.value)
-                    .write(']')
-                ;
-            }
-
-            compiler.write('])');
-        }
+        // compile: (compiler) => {
+        //     compiler
+        //         .write('new Map([')
+        //     ;
+        //
+        //     let first = true;
+        //
+        //     for (let pair of getKeyValuePairs(baseNode)) {
+        //         if (!first) {
+        //             compiler.write(', ');
+        //         }
+        //
+        //         first = false;
+        //
+        //         compiler
+        //             .write('[')
+        //             .subCompile(pair.key)
+        //             .write(', ')
+        //             .subCompile(pair.value)
+        //             .write(']')
+        //         ;
+        //     }
+        //
+        //     compiler.write('])');
+        // }
     };
 };

@@ -24,11 +24,6 @@ export const createDoNode = (
 
     return {
         ...baseNode,
-        compile: (compiler) => {
-            compiler
-                .subCompile(baseNode.children.expr) //, true
-                .write(";\n")
-            ;
-        }
+        execute: baseNode.children.expr.execute
     };
 };

@@ -13,7 +13,7 @@ runTest({
 {% block bar %}Hello{% endblock %}
 `
    },
-    expectedErrorMessage: 'TwingRuntimeError: The template has no parent and no traits defining the "foo" block in "index.twig" at line 4.'
+    expectedErrorMessage: 'TwingRuntimeError: The template has no parent and no traits defining the "foo" block in "index.twig" at line 4, column 4.'
 });
 
 runTest({
@@ -33,5 +33,5 @@ runTest({
 {% endblock %}
 `
     },
-    expectedErrorMessage: 'TwingRuntimeError: The template has no parent and no traits defining the "foo" block in "parent.twig" at line 4.'
+    expectedErrorMessage: 'TwingRuntimeError: The template has no parent and no traits defining the "foo" block in "parent.twig" at line 4, column 4.'
 });

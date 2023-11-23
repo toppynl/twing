@@ -87,7 +87,7 @@ export class NotDefinedTernaryIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "notDefinedVar" does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "notDefinedVar" does not exist in "index.twig" at line 1, column 4.';
     }
 }
 
@@ -103,7 +103,7 @@ export class NotDefinedIfIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "notDefinedVar" does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "notDefinedVar" does not exist in "index.twig" at line 1, column 7.';
     }
 }
 
@@ -125,7 +125,7 @@ export class UndefinedTernaryIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "undefinedVar" does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "undefinedVar" does not exist in "index.twig" at line 1, column 4.';
     }
 }
 
@@ -147,7 +147,7 @@ export class UndefinedIfIterableTest extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "undefinedVar" does not exist in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variable "undefinedVar" does not exist in "index.twig" at line 1, column 7.';
     }
 }
 

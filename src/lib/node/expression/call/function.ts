@@ -3,7 +3,7 @@ import type {TwingArrayNode} from "../array";
 
 export const functionNodeType = "function";
 
-export interface TwingFunctionNode extends TwingBaseCallNode<typeof functionNodeType, undefined> {
+export interface TwingFunctionNode extends TwingBaseCallNode<typeof functionNodeType> {
 }
 
 export const createFunctionNode = (
@@ -12,7 +12,7 @@ export const createFunctionNode = (
     line: number,
     column: number
 ): TwingFunctionNode => {
-    const node = createBaseCallNode(functionNodeType, functionName, undefined, functionArguments, line, column);
+    const node = createBaseCallNode(functionNodeType, functionName, null, functionArguments, line, column);
 
     return node;
 };

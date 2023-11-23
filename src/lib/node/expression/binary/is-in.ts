@@ -1,16 +1,13 @@
 import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
+import {isIn} from "../../../helpers/is-in";
 
 export interface TwingIsInNode extends TwingBaseBinaryNode<"in"> {
 }
 
-export const createIsInNode = createBinaryNodeFactory<TwingIsInNode>("in", null, {
-    compile: (compiler, baseNode) => {
-        compiler
-            .write('runtime.isIn(')
-            .subCompile(baseNode.children.left)
-            .write(', ')
-            .subCompile(baseNode.children.right)
-            .write(')')
-        ;
+export const createIsInNode = createBinaryNodeFactory<TwingIsInNode>("in", {
+    execute: async (baseNode, ...args) => {
+        const {left, right} = baseNode.children;
+
+        return isIn(await left.execute(...args), await right.execute(...args));
     }
 });

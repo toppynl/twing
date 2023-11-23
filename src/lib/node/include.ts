@@ -1,6 +1,9 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
-import {TwingBaseExpressionNode} from "./expression";
-import {TwingCompiler} from "../compiler";
+import type {TwingBaseExpressionNode} from "./expression";
+import type {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "../template";
+import type {TwingContext} from "../context";
+import type {TwingOutputBuffer} from "../output-buffer";
+import {TwingSourceMapRuntime} from "../source-map-runtime";
 
 export type BaseIncludeNodeAttributes = TwingBaseNodeAttributes & {
     only: boolean;
@@ -22,7 +25,14 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
     type: Type,
     attributes: Attributes,
     children: Children,
-    addGetTemplate: (compiler: TwingCompiler) => void,
+    getTemplate: (
+        template: TwingTemplate,
+        context: TwingContext<any, any>,
+        outputBuffer: TwingOutputBuffer,
+        blocks: TwingTemplateBlockMap,
+        aliases: TwingTemplateAliases,
+        sourceMapRuntime?: TwingSourceMapRuntime
+    ) => Promise<TwingTemplate | null>,
     line: number,
     column: number,
     tag: string
@@ -31,30 +41,31 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
 
     const node: TwingBaseIncludeNode<Type, Attributes, Children> = {
         ...baseNode,
-        compile: (compiler) => {
-            const {variables} = baseNode.children;
+        execute: async (...args) => {
+            const [template, context, outputBuffer, , , sourceMapRuntime] = args;
+            const {include} = template;
+            const {variables} = node.children;
             const {only, ignoreMissing} = node.attributes;
 
-            compiler
-                .write('outputBuffer.echo(').write('\n')
-                .write('await runtime.include(').write('\n')
-                .write('template,').write('\n')
-                .write('context,').write('\n')
-                .write('outputBuffer,').write('\n')
-                .write('sourceMapRuntime,').write('\n')
-            ;
-            
-            addGetTemplate(compiler);
+            const templateToInclude = await getTemplate(...args);
 
-            compiler
-                .write(',').write('\n')
-                .subCompile(variables).write(',').write('\n')
-                .render(!only).write(',').write('\n')
-                .render(ignoreMissing).write(',').write('\n')
-                .render(false).write(',').write('\n')
-                .render(baseNode.line).write('\n')
-                .write(')\n')
-                .write(');\n');
+            const traceableInclude = template.getTraceableMethod(include, baseNode.line, baseNode.column, template.templateName);
+
+            const output = await traceableInclude(
+                template,
+                context,
+                outputBuffer,
+                sourceMapRuntime || null,
+                templateToInclude,
+                await variables.execute(...args),
+                !only,
+                ignoreMissing,
+                false,
+                node.line,
+                node.column
+            );
+
+            outputBuffer.echo(output);
         }
     };
 

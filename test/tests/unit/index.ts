@@ -1,2 +1,2 @@
-import "./index/index"
+import "./lib/.";
 import "./lib";

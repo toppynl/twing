@@ -23,7 +23,7 @@ class Test extends TestBase {
 
     getExpectedErrorMessage() {
         // @see https://github.com/twigphp/Twig/issues/2753
-        return 'TwingRuntimeError: Block "unknown" on template "base.twig" does not exist in "index.twig" at line 3.';
+        return 'TwingRuntimeError: Block "unknown" on template "base.twig" does not exist in "index.twig" at line 3, column 33.';
     }
 
     getContext() {

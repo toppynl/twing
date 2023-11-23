@@ -6,12 +6,10 @@ export const andNodeType = "and";
 export interface TwingAndNode extends TwingBaseBinaryNode<typeof andNodeType> {
 }
 
-export const createAndNode = createBinaryNodeFactory<TwingAndNode>(andNodeType, '&&', {
-    compile: (compiler, baseNode) => {
-        compiler
-            .write('!!')
-        ;
+export const createAndNode = createBinaryNodeFactory<TwingAndNode>(andNodeType, {
+    execute: async (baseNode, ...args) => {
+        const {left, right} = baseNode.children;
 
-        baseNode.compile(compiler);
+        return !!(await left.execute(...args) && await right.execute(...args));
     }
 });

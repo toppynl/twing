@@ -21,7 +21,7 @@ export class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variables passed to the "include" function or tag must be iterable, got "string" in "index.twig" at line 1.';
+        return 'TwingRuntimeError: Variables passed to the "include" function or tag must be iterable, got "string" in "index.twig" at line 1, column 4.';
     }
 }
 

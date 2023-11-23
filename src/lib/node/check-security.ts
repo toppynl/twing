@@ -1,4 +1,13 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
+import {
+    isASandboxSecurityNotAllowedFilterError,
+    TwingSandboxSecurityNotAllowedFilterError
+} from "../sandbox/security-not-allowed-filter-error";
+import {
+    isASandboxSecurityNotAllowedTagError,
+    TwingSandboxSecurityNotAllowedTagError
+} from "../sandbox/security-not-allowed-tag-error";
+import {TwingSandboxSecurityNotAllowedFunctionError} from "../sandbox/security-not-allowed-function-error";
 
 export type CheckSecurityNodeAttributes = TwingBaseNodeAttributes & {
     usedFilters: Map<string, TwingNode | string>;
@@ -24,54 +33,35 @@ export const createCheckSecurityNode = (
 
     return {
         ...baseNode,
-        compile: (compiler) => {
+        execute: (template) => {
+            const {environment} = template;
             const {usedTags, usedFunctions, usedFilters} = baseNode.attributes;
 
-            const tags = new Map();
+            try {
+                environment.isSandboxed && environment.sandboxPolicy.checkSecurity(
+                    [...usedTags.keys()],
+                    [...usedFilters.keys()],
+                    [...usedFunctions.keys()]
+                );
+            } catch (error: any) {
+                const supplementError = (error: TwingSandboxSecurityNotAllowedFilterError | TwingSandboxSecurityNotAllowedFunctionError | TwingSandboxSecurityNotAllowedTagError) => {
+                    error.source = template.templateName;
 
-            for (const [name, node] of usedTags) {
-                tags.set(name, node.line);
+                    if (isASandboxSecurityNotAllowedTagError(error)) {
+                        error.location = usedTags.get(error.tagName);
+                    } else if (isASandboxSecurityNotAllowedFilterError(error)) {
+                        error.location = usedFilters.get(error.filterName)
+                    } else {
+                        error.location = usedFunctions.get(error.functionName);
+                    }
+                }
+
+                supplementError(error);
+
+                throw error;
             }
 
-            const filters = new Map();
-
-            for (const [name, node] of usedFilters) {
-                filters.set(name, node.line);
-            }
-
-            const functions = new Map();
-
-            for (const [name, node] of usedFunctions) {
-                functions.set(name, node.line);
-            }
-
-            compiler
-                .write('const tags = ').render(tags).write(";\n")
-                .write('const filters = ').render(filters).write(";\n")
-                .write('const functions = ').render(functions).write(";\n\n")
-                .write("try {\n")
-                .write("runtime.isSandboxed && runtime.checkSecurity(\n")
-                .write(!tags.size ? "[],\n" : "['" + [...tags.keys()].join('\', \'') + "'],\n")
-                .write(!filters.size ? "[],\n" : "['" + [...filters.keys()].join('\', \'') + "'],\n")
-                .write(!functions.size ? "[]\n" : "['" + [...functions.keys()].join('\', \'') + "']\n")
-                .write(");\n")
-                .write("}\n")
-                .write("catch (error) {\n")
-                .write("if (error.name === 'TwingSandboxSecurityError') {\n")
-                .write("error.source = template.source;\n\n")
-                .write("if ((typeof error.tagName === 'string') && tags.has(error.tagName)) {\n")
-                .write("error.line = tags.get(error.tagName);\n")
-                .write("}\n")
-                .write("else if ((typeof error.filterName === 'string') && filters.has(error.filterName)) {\n")
-                .write("error.line = filters.get(error.filterName);\n")
-                .write("}\n")
-                .write("else if ((typeof error.functionName === 'string') && functions.has(error.functionName)) {\n")
-                .write("error.line = functions.get(error.functionName);\n")
-                .write("}\n")
-                .write('}\n\n')
-                .write("throw error;\n")
-                .write("}\n\n")
-            ;
+            return Promise.resolve();
         }
     }
 };

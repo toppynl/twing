@@ -1,5 +1,4 @@
-import type {TwingSource} from "../source";
-import {createBaseError, TwingBaseError} from "./base";
+import {createBaseError, ErrorLocation, TwingBaseError} from "./base";
 
 const Levenshtein = require('levenshtein');
 
@@ -16,9 +15,9 @@ export interface TwingParsingError extends TwingBaseError<typeof parsingErrorNam
 }
 
 export const createParsingError = (
-    message: string, line?: number, column?: number, source?: TwingSource, previous?: Error
+    message: string, location?: ErrorLocation, source?: string, previous?: Error
 ): TwingParsingError => {
-    const baseError = createBaseError(parsingErrorName, message, line, column, source, previous);
+    const baseError = createBaseError(parsingErrorName, message, location, source, previous);
 
     Error.captureStackTrace(baseError, createParsingError);
 

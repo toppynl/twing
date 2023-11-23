@@ -1,11 +1,9 @@
 import * as tape from 'tape';
-import * as index from "../../../../src/index";
+import * as index from "../../../src/lib";
 
 tape('library index', ({same, end}) => {
     const expected: Array<string> = [
-        'createFilesystemCache',
         'isATwingError',
-        'createCompilationError', 'isACompilationError',
         'createTemplateLoadingError', 'isATemplateLoadingError',
         'createRuntimeError', 'isARuntimeError',
         'createParsingError',
@@ -14,6 +12,7 @@ tape('library index', ({same, end}) => {
         'createArrayLoader',
         'createChainLoader',
         'createMarkup', 'isAMarkup',
+        'createApplyNode', 'applyNodeType',
         'createAutoEscapeNode',
         'createBlockNode',
         'createBodyNode',
@@ -31,7 +30,7 @@ tape('library index', ({same, end}) => {
         'createLineNode',
         'createMacroNode',
         'createModuleNode',
-        'createSandboxNode',
+        'createSandboxNode', 'sandboxNodeType',
         'createSetNode',
         'createTraitNode',
         'createWithNode',
@@ -50,7 +49,6 @@ tape('library index', ({same, end}) => {
         'createNameNode', 'nameNodeType',
         'createNullishCoalescingNode', 'nullishCoalescingNodeType',
         'createParentFunctionNode', 'parentFunctionNodeType',
-        'createTemporaryNameNode', 'temporaryNameNodeType',
         'createBaseUnaryNode',
         'createAddNode', 'addNodeType',
         'createAndNode', 'andNodeType',
@@ -87,7 +85,7 @@ tape('library index', ({same, end}) => {
         'createIncludeNode', 'includeNodeType',
         'createBlockReferenceNode', 'blockReferenceType',
         'createInlinePrintNode', 'inlinePrintNodeType',
-        'createPrintNode', 'printNodeTYpe',
+        'createPrintNode', 'printNodeType',
         'createSpacelessNode', 'spacelessNodeType',
         'createTextNode', 'textNodeType',
         'createVerbatimNode', 'verbatimNodeType',
@@ -113,13 +111,11 @@ tape('library index', ({same, end}) => {
         'createUseTagHandler',
         'createVerbatimTagHandler',
         'createWithTagHandler',
-        'createCompiler',
         'createEnvironment',
         'createExtensionSet',
         'createFilter',
         'createFunction',
         'createOperator',
-        'createRuntime',
         'createSandboxSecurityPolicy',
         'createSource',
         'createSourceMapRuntime',

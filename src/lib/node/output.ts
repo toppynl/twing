@@ -1,5 +1,4 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, TwingBaseNodeChildren, createBaseNode} from "../node";
-import {TwingCompiler} from "../compiler";
 
 export interface TwingBaseOutputNode<
     Type extends string, 
@@ -13,7 +12,6 @@ export const createBaseOutputNode = <Type extends string, Attributes extends Twi
     type: Type,
     attributes: Attributes,
     children: Children,
-    compileValue: (compiler: TwingCompiler) => void,
     line: number,
     column: number,
     tag: string | null
@@ -22,18 +20,6 @@ export const createBaseOutputNode = <Type extends string, Attributes extends Twi
     
     return {
         ...baseNode,
-        compile: (compiler) => {
-            compiler
-                .write('outputBuffer.echo(\n')
-            ;
-            
-            compileValue(compiler);
-
-            compiler
-                .write('\n')
-                .write(')')
-            ;
-        },
         isAnOutputNode: true
     };
 };

@@ -43,6 +43,10 @@ class Test extends TestBase {
             'Using an "if" condition on "for" tag in "index.twig" at line 2 is deprecated since Twig 2.10.0, use a "filter" filter or an "if" condition inside the "for" body instead (if your condition depends on a variable updated inside the loop).'
         ];
     }
+    
+    getType(): "template" | "execution context" | undefined {
+        return "execution context";
+    }
 }
 
 runTest(createIntegrationTest(new Test));

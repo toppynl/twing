@@ -19,16 +19,16 @@ export const createParentFunctionNode = (
         //output: false
     }, {}, line, column);
 
-    return {
+    const node: TwingParentFunctionNode = {
         ...baseNode,
-        compile: (compiler) => {
-            const {name} = baseNode.attributes;
+        execute: (...args) => {
+            const [template, context, outputBuffer, , , sourceMapRuntime] = args;
+            const {name} = node.attributes;
+            const renderParentBlock = template.getTraceableMethod(template.renderParentBlock, node.line, node.column, template.templateName);
 
-            compiler
-                .write(`await template.getTraceableRenderParentBlock(${baseNode.line}, template.source)(`)
-                .string(name)
-                .write(', context, outputBuffer, sourceMapRuntime)')
-            ;
+            return renderParentBlock(name, context, outputBuffer, sourceMapRuntime);
         }
-    }
+    };
+
+    return node;
 };

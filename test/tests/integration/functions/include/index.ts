@@ -14,4 +14,5 @@ import "./template_as_array";
 import "./template_from_string";
 import "./template_instance";
 import "./with_context";
+import "./with-null";
 import "./with_variables";

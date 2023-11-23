@@ -1,5 +1,4 @@
-import type {TwingSource} from "../source";
-import {createBaseError, TwingBaseError} from "./base";
+import {createBaseError, ErrorLocation, TwingBaseError} from "./base";
 
 export const runtimeErrorName = 'TwingRuntimeError';
 
@@ -11,8 +10,8 @@ export const isARuntimeError = (candidate: Error): candidate is TwingRuntimeErro
     return (candidate as TwingRuntimeError).name === runtimeErrorName;
 };
 
-export const createRuntimeError = (message: string, line?: number, source?: TwingSource, previous?: Error): TwingRuntimeError => {
-    const error = createBaseError(runtimeErrorName, message, line, undefined, source, previous);
+export const createRuntimeError = (message: string, location?: ErrorLocation, source?: string, previous?: Error): TwingRuntimeError => {
+    const error = createBaseError(runtimeErrorName, message, location, source, previous);
     
     Error.captureStackTrace(error, createRuntimeError);
     

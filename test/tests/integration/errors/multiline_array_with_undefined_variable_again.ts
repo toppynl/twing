@@ -24,7 +24,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingRuntimeError: Variable "foobar" does not exist in "index.twig" at line 7.';
+        return 'TwingRuntimeError: Variable "foobar" does not exist in "index.twig" at line 7, column 12.';
     }
 }
 

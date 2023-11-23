@@ -1,15 +1,14 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {mergeIterables} from "../../../helpers/merge-iterables";
-import {isATemplateLoadingError} from "../../../error/loader";
-import type {TwingTemplate} from "../../../template";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {createRuntimeError} from "../../../error/runtime";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 import {TwingOutputBuffer} from "../../../output-buffer";
-import {TwingContext} from "../../../context";
-import {isMapLike} from "../../../helpers/map-like";
+import {createContext, TwingContext} from "../../../context";
+import {isAMapLike} from "../../../helpers/map-like";
 import {createMarkup, TwingMarkup} from "../../../markup";
 import {TwingSourceMapRuntime} from "../../../source-map-runtime";
+import {TwingTemplate} from "../../../template";
 
 /**
  * Renders a template.
@@ -24,26 +23,26 @@ import {TwingSourceMapRuntime} from "../../../source-map-runtime";
  * @param {boolean} ignoreMissing Whether to ignore missing templates or not
  * @param {boolean} sandboxed Whether to sandbox the template or not
  *
- * @returns {Promise<string>} The rendered template
+ * @returns {Promise<TwingMarkup>} The rendered template
  */
 export function include(
-    template: TwingTemplate, 
-    context: TwingContext<any, any>, 
-    outputBuffer: TwingOutputBuffer, 
-    sourceMapRuntime: TwingSourceMapRuntime,
-    templates: string | Map<number, string | TwingTemplate> | TwingTemplate, 
-    variables: any, 
-    withContext: boolean, 
+    template: TwingTemplate,
+    context: TwingContext<any, any>,
+    outputBuffer: TwingOutputBuffer,
+    sourceMapRuntime: TwingSourceMapRuntime | null,
+    templates: string | Map<number, string | TwingTemplate | null> | TwingTemplate | null,
+    variables: Map<string, any>,
+    withContext: boolean,
     ignoreMissing: boolean,
     sandboxed: boolean
 ): Promise<TwingMarkup> {
-    const runtime = template.runtime;
-    const from = template.source;
-    const alreadySandboxed = runtime.isSandboxed;
+    const environment = template.environment;
+    const from = template.templateName;
+    const alreadySandboxed = environment.isSandboxed;
 
     if (!isPlainObject(variables) && !isTraversable(variables)) {
         const isVariablesNullOrUndefined = variables === null || variables === undefined;
-        
+
         return Promise.reject(createRuntimeError(`Variables passed to the "include" function or tag must be iterable, got "${!isVariablesNullOrUndefined ? typeof variables : variables}".`, undefined, from));
     }
 
@@ -55,39 +54,45 @@ export function include(
 
     if (sandboxed) {
         if (!alreadySandboxed) {
-            runtime.isSandboxed = true;
+            environment.isSandboxed = true;
         }
     }
 
-    if (!isMapLike(templates)) {
+    if (!isAMapLike(templates)) {
         templates = new Map([[0, templates]]);
     }
 
     const restoreSandbox = (): void => {
         if (sandboxed && !alreadySandboxed) {
-            runtime.isSandboxed = false;
+            environment.isSandboxed = false;
         }
     };
 
-    const resolveTemplate = (templates: Map<number, string | TwingTemplate>): Promise<TwingTemplate | null> => {
-        return runtime.resolveTemplate([...templates.values()], from).catch((error) => {
-            if (isATemplateLoadingError(error)) {
+    const resolveTemplate = (templates: Map<number, string | TwingTemplate | null>): Promise<TwingTemplate | null> => {
+        return template.environment.resolveTemplate([...templates.values()], from)
+            .catch((error) => {
                 if (!ignoreMissing) {
                     throw error;
                 } else {
                     return null;
                 }
-            } else {
-                throw error;
-            }
-        });
+            });
     };
 
     return resolveTemplate(templates)
         .then((template) => {
-            const promise = template ? template.render(variables, outputBuffer, sourceMapRuntime) : Promise.resolve('');
+            outputBuffer.start();
 
-            return promise.then((result) => {
+            const promise = template ? template.execute(
+                createContext(template.mergeGlobals(variables)),
+                outputBuffer,
+                undefined,
+                sourceMapRuntime || undefined
+            ) : Promise.resolve('');
+
+            return promise.then(() => {
+                const result = outputBuffer.getAndClean();
+
                 return createMarkup(result);
             });
         })

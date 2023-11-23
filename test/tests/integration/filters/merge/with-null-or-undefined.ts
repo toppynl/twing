@@ -5,7 +5,7 @@ runTest({
     templates: {
         "index.twig": `{{ null|merge({}) }}`
     },
-    expectedErrorMessage: `TwingRuntimeError: The merge filter only works on arrays or "Traversable", got "null" in "index.twig" at line 1.`
+    expectedErrorMessage: `TwingRuntimeError: The merge filter only works on arrays or "Traversable", got "null" in "index.twig" at line 1, column 9.`
 });
 
 runTest({
@@ -13,5 +13,5 @@ runTest({
     templates: {
         "index.twig": `{{ {}|merge(null) }}`
     },
-    expectedErrorMessage: `TwingRuntimeError: The merge filter only accepts arrays or "Traversable" as source, got "null" in "index.twig" at line 1.`
+    expectedErrorMessage: `TwingRuntimeError: The merge filter only accepts arrays or "Traversable" as source, got "null" in "index.twig" at line 1, column 7.`
 });

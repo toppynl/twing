@@ -33,7 +33,7 @@ import {TwingOperator} from "./operator";
 import {namePattern, Token, TokenType} from "twig-lexer";
 import {typeToEnglish} from "./lexer";
 import {createFunctionNode} from "./node/expression/call/function";
-import {createFilterNode} from "./node/expression/call/filter";
+import {createFilterNode, TwingFilterNode} from "./node/expression/call/filter";
 import type {TwingTraitNode} from "./node/trait";
 import {pushToRecord} from "./helpers/record";
 import {ArgumentsNode, createArgumentsNode} from "./node/expression/arguments";
@@ -101,7 +101,12 @@ export interface TwingParser {
 
     parseExpression(stream: TwingTokenStream, precedence?: number, allowArrow?: true): TwingBaseExpressionNode;
 
-    parseFilterExpressionRaw(stream: TwingTokenStream, node: TwingBaseExpressionNode, tag?: string | null): TwingBaseExpressionNode;
+    parseFilterDefinitions(stream: TwingTokenStream): Array<{
+        name: string;
+        arguments: TwingArrayNode;
+    }>;
+
+    parseFilterExpressionRaw(stream: TwingTokenStream, node: TwingBaseExpressionNode, tag?: string | null): TwingFilterNode;
 
     parseMultiTargetExpression(stream: TwingTokenStream): TwingBaseExpressionNode;
 
@@ -228,9 +233,8 @@ export const createParser = (
 
             throw createParsingError(
                 `A template that extends another one cannot include content outside Twig blocks. Did you forget to put the content inside a {% block %} tag?`,
-                node.line,
-                node.column,
-                stream.source
+                node,
+                stream.source.resolvedName
             );
         }
 
@@ -280,7 +284,7 @@ export const createParser = (
     };
 
     const getFilterExpressionFactory = (stream: TwingTokenStream, name: string, line: number, column: number) => {
-        const strict = options.strict || false;
+        const {strict} = options;
         const filter = getFilter(filters, name);
 
         if (filter) {
@@ -302,7 +306,7 @@ export const createParser = (
                 console.warn(message);
             }
         } else if (strict) {
-            const error = createParsingError(`Unknown filter "${name}".`, line, column, stream.source);
+            const error = createParsingError(`Unknown filter "${name}".`, {line, column}, stream.source.resolvedName);
 
             error.addSuggestions(name, filterNames);
 
@@ -313,9 +317,9 @@ export const createParser = (
     };
 
     const getFunctionExpressionFactory = (stream: TwingTokenStream, name: string, line: number, column: number) => {
-        const strict = options.strict || false;
+        const {strict} = options;
         const twingFunction = getFunction(functions, name);
-
+        
         if (twingFunction) {
             if (twingFunction.isDeprecated) {
                 let message = `Function "${twingFunction.name}" is deprecated`;
@@ -335,13 +339,13 @@ export const createParser = (
                 console.warn(message);
             }
         } else if (strict) {
-            const error = createParsingError(`Unknown function "${name}".`, line, column, stream.source);
+            const error = createParsingError(`Unknown function "${name}".`, {line, column}, stream.source.resolvedName);
 
             error.addSuggestions(name, functionNames);
 
             throw error;
         }
-
+        
         return createFunctionNode;
     };
 
@@ -351,11 +355,11 @@ export const createParser = (
                 parseArguments(stream);
 
                 if (!getBlockStack().length) {
-                    throw createParsingError('Calling "parent" outside a block is forbidden.', line, column, stream.source);
+                    throw createParsingError('Calling "parent" outside a block is forbidden.', {line, column}, stream.source.resolvedName);
                 }
 
                 if (!parent && !hasTraits()) {
-                    throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', line, column, stream.source);
+                    throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', {line, column}, stream.source.resolvedName);
                 }
 
                 return createParentFunctionNode(peekBlockStack(), line, column);
@@ -364,7 +368,7 @@ export const createParser = (
                 const keyValuePairs = getKeyValuePairs(blockArgs);
 
                 if (keyValuePairs.length < 1) {
-                    throw createParsingError('The "block" function takes one argument (the block name).', line, column, stream.source);
+                    throw createParsingError('The "block" function takes one argument (the block name).', {line, column}, stream.source.resolvedName);
                 }
 
                 return createBlockFunctionNode(keyValuePairs[0].value, keyValuePairs.length > 1 ? keyValuePairs[1].value : null, line, column);
@@ -373,7 +377,7 @@ export const createParser = (
                 const attributeKeyValuePairs = getKeyValuePairs(attributeArgs);
 
                 if (attributeKeyValuePairs.length < 2) {
-                    throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', line, column, stream.source);
+                    throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', {line, column}, stream.source.resolvedName);
                 }
 
                 return createAttributeAccessorNode(
@@ -477,8 +481,8 @@ export const createParser = (
 
     const getTestName = (stream: TwingTokenStream): string => {
         const {line, column} = stream.current;
-        const strict = options.strict || false;
-        
+        const {strict} = options;
+
         let name = stream.expect(TokenType.NAME).value;
         let test: Pick<TwingTest, "alternative" | "deprecatedVersion" | "isDeprecated" | "name"> | null = getTestByName(tests, name);
 
@@ -538,8 +542,8 @@ export const createParser = (
 
             return name;
         }
-        
-        const error = createParsingError(`Unknown test "${name}".`, line, column, stream.source);
+
+        const error = createParsingError(`Unknown test "${name}".`, {line, column}, stream.source.resolvedName);
 
         error.addSuggestions(name, testNames);
 
@@ -595,7 +599,7 @@ export const createParser = (
             }
         } catch (error: any) {
             if (!(error as TwingParsingError).source) {
-                (error as TwingParsingError).source = stream.source;
+                (error as TwingParsingError).source = stream.source.resolvedName;
             }
 
             throw error;
@@ -689,7 +693,7 @@ export const createParser = (
 
             if (namedArguments && (token = stream.nextIf(TokenType.OPERATOR, '='))) {
                 if (!value.is("name")) {
-                    throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value.line, value.column, stream.source);
+                    throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source.resolvedName);
                 }
 
                 key = createConstantNode(value.attributes.name, value.line, value.column);
@@ -698,9 +702,9 @@ export const createParser = (
                     value = parsePrimaryExpression(stream);
 
                     const notConstantNode = checkConstantExpression(stream, value);
-                    
+
                     if (notConstantNode !== null) {
-                        throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode.line, notConstantNode.column, stream.source);
+                        throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode, stream.source.resolvedName);
                     }
                 } else {
                     value = parseExpression(stream, 0, allowArrow);
@@ -729,7 +733,7 @@ export const createParser = (
 
     const parseArrayExpression = (stream: TwingTokenStream): TwingArrayNode => {
         const {line, column} = stream.current;
-        
+
         stream.expect(TokenType.PUNCTUATION, '[', 'An array element was expected');
 
         const elements: Array<TwingBaseExpressionNode> = [];
@@ -777,7 +781,7 @@ export const createParser = (
             let value = token.value;
 
             if (['true', 'false', 'none', 'null'].indexOf(value.toLowerCase()) > -1) {
-                throw createParsingError(`You cannot assign a value to "${value}".`, token.line, token.column, stream.source);
+                throw createParsingError(`You cannot assign a value to "${value}".`, token, stream.source.resolvedName);
             }
 
             pushToRecord(targets, createAssignmentNode(value, token.line, token.column));
@@ -850,7 +854,7 @@ export const createParser = (
             token = stream.current;
 
             if (!token.test(TokenType.NAME)) {
-                throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token.line, token.column, stream.source);
+                throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.resolvedName);
             }
 
             names[i++] = createAssignmentNode(token.value, token.line, token.column);
@@ -938,13 +942,45 @@ export const createParser = (
         return expression;
     };
 
-    const parseFilterExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingBaseExpressionNode => {
+    const parseFilterExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingFilterNode => {
         stream.next();
 
         return parseFilterExpressionRaw(stream, node);
     };
 
-    const parseFilterExpressionRaw: TwingParser["parseFilterExpressionRaw"] = (stream, node) => {
+    const parseFilterDefinitions: TwingParser["parseFilterDefinitions"] = (stream) => {
+        const definitions: ReturnType<TwingParser["parseFilterDefinitions"]> = [];
+
+        while (true) {
+            const token = stream.expect(TokenType.NAME);
+            const {value, line, column} = token;
+
+            let methodArguments;
+
+            if (!stream.test(TokenType.PUNCTUATION, '(')) {
+                methodArguments = createArrayNode([], line, column);
+            } else {
+                methodArguments = parseArguments(stream, true, false, true);
+            }
+
+            definitions.unshift({
+                name: value,
+                arguments: methodArguments
+            })
+
+            if (!stream.test(TokenType.PUNCTUATION, '|')) {
+                break;
+            }
+
+            stream.next();
+        }
+
+        return definitions;
+    };
+
+    const parseFilterExpressionRaw: TwingParser["parseFilterExpressionRaw"] = (stream, operand) => {
+        let filterNode: TwingFilterNode | null = null;
+
         while (true) {
             const token = stream.expect(TokenType.NAME);
             const {value, line, column} = token;
@@ -959,7 +995,11 @@ export const createParser = (
 
             const factory = getFilterExpressionFactory(stream, value, line, column);
 
-            node = factory(node, value, methodArguments, token.line, token.column);
+            if (filterNode === null) {
+                filterNode = factory(operand, value, methodArguments, token.line, token.column);
+            } else {
+                filterNode = factory(filterNode, value, methodArguments, token.line, token.column);
+            }
 
             if (!stream.test(TokenType.PUNCTUATION, '|')) {
                 break;
@@ -968,7 +1008,7 @@ export const createParser = (
             stream.next();
         }
 
-        return node;
+        return filterNode;
     };
 
     const parseHashExpression = (stream: TwingTokenStream): TwingHashNode => {
@@ -1009,7 +1049,7 @@ export const createParser = (
             } else {
                 const {type, line, value, column} = stream.current;
 
-                throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, line, column, stream.source);
+                throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, {line, column}, stream.source.resolvedName);
             }
 
             stream.expect(TokenType.PUNCTUATION, ':', 'A hash key must be followed by a colon (:)');
@@ -1052,7 +1092,7 @@ export const createParser = (
     const parsePostfixExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode, prefixToken: Token): TwingBaseExpressionNode => {
         while (true) {
             let token = stream.current;
-            
+
             if (token.type === TokenType.PUNCTUATION) {
                 if (token.value === '.' || token.value === '[') {
                     node = parseSubscriptExpression(stream, node, prefixToken);
@@ -1071,7 +1111,7 @@ export const createParser = (
 
     const parsePrimaryExpression = (stream: TwingTokenStream): TwingBaseExpressionNode => {
         const token = stream.current;
-        
+
         let node: TwingBaseExpressionNode;
 
         switch (token.type) {
@@ -1143,9 +1183,9 @@ export const createParser = (
                 } else if (token.test(TokenType.PUNCTUATION, '{')) {
                     node = parseHashExpression(stream);
                 } else if (token.test(TokenType.OPERATOR, '=') && (stream.look(-1).value === '==' || stream.look(-1).value === '!=')) {
-                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token.line, token.column, stream.source);
+                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source.resolvedName);
                 } else {
-                    throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token.line, token.column, stream.source);
+                    throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.resolvedName);
                 }
         }
 
@@ -1185,7 +1225,7 @@ export const createParser = (
         let token = stream.next();
         let arg: TwingBaseExpressionNode;
         let type: TwingGetAttributeCallType = "any";
-        
+
         const {line, column} = token;
         const {line: prefixTokenLine, column: prefixTokenColumn} = prefixToken;
         const elements: Array<TwingBaseExpressionNode> = [];
@@ -1216,7 +1256,7 @@ export const createParser = (
                     }
                 }
             } else {
-                throw createParsingError('Expected name or number.', line, column + 1, stream.source);
+                throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.resolvedName);
             }
 
             if ((node.is("name")) && getImportedTemplate(node.attributes.name)) {
@@ -1349,7 +1389,7 @@ export const createParser = (
             switch (stream.current.type) {
                 case TokenType.TEXT:
                     token = stream.next();
-                    
+
                     children[i++] = createTextNode(token.value, token.line, token.column);
 
                     break;
@@ -1368,9 +1408,9 @@ export const createParser = (
                     token = stream.current;
 
                     if (token.type !== TokenType.NAME) {
-                        throw createParsingError('A block must start with a tag name.', token.line, token.column, stream.source);
+                        throw createParsingError('A block must start with a tag name.', token, stream.source.resolvedName);
                     }
-                    
+
                     if ((test !== null) && test(token)) {
                         if (dropNeedle) {
                             stream.next();
@@ -1385,22 +1425,20 @@ export const createParser = (
 
                     if (!tokenParsers.has(token.value)) {
                         let error;
-
+                        
                         if (test !== null) {
                             error = createParsingError(
                                 `Unexpected "${token.value}" tag`,
-                                token.line,
-                                token.column,
-                                stream.source
+                                token,
+                                stream.source.resolvedName
                             );
 
                             error.appendMessage(` (expecting closing tag for the "${tag}" tag defined line ${line}).`);
                         } else {
                             error = createParsingError(
                                 `Unknown "${token.value}" tag.`,
-                                token.line,
-                                token.column,
-                                stream.source
+                                token,
+                                stream.source.resolvedName
                             );
 
                             error.addSuggestions(token.value, tags);
@@ -1421,12 +1459,12 @@ export const createParser = (
                     break;
                 case TokenType.COMMENT_START:
                     token = stream.next();
-                    
+
                     if (stream.test(TokenType.TEXT)) {
                         // non-empty comment
                         token = stream.expect(TokenType.TEXT);
                     }
-                    
+
                     stream.expect(TokenType.COMMENT_END);
                     children[i++] = createCommentNode(token.value, token.line, token.column);
 
@@ -1453,6 +1491,7 @@ export const createParser = (
         parseAssignmentExpression,
         parseExpression,
         parseFilterExpressionRaw,
+        parseFilterDefinitions,
         parseMultiTargetExpression,
         peekBlockStack,
         popBlockStack,

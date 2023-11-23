@@ -4,7 +4,7 @@ import type {TwingArrayNode} from "../array";
 
 export const filterNodeType = "filter";
 
-export interface TwingFilterNode extends TwingBaseCallNode<typeof filterNodeType, TwingBaseNode> {
+export interface TwingFilterNode extends TwingBaseCallNode<typeof filterNodeType> {
 }
 
 export const createFilterNode = (

@@ -27,7 +27,7 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
                     ) {
                         const {line, column} = expression;
 
-                        throw createParsingError('An escaping strategy must be a string or false.', line, column, stream.source);
+                        throw createParsingError('An escaping strategy must be a string or false.', {line, column}, stream.source.resolvedName);
                     }
 
                     const {value} = expression.attributes;

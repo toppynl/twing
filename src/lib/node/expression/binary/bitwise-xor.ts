@@ -6,4 +6,10 @@ export const bitwiseXorNodeType = "bitwise_xor";
 export interface TwingBitwiseXorNode extends TwingBaseBinaryNode<typeof bitwiseXorNodeType> {
 }
 
-export const createBitwiseXorNode = createBinaryNodeFactory<TwingBitwiseXorNode>(bitwiseXorNodeType, '^');
+export const createBitwiseXorNode = createBinaryNodeFactory<TwingBitwiseXorNode>(bitwiseXorNodeType, {
+    execute: async (baseNode, ...args) => {
+        const {left, right} = baseNode.children;
+
+        return await left.execute(...args) ^ await right.execute(...args);
+    }
+});

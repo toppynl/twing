@@ -8,3 +8,4 @@ import "./not_valid1";
 import "./not_valid2";
 import "./range_operator";
 import "./simple";
+import "./within-a-sandboxed-environment";

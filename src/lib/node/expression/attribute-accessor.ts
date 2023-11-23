@@ -3,6 +3,7 @@ import {
     TwingBaseExpressionNodeAttributes,
     createBaseExpressionNode
 } from "../expression";
+import {getAttribute} from "../../helpers/get-attribute";
 
 export type TwingGetAttributeCallType = "any" | "array" | "method";
 
@@ -42,23 +43,30 @@ export const createAttributeAccessorNode = (
 
     const node: TwingAttributeAccessorNode = {
         ...baseNode,
-        compile: (compiler) => {
+        execute: (...args) => {
+            const [template] = args;
             const {target, attribute, arguments: methodArguments} = node.children;
             const {type, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
-            compiler
-                .write(`await template.getTraceableMethod(runtime.getAttribute, ${node.line}, template.source)(`).write('\n')
-                .write('runtime,').write('\n');
-            
-            compiler
-                .subCompile(target)
-                .write(',').write('\n')
-                .subCompile(attribute).write(',').write('\n')
-                .subCompile(methodArguments).write(',').write('\n')
-                .render(type).write(',').write('\n')
-                .render(shouldTestExistence).write(',').write('\n')
-                .render(shouldIgnoreStrictCheck || null).write('\n')
-                .write(')');
+            const {environment} = template;
+
+            return Promise.all([
+                target.execute(...args),
+                attribute.execute(...args),
+                methodArguments.execute(...args)
+            ]).then(([target, attribute, methodArguments]) => {
+                const traceableGetAttribute = template.getTraceableMethod(getAttribute, node.line, node.column, template.templateName);
+                
+                return traceableGetAttribute(
+                    environment,
+                    target,
+                    attribute,
+                    methodArguments,
+                    type,
+                    shouldTestExistence,
+                    shouldIgnoreStrictCheck || null
+                )
+            })
         }
     };
 

@@ -1,8 +1,9 @@
 import {runTest} from "../../TestBase";
 import {TwingCache} from "../../../../../src/lib/cache";
+import {TwingModuleNode} from "../../../../../src/lib/node/module";
 
 const createCache = (): TwingCache => {
-    const container = new Map<string, string>();
+    const container = new Map<string, TwingModuleNode>();
 
     return {
         generateKey: (hash) => Promise.resolve(hash),
@@ -15,11 +16,11 @@ const createCache = (): TwingCache => {
 const cache = createCache();
 
 const testCases: Array<[title: string, Record<string, any>, errorMessage: string]> = [
-    ['record and method', {foo: {}}, 'TwingRuntimeError: Neither the property "bar" nor one of the methods bar()" or "getbar()"/"isbar()"/"hasbar()" exist and have public access in class "Object" in "index.twig" at line 1.'],
-    ['map and method', {foo: new Map([['oof', 5]])}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on an array in "index.twig" at line 1.'],
-    ['array and method', {foo: [5]}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on an array in "index.twig" at line 1.'],
-    ['null and method', {foo: null}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on a null variable in "index.twig" at line 1.'],
-    ['number and method', {foo: 5}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on a number variable ("5") in "index.twig" at line 1.'],
+    ['record and method', {foo: {}}, 'TwingRuntimeError: Neither the property "bar" nor one of the methods bar()" or "getbar()"/"isbar()"/"hasbar()" exist and have public access in class "Object" in "index.twig" at line 1, column 4.'],
+    ['map and method', {foo: new Map([['oof', 5]])}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on an array in "index.twig" at line 1, column 4.'],
+    ['array and method', {foo: [5]}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on an array in "index.twig" at line 1, column 4.'],
+    ['null and method', {foo: null}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on a null variable in "index.twig" at line 1, column 4.'],
+    ['number and method', {foo: 5}, 'TwingRuntimeError: Impossible to invoke a method ("bar") on a number variable ("5") in "index.twig" at line 1, column 4.'],
 ];
 
 for (const [name, context, errorMessage] of testCases) {

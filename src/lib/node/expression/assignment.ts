@@ -21,12 +21,8 @@ export const createAssignmentNode = (
     
     const node: TwingAssignmentNode = {
         ...baseNode,
-        compile: (compiler) => {
-            compiler
-                .write('context.proxy[')
-                .string(node.attributes.name)
-                .write(']')
-            ;
+        execute: () => {
+            return Promise.resolve(node.attributes.name);
         }
     };
     

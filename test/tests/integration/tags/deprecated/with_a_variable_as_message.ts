@@ -9,6 +9,7 @@ runTest({
         foo: 'bar'
     }),
     expectedDeprecationMessages: [
-        'bar ("index.twig" at line 1)'
-    ]
+        'bar ("index.twig" at line 1, column 4)'
+    ],
+    type: "execution context"
 });

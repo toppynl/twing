@@ -1,9 +1,10 @@
 import {runTest} from "../../TestBase";
 import {TwingCache} from "../../../../../src/lib/cache";
 import {createSandboxSecurityPolicy} from "../../../../../src/lib/sandbox/security-policy";
+import {TwingModuleNode} from "../../../../../src/lib/node/module";
 
 const createCache = (): TwingCache => {
-    const container = new Map<string, string>();
+    const container = new Map<string, TwingModuleNode>();
 
     return {
         generateKey: (hash) => Promise.resolve(hash),
@@ -22,7 +23,7 @@ const testCases: Array<[title: string, Record<string, any>, errorMessage: string
                 return 'bar';
             }
         })
-    }, 'TwingSandboxSecurityError: Calling "bar" property on an instance of (anonymous) is not allowed in "index.twig" at line 1.']
+    }, 'TwingSandboxSecurityError: Calling "bar" property on an instance of (anonymous) is not allowed in "index.twig" at line 1, column 4.']
 ];
 
 for (const [name, context, errorMessage] of testCases) {

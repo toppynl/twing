@@ -1,39 +1,37 @@
-import {TwingSource} from "../source";
+export type ErrorLocation = {
+    line: number;
+    column: number;
+};
 
 export interface TwingBaseError<Name extends string> extends Error {
     readonly name: Name;
     readonly previous: any | undefined;
     readonly rootMessage: string;
-
-    line: number | undefined;
-    column: number | undefined;
-    source: TwingSource | undefined;
+    location: ErrorLocation | undefined;
+    source: string | undefined;
     
     appendMessage(message: string): void;
 }
 
 export const createBaseError = <Name extends string>(
-    name: Name, message: string, line?: number, column?: number, source?: TwingSource, previous?: any
+    name: Name, message: string, location?: ErrorLocation, source?: string, previous?: any
 ): TwingBaseError<Name> => {
     const baseError = Error(message);
 
     baseError.name = name;
 
     const error = Object.create(baseError, {
-        line: {
-            get: () => line,
-            set: (value: number) => {
-                line = value;
+        location: {
+            get: () => location,
+            set: (value: ErrorLocation) => {
+                location = value;
 
                 updateRepresentation();
             }
         },
-        column: {
-            value: column
-        },
         source: {
             get: () => source,
-            set: (value: TwingSource) => {
+            set: (value: string) => {
                 source = value;
 
                 updateRepresentation();
@@ -72,15 +70,13 @@ export const createBaseError = <Name extends string>(
         }
 
         if (source) {
-            representation += ` in "${source.name}"`;
+            representation += ` in "${source}"`;
         }
 
-        if (line !== undefined) {
-            representation += ` at line ${line}`;
-        }
-
-        if (column !== undefined) {
-            representation += `, column ${column}`;
+        if (location !== undefined) {
+            const {line, column} = location;
+            
+            representation += ` at line ${line}, column ${column}`;
         }
 
         if (dot) {

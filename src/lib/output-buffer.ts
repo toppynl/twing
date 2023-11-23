@@ -88,6 +88,7 @@ export interface TwingOutputBuffer {
      *
      * In human terms: appends the top-most buffer to the second-top-most buffer and empties the top-most buffer
      *
+     * ```text
      * ┌─────────┐    ┌─────────┐
      * │   oof   │    │         │
      * ├─────────┤    ├─────────┤
@@ -95,7 +96,7 @@ export interface TwingOutputBuffer {
      * ├─────────┤    ├─────────┤
      * │   foo   │    │   foo   │ => true
      * └─────────┘    └─────────┘
-     *
+     * ```
      */
     flush(): boolean;
 
@@ -142,6 +143,7 @@ export interface TwingOutputBuffer {
      *
      * In human terms: returns the content of the top-most buffer
      *
+     * ```text
      * ┌─────────┐
      * │   oof   │
      * ├─────────┤
@@ -149,6 +151,7 @@ export interface TwingOutputBuffer {
      * ├─────────┤
      * │   foo   │ => "oof"
      * └─────────┘
+     * ```
      *
      * @returns {string}
      */

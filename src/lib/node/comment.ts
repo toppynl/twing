@@ -17,9 +17,6 @@ export const createCommentNode = (
     }, {}, line, column);
 
     return {
-        ...baseNode,
-        compile: () => {
-            // noop
-        }
+        ...baseNode
     }
 };

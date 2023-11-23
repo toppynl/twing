@@ -18,18 +18,20 @@ export const createBlockReferenceNode = (
 ): TwingBlockReferenceNode => {
     const outputNode = createBaseOutputNode(blockReferenceType, {
         name
-    }, {}, (compiler) => {
-        compiler
-            .write(`await template.getTraceableRenderBlock(${line}, template.source)('${name}', context.clone(), outputBuffer, blocks, true, sourceMapRuntime)`)
-        ;
-    }, line, column, tag);
+    }, {}, line, column, tag);
 
-    return {
+    const node: TwingBlockReferenceNode = {
         ...outputNode,
-        compile: (compiler) => {
-            outputNode.compile(compiler);
+        execute: (...args) => {
+            const [template, context, outputBuffer, blocks, , sourceMapRuntime] = args;
+            const {name} = node.attributes;
 
-            compiler.write(';\n');
+            const renderBlock = template.getTraceableMethod(template.renderBlock, node.line, node.column, template.templateName);
+            
+            return renderBlock(name, context.clone(), outputBuffer, blocks, true, sourceMapRuntime)
+                .then(outputBuffer.echo);
         }
-    }
+    };
+
+    return node;
 };

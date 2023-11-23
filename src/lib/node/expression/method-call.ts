@@ -2,6 +2,7 @@ import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseEx
 import type {TwingArrayNode} from "./array";
 import {getKeyValuePairs} from "./array";
 import {TwingBaseNode} from "../../node";
+import {TwingTemplate} from "../../template";
 
 export const methodCallNodeType = "method_call";
 
@@ -35,53 +36,43 @@ export const createMethodCallNode = (
         arguments: methodArguments
     }, line, column);
 
-    return {
+    const node: TwingMethodCallNode = {
         ...baseNode,
-        compile: (compiler) => {
+        execute: async (...args) => {
+            const [template, context, outputBuffer, , aliases, sourceMapRuntime] = args;
             const {methodName, shouldTestExistence} = baseNode.attributes;
             const {operand, arguments: methodArguments} = baseNode.children;
+            const {templateName} = template;
 
             if (shouldTestExistence) {
-                compiler
-                    .write('(await aliases.proxy[')
-                    .render(operand.attributes.name)
-                    .write('].hasMacro(').write('\n')
-                    .render(methodName).write('\n')
-                    .write('))')
-                ;
+                return (aliases.get(operand.attributes.name) as TwingTemplate).hasMacro(methodName);
             } else {
-                compiler
-                    .write('await template.callMacro(').write('\n')
-                    .write('aliases.proxy[')
-                    .render(operand.attributes.name)
-                    .write('],').write('\n')
-                    .render(methodName).write(',').write('\n')
-                    .write('outputBuffer,').write('\n')
-                    .write('[').write('\n')
-                ;
-                let first = true;
+                const keyValuePairs = getKeyValuePairs(methodArguments);
 
-                for (const {value} of getKeyValuePairs(methodArguments)) {
-                    if (!first) {
-                        compiler.write(',').write('\n');
-                    }
+                const macroArguments: Array<any> = [];
 
-                    first = false;
+                for (const {value: valueNode} of keyValuePairs) {
+                    const value = await valueNode.execute(...args);
 
-                    compiler.subCompile(value);
+                    macroArguments.push(value);
                 }
 
-                compiler
-                    .write('],').write('\n')
-                    .render(baseNode.line).write(',').write('\n')
-                    .write('context,').write('\n')
-                    .write('template.source,').write('\n')
-                    .write('sourceMapRuntime').write('\n')
-                    .write(')')
-                ;
+                return template.callMacro(
+                    aliases.get(operand.attributes.name) as TwingTemplate,
+                    methodName,
+                    outputBuffer,
+                    macroArguments,
+                    node.line,
+                    node.column,
+                    context,
+                    templateName,
+                    sourceMapRuntime
+                );
             }
         }
     };
+
+    return node;
 };
 
 export const cloneMethodCallNode = (

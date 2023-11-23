@@ -2,7 +2,6 @@ import "./autoescape";
 import "./comments";
 import "./comparison";
 import "./compatibility";
-import "./compilation";
 import "./deprecation";
 import "./errors";
 import "./exceptions";

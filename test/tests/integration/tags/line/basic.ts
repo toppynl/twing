@@ -16,7 +16,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage(): string {
-        return 'TwingRuntimeError: Variable "unknown" does not exist in "index.twig" at line 6.';
+        return 'TwingRuntimeError: Variable "unknown" does not exist in "index.twig" at line 6, column 4.';
     }
 }
 

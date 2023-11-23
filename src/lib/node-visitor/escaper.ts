@@ -54,7 +54,7 @@ export const createEscaperNodeVisitor = (
                     safe = filter.getSafe(callArguments);
                     
                     if (safe && (safe.length < 1)) {
-                        safe = intersectSafe(analyze(operand), filter.preservesSafety);
+                        safe = intersectSafe(analyze(operand!), filter.preservesSafety);
                     }
                 } else {
                     safe = [];
@@ -219,11 +219,11 @@ export const createEscaperNodeVisitor = (
 
         const operand = filterNode.children.operand;
 
-        if (isSafeFor(type, operand)) {
+        if (isSafeFor(type, operand!)) {
             return filterNode;
         }
 
-        filterNode.children.operand = getEscapeNode(type, operand);
+        filterNode.children.operand = getEscapeNode(type, operand!);
 
         return filterNode;
     };

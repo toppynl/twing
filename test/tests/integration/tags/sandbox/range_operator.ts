@@ -21,7 +21,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage(): string {
-        return 'TwingSandboxSecurityError: Function "range" is not allowed in "foo.twig" at line 2.';
+        return 'TwingSandboxSecurityError: Function "range" is not allowed in "foo.twig" at line 2, column 5.';
     }
 
     getEnvironmentOptions(): TwingEnvironmentOptions {

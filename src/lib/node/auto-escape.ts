@@ -24,8 +24,6 @@ export const createAutoEscapeNode = (
 
     return {
         ...baseNode,
-        compile: (compiler) => {
-            compiler.subCompile(baseNode.children.body);
-        }
+        // execute: baseNode.children.body.execute
     };
 };
