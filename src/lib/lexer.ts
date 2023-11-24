@@ -76,3 +76,10 @@ export class TwingLexer extends Lexer {
         }
     }
 }
+
+export const createLexer = (
+    binaryOperators: Map<string, TwingOperator>,
+    unaryOperators: Map<string, TwingOperator>
+): TwingLexer => {
+    return new TwingLexer(binaryOperators, unaryOperators);  
+};

@@ -18,8 +18,6 @@
     "url": "https://gitlab.com/nightlycommit/twing"
   },
   "main": "dist/cjs/lib.js",
-  "module": "dist/es/lib.js",
-  "browser": "dist/es/lib.js",
   "types": "dist/types/lib.d.ts",
   "jsdelivr": "dist/lib.min.js",
   "files": [
@@ -34,9 +32,8 @@
     "prebuild:test:browser": "npm run prebuild:test",
     "test": "node dist/test",
     "test:browser": "browserify dist/test/index.js | tape-run --sandbox=false",
-    "build": "npm run build:cjs && npm run build:es && npm run build:types && npm run bundle",
+    "build": "npm run build:cjs && npm run build:types && npm run bundle",
     "build:cjs": "rimraf dist/cjs && tsc --project . --module commonjs --outDir dist/cjs",
-    "build:es": "rimraf dist/es && tsc --project . --module es6 --outDir dist/es",
     "build:test": "rimraf dist && tsc --project test --outDir dist",
     "build:types": "rimraf dist/types && tsc --project . --declaration true --emitDeclarationOnly true --outDir dist/types",
     "bundle": "browserify dist/cjs/lib.js -g uglifyify -s Twing -o dist/lib.min.js"
