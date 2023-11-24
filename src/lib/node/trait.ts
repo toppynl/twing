@@ -7,7 +7,7 @@ export const traitNodeType = "trait";
 
 export interface TwingTraitNode extends TwingBaseNode<typeof traitNodeType, TwingBaseNodeAttributes, {
     template: TwingConstantNode;
-    targets: TwingBaseExpressionNode<string, {}, Record<string, TwingConstantNode>>;
+    targets: TwingBaseExpressionNode<string, {}, Record<string, TwingConstantNode<string>>>;
 }> {
 }
 

@@ -10,37 +10,37 @@ import {SyntaxError} from "twig-lexer/dist/types/lib/SyntaxError";
 
 export const typeToEnglish = (type: TokenType): string => {
     switch (type) {
-        case TokenType.EOF:
+        case "EOF":
             return 'end of template';
-        case TokenType.TEXT:
+        case "TEXT":
             return 'text';
-        case TokenType.TAG_START:
+        case "TAG_START":
             return 'begin of statement block';
-        case TokenType.VARIABLE_START:
+        case "VARIABLE_START":
             return 'begin of print statement';
-        case TokenType.TAG_END:
+        case "TAG_END":
             return 'end of statement block';
-        case TokenType.VARIABLE_END:
+        case "VARIABLE_END":
             return 'end of print statement';
-        case TokenType.NAME:
+        case "NAME":
             return 'name';
-        case TokenType.NUMBER:
+        case "NUMBER":
             return 'number';
-        case TokenType.STRING:
+        case "STRING":
             return 'string';
-        case TokenType.OPERATOR:
+        case "OPERATOR":
             return 'operator';
-        case TokenType.PUNCTUATION:
+        case "PUNCTUATION":
             return 'punctuation';
-        case TokenType.INTERPOLATION_START:
+        case "INTERPOLATION_START":
             return 'begin of string interpolation';
-        case TokenType.INTERPOLATION_END:
+        case "INTERPOLATION_END":
             return 'end of string interpolation';
-        case TokenType.COMMENT_START:
+        case "COMMENT_START":
             return 'begin of comment statement';
-        case TokenType.COMMENT_END:
+        case "COMMENT_END":
             return 'end of comment statement';
-        case TokenType.ARROW:
+        case "ARROW":
             return 'arrow function';
         default:
             throw new Error(`Token of type "${type}" does not exist.`)
@@ -81,5 +81,5 @@ export const createLexer = (
     binaryOperators: Map<string, TwingOperator>,
     unaryOperators: Map<string, TwingOperator>
 ): TwingLexer => {
-    return new TwingLexer(binaryOperators, unaryOperators);  
+    return new TwingLexer(binaryOperators, unaryOperators);
 };

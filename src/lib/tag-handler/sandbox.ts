@@ -2,7 +2,7 @@ import {createParsingError} from "../error/parsing";
 import {createSandboxNode} from "../node/sandbox";
 import {getChildren} from "../node";
 import {isMadeOfWhitespaceOnly} from "../helpers/is-made-of-whitespace-only";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 export const createSandboxTagHandler = (): TwingTagHandler => {
@@ -12,13 +12,14 @@ export const createSandboxTagHandler = (): TwingTagHandler => {
         tag,
         initialize: (parser) => {
             return (token, stream) => {
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 let body = parser.subparse(stream, tag, (token: Token) => {
-                    return token.test(TokenType.NAME, 'endsandbox');
-                }, true);
+                    return token.test("NAME", 'endsandbox');
+                });
 
-                stream.expect(TokenType.TAG_END);
+                stream.next();
+                stream.expect("TAG_END");
 
                 // in a sandbox tag, only include tags are allowed
                 if (!body.is("include")) {

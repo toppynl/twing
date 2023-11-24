@@ -1,7 +1,6 @@
 import {createParsingError} from "../error/parsing";
 import {TwingConstantNode, createConstantNode} from "../node/expression/constant";
 import {createBaseNode} from "../node";
-import {TokenType} from "twig-lexer";
 import {createTraitNode} from "../node/trait";
 import {TwingTagHandler} from "../tag-handler";
 import {createArgumentsNode} from "../node/expression/arguments";
@@ -20,27 +19,27 @@ export const createUseTagHandler = (): TwingTagHandler => {
                     throw createParsingError('The template references in a "use" statement must be a string.', {line, column}, stream.source.resolvedName);
                 }
                 
-                const targets: Record<string, TwingConstantNode> = {};
+                const targets: Record<string, TwingConstantNode<string>> = {};
 
-                if (stream.nextIf(TokenType.NAME, 'with')) {
+                if (stream.nextIf("NAME", 'with')) {
                     do {
-                        const name: string = stream.expect(TokenType.NAME).value;
+                        const name: string = stream.expect("NAME").value;
 
                         let alias = name;
 
-                        if (stream.nextIf(TokenType.NAME, 'as')) {
-                            alias = stream.expect(TokenType.NAME).value;
+                        if (stream.nextIf("NAME", 'as')) {
+                            alias = stream.expect("NAME").value;
                         }
 
                         targets[name] = createConstantNode(alias, line, column);
 
-                        if (!stream.nextIf(TokenType.PUNCTUATION, ',')) {
+                        if (!stream.nextIf("PUNCTUATION", ',')) {
                             break;
                         }
                     } while (true);
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
                 
                 parser.addTrait(createTraitNode(template, createArgumentsNode(targets, line, column), line, column));
 

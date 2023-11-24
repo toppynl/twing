@@ -86,11 +86,6 @@ export const createDate = (
             result = result.setZone(timezone);
         }
         
-        // todo: why did we have this?
-        // Reflect.set(result, 'format', (format: string) => {
-        //     return formatDateTime(result, format);
-        // });
-        
         return result;
     };
 

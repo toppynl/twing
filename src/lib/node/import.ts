@@ -47,7 +47,7 @@ export const createImportNode = (
                     templateName,
                     node.line,
                     node.column
-                ))!; // todo: handle null
+                ));
             }
 
             aliases.set(varName.attributes.name, aliasValue);

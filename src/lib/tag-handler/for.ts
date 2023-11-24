@@ -14,18 +14,18 @@ import {createParsingError} from "../error/parsing";
 import {TwingTokenStream} from "../token-stream";
 import {TwingAssignmentNode, createAssignmentNode} from "../node/expression/assignment";
 import {createForNode} from "../node/for";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 export const createForTagHandler = (): TwingTagHandler => {
     const tag = 'for';
 
     const decideForFork = (token: Token) => {
-        return token.test(TokenType.NAME, ['else', 'endfor']);
+        return token.test("NAME", ['else', 'endfor']);
     };
 
     const decideForEnd = (token: Token) => {
-        return token.test(TokenType.NAME, 'endfor');
+        return token.test("NAME", 'endfor');
     };
 
     // the loop variable cannot be used in the condition
@@ -67,31 +67,34 @@ export const createForTagHandler = (): TwingTagHandler => {
                 const {line, column} = token;
                 const targets = parser.parseAssignmentExpression(stream);
 
-                stream.expect(TokenType.OPERATOR, 'in');
+                stream.expect("OPERATOR", 'in');
 
                 let sequence = parser.parseExpression(stream);
 
                 let ifExpression = null;
 
-                if (stream.nextIf(TokenType.NAME, 'if')) {
+                if (stream.nextIf("NAME", 'if')) {
                     console.warn(`Using an "if" condition on "for" tag in "${stream.source.name}" at line ${line} is deprecated since Twig 2.10.0, use a "filter" filter or an "if" condition inside the "for" body instead (if your condition depends on a variable updated inside the loop).`);
 
                     ifExpression = parser.parseExpression(stream);
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 let body = parser.subparse(stream, tag, decideForFork);
                 let elseToken;
 
                 if (stream.next().value == 'else') {
-                    stream.expect(TokenType.TAG_END);
-                    elseToken = parser.subparse(stream, tag, decideForEnd, true);
+                    stream.expect("TAG_END");
+                    
+                    elseToken = parser.subparse(stream, tag, decideForEnd);
+
+                    stream.next();
                 } else {
                     elseToken = null;
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 let keyTarget: TwingAssignmentNode;
                 let valueTarget: TwingAssignmentNode;

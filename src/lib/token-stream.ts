@@ -80,14 +80,14 @@ export const createTokenStream = (
             return stream.test(type, value);
         },
         isEOF: () => {
-            return tokenStream.current.type === TokenType.EOF;
+            return tokenStream.current.type === "EOF";
         },
         toAst: () => {
             return stream.traverse((token: Token, stream: TokenStream) => {
                 token = astVisitor(token, stream);
 
-                if (token && token.test(TokenType.TEST_OPERATOR)) {
-                    token = new Token(TokenType.OPERATOR, token.value, token.line, token.column);
+                if (token && token.test("TEST_OPERATOR")) {
+                    token = new Token("OPERATOR", token.value, token.line, token.column);
                 }
 
                 return token;

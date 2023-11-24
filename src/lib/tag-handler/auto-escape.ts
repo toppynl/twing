@@ -1,6 +1,6 @@
 import {createParsingError} from "../error/parsing";
 import {createAutoEscapeNode} from "../node/auto-escape";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 /**
@@ -17,7 +17,7 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
 
                 let strategy: string | true | null;
 
-                if (stream.test(TokenType.TAG_END)) {
+                if (stream.test("TAG_END")) {
                     strategy = true; // defer to the default strategy
                 } else {
                     const expression = parser.parseExpression(stream);
@@ -35,13 +35,14 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
                     strategy = value === false ? null : value; // null means no auto-escaping
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 let body = parser.subparse(stream, tag, (token: Token) => {
-                    return token.test(TokenType.NAME, 'endautoescape');
-                }, true);
+                    return token.test("NAME", 'endautoescape');
+                });
 
-                stream.expect(TokenType.TAG_END);
+                stream.next();
+                stream.expect("TAG_END");
 
                 return createAutoEscapeNode(strategy, body, line, column, tag);
             };

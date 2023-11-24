@@ -1,6 +1,6 @@
 import {createBaseNode} from "../node";
 import {createIfNode} from "../node/if";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 /**
@@ -20,7 +20,7 @@ export const createIfTagHandler = (): TwingTagHandler => {
     const tag = 'if';
 
     const decideIfFork = (token: Token) => {
-        return token.test(TokenType.NAME, ['elseif', 'else', 'endif']);
+        return token.test("NAME", ['elseif', 'else', 'endif']);
     };
 
     return {
@@ -31,7 +31,7 @@ export const createIfTagHandler = (): TwingTagHandler => {
 
                 let expression = parser.parseExpression(stream);
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 let index = 0;
                 let body = parser.subparse(stream, tag, decideIfFork);
@@ -48,15 +48,15 @@ export const createIfTagHandler = (): TwingTagHandler => {
                 while (!end) {
                     switch (stream.next().value) {
                         case 'else':
-                            stream.expect(TokenType.TAG_END);
+                            stream.expect("TAG_END");
                             elseNode = parser.subparse(stream, tag, (token) => {
-                                return token.test(TokenType.NAME, 'endif');
+                                return token.test("NAME", 'endif');
                             });
                             break;
 
                         case 'elseif':
                             expression = parser.parseExpression(stream);
-                            stream.expect(TokenType.TAG_END);
+                            stream.expect("TAG_END");
                             body = parser.subparse(stream, tag, decideIfFork);
                             tests[index++] = expression;
                             tests[index++] = body;
@@ -68,7 +68,7 @@ export const createIfTagHandler = (): TwingTagHandler => {
                     }
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 return createIfNode(createBaseNode(null, {}, tests), elseNode, line, column, tag);
             };

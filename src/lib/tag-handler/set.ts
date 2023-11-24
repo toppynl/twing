@@ -1,6 +1,5 @@
 import {createParsingError} from "../error/parsing";
 import {createSetNode} from "../node/set";
-import {TokenType} from "twig-lexer";
 import {TwingBaseNode, getChildrenCount} from "../node";
 import {TwingTagHandler} from "../tag-handler";
 
@@ -17,10 +16,10 @@ export const createSetTagHandler = (): TwingTagHandler => {
                 let capture = false;
                 let values: TwingBaseNode;
 
-                if (stream.nextIf(TokenType.OPERATOR, '=')) {
+                if (stream.nextIf("OPERATOR", '=')) {
                     values = parser.parseMultiTargetExpression(stream);
 
-                    stream.expect(TokenType.TAG_END);
+                    stream.expect("TAG_END");
 
                     if (getChildrenCount(names) !== getChildrenCount(values)) {
                         const {line, column} = stream.current;
@@ -37,13 +36,14 @@ export const createSetTagHandler = (): TwingTagHandler => {
                         throw createParsingError('When using set with a block, you cannot have a multi-target.', {line, column}, stream.source.resolvedName);
                     }
 
-                    stream.expect(TokenType.TAG_END);
+                    stream.expect("TAG_END");
 
                     values = parser.subparse(stream, tag, (token) => {
-                        return token.test(TokenType.NAME, 'endset');
-                    }, true);
+                        return token.test("NAME", 'endset');
+                    });
 
-                    stream.expect(TokenType.TAG_END);
+                    stream.next();
+                    stream.expect("TAG_END");
                 }
 
                 return createSetNode(capture, names, values, line, column, tag);

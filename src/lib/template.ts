@@ -12,7 +12,6 @@ import {createMarkup, TwingMarkup} from "./markup";
 import {include} from "./extension/core/functions/include";
 import {isATemplateLoadingError} from "./error/loader";
 import {cloneMap} from "./helpers/clone-map";
-import {TwingConstantNode} from "./node/expression/constant";
 import {createBodyNode} from "./node/body";
 import {getKeyValuePairs} from "./node/expression/array";
 import {iteratorToMap} from "./helpers/iterator-to-map";
@@ -207,8 +206,10 @@ export const createTemplate = (
     const displayParentBlock = (name: string, context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, blocks: TwingTemplateBlockMap, sourceMapRuntime?: TwingSourceMapRuntime): Promise<void> => {
         return template.getTraits()
             .then((traits) => {
-                if (traits.has(name)) {
-                    const [blockTemplate, blockName] = traits.get(name)!;
+                const trait = traits.get(name);
+
+                if (trait) {
+                    const [blockTemplate, blockName] = trait;
 
                     return blockTemplate.displayBlock(
                         blockName,
@@ -293,8 +294,10 @@ export const createTemplate = (
         },
         callMacro: (template, name, outputBuffer, args, line, column, context, templateName, sourceMapRuntime) => {
             const getHandler = (template: TwingTemplate): Promise<MacroHandler | null> => {
-                if (template.macroHandlers.has(name)) {
-                    return Promise.resolve(template.macroHandlers.get(name)!);
+                const macroHandler = template.macroHandlers.get(name);
+
+                if (macroHandler) {
+                    return Promise.resolve(macroHandler);
                 } else {
                     return template.getParent(context, outputBuffer)
                         .then((parent) => {
@@ -338,12 +341,16 @@ export const createTemplate = (
                         return template.getParent(context, outputBuffer).then((parent) => {
                             if (parent) {
                                 return parent.displayBlock(name, context, outputBuffer, mergeIterables(ownBlocks, blocks), false, sourceMapRuntime);
-                            } else if (blocks.has(name)) {
-                                const [blockTemplate] = blocks.get(name)!;
-
-                                throw createRuntimeError(`Block "${name}" should not call parent() in "${blockTemplate.templateName}" as the block does not exist in the parent template "${template.templateName}".`, undefined, blockTemplate.templateName);
                             } else {
-                                throw createRuntimeError(`Block "${name}" on template "${template.templateName}" does not exist.`, undefined, template.templateName);
+                                const block = blocks.get(name);
+                                
+                                if (block) {
+                                    const [blockTemplate] = block!;
+
+                                    throw createRuntimeError(`Block "${name}" should not call parent() in "${blockTemplate.templateName}" as the block does not exist in the parent template "${template.templateName}".`, undefined, blockTemplate.templateName);
+                                } else {
+                                    throw createRuntimeError(`Block "${name}" on template "${template.templateName}" does not exist.`, undefined, template.templateName);
+                                }
                             }
                         });
 
@@ -352,7 +359,7 @@ export const createTemplate = (
         },
         execute: async (context, outputBuffer, blocks = new Map(), sourceMapRuntime) => {
             const aliases = template.aliases.clone();
-            
+
             return Promise.all([
                 template.getParent(context, outputBuffer),
                 template.getBlocks()
@@ -451,7 +458,7 @@ export const createTemplate = (
                         templateName,
                         templateNameNode.line,
                         templateNameNode.column
-                    ))!; // todo: handle null
+                    ));
 
                     if (!traitExecutionContext.canBeUsedAsATrait) {
                         throw createRuntimeError(`Template ${templateName} cannot be used as a trait.`, templateNameNode, template.templateName);
@@ -465,9 +472,8 @@ export const createTemplate = (
                         if (!traitBlock) {
                             throw createRuntimeError(`Block "${key}" is not defined in trait "${templateName}".`, templateNameNode, template.templateName);
                         }
-
-                        // todo: we need to find a way to have typed targets
-                        const targetValue = (target as TwingConstantNode).attributes.value as string;
+                        
+                        const targetValue = target.attributes.value;
 
                         traitBlocks.set(targetValue, traitBlock);
                         traitBlocks.delete(key);
@@ -531,9 +537,9 @@ export const createTemplate = (
 
             if (index !== undefined) {
                 // this is an attempt to load an embedded template
-                const ast = embeddedTemplates.get(index);
+                const ast = embeddedTemplates.get(index)!; // it can't happen that the embedded template is not present in the register, by nature
 
-                promise = Promise.resolve(createTemplate(environment, ast!)); // todo: handle null and cover with a test
+                promise = Promise.resolve(createTemplate(environment, ast));
             } else {
                 if (typeof identifier === "string") {
                     promise = environment.loadTemplate(identifier);

@@ -10,7 +10,6 @@
  * </pre>
  */
 import {createParsingError} from "../error/parsing";
-import {TokenType} from "twig-lexer";
 import type {TwingTagHandler} from "../tag-handler";
 
 export const createExtendsTagHandler = (): TwingTagHandler => {
@@ -34,7 +33,7 @@ export const createExtendsTagHandler = (): TwingTagHandler => {
 
                 parser.parent = parser.parseExpression(stream);
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 return null;
             };
