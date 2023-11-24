@@ -10,6 +10,5 @@ runTest({
     }),
     expectedDeprecationMessages: [
         'bar ("index.twig" at line 1, column 4)'
-    ],
-    type: "execution context"
+    ]
 });

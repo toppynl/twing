@@ -32,8 +32,7 @@ BARFOO
                 }
             })
         );
-    }),
-    type: "template"
+    })
 });
 
 runTest({
@@ -66,6 +65,5 @@ BARFOO
                 };
             })
         );
-    }),
-    type: "execution context"
+    })
 });

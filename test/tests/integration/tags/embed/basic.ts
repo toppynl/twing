@@ -36,7 +36,6 @@ A
 C
 BAR
 `,
-    type: "execution context"
 });
 
 

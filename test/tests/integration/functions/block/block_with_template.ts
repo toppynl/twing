@@ -37,8 +37,7 @@ NOT FOO
                     included_loaded_internal: template
                 }
             }));
-    }),
-    type: "template"
+    })
 }));
 
 runTest(({
@@ -75,6 +74,5 @@ NOT FOO
                     included_loaded_internal: template
                 };
             }));
-    }),
-    type: "execution context"
+    })
 }));

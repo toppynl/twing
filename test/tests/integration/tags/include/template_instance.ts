@@ -27,8 +27,7 @@ BAR`
         );
     }),
     trimmedExpectation: `BAR FOO
-`,
-    type: "template"
+`
 }));
 
 runTest(({
@@ -56,7 +55,6 @@ BAR`
     }),
     expectation: `
 
-BAR FOO`,
-    type: "execution context"
+BAR FOO`
 }));
 

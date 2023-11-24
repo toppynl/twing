@@ -209,10 +209,6 @@ export default abstract class {
     getExpectedDeprecationMessages(): string[] | null {
         return null;
     }
-
-    getType(): "template" | "execution context" | undefined {
-        return undefined;
-    }
 }
 
 /**
@@ -280,138 +276,135 @@ export const runTest = async (
         sandboxSecurityPolicyMethods,
         sandboxSecurityPolicyProperties,
         parserOptions,
-        trimmedExpectation,
-        type
+        trimmedExpectation
     } = integrationTest;
 
-    if (type === undefined || type === "execution context") {
-        tape(`Renderer - ${description}`, ({fail, same, end}) => {
-            if (!isATestWithALoader(integrationTest)) {
-                loader = createArrayLoader(integrationTest.templates);
-            } else {
-                loader = integrationTest.loader;
-            }
+    tape(`Renderer - ${description}`, ({fail, same, end}) => {
+        if (!isATestWithALoader(integrationTest)) {
+            loader = createArrayLoader(integrationTest.templates);
+        } else {
+            loader = integrationTest.loader;
+        }
 
-            let environment = createEnvironment(loader, Object.assign({}, <TwingEnvironmentOptions>{
-                sandboxPolicy: sandboxPolicy || createSandboxSecurityPolicy({
-                    allowedTags: sandboxSecurityPolicyTags,
-                    allowedFilters: sandboxSecurityPolicyFilters,
-                    allowedFunctions: sandboxSecurityPolicyFunctions,
-                    allowedMethods: sandboxSecurityPolicyMethods,
-                    allowedProperties: sandboxSecurityPolicyProperties
-                }),
-                strictVariables: true,
-                emitsSourceMap: expectedSourceMapMappings !== undefined,
-                parserOptions
-            }, environmentOptions || {}));
+        let environment = createEnvironment(loader, Object.assign({}, <TwingEnvironmentOptions>{
+            sandboxPolicy: sandboxPolicy || createSandboxSecurityPolicy({
+                allowedTags: sandboxSecurityPolicyTags,
+                allowedFilters: sandboxSecurityPolicyFilters,
+                allowedFunctions: sandboxSecurityPolicyFunctions,
+                allowedMethods: sandboxSecurityPolicyMethods,
+                allowedProperties: sandboxSecurityPolicyProperties
+            }),
+            strictVariables: true,
+            emitsSourceMap: expectedSourceMapMappings !== undefined,
+            parserOptions
+        }, environmentOptions || {}));
 
-            environment.addExtension(new TwingTestExtension());
-            environment.registerEscapingStrategy((value) => `custom ${value}`, 'custom');
+        environment.addExtension(new TwingTestExtension());
+        environment.registerEscapingStrategy((value) => `custom ${value}`, 'custom');
 
-            environment.addExtension({
-                filters: additionalFilters || [],
-                functions: additionalFunctions || [],
-                nodeVisitors: additionalNodeVisitors || [],
-                tagHandlers: [],
-                tests: additionalTests || [],
-                operators: []
-            });
-
-            if (globals) {
-                for (let key in globals) {
-                    environment.setGlobal(key, globals[key]);
-                }
-            }
-
-            environment.setGlobal('global', 'global');
-
-            let consoleStub: SinonStub | null = null;
-            let consoleData: string[] = [];
-
-            if (expectedDeprecationMessages) {
-                consoleStub = stub(console, 'warn').callsFake((data: string) => {
-                    consoleData.push(data);
-                });
-            }
-
-            return (context || Promise.resolve({})).then(async (context: Record<string, any>) => {
-                if (!expectedErrorMessage) {
-                    try {
-                        console.time(description);
-
-                        let actual: string;
-                        let sourceMap: RawSourceMap | null = null;
-
-                        if (expectedSourceMapMappings !== undefined) {
-                            const result = await environment.renderWithSourceMap('index.twig', context);
-
-                            actual = result.data;
-                            sourceMap = result.sourceMap;
-                        } else {
-                            actual = await environment.render('index.twig', context);
-                        }
-
-                        console.timeEnd(description);
-
-                        if (expectation !== undefined) {
-                            same(actual, expectation, `${description}: renders as expected`);
-                        }
-
-                        if (trimmedExpectation !== undefined) {
-                            same(actual.trim(), trimmedExpectation.trim(), `${description}: trimmed, renders as expected`);
-                        }
-
-                        if (consoleStub) {
-                            consoleStub.restore();
-
-                            same(consoleData, expectedDeprecationMessages, `${description}: outputs deprecation warnings`);
-                        }
-
-                        if (sourceMap !== null) {
-                            const mappings: Array<MappingItem> = [];
-                            const consumer = new SourceMapConsumer(sourceMap);
-
-                            consumer.eachMapping(({
-                                                      source,
-                                                      generatedLine,
-                                                      generatedColumn,
-                                                      originalLine,
-                                                      originalColumn,
-                                                      name
-                                                  }) => {
-                                mappings.push({
-                                    source,
-                                    generatedLine,
-                                    generatedColumn,
-                                    originalLine,
-                                    originalColumn,
-                                    name
-                                });
-                            })
-
-                            same(mappings, expectedSourceMapMappings);
-                        }
-                    } catch (e) {
-                        console.timeEnd(description);
-
-                        fail(`${description}: should not throw an error (${e})`);
-                    }
-                } else {
-                    try {
-                        console.time(description);
-
-                        await environment.render('index.twig', context);
-
-                        fail(`${description}: should throw an error`);
-                    } catch (error: any) {
-                        console.timeEnd(description);
-
-                        same(`${error.name}: ${error.message}`, expectedErrorMessage, `${description}: throws error`);
-                    }
-                }
-
-                end();
-            });
+        environment.addExtension({
+            filters: additionalFilters || [],
+            functions: additionalFunctions || [],
+            nodeVisitors: additionalNodeVisitors || [],
+            tagHandlers: [],
+            tests: additionalTests || [],
+            operators: []
         });
-    }
+
+        if (globals) {
+            for (let key in globals) {
+                environment.setGlobal(key, globals[key]);
+            }
+        }
+
+        environment.setGlobal('global', 'global');
+
+        let consoleStub: SinonStub | null = null;
+        let consoleData: string[] = [];
+
+        if (expectedDeprecationMessages) {
+            consoleStub = stub(console, 'warn').callsFake((data: string) => {
+                consoleData.push(data);
+            });
+        }
+
+        return (context || Promise.resolve({})).then(async (context: Record<string, any>) => {
+            if (!expectedErrorMessage) {
+                try {
+                    console.time(description);
+
+                    let actual: string;
+                    let sourceMap: RawSourceMap | null = null;
+
+                    if (expectedSourceMapMappings !== undefined) {
+                        const result = await environment.renderWithSourceMap('index.twig', context);
+
+                        actual = result.data;
+                        sourceMap = result.sourceMap;
+                    } else {
+                        actual = await environment.render('index.twig', context);
+                    }
+
+                    console.timeEnd(description);
+
+                    if (expectation !== undefined) {
+                        same(actual, expectation, `${description}: renders as expected`);
+                    }
+
+                    if (trimmedExpectation !== undefined) {
+                        same(actual.trim(), trimmedExpectation.trim(), `${description}: trimmed, renders as expected`);
+                    }
+
+                    if (consoleStub) {
+                        consoleStub.restore();
+
+                        same(consoleData, expectedDeprecationMessages, `${description}: outputs deprecation warnings`);
+                    }
+
+                    if (sourceMap !== null) {
+                        const mappings: Array<MappingItem> = [];
+                        const consumer = new SourceMapConsumer(sourceMap);
+
+                        consumer.eachMapping(({
+                                                  source,
+                                                  generatedLine,
+                                                  generatedColumn,
+                                                  originalLine,
+                                                  originalColumn,
+                                                  name
+                                              }) => {
+                            mappings.push({
+                                source,
+                                generatedLine,
+                                generatedColumn,
+                                originalLine,
+                                originalColumn,
+                                name
+                            });
+                        })
+
+                        same(mappings, expectedSourceMapMappings);
+                    }
+                } catch (e) {
+                    console.timeEnd(description);
+
+                    fail(`${description}: should not throw an error (${e})`);
+                }
+            } else {
+                try {
+                    console.time(description);
+
+                    await environment.render('index.twig', context);
+
+                    fail(`${description}: should throw an error`);
+                } catch (error: any) {
+                    console.timeEnd(description);
+
+                    same(`${error.name}: ${error.message}`, expectedErrorMessage, `${description}: throws error`);
+                }
+            }
+
+            end();
+        });
+    });
 };

@@ -35,10 +35,6 @@ Hello {{ name }}
             'The "welcome" macro is deprecated, use "hello" instead. ("greeting.twig" at line 2, column 8)'
         ];
     }
-    
-    getType(): "template" | "execution context" | undefined {
-        return "execution context";
-    }
 }
 
 runTest(createIntegrationTest(new Test));

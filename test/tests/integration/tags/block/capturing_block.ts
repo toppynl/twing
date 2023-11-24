@@ -43,10 +43,6 @@ FOO
             'The "spaceless" tag in "index.twig" at line 4 is deprecated since Twig 2.7, use the "spaceless" filter instead.'
         ];
     }
-    
-    getType(): "template" | "execution context" | undefined {
-        return "execution context";
-    }
 }
 
 runTest(createIntegrationTest(new Test));
