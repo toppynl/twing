@@ -1,5 +1,4 @@
 import {createDeprecatedNode} from "../node/deprecated";
-import {TokenType} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 /**
@@ -22,7 +21,7 @@ export const createDeprecatedTagHandler = (): TwingTagHandler => {
             return (token, stream) => {
                 const expression = parser.parseExpression(stream);
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 return createDeprecatedNode(expression, token.line, token.column, tag);
             };

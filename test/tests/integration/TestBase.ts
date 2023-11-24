@@ -1,6 +1,5 @@
 import * as tape from 'tape';
 import {SinonStub, stub} from 'sinon';
-import {TokenType} from "twig-lexer";
 import {createEnvironment, TwingEnvironmentOptions} from "../../../src/lib/environment";
 import {createPrintNode} from "../../../src/lib/node/output/print";
 import {createConstantNode} from "../../../src/lib/node/expression/constant";
@@ -23,7 +22,7 @@ const createSectionTokenParser = (): TwingTagHandler => {
         tag: '§',
         initialize: () => {
             return (_token, stream) => {
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 return createPrintNode(createConstantNode('§', -1, -1), -1, -1);
             };

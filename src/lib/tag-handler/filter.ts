@@ -2,7 +2,7 @@ import {createBlockFunctionNode} from "../node/expression/block-function";
 import {createConstantNode} from "../node/expression/constant";
 import {createBlockNode} from "../node/block";
 import {createPrintNode} from "../node/output/print";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 /**
@@ -31,13 +31,14 @@ export const createFilterTagHandler = (): TwingTagHandler => {
                 
                 const filterNode = parser.parseFilterExpressionRaw(stream, blockFunctionNode, tag);
                 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 const body = parser.subparse(stream, tag, (token: Token) => {
-                    return token.test(TokenType.NAME, 'endfilter');
-                }, true);
+                    return token.test("NAME", 'endfilter');
+                });
 
-                stream.expect(TokenType.TAG_END);
+                stream.next();
+                stream.expect("TAG_END");
 
                 const block = createBlockNode(name, body, line, column);
 

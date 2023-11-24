@@ -1,5 +1,5 @@
 import {createWithNode} from "../node/with";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 export const createWithTagHandler = (): TwingTagHandler => {
@@ -12,19 +12,20 @@ export const createWithTagHandler = (): TwingTagHandler => {
                 let variables = null;
                 let only = false;
 
-                if (!stream.test(TokenType.TAG_END)) {
+                if (!stream.test("TAG_END")) {
                     variables = parser.parseExpression(stream);
 
-                    only = stream.nextIf(TokenType.NAME, 'only') !== null;
+                    only = stream.nextIf("NAME", 'only') !== null;
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 let body = parser.subparse(stream, tag, (token: Token) => {
-                    return token.test(TokenType.NAME, 'endwith');
-                }, true);
+                    return token.test("NAME", 'endwith');
+                });
 
-                stream.expect(TokenType.TAG_END);
+                stream.next();
+                stream.expect("TAG_END");
 
                 return createWithNode(body, variables, only, token.line, token.column, tag);
             };

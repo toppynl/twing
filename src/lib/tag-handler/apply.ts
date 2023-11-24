@@ -1,4 +1,3 @@
-import {TokenType} from "twig-lexer";
 import type {TwingTagHandler} from "../tag-handler";
 import {createApplyNode} from "../node/apply";
 import {createArrayNode} from "../node/expression/array";
@@ -15,13 +14,14 @@ export const createApplyTagHandler = (): TwingTagHandler => {
                 
                 const filterDefinitions = parser.parseFilterDefinitions(stream);
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 let body = parser.subparse(stream, tag, (token): boolean => {
-                    return token.test(TokenType.NAME, 'endapply');
-                }, true);
+                    return token.test("NAME", 'endapply');
+                });
 
-                stream.expect(TokenType.TAG_END);
+                stream.next();
+                stream.expect("TAG_END");
                 
                 return createApplyNode(createArrayNode(filterDefinitions.map(({name, arguments: filterArgument}) => {
                     return {

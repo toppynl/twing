@@ -3,7 +3,7 @@ import {createParsingError} from "../error/parsing";
 import {createBlockNode} from "../node/block";
 import {createPrintNode} from "../node/output/print";
 import {createBlockReferenceNode} from "../node/output/block-reference";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 /**
@@ -24,7 +24,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
         initialize: (parser) => {
             return (token, stream) => {
                 const {line, column} = token;
-                const name = stream.expect(TokenType.NAME).value;
+                const name = stream.expect("NAME").value;
 
                 let block = parser.getBlock(name);
 
@@ -40,12 +40,14 @@ export const createBlockTagHandler = (): TwingTagHandler => {
 
                 let body;
 
-                if (stream.nextIf(TokenType.TAG_END)) {
+                if (stream.nextIf("TAG_END")) {
                     body = parser.subparse(stream, tag, (token: Token) => {
-                        return token.test(TokenType.NAME, 'endblock');
-                    }, true);
+                        return token.test("NAME", 'endblock');
+                    });
 
-                    const token = stream.nextIf(TokenType.NAME);
+                    stream.next();
+                    
+                    const token = stream.nextIf("NAME");
 
                     if (token) {
                         const value = token.value;
@@ -62,7 +64,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                     });
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 block.children.body = body;
 

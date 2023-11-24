@@ -1,6 +1,6 @@
 import {parseArguments} from "./include";
 import {createEmbedNode} from "../node/include/embed";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import type {TwingTagHandler} from "../tag-handler";
 
 export const createEmbedTagHandler = (): TwingTagHandler => {
@@ -23,26 +23,28 @@ export const createEmbedTagHandler = (): TwingTagHandler => {
                 let parentToken;
                 let fakeParentToken;
 
-                parentToken = fakeParentToken = new Token(TokenType.STRING, '__parent__', token.line, token.column);
+                parentToken = fakeParentToken = new Token("STRING", '__parent__', token.line, token.column);
 
                 if (parent.is("constant")) {
-                    parentToken = new Token(TokenType.STRING, parent.attributes.value, token.line, token.column);
+                    parentToken = new Token("STRING", parent.attributes.value, token.line, token.column);
                 } else if (parent.is("name")) {
-                    parentToken = new Token(TokenType.NAME, parent.attributes.name, token.line, token.column);
+                    parentToken = new Token("NAME", parent.attributes.name, token.line, token.column);
                 }
 
                 // inject a fake parent to make the parent() function work
                 stream.injectTokens([
-                    new Token(TokenType.TAG_START, '', token.line, token.column),
-                    new Token(TokenType.NAME, 'extends', token.line, token.column),
+                    new Token("TAG_START", '', token.line, token.column),
+                    new Token("NAME", 'extends', token.line, token.column),
                     parentToken,
-                    new Token(TokenType.TAG_END, '', token.line, token.column),
+                    new Token("TAG_END", '', token.line, token.column),
                 ]);
                 
                 let module = parser.parse(stream, tag, (token: Token) => {
-                    return token.test(TokenType.NAME, 'endembed');
-                }, true);
+                    return token.test("NAME", 'endembed');
+                });
 
+                stream.next();
+                
                 // override the parent with the correct one
                 if (fakeParentToken === parentToken) {
                     module.children.parent = parent;
@@ -50,7 +52,7 @@ export const createEmbedTagHandler = (): TwingTagHandler => {
 
                 parser.embedTemplate(module);
                 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 const {source, index} = module.attributes;
                 

@@ -1,6 +1,5 @@
 import {createIncludeNode} from "../node/include/include";
 import {TwingBaseExpressionNode} from "../node/expression";
-import {TokenType} from "twig-lexer";
 import {createArrayNode} from "../node/expression/array";
 import {TwingTagHandler} from "../tag-handler";
 import {TwingParser} from "../parser";
@@ -41,25 +40,25 @@ export const parseArguments = (
 } => {
     let ignoreMissing = false;
 
-    if (stream.nextIf(TokenType.NAME, 'ignore')) {
-        stream.expect(TokenType.NAME, 'missing');
+    if (stream.nextIf("NAME", 'ignore')) {
+        stream.expect("NAME", 'missing');
 
         ignoreMissing = true;
     }
 
     let variables: TwingBaseExpressionNode = createArrayNode([], line, column);
 
-    if (stream.nextIf(TokenType.NAME, 'with')) {
+    if (stream.nextIf("NAME", 'with')) {
         variables = parser.parseExpression(stream);
     }
 
     let only = false;
 
-    if (stream.nextIf(TokenType.NAME, 'only')) {
+    if (stream.nextIf("NAME", 'only')) {
         only = true;
     }
 
-    stream.expect(TokenType.TAG_END);
+    stream.expect("TAG_END");
 
     return {
         variables,

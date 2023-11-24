@@ -1,6 +1,5 @@
 import * as tape from 'tape';
 import {TwingLexer, typeToEnglish} from "../../../../../src/lib/lexer";
-import {TokenType} from "twig-lexer";
 import {createOperator} from "../../../../../src/lib/operator";
 
 tape('lexer', (test) => {
@@ -18,8 +17,8 @@ tape('lexer', (test) => {
 
             let tokens = lexer.tokenize(`{{a foo b}}{{bar a}}`);
 
-            test.true(tokens[3].test(TokenType.OPERATOR, 'foo'));
-            test.true(tokens[8].test(TokenType.OPERATOR, 'bar'));
+            test.true(tokens[3].test("OPERATOR", 'foo'));
+            test.true(tokens[8].test("OPERATOR", 'bar'));
 
             test.end();
         });
@@ -28,22 +27,22 @@ tape('lexer', (test) => {
     });
 
     test.test('should support type to english representation', (test) => {
-        test.same(typeToEnglish(TokenType.TAG_END), 'end of statement block');
-        test.same(typeToEnglish(TokenType.TAG_START), 'begin of statement block');
-        test.same(typeToEnglish(TokenType.EOF), 'end of template');
-        test.same(typeToEnglish(TokenType.INTERPOLATION_END), 'end of string interpolation');
-        test.same(typeToEnglish(TokenType.INTERPOLATION_START), 'begin of string interpolation');
-        test.same(typeToEnglish(TokenType.NAME), 'name');
-        test.same(typeToEnglish(TokenType.NUMBER), 'number');
-        test.same(typeToEnglish(TokenType.OPERATOR), 'operator');
-        test.same(typeToEnglish(TokenType.PUNCTUATION), 'punctuation');
-        test.same(typeToEnglish(TokenType.STRING), 'string');
-        test.same(typeToEnglish(TokenType.TEXT), 'text');
-        test.same(typeToEnglish(TokenType.VARIABLE_END), 'end of print statement');
-        test.same(typeToEnglish(TokenType.VARIABLE_START), 'begin of print statement');
-        test.same(typeToEnglish(TokenType.COMMENT_START), 'begin of comment statement');
-        test.same(typeToEnglish(TokenType.COMMENT_END), 'end of comment statement');
-        test.same(typeToEnglish(TokenType.ARROW), 'arrow function');
+        test.same(typeToEnglish("TAG_END"), 'end of statement block');
+        test.same(typeToEnglish("TAG_START"), 'begin of statement block');
+        test.same(typeToEnglish("EOF"), 'end of template');
+        test.same(typeToEnglish("INTERPOLATION_END"), 'end of string interpolation');
+        test.same(typeToEnglish("INTERPOLATION_START"), 'begin of string interpolation');
+        test.same(typeToEnglish("NAME"), 'name');
+        test.same(typeToEnglish("NUMBER"), 'number');
+        test.same(typeToEnglish("OPERATOR"), 'operator');
+        test.same(typeToEnglish("PUNCTUATION"), 'punctuation');
+        test.same(typeToEnglish("STRING"), 'string');
+        test.same(typeToEnglish("TEXT"), 'text');
+        test.same(typeToEnglish("VARIABLE_END"), 'end of print statement');
+        test.same(typeToEnglish("VARIABLE_START"), 'begin of print statement');
+        test.same(typeToEnglish("COMMENT_START"), 'begin of comment statement');
+        test.same(typeToEnglish("COMMENT_END"), 'end of comment statement');
+        test.same(typeToEnglish("ARROW"), 'arrow function');
 
         try {
             typeToEnglish(-999 as any);

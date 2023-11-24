@@ -35,8 +35,6 @@ import {TwingOutputBuffer} from "./output-buffer";
 import type {TwingApplyNode} from "./node/apply";
 import {TwingSourceMapRuntime} from "./source-map-runtime";
 
-const var_export = require('locutus/php/var/var_export');
-
 export type TwingNode =
     | TwingApplyNode
     | TwingAutoEscapeNode
@@ -82,7 +80,7 @@ export type TwingBaseNodeChildren = Record<string, TwingBaseNode>;
 export interface TwingBaseNode<
     Type extends string | null = any,
     Attributes extends TwingBaseNodeAttributes = TwingBaseNodeAttributes,
-    Children extends TwingBaseNodeChildren = TwingBaseNodeChildren,
+    Children extends TwingBaseNodeChildren = TwingBaseNodeChildren
 > {
     readonly attributes: Attributes;
     readonly children: Children;
@@ -101,9 +99,7 @@ export interface TwingBaseNode<
         aliases: TwingTemplateAliases,
         sourceMapRuntime?: TwingSourceMapRuntime
     ): Promise<any>;
-
-    toString(): string; // todo: remove - move it to a development helper and check usage in the parser 
-
+    
     is<Type extends string>(type: Type): this is TwingNode & {
         type: Type;
     };
@@ -153,47 +149,6 @@ export const createBaseNode = <
             return output;
         },
         is: (aType) => (aType as string) === node.type,
-        toString: () => {
-            const attributeRepresentations: Array<string> = [];
-
-            const isANode = (candidate: any): candidate is TwingBaseNode => {
-                return candidate &&
-                    (candidate as TwingBaseNode).type !== undefined &&
-                    (candidate as TwingBaseNode).attributes !== undefined &&
-                    (candidate as TwingBaseNode).children !== undefined;
-            };
-
-            for (const [name, value] of Object.entries(node.attributes)) {
-                const attributeRepresentation = isANode(value) ? value.toString() : String(var_export(value, true));
-                attributeRepresentations.push(`${name}: ${attributeRepresentation.replace(/\n/g, '')}`);
-            }
-
-            attributeRepresentations.push(`line: ${line}`);
-            attributeRepresentations.push(`column: ${column}`);
-
-            const representation: Array<string> = [
-                `Node<${node.type ? '"' + node.type + '"' : 'null'}, ${attributeRepresentations.join(', ')}> (`
-            ];
-
-            if (getChildrenCount(node)) {
-                for (let [name, child] of getChildren(node)) {
-                    const length = ('' + name).length + 4;
-                    const nodeRepresentation: Array<string> = [];
-
-                    for (let line of child.toString().split('\n')) {
-                        nodeRepresentation.push(' '.repeat(length) + line);
-                    }
-
-                    representation.push(`  ${name}: ${nodeRepresentation.join('\n').trimLeft()}`);
-                }
-
-                representation.push(')');
-            } else {
-                representation[0] += ')';
-            }
-
-            return representation.join('\n');
-        },
         type
     };
 

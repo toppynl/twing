@@ -1,5 +1,5 @@
 import {createSpacelessNode} from "../node/output/spaceless";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 
 /**
@@ -24,13 +24,14 @@ export const createSpacelessTagHandler = (): TwingTagHandler => {
 
                 console.warn(`The "spaceless" tag in "${stream.source.name}" at line ${line} is deprecated since Twig 2.7, use the "spaceless" filter instead.`);
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 const body = parser.subparse(stream, tag, (token: Token) => {
-                    return token.test(TokenType.NAME, 'endspaceless');
-                }, true);
+                    return token.test("NAME", 'endspaceless');
+                });
 
-                stream.expect(TokenType.TAG_END);
+                stream.next();
+                stream.expect("TAG_END");
 
                 return createSpacelessNode(body, line, column, tag);
             };

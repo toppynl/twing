@@ -10,7 +10,7 @@
 import {createParsingError} from "../error/parsing";
 import {createBodyNode} from "../node/body";
 import {createMacroNode, VARARGS_NAME} from "../node/macro";
-import {Token, TokenType} from "twig-lexer";
+import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 import {getKeyValuePairs} from "../node/expression/array";
 
@@ -22,7 +22,7 @@ export const createMacroTagHandler = (): TwingTagHandler => {
         initialize: (parser) => {
             return (token, stream) => {
                 const {line, column} = token;
-                const name = stream.expect(TokenType.NAME).value;
+                const name = stream.expect("NAME").value;
                 const macroArguments = parser.parseArguments(stream, true, true);
 
                 for (const {key, value: macroArgument} of getKeyValuePairs(macroArguments)) {
@@ -33,14 +33,17 @@ export const createMacroTagHandler = (): TwingTagHandler => {
                     }
                 }
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 parser.pushLocalScope();
 
                 const body = parser.subparse(stream, tag, (token: Token) => {
-                    return token.test(TokenType.NAME, 'endmacro');
-                }, true);
-                const nextToken = stream.nextIf(TokenType.NAME);
+                    return token.test("NAME", 'endmacro');
+                });
+                
+                stream.next();
+                
+                const nextToken = stream.nextIf("NAME");
 
                 if (nextToken) {
                     const value = nextToken.value;
@@ -54,7 +57,7 @@ export const createMacroTagHandler = (): TwingTagHandler => {
 
                 parser.popLocalScope();
 
-                stream.expect(TokenType.TAG_END);
+                stream.expect("TAG_END");
 
                 parser.setMacro(name, createMacroNode(name, createBodyNode(body, line, column), macroArguments, line, column, tag));
 
