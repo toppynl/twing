@@ -18,13 +18,10 @@
     "url": "https://gitlab.com/nightlycommit/twing"
   },
   "main": "dist/cjs/lib.js",
+  "module": "dist/es/lib.js",
+  "browser": "dist/es/lib.js",
   "types": "dist/types/lib.d.ts",
   "jsdelivr": "dist/lib.min.js",
-  "exports": {
-    "import": "./dist/es/lib.js",
-    "default": "./dist/cjs/lib.js",
-    "types": "./dist/types/lib.d.ts"
-  },
   "files": [
     "dist"
   ],
