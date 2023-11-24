@@ -26,10 +26,6 @@ SOME TEXT WITH A VAR
             var: 'var'
         };
     }
-    
-    getType(): "template" | "execution context" | undefined {
-        return "execution context";
-    }
 }
 
 runTest(createIntegrationTest(new Test));

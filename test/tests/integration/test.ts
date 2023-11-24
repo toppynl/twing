@@ -30,7 +30,6 @@ export type IntegrationTest = {
     sandboxSecurityPolicyProperties?: Map<Function, Array<string>>;
     sandboxSecurityPolicyMethods?: Map<Function, Array<string>>;
     trimmedExpectation?: string;
-    type?: "template" | "execution context"; // todo: remove when moved to execution context only
 } & ({
     templates: {
         'index.twig': string;
@@ -53,8 +52,7 @@ export const createIntegrationTest = (
         sandboxSecurityPolicyTags: testInstance.getSandboxSecurityPolicyTags(),
         sandboxSecurityPolicyFilters: testInstance.getSandboxSecurityPolicyFilters(),
         sandboxSecurityPolicyFunctions: testInstance.getSandboxSecurityPolicyFunctions(),
-        expectedDeprecationMessages: testInstance.getExpectedDeprecationMessages(),
-        type: testInstance.getType()
+        expectedDeprecationMessages: testInstance.getExpectedDeprecationMessages()
     };
 };
 

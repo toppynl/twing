@@ -26,10 +26,6 @@ class Test extends TestBase {
             var: 'VAR'
         }
     }
-
-    getType(): "template" | "execution context" | undefined {
-        return "execution context";
-    }
 }
 
 runTest(createIntegrationTest(new Test));

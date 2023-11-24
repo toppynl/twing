@@ -7,33 +7,12 @@ import {TwingOperator} from "./operator";
 
 export interface TwingExtension {
     /**
-     * Returns the token parser instances to add to the existing list.
-     *
-     * @return Array<TwingTagHandler>
-     */
-    readonly tagHandlers: Array<TwingTagHandler>;
-
-    /**
-     * Returns the node visitor instances to add to the existing list.
-     *
-     * @return Array<TwingNodeVisitor>
-     */
-    readonly nodeVisitors: Array<TwingNodeVisitor>;
-
-    /**
      * Returns a list of filters to add to the existing list.
      *
      * @return Array<TwingFilter>
      */
     readonly filters: Array<TwingFilter>;
-
-    /**
-     * Returns a list of tests to add to the existing list.
-     *
-     * @returns Array<TwingTest>
-     */
-    readonly tests: Array<TwingTest>;
-
+    
     /**
      * Returns a list of functions to add to the existing list.
      *
@@ -42,9 +21,30 @@ export interface TwingExtension {
     readonly functions: Array<TwingFunction>;
 
     /**
+     * Returns the node visitor instances to add to the existing list.
+     *
+     * @return Array<TwingNodeVisitor>
+     */
+    readonly nodeVisitors: Array<TwingNodeVisitor>;
+    
+    /**
      * Returns a list of operators to add to the existing list.
      *
      * @return TwingOperator[]
      */
     readonly operators: Array<TwingOperator>;
+    
+    /**
+     * Returns the token parser instances to add to the existing list.
+     *
+     * @return Array<TwingTagHandler>
+     */
+    readonly tagHandlers: Array<TwingTagHandler>;
+    
+    /**
+     * Returns a list of tests to add to the existing list.
+     *
+     * @returns Array<TwingTest>
+     */
+    readonly tests: Array<TwingTest>;
 }

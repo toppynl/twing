@@ -55,10 +55,6 @@ A
             ]
         }
     }
-    
-    getType(): "template" | "execution context" | undefined {
-        return "execution context";
-    }
 }
 
 runTest(createIntegrationTest(new Test));

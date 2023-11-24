@@ -111,6 +111,7 @@ tape('library index', ({same, end}) => {
         'createUseTagHandler',
         'createVerbatimTagHandler',
         'createWithTagHandler',
+        'createBaseNode', 'getChildren', 'getChildrenCount',
         'createEnvironment',
         'createExtensionSet',
         'createFilter',

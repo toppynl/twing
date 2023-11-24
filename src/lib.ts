@@ -262,6 +262,7 @@ export {createExtensionSet} from "./lib/extension-set";
 export {createFilter} from "./lib/filter";
 export {createFunction} from "./lib/function";
 export {createLexer} from "./lib/lexer";
+export {createBaseNode, getChildren, getChildrenCount} from "./lib/node";
 export {createOperator} from "./lib/operator";
 export {createSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
 export {createSource} from "./lib/source";
