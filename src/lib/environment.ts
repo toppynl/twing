@@ -28,7 +28,7 @@ import {Settings as DateTimeSettings} from "luxon";
 import {EventEmitter} from "events";
 import {createTemplateLoadingError} from "./error/loader";
 import {TwingParsingError} from "./error/parsing";
-import {TwingLexer} from "./lexer";
+import {createLexer, TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
 import * as createHash from "create-hash";
 import {createCoreExtension} from "./extension/core";
@@ -573,7 +573,7 @@ export function createEnvironment(
         },
         tokenize: (source: TwingSource): TwingTokenStream => {
             if (!lexer) {
-                lexer = new TwingLexer(extensionSet.binaryOperators, extensionSet.unaryOperators);
+                lexer = createLexer(extensionSet.binaryOperators, extensionSet.unaryOperators);
             }
 
             const stream = lexer.tokenizeSource(source);

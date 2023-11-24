@@ -115,6 +115,7 @@ tape('library index', ({same, end}) => {
         'createExtensionSet',
         'createFilter',
         'createFunction',
+        'createLexer',
         'createOperator',
         'createSandboxSecurityPolicy',
         'createSource',
