@@ -5,7 +5,7 @@ export interface TwingMarkup {
     readonly content: string;
     readonly count: number;
 
-    toJSON: () => string;
+    toJSON: () => string; // todo: used somewhere?
     toString: () => string;
 }
 

@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {TwingEnvironmentOptions} from "../../../../../src/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -10,6 +9,7 @@ class Test extends TestBase {
     getTemplates() {
         return {
             'index.twig': `
+{% set text = "  If you have some <strong>HTML</strong> it will be escaped.  " %}
 {{ "  I like Twig.  "|trim }}
 {{ text|trim }}
 {{ "  foo/"|trim("/") }}
@@ -25,7 +25,7 @@ class Test extends TestBase {
     getExpected() {
         return `
 I like Twig.
-If you have some &lt;strong&gt;HTML&lt;/strong&gt; it will be escaped.
+If you have some <strong>HTML</strong> it will be escaped.
   foo
 I like Twig.xxx
 xxxI like Twig.
@@ -34,18 +34,6 @@ xxxI like Twig.
   foo/
   do nothing.
 `;
-    }
-
-    getContext() {
-        return {
-            text: '  If you have some <strong>HTML</strong> it will be escaped.  ',
-        }
-    }
-    
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            autoEscapingStrategy: 'html'
-        }
     }
 }
 

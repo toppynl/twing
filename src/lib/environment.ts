@@ -7,7 +7,7 @@ import {TwingLoader} from "./loader";
 import {TwingTest} from "./test";
 import {TwingFunction} from "./function";
 import {TwingOperator} from "./operator";
-import {EscapingStrategy, EscapingStrategyHandler, EscapingStrategyResolver} from "./escaping-strategy";
+import {EscapingStrategy, EscapingStrategyHandler} from "./escaping-strategy";
 import {createHtmlEscapingStrategyHandler} from "./escaping-stragegy/html";
 import {createCssEscapingStrategyHandler} from "./escaping-stragegy/css";
 import {createJsEscapingStrategyHandler} from "./escaping-stragegy/js";
@@ -23,7 +23,6 @@ import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox
 import {isAMarkup, TwingMarkup} from "./markup";
 import {createTemplate, TwingTemplate} from "./template";
 import {createRuntimeError} from "./error/runtime";
-import {basename, extname} from "path";
 import {Settings as DateTimeSettings} from "luxon";
 import {EventEmitter} from "events";
 import {createTemplateLoadingError} from "./error/loader";
@@ -40,14 +39,6 @@ export type TwingNumberFormat = {
 };
 
 export type TwingEnvironmentOptions = {
-    /**
-     * Sets the default auto-escaping strategy (`"name"`, `"html"`, `"js"`, `"css"`, `"url"`, `"html_attr"`), or disables auto-escaping entirely when set to `null`.
-     *
-     * The `"name"` escaping strategy infers the escaping strategy from the template filename extension.
-     *
-     * Defaults to `"html"`.
-     */
-    autoEscapingStrategy?: string | null;
     /**
      * Controls whether the templates are recompiled whenever their content changes or not.
      *
@@ -115,7 +106,7 @@ export interface TwingEnvironment {
 
     createTemplateFromString(content: string, name: string | null): Promise<TwingTemplate>;
 
-    escape(template: TwingTemplate, value: string | boolean | TwingMarkup | null | undefined, strategy: EscapingStrategy, charset: string | null, autoEscape?: boolean): Promise<string | boolean>;
+    escape(template: TwingTemplate, value: string | boolean | TwingMarkup | null | undefined, strategy: EscapingStrategy | string, charset: string | null, autoEscape?: boolean): Promise<string | boolean | TwingMarkup>;
 
     /**
      * Loads a template by its name.
@@ -219,7 +210,7 @@ export function createEnvironment(
     const jsEscapingStrategy = createJsEscapingStrategyHandler();
     const urlEscapingStrategy = createUrlEscapingStrategyHandler();
 
-    const escapingStrategyHandlers: Record<string, EscapingStrategyHandler> = {
+    const escapingStrategyHandlers: Record<EscapingStrategy, EscapingStrategyHandler> = {
         css: cssEscapingStrategy,
         html: htmlEscapingStrategy,
         html_attr: htmlAttributeEscapingStrategy,
@@ -229,8 +220,7 @@ export function createEnvironment(
     const extensionSet = createExtensionSet();
 
     extensionSet.addExtension(createCoreExtension());
-
-    const autoEscapingStrategy = options?.autoEscapingStrategy;
+    
     const shouldAutoReload = options?.autoReload || false;
     const cache: TwingCache | null = options?.cache || null;
     const charset = options?.charset || 'UTF-8';
@@ -248,43 +238,6 @@ export function createEnvironment(
     let isSandboxed = options?.sandboxed ? true : false;
     let lexer: TwingLexer;
     let parser: TwingParser;
-
-    // auto-escaping strategy
-    const guessEscapingStrategyName = (templateName: string): string | null => {
-        let extension = extname(templateName);
-
-        if (extension === '.twig') {
-            templateName = basename(templateName, extension);
-
-            extension = extname(templateName);
-        }
-
-        switch (extension) {
-            case '.js':
-                return 'js';
-
-            case '.css':
-                return 'css';
-
-            case '.txt':
-                return null;
-
-            default:
-                return 'html';
-        }
-    };
-
-    const defaultEscapingStrategyResolver: EscapingStrategyResolver =
-        autoEscapingStrategy === "name" ?
-            guessEscapingStrategyName
-            :
-            () => {
-                if (autoEscapingStrategy === undefined) {
-                    return 'html';
-                }
-
-                return autoEscapingStrategy;
-            };
 
     const loadedTemplates: Map<string, TwingTemplate> = new Map();
 
@@ -361,8 +314,12 @@ export function createEnvironment(
 
             return Promise.resolve(template);
         },
-        escape: (template, value, strategy, charset, autoEscape) => {
+        escape: (template, value, strategy, charset) => {
             if (typeof value === "boolean") {
+                return Promise.resolve(value);
+            }
+            
+            if (isAMarkup(value)) {
                 return Promise.resolve(value);
             }
 
@@ -370,23 +327,11 @@ export function createEnvironment(
 
             if ((value === null) || (value === undefined)) {
                 result = '';
-            } else if (autoEscape && isAMarkup(value)) {
-                result = value.toString();
             } else {
-                let strategyHandler: EscapingStrategyHandler | undefined;
-
-                if (strategy === true) { // todo: replace with undefined, true makes no syntactic sense
-                    strategy = defaultEscapingStrategyResolver(template.templateName);
-                }
-
-                if (strategy === null) {
-                    strategyHandler = (value) => value;
-                } else {
-                    strategyHandler = escapingStrategyHandlers[strategy];
-
-                    if (strategyHandler === undefined) {
-                        return Promise.reject(createRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(escapingStrategyHandlers).sort().join(', ')}).`));
-                    }
+                const strategyHandler = escapingStrategyHandlers[strategy];
+                
+                if (strategyHandler === undefined) {
+                    return Promise.reject(createRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(escapingStrategyHandlers).sort().join(', ')}).`));
                 }
 
                 result = strategyHandler(value.toString(), charset || environment.charset, template.templateName);
@@ -530,13 +475,11 @@ export function createEnvironment(
                     return template.render(context, undefined, sourceMapRuntime);
                 })
                 .then((data) => {
-                    const {sourceNode} = sourceMapRuntime;
-
-                    const {map} = sourceNode.toStringWithSourceMap();
-
+                    const {sourceMap} = sourceMapRuntime;
+                    
                     return {
                         data,
-                        sourceMap: JSON.parse(map.toString())
+                        sourceMap
                     };
                 });
         },

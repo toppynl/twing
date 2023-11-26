@@ -15,7 +15,6 @@ import type {TwingFlushNode} from "./node/flush";
 import type {TwingForNode} from "./node/for";
 import type {TwingForLoopNode} from "./node/for-loop";
 import type {TwingImportNode} from "./node/import";
-import type {TwingInlinePrintNode} from "./node/output/inline-print";
 import type {TwingLineNode} from "./node/line";
 import type {TwingMacroNode} from "./node/macro";
 import type {TwingModuleNode} from "./node/module";
@@ -55,7 +54,6 @@ export type TwingNode =
     | TwingIfNode
     | TwingImportNode
     | TwingIncludeNode
-    | TwingInlinePrintNode
     | TwingLineNode
     | TwingMacroNode
     | TwingMethodCallNode

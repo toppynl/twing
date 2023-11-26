@@ -11,7 +11,9 @@ type TwingBlockFunctionNodeChildren = {
     template?: TwingBaseNode;
 };
 
-export interface TwingBlockFunctionNode extends TwingBaseExpressionNode<"block_reference_expression", TwingBlockFunctionNodeAttributes, TwingBlockFunctionNodeChildren> {
+export const blockFunctionNodeType = "block_function";
+
+export interface TwingBlockFunctionNode extends TwingBaseExpressionNode<typeof blockFunctionNodeType, TwingBlockFunctionNodeAttributes, TwingBlockFunctionNodeChildren> {
 }
 
 export const createBlockFunctionNode = (
@@ -29,7 +31,7 @@ export const createBlockFunctionNode = (
         children.template = template;
     }
 
-    const baseNode = createBaseExpressionNode("block_reference_expression", {
+    const baseNode = createBaseExpressionNode(blockFunctionNodeType, {
         shouldTestExistence: false
     }, children, line, column, tag);
 

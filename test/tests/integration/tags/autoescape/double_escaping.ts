@@ -10,7 +10,7 @@ class Test extends TestBase {
         return {
             'index.twig': `
 {% autoescape 'html' %}
-    {{ var|escape }}
+{{ var|escape }}
 {% endautoescape %}`
         };
     }

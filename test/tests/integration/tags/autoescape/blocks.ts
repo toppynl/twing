@@ -1,34 +1,21 @@
-import TestBase, {runTest} from "../../TestBase";
-import {createIntegrationTest} from "../../test";
+import {runTest} from "../../TestBase";
 
-class Test extends TestBase {
-    getDescription() {
-        return '"autoescape" tag applies escaping on embedded blocks';
-    }
-
-    getTemplates() {
-        return {
-            'index.twig': `
+runTest({
+   description: '"autoescape" tag applies escaping on embedded blocks',
+    templates: {
+        'index.twig': `
+{% set var = "<br/>" %}
 {% autoescape 'html' %}
     {% block foo %}
+        {% autoescape false %}
+            {{ var }}
+        {% endautoescape %}
         {{ var }}
     {% endblock %}
 {% endautoescape %}`
-        };
-    }
-
-    getExpected() {
-        return `
-&lt;br /&gt;
-`;
-    }
-
-
-    getContext() {
-        return {
-            'var': '<br />'
-        };
-    }
-}
-
-runTest(createIntegrationTest(new Test));
+    },
+    expectation: `
+                        <br/>
+                &lt;br/&gt;
+    `
+});

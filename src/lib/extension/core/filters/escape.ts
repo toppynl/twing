@@ -9,7 +9,11 @@ export const escape = (
 ): Promise<string | boolean | TwingMarkup | null> => {
     const {environment} = template;
     
-    return environment.escape(template, value, strategy || true, charset)
+    if (strategy === null) {
+        strategy = "html";
+    }
+    
+    return environment.escape(template, value, strategy, charset)
         .then((value) => {
             if (typeof value === "string") {
                 return createMarkup(value);

@@ -17,8 +17,5 @@ content
 `,
     context: Promise.resolve({
         markup: createMarkup(('FoO'), "UTF-8")
-    }),
-    environmentOptions: {
-        autoEscapingStrategy: null
-    }
+    })
 });

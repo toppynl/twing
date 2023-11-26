@@ -64,16 +64,15 @@ class TwingTestExtension implements TwingExtension {
     get filters() {
         return [
             createFilter('escape_and_nl2br', escape_and_nl2br, [], {
-                needs_template: true,
-                is_safe: ['html']
+                needs_template: true
             }),
             // name this filter "nl2br_" to allow the core "nl2br" filter to be tested
             createFilter('nl2br_', nl2br, [{
                 name: 'separator'
-            }], {pre_escape: 'html', is_safe: ['html']}),
+            }]),
             createFilter('§', this.sectionFilter, []),
-            createFilter('escape_something', escape_something, [], {'is_safe': ['something']}),
-            createFilter('preserves_safety', preserves_safety, [], {'preserves_safety': ['html']}),
+            createFilter('escape_something', escape_something, []),
+            createFilter('preserves_safety', preserves_safety, []),
             createFilter('static_call_string', TwingTestExtension.staticCall, []),
             createFilter('static_call_array', TwingTestExtension.staticCall, []),
             createFilter('magic_call_string', function () {
@@ -95,9 +94,7 @@ class TwingTestExtension implements TwingExtension {
             createFunction('§', this.sectionFunction, [{
                 name: 'value'
             }]),
-            createFunction('safe_br', this.br, [], {
-                'is_safe': ['html']
-            }),
+            createFunction('safe_br', this.br, []),
             createFunction('unsafe_br', this.br, []),
             createFunction('static_call_string', TwingTestExtension.staticCall, [{
                 name: 'value'

@@ -9,37 +9,24 @@ class Test extends TestBase {
     getTemplates() {
         return {
             'index.twig': `
+{% set sep = "<br />" %}
+{% set var = ["foo","bar"] %}
 {% autoescape 'html' %}
-{{ var|nl2br_("<br />") }}
-{{ var|nl2br_("<br />"|escape) }}
-{{ var|nl2br_(sep) }}
-{{ var|nl2br_(sep|raw) }}
-{{ var|nl2br_(sep|escape) }}
+{{ var|join("<br />") }}
+{{ var|join("<br />"|escape) }}
+{{ var|join(sep) }}
+{{ var|join(sep|raw) }}
 {% endautoescape %}`
         };
     }
 
     getExpected() {
         return `
-&lt;Fabien&gt;<br />
-Twig
-&lt;Fabien&gt;&lt;br /&gt;
-Twig
-&lt;Fabien&gt;<br />
-Twig
-&lt;Fabien&gt;<br />
-Twig
-&lt;Fabien&gt;&lt;br /&gt;
-Twig
+foo&lt;br /&gt;bar
+foo&amp;lt;br /&amp;gt;bar
+foo&lt;br /&gt;bar
+foo&lt;br /&gt;bar
 `;
-    }
-
-
-    getContext() {
-        return {
-            var: `<Fabien>\nTwig`,
-            sep: '<br />'
-        };
     }
 }
 

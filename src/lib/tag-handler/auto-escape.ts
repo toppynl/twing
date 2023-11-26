@@ -2,6 +2,7 @@ import {createParsingError} from "../error/parsing";
 import {createAutoEscapeNode} from "../node/auto-escape";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
+import {EscapingStrategy} from "../escaping-strategy";
 
 /**
  * Marks a section of a template to be escaped or not.
@@ -15,10 +16,10 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
             return (token, stream) => {
                 const {line, column} = token;
 
-                let strategy: string | true | null;
+                let strategy: EscapingStrategy | false;
 
                 if (stream.test("TAG_END")) {
-                    strategy = true; // defer to the default strategy
+                    strategy = "html";
                 } else {
                     const expression = parser.parseExpression(stream);
 
@@ -32,7 +33,7 @@ export const createAutoEscapeTagHandler = (): TwingTagHandler => {
 
                     const {value} = expression.attributes;
 
-                    strategy = value === false ? null : value; // null means no auto-escaping
+                    strategy = value;
                 }
 
                 stream.expect("TAG_END");

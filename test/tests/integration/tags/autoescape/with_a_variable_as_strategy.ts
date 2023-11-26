@@ -12,5 +12,5 @@ runTest({
     context: Promise.resolve({
         strategy: 'html'
     }),
-    expectedErrorMessage: 'TwingParsingError: An escaping strategy must be a string or false in "index.twig" at line 2.'
+    expectedErrorMessage: 'TwingParsingError: An escaping strategy must be a string or false in "index.twig" at line 2, column 15.'
 })

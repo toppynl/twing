@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {TwingEnvironmentOptions} from "../../../../../src/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -10,44 +9,35 @@ class Test extends TestBase {
     getTemplates() {
         return {
             'index.twig': `
-{{ var }}
-{% autoescape 'html' %}
+{% set var = "<br />" %}
+{% autoescape false %}
     {{ var }}
-    {% autoescape false %}
-        {{ var }}
-        {% autoescape 'html' %}
-            {{ var }}
+    {% autoescape 'html' %}
+        html: {{ var }}
+        {% autoescape false %}
+            false: {{ var }}
+            {% autoescape 'html' %}
+                html: {{ var }}
+            {% endautoescape %}
+            false: {{ var }}
         {% endautoescape %}
-        {{ var }}
+        html: {{ var }}
     {% endautoescape %}
     {{ var }}
-{% endautoescape %}
-{{ var }}`
+{% endautoescape %}`
         };
     }
 
     getExpected() {
         return `
-&lt;br /&gt;
-    &lt;br /&gt;
-            <br />
-                    &lt;br /&gt;
-                <br />
-        &lt;br /&gt;
-&lt;br /&gt;
+<br />
+            html: &lt;br /&gt;
+                    false: <br />
+                            html: &lt;br /&gt;
+                        false: <br />
+                html: &lt;br /&gt;
+        <br />
 `;
-    }
-    
-    getContext() {
-        return {
-            'var': '<br />'
-        };
-    }
-
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            autoEscapingStrategy: "html"
-        };
     }
 }
 

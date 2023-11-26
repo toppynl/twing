@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {TwingEnvironmentOptions} from "../../../../../src/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -22,12 +21,6 @@ class Test extends TestBase {
 
     getExpectedErrorMessage(): string {
         return 'TwingSandboxSecurityError: Function "range" is not allowed in "foo.twig" at line 2, column 5.';
-    }
-
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            autoEscapingStrategy: "html"
-        }
     }
 }
 

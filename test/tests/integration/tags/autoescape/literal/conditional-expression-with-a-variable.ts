@@ -4,30 +4,19 @@ runTest({
     description: '"autoescape" tag on conditional expression with a variable',
     templates: {
         "index.twig": `
+{% set br = "<br />" %}
 {% autoescape 'html' %}
-{{ true ? "<br />" : someVar }}
-{{ false ? "<br />" : someVar }}
-{{ true ? someVar : "<br />" }}
-{{ false ? someVar : "<br />" }}
-{{ "<br />" ?: someVar }}
-{{ someFalseVar ?: "<br />" }}
-{{ aaaa ?? "<br />" }}
-{{ "<br />" ?? someVar }}
+{{ true ? "<br />" : br }}
+{{ false ? "<br />" : br }}
+{{ "<br />" ?? br }}
+{{ br ?? "<br />" }}
 {% endautoescape %}
 `
     },
-    context: Promise.resolve({
-        someVar: '<br />',
-        someFalseVar: false
-    }),
     trimmedExpectation: `
 <br />
 &lt;br /&gt;
+<br />
 &lt;br /&gt;
-<br />
-<br />
-<br />
-<br />
-<br />
 `
 })
