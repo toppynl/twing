@@ -8,7 +8,6 @@ runTest({
     trimmedExpectation: `foo visited`,
     additionalNodeVisitors: [
         {
-            priority: 0,
             enterNode: (node) => {
                 return node;
             },

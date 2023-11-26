@@ -16,8 +16,7 @@ const createRemoveNodeToRemoveNodeVisitor = (
             }
 
             return node;
-        },
-        0
+        }
     );
 };
 

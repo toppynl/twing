@@ -46,7 +46,6 @@ import {getFilter} from "./helpers/get-filter";
 import {getTest as getTestByName} from "./helpers/get-test";
 import {createCoreNodeVisitor} from "./node-visitor/core";
 import {createEscaperNodeVisitor} from "./node-visitor/escaper";
-import {createMacroAutoImportNodeVisitor} from "./node-visitor/macro-auto-import";
 import {createSandboxNodeVisitor} from "./node-visitor/sandbox";
 import {createTestNode} from "./node/expression/call/test";
 import {positiveNodeType} from "./node/expression/unary/pos";
@@ -623,8 +622,7 @@ export const createParser = (
             createEscaperNodeVisitor(
                 filters,
                 functions
-            ),
-            createMacroAutoImportNodeVisitor(),
+            ), 
             createSandboxNodeVisitor()
         ]);
 
@@ -1219,7 +1217,7 @@ export const createParser = (
 
     const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode, prefixToken: Token) => {
         let token = stream.next();
-        let arg: TwingBaseExpressionNode;
+        let attribute: TwingBaseExpressionNode;
         let type: TwingGetAttributeCallType = "any";
 
         const {line, column} = token;
@@ -1240,8 +1238,8 @@ export const createParser = (
             let match = nameRegExp.exec(token.value);
 
             if ((token.type === "NAME") || (token.type === "NUMBER") || (token.type === "OPERATOR" && (match !== null))) {
-                arg = createConstantNode(token.value, line, column);
-
+                attribute = createConstantNode(token.value, line, column);
+                
                 if (stream.test("PUNCTUATION", '(')) {
                     type = "method";
 
@@ -1255,8 +1253,8 @@ export const createParser = (
                 throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.resolvedName);
             }
 
-            if ((node.is("name")) && getImportedTemplate(node.attributes.name)) {
-                const name = (arg as TwingConstantNode).attributes.value as string;
+            if ((node.is("name")) && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
+                const name = (attribute as TwingConstantNode<string>).attributes.value;
                 const methodCallNode = createMethodCallNode(node, name, createArrayNodeFromElements(), line, column);
 
                 return methodCallNode;
@@ -1269,9 +1267,9 @@ export const createParser = (
 
             if (stream.test("PUNCTUATION", ':')) {
                 slice = true;
-                arg = createConstantNode(0, token.line, token.column);
+                attribute = createConstantNode(0, token.line, token.column);
             } else {
-                arg = parseExpression(stream);
+                attribute = parseExpression(stream);
             }
 
             if (stream.nextIf("PUNCTUATION", ':')) {
@@ -1291,7 +1289,7 @@ export const createParser = (
                 const filterArguments = createArrayNode([
                     {
                         key: createConstantNode(0, line, column),
-                        value: arg
+                        value: attribute
                     },
                     {
                         key: createConstantNode(1, line, column),
@@ -1308,7 +1306,7 @@ export const createParser = (
             stream.expect("PUNCTUATION", ']');
         }
 
-        return createAttributeAccessorNode(node, arg, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn);
+        return createAttributeAccessorNode(node, attribute, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn);
     };
 
     const parseTestExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingBaseExpressionNode => {

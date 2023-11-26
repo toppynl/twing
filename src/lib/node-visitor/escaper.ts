@@ -240,7 +240,6 @@ export const createEscaperNodeVisitor = (
 
     return createNodeVisitor(
         enterNode,
-        leaveNode,
-        0
+        leaveNode
     );
 };

@@ -2,7 +2,7 @@ import {getChildren, getChildrenCount, TwingBaseNode} from "../../src/lib/node";
 
 const var_export = require('locutus/php/var/var_export');
 
-export const toString = (node: TwingBaseNode): string => {
+export const nodeToString = (node: TwingBaseNode): string => {
     const attributeRepresentations: Array<string> = [];
     const {line, column} = node;
 
@@ -14,7 +14,7 @@ export const toString = (node: TwingBaseNode): string => {
     };
 
     for (const [name, value] of Object.entries(node.attributes)) {
-        const attributeRepresentation = isANode(value) ? value.toString() : String(var_export(value, true));
+        const attributeRepresentation = isANode(value) ? nodeToString(value) : String(var_export(value, true));
         attributeRepresentations.push(`${name}: ${attributeRepresentation.replace(/\n/g, '')}`);
     }
 
@@ -30,7 +30,7 @@ export const toString = (node: TwingBaseNode): string => {
             const length = ('' + name).length + 4;
             const nodeRepresentation: Array<string> = [];
 
-            for (let line of child.toString().split('\n')) {
+            for (let line of nodeToString(child).split('\n')) {
                 nodeRepresentation.push(' '.repeat(length) + line);
             }
 

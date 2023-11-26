@@ -156,7 +156,6 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
             }
 
             return node;
-        },
-        priority: 0
+        }
     };
 };
