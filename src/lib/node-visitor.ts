@@ -18,15 +18,6 @@ export interface TwingNodeVisitor {
      * @return {TwingBaseNode} The modified node or null if the node must be removed from its parent
      */
     leaveNode(node: TwingBaseNode): TwingBaseNode | null;
-
-    /**
-     * Returns the priority for this visitor.
-     *
-     * Priority should be between -10 and 10 (0 is the default).
-     *
-     * @return int The priority level
-     */
-    readonly priority: number;
 }
 
 /**
@@ -34,14 +25,10 @@ export interface TwingNodeVisitor {
  */
 export const createNodeVisitor = (
     enterNode: (node: TwingBaseNode) => TwingNode,
-    leaveNode: (node: TwingBaseNode) => TwingNode | null,
-    priority: number
+    leaveNode: (node: TwingBaseNode) => TwingNode | null
 ): TwingNodeVisitor => {
     return {
         enterNode,
-        leaveNode,
-        get priority() {
-            return priority;
-        }
+        leaveNode
     };
 };

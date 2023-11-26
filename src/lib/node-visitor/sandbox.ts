@@ -112,7 +112,6 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
 
     return createNodeVisitor(
         enterNode,
-        leaveNode,
-        0
+        leaveNode   
     );
 };

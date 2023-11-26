@@ -1,9 +1,6 @@
 import {TwingNodeVisitor} from "./node-visitor";
 import {TwingBaseNode, getChildren, TwingNode} from "./node";
 
-import {ksort} from "./helpers/ksort";
-import {push} from "./helpers/push";
-
 /**
  * TwingNodeTraverser is a node traverser.
  *
@@ -14,20 +11,6 @@ export type TwingNodeTraverser = (node: TwingBaseNode) => TwingBaseNode | null;
 export const createNodeTraverser = (
     visitors: Array<TwingNodeVisitor>
 ): TwingNodeTraverser => {
-    const visitorsByPriority: Map<number, Map<string, TwingNodeVisitor>> = new Map();
-
-    for (const visitor of visitors) {
-        let visitors = visitorsByPriority.get(visitor.priority);
-
-        if (!visitors) {
-            visitors = new Map();
-
-            visitorsByPriority.set(visitor.priority, visitors);
-        }
-
-        push(visitors, visitor);
-    }
-    
     const traverseWithVisitor = (visitor: TwingNodeVisitor, node: TwingBaseNode) => {
         node = visitor.enterNode(node);
 
@@ -48,13 +31,9 @@ export const createNodeTraverser = (
 
     return (node) => {
         let result: TwingNode | null = node;
-
-        ksort(visitorsByPriority);
-
-        for (const [, visitors] of visitorsByPriority) {
-            for (const [, visitor] of visitors) {
-                result = traverseWithVisitor(visitor, node);
-            }
+        
+        for (const visitor of visitors) {
+            result = traverseWithVisitor(visitor, node);
         }
 
         return result;
