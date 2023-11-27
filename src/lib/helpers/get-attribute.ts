@@ -5,9 +5,8 @@ import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
 import type {TwingGetAttributeCallType} from "../node/expression/attribute-accessor";
 import {TwingEnvironment} from "../environment";
+import {isBoolean, isFloat} from "./php";
 
-const isBool = require('locutus/php/var/is_bool');
-const isFloat = require('locutus/php/var/is_float');
 const isObject = require('isobject');
 
 /**
@@ -46,7 +45,7 @@ export const getAttribute = (
         if (type !== "method") {
             let arrayItem;
 
-            if (isBool(attribute)) {
+            if (isBoolean(attribute)) {
                 arrayItem = attribute ? 1 : 0;
             } else if (isFloat(attribute)) {
                 arrayItem = parseInt(attribute);

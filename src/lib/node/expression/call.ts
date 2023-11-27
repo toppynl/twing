@@ -181,7 +181,7 @@ export const createBaseCallNode = <Type extends CallType>(
                 case "function":
                     callableWrapper = getFunction(environment.functions, operatorName);
                     break;
-                
+
                 // for some reason, using `case "test"` makes the compiler assume that callableWrapper is used
                 // before it is assigned a value; this is probably a bug of the compiler
                 default:
