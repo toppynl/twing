@@ -315,7 +315,10 @@ export const createTemplate = (
                     if (handler) {
                         return handler(outputBuffer, sourceMapRuntime, ...args);
                     } else {
-                        throw createRuntimeError(`Macro "${name}" is not defined in template "${template.templateName}".`, {line, column}, templateName);
+                        throw createRuntimeError(`Macro "${name}" is not defined in template "${template.templateName}".`, {
+                            line,
+                            column
+                        }, templateName);
                     }
                 });
         },
@@ -343,7 +346,7 @@ export const createTemplate = (
                                 return parent.displayBlock(name, context, outputBuffer, mergeIterables(ownBlocks, blocks), false, sourceMapRuntime);
                             } else {
                                 const block = blocks.get(name);
-                                
+
                                 if (block) {
                                     const [blockTemplate] = block!;
 
@@ -437,7 +440,10 @@ export const createTemplate = (
                                 error.source = templateName;
                             }
                         } else {
-                            throw createRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, {line, column}, templateName, error);
+                            throw createRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, {
+                                line,
+                                column
+                            }, templateName, error);
                         }
 
                         throw error;
@@ -472,7 +478,7 @@ export const createTemplate = (
                         if (!traitBlock) {
                             throw createRuntimeError(`Block "${key}" is not defined in trait "${templateName}".`, templateNameNode, template.templateName);
                         }
-                        
+
                         const targetValue = target.attributes.value;
 
                         traitBlocks.set(targetValue, traitBlock);
@@ -570,10 +576,9 @@ export const createTemplate = (
                 actualOutputBuffer,
                 undefined,
                 sourceMapRuntime
-            )
-                .then(() => {
-                    return actualOutputBuffer.getContents();
-                });
+            ).then(() => {
+                return actualOutputBuffer.getAndFlush();
+            });
         },
         renderBlock: (name, context, outputBuffer, blocks, useBlocks, sourceMapRuntime) => {
             outputBuffer.start();

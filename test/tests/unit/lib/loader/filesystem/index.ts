@@ -300,7 +300,7 @@ tape('loader filesystem', ({test}) => {
             const loader = createFilesystemLoader(filesystem, fixturesPath);
 
             const readFileStub = stub(filesystem, "readFile").callsFake((_path, callback) => {
-                callback('I am Error');
+                callback(new Error('I am Error'), null);
             });
 
             try {
@@ -308,7 +308,7 @@ tape('loader filesystem', ({test}) => {
 
                 fail();
             } catch (error) {
-                same(error, 'I am Error');
+                same((error as Error).message, 'I am Error');
             }
 
             readFileStub.restore();
@@ -322,7 +322,7 @@ tape('loader filesystem', ({test}) => {
             const loader = createFilesystemLoader(filesystem, fixturesPath);
 
             const statStub = stub(filesystem, "stat").callsFake((_path, callback) => {
-                callback('I am Error');
+                callback(new Error('I am Error'), null);
             });
 
             same(await loader.getSourceContext('named_one/index.html', null), null);

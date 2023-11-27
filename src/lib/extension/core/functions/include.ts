@@ -93,7 +93,7 @@ export function include(
             return promise.then(() => {
                 const result = outputBuffer.getAndClean();
 
-                return createMarkup(result);
+                return createMarkup(result, environment.charset);
             });
         })
         .finally(() => {
