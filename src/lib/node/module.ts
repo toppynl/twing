@@ -262,7 +262,7 @@ export class TwingNodeModule extends TwingNode {
             let parent = this.getNode('parent');
 
             compiler
-                .write("doGetParent(context) {\n")
+                .write("async doGetParent(context) {\n")
                 .indent()
                 .write('return this.loadTemplate(')
                 .subcompile(parent)
