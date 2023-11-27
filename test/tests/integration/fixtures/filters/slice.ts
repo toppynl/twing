@@ -45,7 +45,8 @@ export default class extends TestBase {
 
 {{ arr|slice(3)|join('') }}
 {{ arr[2:]|join('') }}
-{{ xml|slice(1)|join('')}}`
+{{ xml|slice(1)|join('')}}
+{{ [1, 2, 3, 4]|slice(1, -1)|join('') }}`
         };
     }
 
@@ -75,6 +76,7 @@ bc
 4
 34
 2
+23
 `;
     }
 
