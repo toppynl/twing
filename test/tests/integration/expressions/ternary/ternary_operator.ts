@@ -19,9 +19,6 @@ NO1
 foo<br />
 foo-bar
 `,
-    environmentOptions: {
-        autoEscapingStrategy: null
-    },
     context: Promise.resolve({
         foo: 'foo',
         bar: 'bar'

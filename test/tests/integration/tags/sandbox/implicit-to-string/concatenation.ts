@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../../../TestBase";
 import {createIntegrationTest} from "../../../test";
-import {TwingEnvironmentOptions} from "../../../../../../src/lib/environment";
 
 export class Basic extends TestBase {
     getDescription() {
@@ -20,13 +19,7 @@ export class Basic extends TestBase {
     getExpectedErrorMessage() {
         return 'TwingSandboxSecurityError: Calling "toString" method on an instance of Object is not allowed in "foo.twig" at line 2, column 8.';
     }
-
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            autoEscapingStrategy: "html"
-        }
-    }
-
+    
     getContext() {
         return {
             article: {

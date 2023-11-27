@@ -1,26 +1,25 @@
-import {TwingBaseNode, TwingBaseNodeAttributes} from "../../node";
+import {TwingBaseNodeAttributes} from "../../node";
 import {TwingBaseExpressionNode, createBaseExpressionNode} from "../expression";
+import {TwingBaseOutputNode} from "../output";
 
 export interface TwingEscapeNodeAttributes extends TwingBaseNodeAttributes {
-    strategy: string | true;
+    strategy: string;
 }
 
 export interface TwingEscapeNode extends TwingBaseExpressionNode<"escape", TwingEscapeNodeAttributes, {
-    body: TwingBaseNode;
+    body: TwingBaseOutputNode<any>;
 }> {
 }
 
 export const createEscapeNode = (
-    body: TwingBaseNode,
-    strategy: string | true,
-    line: number,
-    column: number
+    body: TwingBaseOutputNode<any>,
+    strategy: string
 ): TwingEscapeNode => {
     const baseNode = createBaseExpressionNode("escape", {
         strategy
     }, {
         body
-    }, line, column);
+    }, body.line, body.column);
 
     const node: TwingEscapeNode = {
         ...baseNode,
@@ -29,7 +28,7 @@ export const createEscapeNode = (
             const {environment} = template;
             const {strategy} = node.attributes;
             const {body} = node.children;
-
+            
             return body.execute(...args)
                 .then((value) => {
                     const escape = template.getTraceableMethod(environment.escape, node.line, node.column, template.templateName);

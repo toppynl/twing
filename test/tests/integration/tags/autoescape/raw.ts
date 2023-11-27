@@ -9,6 +9,7 @@ class Test extends TestBase {
     getTemplates() {
         return {
             'index.twig': `
+{% set var = "<br/>" %}
 {% autoescape 'html' %}
 {{ var|raw }}
 {% endautoescape %}`
@@ -17,15 +18,8 @@ class Test extends TestBase {
 
     getExpected() {
         return `
-<br />
+<br/>
 `;
-    }
-
-
-    getContext() {
-        return {
-            'var': '<br />'
-        };
     }
 }
 

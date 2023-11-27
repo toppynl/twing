@@ -53,7 +53,7 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
 
             if (node.is("print")) {
                 shouldWrap = true;
-                wrapNode(node, "expr");
+                wrapNode(node, "expression");
             }
 
             if (node.is("set")) {

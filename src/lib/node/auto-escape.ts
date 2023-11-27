@@ -1,29 +1,31 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {EscapingStrategy} from "../escaping-strategy";
+
+export const autoEscapeNodeType = "auto_escape";
 
 export type TwingAutoEscapeNodeAttributes = TwingBaseNodeAttributes & {
-    strategy: string | true | null;
+    strategy: EscapingStrategy | string | false;
 }
 
-export interface TwingAutoEscapeNode extends TwingBaseNode<"auto_escape", TwingAutoEscapeNodeAttributes, {
+export interface TwingAutoEscapeNode extends TwingBaseNode<typeof autoEscapeNodeType, TwingAutoEscapeNodeAttributes, {
     body: TwingBaseNode;
 }> {
 }
 
 export const createAutoEscapeNode = (
-    strategy: string | true | null,
+    strategy: EscapingStrategy | string | false,
     body: TwingBaseNode,
     line: number,
     column: number,
     tag: string
 ): TwingAutoEscapeNode => {
-    const baseNode = createBaseNode("auto_escape", {
+    const baseNode = createBaseNode(autoEscapeNodeType, {
         strategy
     }, {
         body
     }, line, column, tag);
 
     return {
-        ...baseNode,
-        // execute: baseNode.children.body.execute
+        ...baseNode
     };
 };

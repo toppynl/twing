@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {TwingEnvironmentOptions} from "../../../../../src/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -22,12 +21,6 @@ string(3) "foo"
 string(3) "foo"
 string(3) "bar"
 `;
-    }
-
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            autoEscapingStrategy: "html"
-        }
     }
 
     getContext() {

@@ -61,8 +61,8 @@ export type {TwingTraitNode} from "./lib/node/trait";
 export type {TwingWithNode} from "./lib/node/with";
 
 export {createApplyNode, applyNodeType} from "./lib/node/apply";
-export {createAutoEscapeNode} from "./lib/node/auto-escape";
-export {createBlockNode} from "./lib/node/block";
+export {createAutoEscapeNode, autoEscapeNodeType} from "./lib/node/auto-escape";
+export {createBlockNode, blockNodeType} from "./lib/node/block";
 export {createBodyNode} from "./lib/node/body";
 export {createCheckSecurityNode} from "./lib/node/check-security";
 export {createCheckToStringNode} from "./lib/node/check-to-string";
@@ -106,7 +106,7 @@ export {createArrowFunctionNode} from "./lib/node/expression/arrow-function";
 export {createAssignmentNode, assignmentNodeType} from "./lib/node/expression/assignment";
 export {createAttributeAccessorNode} from "./lib/node/expression/attribute-accessor";
 export {createBaseBinaryNode} from "./lib/node/expression/binary";
-export {createBlockFunctionNode} from "./lib/node/expression/block-function";
+export {createBlockFunctionNode, blockFunctionNodeType} from "./lib/node/expression/block-function";
 export {createBaseCallNode} from "./lib/node/expression/call";
 export {createBaseConditionalNode, createConditionalNode, conditionalNodeType} from "./lib/node/expression/conditional";
 export {createConstantNode} from "./lib/node/expression/constant";
@@ -198,14 +198,12 @@ export {createIncludeNode, includeNodeType} from "./lib/node/include/include";
 
 // node/output
 export type {TwingBlockReferenceNode} from "./lib/node/output/block-reference";
-export type {TwingInlinePrintNode} from "./lib/node/output/inline-print";
 export type {TwingPrintNode} from "./lib/node/output/print";
 export type {TwingSpacelessNode} from "./lib/node/output/spaceless";
 export type {TwingTextNode} from "./lib/node/output/text";
 export type {TwingVerbatimNode} from "./lib/node/output/verbatim";
 
 export {createBlockReferenceNode, blockReferenceType} from "./lib/node/output/block-reference";
-export {createInlinePrintNode, inlinePrintNodeType} from "./lib/node/output/inline-print";
 export {createPrintNode, printNodeType} from "./lib/node/output/print";
 export {createSpacelessNode, spacelessNodeType} from "./lib/node/output/spaceless";
 export {createTextNode, textNodeType} from "./lib/node/output/text";

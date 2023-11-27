@@ -1,16 +1,9 @@
 import TestBase, {runTest} from "../TestBase";
 import {createIntegrationTest} from "../test";
-import {TwingEnvironmentOptions} from "../../../../src/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
         return 'Twing supports string interpolation';
-    }
-
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            autoEscapingStrategy: null
-        };
     }
 
     getTemplates() {

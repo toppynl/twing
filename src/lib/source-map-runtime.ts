@@ -1,7 +1,7 @@
 import {TwingSource} from "./source";
 import {TwingOutputBuffer} from "./output-buffer";
 import {isAbsolute, relative} from "path";
-import {SourceNode} from "source-map";
+import {RawSourceMap, SourceNode} from "source-map";
 
 /**
  * source-map@0.6 definitions are wrong and source-map@0.7 has a bug that prevents it
@@ -14,8 +14,8 @@ type TwingSourceNode = SourceNode & {
 };
 
 export interface TwingSourceMapRuntime {
-    readonly sourceNode: TwingSourceNode;
-    
+    readonly sourceMap: RawSourceMap;
+
     /**
      * @param {number} line 0-based
      * @param {number} column 1-based
@@ -32,10 +32,12 @@ export const createSourceMapRuntime = (): TwingSourceMapRuntime => {
     let stack: Array<TwingSourceNode> = [
         new SourceNode() as TwingSourceNode
     ];
-    
+
     return {
-        get sourceNode() {
-            return stack[0];  
+        get sourceMap() {
+            const {map} = stack[0].toStringWithSourceMap();
+
+            return JSON.parse(map.toString());
         },
         enterSourceMapBlock: (line, column, nodeType, source, outputBuffer) => {
             outputBuffer.start();
@@ -45,7 +47,7 @@ export const createSourceMapRuntime = (): TwingSourceMapRuntime => {
             if (isAbsolute(sourceName)) {
                 sourceName = relative('.', sourceName);
             }
-            
+
             const node = new SourceNode(line, column - 1, sourceName, '', nodeType) as TwingSourceNode;
 
             stack[0].setSourceContent(sourceName, source.code);
@@ -55,11 +57,11 @@ export const createSourceMapRuntime = (): TwingSourceMapRuntime => {
         leaveSourceMapBlock: (outputBuffer: TwingOutputBuffer) => {
             const sourceNode = stack.pop()!;
             const content = outputBuffer.getAndFlush();
-            
+
             if (sourceNode.children.length === 0) {
                 sourceNode.add(content);
             }
-            
+
             stack[stack.length - 1].add(sourceNode);
         }
     };

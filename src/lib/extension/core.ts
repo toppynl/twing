@@ -109,7 +109,6 @@ import {createLineTagHandler} from "../tag-handler/line";
 import {createSandboxTagHandler} from "../tag-handler/sandbox";
 import {createDoTagHandler} from "../tag-handler/do";
 import {createFlushTagHandler} from "../tag-handler/flush";
-import {getChildren, getChildrenCount} from "../node";
 import {isDefined} from "./core/tests/is-defined";
 import {isConstant} from "./core/tests/is-constant";
 
@@ -127,22 +126,7 @@ export const createCoreExtension = (): TwingExtension => {
                         defaultValue: null
                     }
                 ], {
-                    needs_template: true,
-                    is_safe_callback: (argumentsNode) => {
-                        if (getChildrenCount(argumentsNode) > 0) {
-                            let result: Array<string> = [];
-
-                            for (const [, child] of getChildren(argumentsNode)) {
-                                if (child.is("constant")) {
-                                    result = [child.attributes.value as string];
-                                }
-                            }
-
-                            return result;
-                        } else {
-                            return ['html'];
-                        }
-                    }
+                    needs_template: true
                 });
             });
 
@@ -175,10 +159,7 @@ export const createCoreExtension = (): TwingExtension => {
                     {
                         name: 'from'
                     }
-                ], {
-                    pre_escape: 'html',
-                    is_safe: ['html']
-                }),
+                ]),
                 createFilter('date', date, [
                     {
                         name: 'format',
@@ -247,10 +228,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'source'
                     }
                 ]),
-                createFilter('nl2br', nl2br, [], {
-                    pre_escape: 'html',
-                    is_safe: ['html']
-                }),
+                createFilter('nl2br', nl2br, []),
                 createFilter('number_format', numberFormat, [
                     {
                         name: 'decimal',
@@ -267,9 +245,7 @@ export const createCoreExtension = (): TwingExtension => {
                 ], {
                     needs_template: true
                 }),
-                createFilter('raw', raw, [], {
-                    is_safe: ['all']
-                }),
+                createFilter('raw', raw, []),
                 createFilter('reduce', reduce, [
                     {
                         name: 'arrow'
@@ -314,9 +290,7 @@ export const createCoreExtension = (): TwingExtension => {
                     }
                 ]),
                 createFilter('sort', sort, []),
-                createFilter('spaceless', spaceless, [], {
-                    is_safe: ['html']
-                }),
+                createFilter('spaceless', spaceless, []),
                 createFilter('split', split, [
                     {
                         name: 'delimiter'
@@ -376,7 +350,6 @@ export const createCoreExtension = (): TwingExtension => {
                     needs_template: true
                 }),
                 createFunction('dump', dump, [], {
-                    is_safe: ['html'],
                     needs_context: true,
                     is_variadic: true
                 }),
@@ -404,8 +377,7 @@ export const createCoreExtension = (): TwingExtension => {
                     needs_template: true,
                     needs_context: true,
                     needs_output_buffer: true,
-                    needs_source_map_runtime: true,
-                    is_safe: ['all']
+                    needs_source_map_runtime: true
                 }),
                 createFunction('max', max, [], {
                     is_variadic: true
@@ -446,8 +418,7 @@ export const createCoreExtension = (): TwingExtension => {
                         defaultValue: false
                     }
                 ], {
-                    needs_template: true,
-                    is_safe: ['all']
+                    needs_template: true
                 }),
                 createFunction('template_from_string', templateFromString, [
                     {

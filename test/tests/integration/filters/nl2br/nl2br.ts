@@ -9,6 +9,8 @@ class Test extends TestBase {
     getTemplates() {
         return {
             'index.twig': `
+{% set text %}If you have some <strong>HTML</strong>
+it will be escaped.{% endset %}
 {{ "I like Twig.\\nYou will like it too.\\n\\nEverybody like it!"|nl2br }}
 {{ text|nl2br }}`
         };
@@ -20,7 +22,7 @@ I like Twig.<br />
 You will like it too.<br />
 <br />
 Everybody like it!
-If you have some &lt;strong&gt;HTML&lt;/strong&gt;<br />
+If you have some <strong>HTML</strong><br />
 it will be escaped.`;
     }
 

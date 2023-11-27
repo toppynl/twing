@@ -1,6 +1,4 @@
 import type {TwingRuntimeError} from "./error/runtime";
-import type {TwingArrayNode} from "./node/expression/array";
-import {Safe} from "./node-visitor/escaper";
 
 export type TwingCallable<R = any> = (...args: any[]) => Promise<R>;
 
@@ -15,8 +13,6 @@ export type TwingCallableWrapperOptions = {
     needs_output_buffer?: boolean;
     needs_source_map_runtime?: boolean;
     is_variadic?: boolean;
-    is_safe?: Array<any>;
-    is_safe_callback?: (argumentsNode: TwingArrayNode) => Safe;
     deprecated?: boolean | string;
     alternative?: string;
 }
@@ -39,9 +35,7 @@ export interface TwingCallableWrapper<Callable extends TwingCallable> {
     readonly needsOutputBuffer: boolean;
     readonly needsSourceMapRuntime: boolean;
     readonly needsTemplate: boolean;
-
-    getSafe(argumentsNode: TwingArrayNode): Safe;
-
+    
     getTraceableCallable(line: number, column: number, source: string): Callable;
 }
 
@@ -92,17 +86,6 @@ export const createCallableWrapper = <Callable extends TwingCallable>(
         },
         get needsTemplate() {
             return options.needs_template || false;
-        },
-        getSafe: (functionArgs) => {
-            if (options.is_safe) {
-                return options.is_safe;
-            }
-
-            if (options.is_safe_callback) {
-                return options.is_safe_callback(functionArgs);
-            }
-
-            return [];
         },
         getTraceableCallable: (line, column, source) => {
             return ((...args) => {

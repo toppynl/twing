@@ -1,6 +1,6 @@
 import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
 
-export const parentFunctionNodeType = "parent";
+export const parentFunctionNodeType = "parent_function";
 
 export type ParentNodeAttributes = TwingBaseExpressionNodeAttributes & {
     name: string;

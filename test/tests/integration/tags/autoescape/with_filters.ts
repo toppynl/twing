@@ -9,32 +9,24 @@ class Test extends TestBase {
     getTemplates() {
         return {
             'index.twig': `
+{% set var %}<Fabien>
+Twig{% endset %}
 {% autoescape 'html' %}
-8. Escape if last filter is not an escaper
-( the output of |format is "<b>" ~ var ~ "</b>",
-  |raw is redundant,
-  the output is auto-escaped )
+{{ "<b>%s</b>"|raw }}
 {{ "<b>%s</b>"|raw|format(var) }}
+{{ "<b>%s</b>"|raw|format(var)|raw }}
 {% endautoescape %}`
         };
     }
 
     getExpected() {
         return `
-8. Escape if last filter is not an escaper
-( the output of |format is "<b>" ~ var ~ "</b>",
-  |raw is redundant,
-  the output is auto-escaped )
+<b>%s</b>
 &lt;b&gt;&lt;Fabien&gt;
 Twig&lt;/b&gt;
+<b><Fabien>
+Twig</b>
 `;
-    }
-
-
-    getContext() {
-        return {
-            'var': `<Fabien>\nTwig`
-        };
     }
 }
 

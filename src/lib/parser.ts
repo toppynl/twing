@@ -45,11 +45,11 @@ import {getFunction} from "./helpers/get-function";
 import {getFilter} from "./helpers/get-filter";
 import {getTest as getTestByName} from "./helpers/get-test";
 import {createCoreNodeVisitor} from "./node-visitor/core";
-import {createEscaperNodeVisitor} from "./node-visitor/escaper";
 import {createSandboxNodeVisitor} from "./node-visitor/sandbox";
 import {createTestNode} from "./node/expression/call/test";
 import {positiveNodeType} from "./node/expression/unary/pos";
 import {negativeNodeType} from "./node/expression/unary/neg";
+import {createEscaperNodeVisitor} from "./node-visitor/escaper";
 
 const nameRegExp = new RegExp(namePattern);
 
@@ -619,10 +619,7 @@ export const createParser = (
         // core visitors
         traverse = createNodeTraverser([
             createCoreNodeVisitor(),
-            createEscaperNodeVisitor(
-                filters,
-                functions
-            ), 
+            createEscaperNodeVisitor(), // todo: move to core?
             createSandboxNodeVisitor()
         ]);
 

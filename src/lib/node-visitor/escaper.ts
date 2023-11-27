@@ -1,113 +1,62 @@
 import {TwingBaseNode} from "../node";
-import {filterNodeType, TwingFilterNode} from "../node/expression/call/filter";
 import {createPrintNode, TwingPrintNode} from "../node/output/print";
 import {createDoNode} from "../node/do";
-import {TwingConditionalNode, createConditionalNode} from "../node/expression/conditional";
-import {createInlinePrintNode, TwingInlinePrintNode} from "../node/output/inline-print";
+import {TwingConditionalNode, createConditionalNode, conditionalNodeType} from "../node/expression/conditional";
 import {createEscapeNode, TwingEscapeNode} from "../node/expression/escape";
 import {createNodeVisitor, TwingNodeVisitor} from "../node-visitor";
-import {TwingFilter} from "../filter";
-import {TwingFunction} from "../function";
-import {getFilter} from "../helpers/get-filter";
-import {getFunction} from "../helpers/get-function";
-import {functionNodeType} from "../node/expression/call/function";
+import {autoEscapeNodeType} from "../node/auto-escape";
+import {blockFunctionNodeType} from "../node/expression/block-function";
+import {methodCallNodeType} from "../node/expression/method-call";
+import {parentFunctionNodeType} from "../node/expression/parent-function";
 
-export type SafeEntry = "all" | string | boolean;
-export type Safe = Array<SafeEntry>;
-type Type = SafeEntry;
+export const createEscaperNodeVisitor = (): TwingNodeVisitor => {
+    const safes: Map<TwingBaseNode, boolean> = new Map();
+    const statusStack: Array<string | false> = [];
 
-export const createEscaperNodeVisitor = (
-    filters: Map<string, TwingFilter>,
-    functions: Map<string, TwingFunction>
-): TwingNodeVisitor => {
-    const safes: Map<TwingBaseNode, Safe> = new Map();
-    const statusStack: Array<Type> = [];
+    let blocks: Map<string, string | false> = new Map();
 
-    let blocks: Map<string, Type> = new Map();
-
-    const analyze = (node: TwingBaseNode): Safe => {
-        let safe = safes.get(node);
-
-        if (safe === undefined) {
+    const analyze = (node: TwingBaseNode): boolean => {
+        let isSafe = safes.get(node);
+        
+        if (isSafe === undefined) {
             if (node.is("constant")) {
                 // constants are safe by definition
-                safe = ['all'];
-            } else if (node.is("block_reference_expression")) {
-                // blocks are safe by definition
-                safe = ['all'];
-            } else if (node.is("parent")) {
-                // parent block is safe by definition
-                safe = ['all'];
-            } else if (node.is("conditional")) {
+                isSafe = true;
+            } else if (node.is(blockFunctionNodeType)) {
+                // blocks function is safe by definition
+                isSafe = true;
+            } else if (node.is(parentFunctionNodeType)) {
+                // parent function is safe by definition
+                isSafe = true;
+            } else if (node.is(conditionalNodeType)) {
                 // intersect safeness of both operands
                 const {expr2, expr3} = node.children;
 
-                safe = intersectSafe(analyze(expr2), analyze(expr3));
-            } else if (node.is(filterNodeType)) {
-                // filter expression is safe when the filter is safe
-                const {arguments: callArguments} = node.children;
-                const {operatorName} = node.attributes;
-                const {operand} = node.children;
-                const filter = getFilter(filters, operatorName);
-
-                if (filter) {
-                    safe = filter.getSafe(callArguments);
-                    
-                    if (safe && (safe.length < 1)) {
-                        safe = intersectSafe(analyze(operand!), filter.preservesSafety);
-                    }
-                } else {
-                    safe = [];
-                }
-            } else if (node.is(functionNodeType)) {
-                // function expression is safe when the function is safe
-                const {operatorName} = node.attributes;
-                const {arguments: callArguments} = node.children;
-                const twingFunction = getFunction(functions, operatorName);
-
-                if (twingFunction) {
-                    safe = twingFunction.getSafe(callArguments);
-                } else {
-                    safe = [];
-                }
-            } else if (node.is("method_call")) {
-                safe = ['all'];
+                isSafe = intersectSafe(analyze(expr2), analyze(expr3));
             } else {
-                safe = [];
+                isSafe = node.is(methodCallNodeType);
             }
 
-            safes.set(node, safe);
-        }
-
-        return safe;
-    };
-
-    const intersectSafe = (a: Safe, b: Safe): Safe => {
-        if (a.includes('all')) {
-            return b;
-        }
-
-        if (b.includes('all')) {
-            return a;
+            safes.set(node, isSafe);
         }
         
-        return a.filter((safeEntry) => {
-            return b.includes(safeEntry);
-        });
+        return isSafe;
     };
 
-    const needEscaping = (): Type | true => {
+    const intersectSafe = (a: boolean, b: boolean): boolean => {
+        return a && b;
+    };
+
+    const needEscaping = (): string | false => {
         if (statusStack.length) {
             return statusStack[statusStack.length - 1];
         }
 
-        return true;
+        return false;
     };
 
-    const getEscapeNode = (type: string | true, node: TwingBaseNode): TwingEscapeNode => {
-        const {line, column} = node;
-        
-        return createEscapeNode(node, type, line, column);
+    const getEscapeNode = (type: string, node: TwingBaseNode): TwingEscapeNode => {
+        return createEscapeNode(node, type);
     };
 
     const enterNode: TwingNodeVisitor["enterNode"] = (node) => {
@@ -116,7 +65,7 @@ export const createEscaperNodeVisitor = (
         } else if (node.is("auto_escape")) {
             const {strategy} = node.attributes;
 
-            statusStack.push(strategy === true ? "html" : (strategy === null ? false : strategy));
+            statusStack.push(strategy);
         } else if (node.is("block")) {
             const blockStatus = blocks.get(node.attributes.name);
 
@@ -129,24 +78,26 @@ export const createEscaperNodeVisitor = (
     const leaveNode: TwingNodeVisitor["leaveNode"] = (node) => {
         if (node.type === "module") {
             blocks = new Map();
-        } else if (node.is(filterNodeType)) {
-            return preEscapeFilterNode(node);
         } else if (node.is("print")) {
             const type = needEscaping();
             
             if (type !== false) {
-                const {expr: expression} = node.children;
-                
-                if (expression.is("conditional") && shouldUnwrapConditional(expression, type)) {
+                const {expression} = node.children;
+
+                if (expression.is("conditional") && shouldUnwrapConditional(expression)) {
                     return createDoNode(unwrapConditional(expression, type), expression.line, expression.column, null);
                 }
-
+                
                 return escapePrintNode(node, type);
             }
         }
 
         if (node.is("auto_escape") || node.is("block")) {
             statusStack.pop();
+            
+            if (node.is(autoEscapeNodeType)) {
+                return node.children.body;
+            }
         } else if (node.is("block_reference")) {
             blocks.set(node.attributes.name, needEscaping());
         }
@@ -154,88 +105,62 @@ export const createEscaperNodeVisitor = (
         return node;
     };
 
-    const shouldUnwrapConditional = (expression: TwingConditionalNode, type: Type) => {
+    const shouldUnwrapConditional = (expression: TwingConditionalNode) => {
         const {expr2, expr3} = expression.children;
-        
-        const expr2IsSafe = isSafeFor(type, expr2);
-        const expr3IsSafe = isSafeFor(type, expr3);
-        
+
+        const expr2IsSafe = isSafe(expr2);
+        const expr3IsSafe = isSafe(expr3);
+
         return expr2IsSafe !== expr3IsSafe;
     };
 
-    const unwrapConditional = (expression: TwingConditionalNode, type: string | true): TwingConditionalNode => {
+    const unwrapConditional = (expression: TwingConditionalNode, type: string): TwingConditionalNode => {
         // convert "echo a ? b : c" to "a ? echo b : echo c" recursively
         let {expr1, expr2, expr3} = expression.children;
-        
-        if (expr2.is("conditional") && shouldUnwrapConditional(expr2, type)) {
+
+        const wrapPrintNodeExpression = (node: TwingPrintNode): TwingPrintNode => {
+            const {expression} = node.children;
+
+            if (isSafe(expression)) {
+                return node;
+            }
+
+            return createPrintNode(getEscapeNode(type, expression), node.line, node.column);
+        };
+
+        if (expr2.is("conditional") && shouldUnwrapConditional(expr2)) {
             expr2 = unwrapConditional(expr2, type);
         } else {
-            expr2 = escapeInlinePrintNode(createInlinePrintNode(expr2, expr2.line, expr2.column), type);
+            expr2 = wrapPrintNodeExpression(createPrintNode(expr2, expr2.line, expr2.column));
         }
 
-        if (expr3.is("conditional") && shouldUnwrapConditional(expr3, type)) {
+        if (expr3.is("conditional") && shouldUnwrapConditional(expr3)) {
             expr3 = unwrapConditional(expr3, type);
         } else {
-            expr3 = escapeInlinePrintNode(createInlinePrintNode(expr3, expr3.line, expr3.column), type);
+            expr3 = wrapPrintNodeExpression(createPrintNode(expr3, expr3.line, expr3.column));
         }
 
         return createConditionalNode(expr1, expr2, expr3, expression.line, expression.column);
     };
 
-    const escapeInlinePrintNode = (node: TwingInlinePrintNode, type: string | true): TwingInlinePrintNode => {
-        const expression = node.children.node;
-
-        if (isSafeFor(type, expression)) {
-            return node;
-        }
-
-        return createInlinePrintNode(getEscapeNode(type, expression), node.line, node.column);
-    };
-
-    const escapePrintNode = (node: TwingPrintNode, type: string | true) => {
-        const expression = node.children.expr;
-
-        if (isSafeFor(type, expression)) {
+    const escapePrintNode = (node: TwingPrintNode, type: string) => {
+        const {expression} = node.children;
+        
+        if (isSafe(expression)) {
             return node;
         }
 
         return createPrintNode(getEscapeNode(type, expression), node.line, node.column);
     };
-
-    const preEscapeFilterNode = (filterNode: TwingFilterNode) => {
-        const name = filterNode.attributes.operatorName;
-
-        const filter = getFilter(filters, name);
-
-        if (!filter) {
-            return filterNode;
-        }
-
-        const type = filter.preEscape;
-
-        if (type === null) {
-            return filterNode;
-        }
-
-        const operand = filterNode.children.operand;
-
-        if (isSafeFor(type, operand!)) {
-            return filterNode;
-        }
-
-        filterNode.children.operand = getEscapeNode(type, operand!);
-
-        return filterNode;
-    };
-
-    const isSafeFor = (type: Type, expression: TwingBaseNode): boolean => {
+    
+    const isSafe = (expression: TwingBaseNode): boolean => {
         let safe = safes.get(expression);
 
         if (safe === undefined) {
             safe = analyze(expression);
         }
 
-        return safe.includes(type) || safe.includes('all');
+        return safe;
     }
 
     return createNodeVisitor(

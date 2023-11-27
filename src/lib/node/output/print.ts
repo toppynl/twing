@@ -4,7 +4,7 @@ import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
 export const printNodeType = "print";
 
 export interface TwingPrintNode extends TwingBaseOutputNode<typeof printNodeType, {}, {
-    expr: TwingBaseExpressionNode;
+    expression: TwingBaseExpressionNode;
 }> {
 }
 
@@ -14,7 +14,7 @@ export const createPrintNode = (
     column: number
 ): TwingPrintNode => {
     const outputNode: TwingPrintNode = createBaseOutputNode(printNodeType, {}, {
-        expr: expression
+        expression: expression
     }, line, column, null);
 
     const printNode: TwingPrintNode = {
@@ -24,7 +24,7 @@ export const createPrintNode = (
 
             sourceMapRuntime?.enterSourceMapBlock(printNode.line, printNode.column, printNode.type, template.source, outputBuffer);
             
-            return printNode.children.expr.execute(...args)
+            return printNode.children.expression.execute(...args)
                 .then((result) => {
                     outputBuffer.echo(result);
 

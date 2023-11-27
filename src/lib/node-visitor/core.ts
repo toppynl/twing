@@ -1,7 +1,7 @@
 import {TwingNodeVisitor} from "../node-visitor";
 import {cloneGetAttributeNode, TwingAttributeAccessorNode} from "../node/expression/attribute-accessor";
 import {cloneNameNode} from "../node/expression/name";
-import {cloneBlockReferenceExpressionNode} from "../node/expression/block-function";
+import {blockFunctionNodeType, cloneBlockReferenceExpressionNode} from "../node/expression/block-function";
 import {createConstantNode} from "../node/expression/constant";
 import {cloneMethodCallNode} from "../node/expression/method-call";
 import {TwingBaseExpressionNode} from "../node/expression";
@@ -52,7 +52,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
         if (
             !operand.is("name") &&
             !operand.is("get_attribute") &&
-            !operand.is("block_reference_expression") &&
+            !operand.is(blockFunctionNodeType) &&
             !operand.is("constant") &&
             !operand.is("array") &&
             !operand.is("method_call") &&
@@ -63,7 +63,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
 
         let newOperand: TwingBaseExpressionNode;
 
-        if (operand.is("block_reference_expression")) {
+        if (operand.is(blockFunctionNodeType)) {
             const blockReferenceExpressionNode = cloneBlockReferenceExpressionNode(operand);
 
             blockReferenceExpressionNode.attributes.shouldTestExistence = true;

@@ -1,12 +1,10 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 import {createConstantNode} from "./expression/constant";
 import {textNodeType} from "./output/text";
-import {createMarkup} from "../markup";
 import {createArgumentsNode} from "./expression/arguments";
 
 export type SetNodeAttributes = TwingBaseNodeAttributes & {
     capture: boolean; // todo: rename
-    safe: boolean;
 };
 
 export interface TwingSetNode extends TwingBaseNode<"set", SetNodeAttributes, {
@@ -24,8 +22,7 @@ export const createSetNode = (
     tag: string
 ): TwingSetNode => {
     const baseNode = createBaseNode("set", {
-        capture,
-        safe: false
+        capture
     }, {
         names,
         values
@@ -37,8 +34,6 @@ export const createSetNode = (
      * {% set foo %}foo{% endset %} is compiled to $context['foo'] = new Twig_Markup("foo");
      */
     if (baseNode.attributes.capture) {
-        baseNode.attributes.safe = true;
-
         const {values} = baseNode.children;
 
         if (values.is(textNodeType)) {
@@ -52,20 +47,11 @@ export const createSetNode = (
     const node: TwingSetNode = {
         ...baseNode,
         execute: async (...args) => {
-            const [template, context, outputBuffer] = args;
-            const {environment} = template;
+            const [, context, outputBuffer] = args;
             const {names: namesNode, values: valuesNode} = node.children;
-            const {capture, safe} = node.attributes;
+            const {capture} = node.attributes;
 
             const names: Array<string> = await namesNode.execute(...args);
-
-            const getSafeValue = (value: any) => {
-                if (safe && value !== '') {
-                    return createMarkup(value, environment.charset);
-                } else {
-                    return value;
-                }
-            }
 
             if (capture) {
                 outputBuffer.start();
@@ -75,7 +61,7 @@ export const createSetNode = (
                 const value = outputBuffer.getAndClean();
 
                 for (const name of names) {
-                    context.set(name, getSafeValue(value));
+                    context.set(name, value);
                 }
             } else {
                 const values: Array<any> = await valuesNode.execute(...args);
@@ -85,7 +71,7 @@ export const createSetNode = (
                 for (const name of names) {
                     const value = values[index];
 
-                    context.set(name, getSafeValue(value));
+                    context.set(name, value);
 
                     index++;
                 }

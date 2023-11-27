@@ -2,12 +2,12 @@ import {runTest} from "../../TestBase";
 import {createMarkup} from "../../../../../src/lib/markup";
 
 runTest({
-    description: '"escape" filter with a markup asn autoescape enabled',
+    description: '"escape" filter with a markup and autoescape',
     templates: {
         "index.twig": '{% autoescape %}{{ foo|escape("html") }}{% endautoescape %}'
     },
-    trimmedExpectation: '&lt;br/&gt;',
+    expectation: '<br/>',
     context: Promise.resolve({
-        foo: createMarkup(('<br/>'), "UTF-8")
+        foo: createMarkup('<br/>', "UTF-8")
     })
 });
