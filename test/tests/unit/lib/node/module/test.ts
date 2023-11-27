@@ -100,7 +100,7 @@ tape('node/module', (test) => {
                 aliases.proxy[\`_self\`] = this.aliases.proxy[\`_self\`] = this;
             }
 
-            doGetParent(context) {
+            async doGetParent(context) {
                 return this.loadTemplate(\`layout.twig\`, 1).then((parent) => {
                     this.parent = parent;
 
@@ -172,7 +172,7 @@ tape('node/module', (test) => {
                 aliases.proxy[\`_self\`] = this.aliases.proxy[\`_self\`] = this;
             }
 
-            doGetParent(context) {
+            async doGetParent(context) {
                 return this.loadTemplate(((true) ? (\`foo\`) : (\`bar\`)), 2);
             }
 
