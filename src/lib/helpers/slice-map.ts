@@ -7,8 +7,16 @@ export function sliceMap(map: Map<any, any>, start: number, length: number, pres
         start = map.size + start;
     }
 
+    let end: number;
+
+    if (length >= 0) {
+        end = start + length;
+    } else {
+        end = map.size + length;
+    }
+
     for (let [key, value] of map) {
-        if ((index >= start) && (index < start + length)) {
+        if ((index >= start) && (index < end)) {
             let newKey;
 
             // Note that array_slice() will reorder and reset the ***numeric*** array indices by default. [...]
@@ -25,7 +33,7 @@ export function sliceMap(map: Map<any, any>, start: number, length: number, pres
             result.set(newKey, value);
         }
 
-        if (index >= start + length) {
+        if (index >= end) {
             break;
         }
 
