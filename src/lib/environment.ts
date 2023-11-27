@@ -16,7 +16,7 @@ import {createHtmlAttributeEscapingStrategyHandler} from "./escaping-stragegy/ht
 import {createSource, TwingSource} from "./source";
 import {createTokenStream, TwingTokenStream} from "./token-stream";
 import {TwingExtension} from "./extension";
-import {TwingModuleNode} from "./node/module";
+import {templateNodeType, TwingTemplateNode} from "./node/template";
 import {RawSourceMap} from "source-map";
 import {createSourceMapRuntime} from "./source-map-runtime";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
@@ -31,6 +31,7 @@ import {createLexer, TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
 import * as createHash from "create-hash";
 import {createCoreExtension} from "./extension/core";
+import {createAutoEscapeNode} from "../lib";
 
 export type TwingNumberFormat = {
     numberOfDecimals: number;
@@ -39,6 +40,13 @@ export type TwingNumberFormat = {
 };
 
 export type TwingEnvironmentOptions = {
+    /**
+     * The implicit auto-escaping strategy to apply to the templates.
+     * 
+     * Analogous to adding an `autoescape` tag at the top of each loaded template.
+     */
+    autoEscapingStrategy?: string;
+
     /**
      * Controls whether the templates are recompiled whenever their content changes or not.
      *
@@ -139,7 +147,7 @@ export interface TwingEnvironment {
      * *
      * @throws {TwingParsingError} When the token stream is syntactically or semantically wrong
      */
-    parse(stream: TwingTokenStream, options?: TwingParserOptions): TwingModuleNode;
+    parse(stream: TwingTokenStream, options?: TwingParserOptions): TwingTemplateNode;
 
     /**
      * Convenient method that renders a template from its name.
@@ -220,7 +228,7 @@ export function createEnvironment(
     const extensionSet = createExtensionSet();
 
     extensionSet.addExtension(createCoreExtension());
-    
+
     const shouldAutoReload = options?.autoReload || false;
     const cache: TwingCache | null = options?.cache || null;
     const charset = options?.charset || 'UTF-8';
@@ -318,7 +326,7 @@ export function createEnvironment(
             if (typeof value === "boolean") {
                 return Promise.resolve(value);
             }
-            
+
             if (isAMarkup(value)) {
                 return Promise.resolve(value);
             }
@@ -329,7 +337,7 @@ export function createEnvironment(
                 result = '';
             } else {
                 const strategyHandler = escapingStrategyHandlers[strategy];
-                
+
                 if (strategyHandler === undefined) {
                     return Promise.reject(createRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(escapingStrategyHandlers).sort().join(', ')}).`));
                 }
@@ -356,12 +364,12 @@ export function createEnvironment(
                 const cacheKey = cache && templateHash ? await cache.generateKey(templateHash) : null;
                 const timestamp = cache && cacheKey ? await cache.getTimestamp(cacheKey) : 0;
 
-                const getAstFromCache = async (): Promise<TwingModuleNode | null> => {
+                const getAstFromCache = async (): Promise<TwingTemplateNode | null> => {
                     if (cache === null || cacheKey === null) {
                         return Promise.resolve(null);
                     }
 
-                    let content: TwingModuleNode | null;
+                    let content: TwingTemplateNode | null;
 
                     /**
                      * When auto-reload is disabled, we always challenge the cache
@@ -382,7 +390,7 @@ export function createEnvironment(
                     return content;
                 };
 
-                const getAstFromLoader = async (): Promise<TwingModuleNode | null> => {
+                const getAstFromLoader = async (): Promise<TwingTemplateNode | null> => {
                     const source = await loader.getSourceContext(name, from);
 
                     if (source === null) {
@@ -432,6 +440,27 @@ export function createEnvironment(
         },
         parse: (stream, parserOptions) => {
             if (!parser) {
+                const visitors = extensionSet.nodeVisitors;
+
+                if (options?.autoEscapingStrategy) {
+                    const strategy = options.autoEscapingStrategy;
+
+                    visitors.unshift({
+                        enterNode: (node) => {
+                            return node;
+                        },
+                        leaveNode: (node) => {
+                            if (node.is(templateNodeType)) {
+                                const autoEscapeNode = createAutoEscapeNode(strategy, node.children.body.children.content, node.line, node.column, 'foo');
+
+                                node.children.body.children.content = autoEscapeNode;
+                            }
+
+                            return node;
+                        }
+                    })
+                }
+
                 parser = createParser(
                     extensionSet.unaryOperators,
                     extensionSet.binaryOperators,
@@ -476,7 +505,7 @@ export function createEnvironment(
                 })
                 .then((data) => {
                     const {sourceMap} = sourceMapRuntime;
-                    
+
                     return {
                         data,
                         sourceMap
@@ -487,7 +516,7 @@ export function createEnvironment(
             const loadTemplateAtIndex = (index: number): Promise<TwingTemplate> => {
                 if (index < names.length) {
                     const name = names[index];
-                    
+
                     if (name === null) {
                         return loadTemplateAtIndex(index + 1);
                     } else if (typeof name !== "string") {

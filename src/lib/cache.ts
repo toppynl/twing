@@ -1,4 +1,4 @@
-import {TwingModuleNode} from "./node/module";
+import {TwingTemplateNode} from "./node/template";
 
 export interface TwingCache {
     /**await
@@ -18,7 +18,7 @@ export interface TwingCache {
      *
      * @return {Promise<void>}
      */
-    write: (key: string, content: TwingModuleNode) => Promise<void>;
+    write: (key: string, content: TwingTemplateNode) => Promise<void>;
 
     /**
      * Loads a compiled template from the cache.
@@ -27,7 +27,7 @@ export interface TwingCache {
      *
      * @return {Promise<string | null>}
      */
-    load: (key: string) => Promise<TwingModuleNode | null>;
+    load: (key: string) => Promise<TwingTemplateNode | null>;
 
     /**
      * Returns the modification timestamp of a key.

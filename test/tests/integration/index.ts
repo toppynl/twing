@@ -8,6 +8,7 @@ import "./expressions";
 import "./extensions";
 import "./filters";
 import "./functions";
+import "./implicit-auto-escaping";
 import "./macros";
 import "./operators";
 import "./parsing";

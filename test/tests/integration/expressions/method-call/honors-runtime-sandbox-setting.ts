@@ -1,10 +1,10 @@
 import {runTest} from "../../TestBase";
 import {TwingCache} from "../../../../../src/lib/cache";
 import {createSandboxSecurityPolicy} from "../../../../../src/lib/sandbox/security-policy";
-import {TwingModuleNode} from "../../../../../src/lib/node/module";
+import {TwingTemplateNode} from "../../../../../src/lib/node/template";
 
 const createCache = (): TwingCache => {
-    const container = new Map<string, TwingModuleNode>();
+    const container = new Map<string, TwingTemplateNode>();
 
     return {
         generateKey: (hash) => Promise.resolve(hash),

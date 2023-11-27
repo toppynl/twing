@@ -5,7 +5,7 @@ import {Settings} from "luxon";
 import {spy, stub} from "sinon";
 import {createSource} from "../../../../../src/lib/source";
 import {TwingCache} from "../../../../../src/lib/cache";
-import {TwingModuleNode} from "../../../../../src/lib/node/module";
+import {TwingTemplateNode} from "../../../../../src/lib/node/template";
 
 const createMockCache = (): TwingCache => {
     return {
@@ -62,7 +62,7 @@ tape('createEnvironment ', ({test}) => {
 
                 let count: number = -1;
 
-                const cachedTemplates: Map<string, TwingModuleNode> = new Map();
+                const cachedTemplates: Map<string, TwingTemplateNode> = new Map();
 
                 stub(loader, "getSourceContext").callsFake(() => {
                     return Promise.resolve(createSource('foo', `${count}`));
@@ -126,7 +126,7 @@ tape('createEnvironment ', ({test}) => {
 
                         let count: number = -1;
 
-                        const cachedTemplates: Map<string, TwingModuleNode> = new Map();
+                        const cachedTemplates: Map<string, TwingTemplateNode> = new Map();
 
                         stub(loader, "getSourceContext").callsFake(() => {
                             return Promise.resolve(createSource('foo', `${count}`));

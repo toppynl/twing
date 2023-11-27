@@ -7,7 +7,7 @@ import {createTextNode, textNodeType} from "./node/output/text";
 import {createPrintNode} from "./node/output/print";
 import {TwingBaseExpressionNode} from "./node/expression";
 import {createBodyNode} from "./node/body";
-import {createModuleNode, TwingModuleNode} from "./node/module";
+import {createTemplateNode, TwingTemplateNode} from "./node/template";
 import {createNodeTraverser} from "./node-traverser";
 import {TwingMacroNode} from "./node/macro";
 import {createCommentNode} from "./node/comment";
@@ -82,7 +82,7 @@ export interface TwingParser {
 
     addTrait(trait: TwingTraitNode): void;
 
-    embedTemplate(template: TwingModuleNode): void;
+    embedTemplate(template: TwingTemplateNode): void;
 
     getBlock(name: string): TwingBlockNode | null;
 
@@ -90,7 +90,7 @@ export interface TwingParser {
 
     isMainScope(): boolean;
 
-    parse(stream: TwingTokenStream, tag?: string | null, test?: ParseTest[1] | null): TwingModuleNode;
+    parse(stream: TwingTokenStream, tag?: string | null, test?: ParseTest[1] | null): TwingTemplateNode;
 
     parseArguments(stream: TwingTokenStream, namedArguments?: boolean, definition?: boolean, allowArrow?: true): TwingArrayNode;
 
@@ -132,7 +132,7 @@ export type StackEntry = {
     macros: Record<string, TwingMacroNode>;
     importedSymbols: Array<TwingParserImportedSymbol>;
     traits: Record<string, TwingTraitNode>;
-    embeddedTemplates: Array<TwingModuleNode>;
+    embeddedTemplates: Array<TwingTemplateNode>;
 };
 
 const getNames = (
@@ -164,7 +164,7 @@ export const createParser = (
         template: []
     }];
     let traits: Record<string, TwingTraitNode> = {};
-    let embeddedTemplates: Array<TwingModuleNode> = [];
+    let embeddedTemplates: Array<TwingTemplateNode> = [];
     let embeddedTemplateIndex: number = 1;
 
     const filterNames = getNames(filters);
@@ -600,7 +600,7 @@ export const createParser = (
             throw error;
         }
 
-        let node = createModuleNode(
+        let node = createTemplateNode(
             createBodyNode(body, 1, 1),
             parent,
             createBaseNode(null, {}, blocks),
@@ -614,16 +614,16 @@ export const createParser = (
         // passed visitors
         let traverse = createNodeTraverser(visitors);
 
-        node = traverse(node) as TwingModuleNode;
+        node = traverse(node) as TwingTemplateNode;
 
         // core visitors
         traverse = createNodeTraverser([
             createCoreNodeVisitor(),
-            createEscaperNodeVisitor(), // todo: move to core?
+            createEscaperNodeVisitor(),
             createSandboxNodeVisitor()
         ]);
 
-        node = traverse(node) as TwingModuleNode;
+        node = traverse(node) as TwingTemplateNode;
 
         // restore previous stack so previous parse() call can resume working
         const previousStackEntry = stack.pop()!;

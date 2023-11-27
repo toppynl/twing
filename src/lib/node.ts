@@ -17,7 +17,7 @@ import type {TwingForLoopNode} from "./node/for-loop";
 import type {TwingImportNode} from "./node/import";
 import type {TwingLineNode} from "./node/line";
 import type {TwingMacroNode} from "./node/macro";
-import type {TwingModuleNode} from "./node/module";
+import type {TwingTemplateNode} from "./node/template";
 import type {TwingBlockNode} from "./node/block";
 import type {TwingTraitNode} from "./node/trait";
 import type {TwingSetNode} from "./node/set";
@@ -57,7 +57,7 @@ export type TwingNode =
     | TwingLineNode
     | TwingMacroNode
     | TwingMethodCallNode
-    | TwingModuleNode
+    | TwingTemplateNode
     | TwingPrintNode
     | TwingSandboxNode
     | TwingSetNode

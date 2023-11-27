@@ -5,6 +5,7 @@ import {createNodeVisitor, TwingNodeVisitor} from "../node-visitor";
 import {ArgumentsNode} from "../node/expression/arguments";
 import {functionNodeType} from "../node/expression/call/function";
 import {filterNodeType} from "../node/expression/call/filter";
+import {templateNodeType} from "../node/template";
 
 export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
     let tags: Map<string, TwingBaseNode>;
@@ -14,7 +15,7 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
     let shouldWrap: boolean = true;
 
     const enterNode: TwingNodeVisitor["enterNode"] = (node) => {
-        if (node.is("module")) {
+        if (node.is(templateNodeType)) {
             tags = new Map();
             filters = new Map();
             functions = new Map();
@@ -85,7 +86,7 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
     };
 
     const leaveNode: TwingNodeVisitor["leaveNode"] = (node) => {
-        if (node.is("module")) {
+        if (node.is(templateNodeType)) {
             node.children.securityCheck = createCheckSecurityNode(filters, tags, functions, node.line, node.column);
         } else if (node.is("print") || node.is("set")) {
             shouldWrap = false;

@@ -8,6 +8,7 @@ import {autoEscapeNodeType} from "../node/auto-escape";
 import {blockFunctionNodeType} from "../node/expression/block-function";
 import {methodCallNodeType} from "../node/expression/method-call";
 import {parentFunctionNodeType} from "../node/expression/parent-function";
+import {templateNodeType} from "../node/template";
 
 export const createEscaperNodeVisitor = (): TwingNodeVisitor => {
     const safes: Map<TwingBaseNode, boolean> = new Map();
@@ -60,7 +61,7 @@ export const createEscaperNodeVisitor = (): TwingNodeVisitor => {
     };
 
     const enterNode: TwingNodeVisitor["enterNode"] = (node) => {
-        if (node.is("module")) {
+        if (node.is(templateNodeType)) {
             blocks = new Map();
         } else if (node.is("auto_escape")) {
             const {strategy} = node.attributes;
@@ -76,7 +77,7 @@ export const createEscaperNodeVisitor = (): TwingNodeVisitor => {
     };
 
     const leaveNode: TwingNodeVisitor["leaveNode"] = (node) => {
-        if (node.type === "module") {
+        if (node.is(templateNodeType)) {
             blocks = new Map();
         } else if (node.is("print")) {
             const type = needEscaping();
