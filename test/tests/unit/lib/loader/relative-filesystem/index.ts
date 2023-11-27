@@ -150,7 +150,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
             const loader = createRelativeFilesystemLoader(filesystem);
 
             const readFileStub = stub(filesystem, "readFile").callsFake((_path, callback) => {
-                callback('I am Error');
+                callback(new Error('I am Error'), null);
             });
 
             try {
@@ -158,7 +158,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
 
                 fail();
             } catch (error) {
-                same(error, 'I am Error');
+                same((error as Error).message, 'I am Error');
             }
 
             readFileStub.restore();
@@ -171,7 +171,7 @@ tape('createRelativeFilesystemLoader', ({test}) => {
             const loader = createRelativeFilesystemLoader(filesystem);
 
             const statStub = stub(filesystem, "stat").callsFake((_path, callback) => {
-                callback('I am Error', null);
+                callback(new Error('I am Error'), null);
             });
 
             same(await loader.getSourceContext('named_one/index.html', null), null);

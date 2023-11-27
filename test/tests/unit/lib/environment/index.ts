@@ -5,6 +5,7 @@ import {Settings} from "luxon";
 import {spy, stub} from "sinon";
 import {createSource} from "../../../../../src/lib/source";
 import {TwingCache} from "../../../../../src/lib/cache";
+import {TwingModuleNode} from "../../../../../src/lib/node/module";
 
 const createMockCache = (): TwingCache => {
     return {
@@ -61,7 +62,7 @@ tape('createEnvironment ', ({test}) => {
 
                 let count: number = -1;
 
-                const cachedTemplates: Map<string, string> = new Map();
+                const cachedTemplates: Map<string, TwingModuleNode> = new Map();
 
                 stub(loader, "getSourceContext").callsFake(() => {
                     return Promise.resolve(createSource('foo', `${count}`));
@@ -74,11 +75,15 @@ tape('createEnvironment ', ({test}) => {
 
                     return Promise.resolve(isFresh);
                 });
+                
                 const loadStub = stub(cache, "load").callsFake((key) => {
                     return Promise.resolve(cachedTemplates.get(key) || null);
                 });
+                
                 const writeStub = stub(cache, "write").callsFake((key, content) => {
-                    return Promise.resolve(cachedTemplates.set(key, content));
+                    cachedTemplates.set(key, content);
+                    
+                    return Promise.resolve();
                 });
 
                 return getEnvironment().loadTemplate('foo')
@@ -121,7 +126,7 @@ tape('createEnvironment ', ({test}) => {
 
                         let count: number = -1;
 
-                        const cachedTemplates: Map<string, string> = new Map();
+                        const cachedTemplates: Map<string, TwingModuleNode> = new Map();
 
                         stub(loader, "getSourceContext").callsFake(() => {
                             return Promise.resolve(createSource('foo', `${count}`));
@@ -140,7 +145,9 @@ tape('createEnvironment ', ({test}) => {
                         });
 
                         const writeStub = stub(cache, "write").callsFake((key, content) => {
-                            return Promise.resolve(cachedTemplates.set(key, content));
+                            cachedTemplates.set(key, content);
+
+                            return Promise.resolve();
                         });
 
                         return getEnvironment().loadTemplate('foo')

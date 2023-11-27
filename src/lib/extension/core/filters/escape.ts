@@ -16,7 +16,7 @@ export const escape = (
     return environment.escape(template, value, strategy, charset)
         .then((value) => {
             if (typeof value === "string") {
-                return createMarkup(value);
+                return createMarkup(value, environment.charset);
             }
             
             return value;
