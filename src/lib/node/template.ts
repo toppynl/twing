@@ -6,12 +6,14 @@ import {TwingMacroNode} from "./macro";
 import {TwingBlockNode} from "./block";
 import {TwingBodyNode} from "./body";
 
-export type TwingModuleNodeAttributes = TwingBaseNodeAttributes & {
+export const templateNodeType = "template";
+
+export type TwingTemplateNodeAttributes = TwingBaseNodeAttributes & {
     index: number;
     source: TwingSource;
 };
 
-export type TwingModuleNodeChildren = {
+export type TwingTemplateNodeChildren = {
     body: TwingBodyNode;
     blocks: TwingBaseNode<any, {}, Record<string, TwingBlockNode>>;
     macros: TwingBaseNode<any, {}, Record<string, TwingMacroNode>>;
@@ -20,23 +22,23 @@ export type TwingModuleNodeChildren = {
     parent?: TwingBaseExpressionNode;
 };
 
-export interface TwingModuleNode extends TwingBaseNode<"module", TwingModuleNodeAttributes, TwingModuleNodeChildren> {
-    readonly embeddedTemplates: Array<TwingModuleNode>;
+export interface TwingTemplateNode extends TwingBaseNode<typeof templateNodeType, TwingTemplateNodeAttributes, TwingTemplateNodeChildren> {
+    readonly embeddedTemplates: Array<TwingTemplateNode>;
     readonly source: TwingSource;
 }
 
-export const createModuleNode = (
-    body: TwingModuleNode["children"]["body"],
+export const createTemplateNode = (
+    body: TwingTemplateNode["children"]["body"],
     parent: TwingBaseExpressionNode | null,
-    blocks: TwingModuleNode["children"]["blocks"],
-    macros: TwingModuleNode["children"]["macros"],
-    traits: TwingModuleNode["children"]["traits"],
-    embeddedTemplates: Array<TwingModuleNode>,
+    blocks: TwingTemplateNode["children"]["blocks"],
+    macros: TwingTemplateNode["children"]["macros"],
+    traits: TwingTemplateNode["children"]["traits"],
+    embeddedTemplates: Array<TwingTemplateNode>,
     source: TwingSource,
     line: number,
     column: number
-): TwingModuleNode => {
-    const children: TwingModuleNode["children"] = {
+): TwingTemplateNode => {
+    const children: TwingTemplateNode["children"] = {
         body,
         blocks,
         macros,
@@ -48,12 +50,12 @@ export const createModuleNode = (
         children.parent = parent;
     }
 
-    const baseNode = createBaseNode("module", {
+    const baseNode = createBaseNode(templateNodeType, {
         index: 0,
         source
     }, children, line, column);
 
-    const moduleNode: TwingModuleNode = {
+    const templateNode: TwingTemplateNode = {
         ...baseNode,
         get embeddedTemplates() {
             return embeddedTemplates;
@@ -63,11 +65,11 @@ export const createModuleNode = (
         },
         execute: (...args) => {
             const [template, , outputBuffer, , , sourceMapRuntime] = args;
-            const {securityCheck, body} = moduleNode.children;
+            const {securityCheck, body} = templateNode.children;
 
             return securityCheck.execute(...args)
                 .then(() => {
-                    sourceMapRuntime?.enterSourceMapBlock(moduleNode.line, moduleNode.column, moduleNode.type, template.source, outputBuffer);
+                    sourceMapRuntime?.enterSourceMapBlock(templateNode.line, templateNode.column, templateNode.type, template.source, outputBuffer);
 
                     return body.execute(...args).then(() => {
                         sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);
@@ -76,5 +78,5 @@ export const createModuleNode = (
         }
     };
 
-    return moduleNode;
+    return templateNode;
 };

@@ -29,7 +29,7 @@ tape('library index', ({same, end}) => {
         'createBaseIncludeNode',
         'createLineNode',
         'createMacroNode',
-        'createModuleNode',
+        'createTemplateNode', 'templateNodeType',
         'createSandboxNode', 'sandboxNodeType',
         'createSetNode',
         'createTraitNode',

@@ -2,7 +2,7 @@ import {createContext, TwingContext} from "./context";
 import {TwingEnvironment} from "./environment";
 import {createOutputBuffer, TwingOutputBuffer} from "./output-buffer";
 import {TwingSourceMapRuntime} from "./source-map-runtime";
-import {TwingModuleNode} from "./node/module";
+import {TwingTemplateNode} from "./node/template";
 import {mergeIterables} from "./helpers/merge-iterables";
 import {createRuntimeError} from "./error/runtime";
 import {getChildren, getChildrenCount, TwingBaseNode} from "./node";
@@ -126,7 +126,7 @@ export interface TwingTemplate {
 
 export const createTemplate = (
     environment: TwingEnvironment,
-    ast: TwingModuleNode
+    ast: TwingTemplateNode
 ): TwingTemplate => {
     let blockHandlers: Map<string, BlockHandler> = new Map();
     let macroHandlers: Map<string, MacroHandler> = new Map();
@@ -197,7 +197,7 @@ export const createTemplate = (
     let traits: TwingTemplateBlockMap | null = null;
 
     // handle embedded templates
-    const embeddedTemplates: Map<number, TwingModuleNode> = new Map();
+    const embeddedTemplates: Map<number, TwingTemplateNode> = new Map();
 
     for (const embeddedTemplate of ast.embeddedTemplates) {
         embeddedTemplates.set(embeddedTemplate.attributes.index, embeddedTemplate);
