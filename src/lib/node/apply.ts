@@ -29,14 +29,14 @@ export const createApplyNode = (
 
     const node: TwingApplyNode = {
         ...baseNode,
-        execute: async (...args) => {
-            const outputBuffer = args[2];
+        execute: async (executionContext) => {
+            const {outputBuffer} = executionContext;
             const {body, filters} = node.children;
             const {line, column} = node;
-            
+
             outputBuffer.start();
 
-            return body.execute(...args)
+            return body.execute(executionContext)
                 .then(async () => {
                     let content = outputBuffer.getAndClean();
 
@@ -44,11 +44,11 @@ export const createApplyNode = (
 
                     while (keyValuePairs.length > 0) {
                         const {key, value: filterArguments} = keyValuePairs.pop()!;
-                        
+
                         const filterName = key.attributes.value as string;
                         const filterNode = createFilterNode(createConstantNode(content, line, column), filterName, filterArguments, line, column);
-                        
-                        content = await filterNode.execute(...args);
+
+                        content = await filterNode.execute(executionContext);
                     }
 
                     outputBuffer.echo(content);

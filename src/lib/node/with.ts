@@ -38,17 +38,18 @@ export const createWithNode = (
 
     const node: TwingWithNode = {
         ...baseNode,
-        execute: async (template, context, ...args) => {
+        execute: async (executionContext) => {
+            const {template, context} = executionContext;
             const {variables: variablesNode, body} = baseNode.children;
             const {only} = baseNode.attributes;
 
             let scopedContext: TwingContext<any, any>;
 
             if (variablesNode) {
-                const variables = await variablesNode.execute(template, context, ...args);
+                const variables = await variablesNode.execute(executionContext);
 
                 if (typeof variables !== "object") {
-                    throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, node, template.templateName);
+                    throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, node, template.name);
                 }
 
                 if (only) {
@@ -57,11 +58,9 @@ export const createWithNode = (
                     scopedContext = context.clone();
                 }
 
-                scopedContext = createContext(template.mergeGlobals(
-                    mergeIterables(
-                        scopedContext,
-                        iteratorToMap(variables)
-                    )
+                scopedContext = createContext(mergeIterables(
+                    scopedContext,
+                    iteratorToMap(variables)
                 ))
             } else {
                 scopedContext = context.clone();
@@ -69,7 +68,10 @@ export const createWithNode = (
 
             scopedContext.set('_parent', context.clone());
 
-            await body.execute(template, scopedContext, ...args);
+            await body.execute({
+                ...executionContext,
+                context: scopedContext
+            });
         }
     };
 

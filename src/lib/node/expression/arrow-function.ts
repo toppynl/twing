@@ -23,8 +23,8 @@ export const createArrowFunctionNode = (
 
     return {
         ...baseNode,
-        execute: (...args) => {
-            const [, context] = args;
+        execute: (executionContext) => {
+            const {context} = executionContext;
             const {expr} = baseNode.children;
             const assignmentNodes = Object.values(baseNode.children.names.children);
 
@@ -39,7 +39,7 @@ export const createArrowFunctionNode = (
                     index++;
                 }
 
-                return expr.execute(...args);
+                return expr.execute(executionContext);
             });
         }
     };

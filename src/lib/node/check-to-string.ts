@@ -1,5 +1,6 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 import {TwingBaseExpressionNode} from "./expression";
+import {getTraceableMethod} from "../helpers/traceable-method";
 
 /**
  * Checks if casting an expression to toString() is allowed by the sandbox.
@@ -25,13 +26,27 @@ export const createCheckToStringNode = (
 
     return {
         ...baseNode,
-        execute: (...args) => {
-            const [template] = args;
+        execute: (executionContext) => {
+            const {template, sandboxed} = executionContext;
             const {expr} = baseNode.children;
-            
-            return expr.execute(...args)
+
+            return expr.execute(executionContext)
                 .then((value) => {
-                    template.assertToStringAllowed(value);
+                    if (sandboxed) {
+                        const assertToStringAllowed = getTraceableMethod((value: any) => {
+                            if (typeof value === 'object') {
+                                try {
+                                    template.checkMethodAllowed(value, 'toString');
+                                } catch (error) {
+                                    return Promise.reject(error);
+                                }
+                            }
+
+                            return Promise.resolve(value);
+                        }, expr.line, expr.column, template.name)
+
+                        return assertToStringAllowed(value);
+                    }
 
                     return value;
                 });

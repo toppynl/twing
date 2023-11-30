@@ -9,9 +9,6 @@ import {TwingTemplateNode} from "../../../../../src/lib/node/template";
 
 const createMockCache = (): TwingCache => {
     return {
-        generateKey: () => {
-            return Promise.resolve('key');
-        },
         write: () => {
             return Promise.resolve();
         },
@@ -25,6 +22,8 @@ const createMockCache = (): TwingCache => {
 };
 
 // todo: unit test every property because this is the public API
+import "./load-template";
+
 tape('createEnvironment ', ({test}) => {
     test('options', ({test}) => {
         test('apply default values', ({same, end}) => {
@@ -64,7 +63,7 @@ tape('createEnvironment ', ({test}) => {
 
                 const cachedTemplates: Map<string, TwingTemplateNode> = new Map();
 
-                stub(loader, "getSourceContext").callsFake(() => {
+                stub(loader, "getSource").callsFake(() => {
                     return Promise.resolve(createSource('foo', `${count}`));
                 });
 
@@ -75,14 +74,14 @@ tape('createEnvironment ', ({test}) => {
 
                     return Promise.resolve(isFresh);
                 });
-                
+
                 const loadStub = stub(cache, "load").callsFake((key) => {
                     return Promise.resolve(cachedTemplates.get(key) || null);
                 });
-                
+
                 const writeStub = stub(cache, "write").callsFake((key, content) => {
                     cachedTemplates.set(key, content);
-                    
+
                     return Promise.resolve();
                 });
 
@@ -128,7 +127,7 @@ tape('createEnvironment ', ({test}) => {
 
                         const cachedTemplates: Map<string, TwingTemplateNode> = new Map();
 
-                        stub(loader, "getSourceContext").callsFake(() => {
+                        stub(loader, "getSource").callsFake(() => {
                             return Promise.resolve(createSource('foo', `${count}`));
                         });
 
@@ -175,11 +174,11 @@ tape('createEnvironment ', ({test}) => {
                 const loader = createArrayLoader({
                     foo: 'bar'
                 });
-                
+
                 const getEnvironment = () => createEnvironment(
                     loader
                 );
-                
+
                 const isFreshStub = stub(loader, "isFresh").callsFake(() => {
                     return Promise.resolve(false);
                 });
@@ -255,11 +254,11 @@ tape('createEnvironment ', ({test}) => {
                     cache
                 }
             );
-            
-            const getSourceContextSpy = spy(loader, "getSourceContext");
-            
+
+            const getSourceContextSpy = spy(loader, "getSource");
+
             const environment = getEnvironment();
-            
+
             return environment.loadTemplate('foo')
                 .then(() => {
                     return environment.loadTemplate('foo');

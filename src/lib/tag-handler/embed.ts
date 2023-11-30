@@ -38,26 +38,25 @@ export const createEmbedTagHandler = (): TwingTagHandler => {
                     parentToken,
                     new Token("TAG_END", '', token.line, token.column),
                 ]);
-                
+
                 let module = parser.parse(stream, tag, (token: Token) => {
                     return token.test("NAME", 'endembed');
                 });
 
                 stream.next();
-                
+
                 // override the parent with the correct one
                 if (fakeParentToken === parentToken) {
                     module.children.parent = parent;
                 }
 
                 parser.embedTemplate(module);
-                
+
                 stream.expect("TAG_END");
 
-                const {source, index} = module.attributes;
-                
+                const {index} = module.attributes;
+
                 return createEmbedNode({
-                    templateName: source.name,
                     index,
                     only,
                     ignoreMissing

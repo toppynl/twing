@@ -29,13 +29,11 @@ array(1) {
     }
 }
 
-array(3) {
+array(2) {
     [foo] =>
     string(3) "foo"
     [bar] =>
     string(3) "bar"
-    [global] =>
-    string(6) "global"
 }
 `;
     }

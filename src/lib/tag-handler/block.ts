@@ -29,7 +29,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                 let block = parser.getBlock(name);
 
                 if (block !== null) {
-                    throw createParsingError(`The block '${name}' has already been defined at {${block.line}:${block.column}}.`, {line, column}, stream.source.resolvedName);
+                    throw createParsingError(`The block '${name}' has already been defined at {${block.line}:${block.column}}.`, {line, column}, stream.source.name);
                 }
 
                 block = createBlockNode(name, createBaseNode(null), line, column);
@@ -55,7 +55,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                         if (value !== name) {
                             const {line, column} = token;
 
-                            throw createParsingError(`Expected endblock for block "${name}" (but "${value}" given).`, {line, column}, stream.source.resolvedName);
+                            throw createParsingError(`Expected endblock for block "${name}" (but "${value}" given).`, {line, column}, stream.source.name);
                         }
                     }
                 } else {

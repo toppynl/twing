@@ -6,7 +6,6 @@ import "./endmacro_name";
 import "./external";
 import "./from_embed_with_global_macro";
 import "./from_nested_blocks";
-import "./global";
 import "./self_import";
 import "./special_chars";
 import "./super_globals";

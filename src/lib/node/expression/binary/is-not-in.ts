@@ -5,9 +5,7 @@ export interface TwingIsNotInNode extends TwingBaseBinaryNode<"not_in"> {
 }
 
 export const createIsNotInNode = createBinaryNodeFactory<TwingIsNotInNode>("not_in", {
-    execute: async (baseNode, ...args) => {
-        const {left, right} = baseNode.children;
-
-        return Promise.resolve(!isIn(await left.execute(...args), await right.execute(...args)))
+    execute: async (left, right, executionContext) => {
+        return Promise.resolve(!isIn(await left.execute(executionContext), await right.execute(executionContext)))
     }
 });

@@ -5,11 +5,9 @@ export interface TwingIsEqualToNode extends TwingBaseBinaryNode<"equals"> {
 }
 
 export const createIsEqualNode = createBinaryNodeFactory<TwingIsEqualToNode>("equals", {
-    execute: async (node, ...args) => {
-        const {left, right} = node.children;
-
-        const leftValue = await left.execute(...args);
-        const rightValue = await right.execute(...args);
+    execute: async (left, right, executionContext) => {
+        const leftValue = await left.execute(executionContext);
+        const rightValue = await right.execute(executionContext);
 
         return compare(leftValue, rightValue);
     }

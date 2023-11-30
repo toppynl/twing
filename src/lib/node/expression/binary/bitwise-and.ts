@@ -6,9 +6,7 @@ export interface TwingBitwiseAndNode extends TwingBaseBinaryNode<typeof bitwiseA
 }
 
 export const createBitwiseAndNode = createBinaryNodeFactory<TwingBitwiseAndNode>(bitwiseAndNodeType, {
-    execute: async (baseNode, ...args) => {
-        const {left, right} = baseNode.children;
-
-        return await left.execute(...args) & await right.execute(...args);
+    execute: async (left, right, executionContext) => {
+        return await left.execute(executionContext) & await right.execute(executionContext);
     }
 });

@@ -10,6 +10,7 @@ export type TwingAssignmentNodeAttributes = TwingBaseExpressionNodeAttributes & 
 export interface TwingAssignmentNode extends TwingBaseNode<typeof assignmentNodeType, TwingAssignmentNodeAttributes> {
 }
 
+// todo: probably a useless node
 export const createAssignmentNode = (
     name: string,
     line: number,

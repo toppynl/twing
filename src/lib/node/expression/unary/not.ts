@@ -6,10 +6,8 @@ export interface TwingNotNode extends TwingBaseUnaryNode<typeof notNodeType> {
 }
 
 export const createNotNode = createUnaryNodeFactory<TwingNotNode>(notNodeType, {
-    execute: (baseNode, ...args) => {
-        const {operand} = baseNode.children;
-
-        return operand.execute(...args)
+    execute: (operand, executionContext) => {
+        return operand.execute(executionContext)
             .then((value) => !(value));
     }
 });

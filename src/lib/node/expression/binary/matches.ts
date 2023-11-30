@@ -5,11 +5,11 @@ export interface TwingMatchesNode extends TwingBaseBinaryNode<"matches"> {
 }
 
 export const createMatchesNode = createBinaryNodeFactory<TwingMatchesNode>("matches", {
-    execute: async (node, ...args) => {
+    execute: async (left, right, executionContext) => {
         return parseRegularExpression(
-            await node.children.right.execute(...args)
+            await right.execute(executionContext)
         ).test(
-            await node.children.left.execute(...args)
+            await left.execute(executionContext)
         );
     }
 });

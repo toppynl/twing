@@ -20,10 +20,10 @@ class Test extends TestBase {
 
     getExpected() {
         return `
-foo,global,_parent,
-global,_parent,
-foo,global,foo1,_parent,
-foo1,global,_parent,
+foo,_parent,
+_parent,
+foo,foo1,_parent,
+foo1,_parent,
 `;
     }
 

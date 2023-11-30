@@ -48,12 +48,12 @@ export const createBaseArrayNode = <Type extends string>(
 
     const node: TwingBaseArrayNode<Type> = {
         ...baseNode,
-        execute: (...args): Promise<Map<string, any>> => {
+        execute: (executionContext): Promise<Map<string, any>> => {
             const keyValuePairs = getKeyValuePairs(node);
             const promises = keyValuePairs.map(async ({key, value}) => {
                 return await Promise.all([
-                    key.execute(...args),
-                    value.execute(...args)
+                    key.execute(executionContext),
+                    value.execute(executionContext)
                 ]);
             });
 

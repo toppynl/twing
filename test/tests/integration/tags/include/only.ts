@@ -18,7 +18,7 @@ class Test extends TestBase {
 
     getExpected() {
         return `
-global,_parent,`;
+_parent,`;
     }
 }
 

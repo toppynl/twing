@@ -23,18 +23,16 @@ export const numberFormat = (
     decimalPoint: string | null,
     thousandSeparator: string | null
 ): Promise<string> => {
-    const {environment} = template;
-    
     if (numberOfDecimals === null) {
-        numberOfDecimals = environment.numberFormat.numberOfDecimals;
+        numberOfDecimals = template.numberFormat.numberOfDecimals;
     }
 
     if (decimalPoint === null) {
-        decimalPoint = environment.numberFormat.decimalPoint;
+        decimalPoint = template.numberFormat.decimalPoint;
     }
 
     if (thousandSeparator === null) {
-        thousandSeparator = environment.numberFormat.thousandSeparator;
+        thousandSeparator = template.numberFormat.thousandSeparator;
     }
     
     return Promise.resolve(phpNumberFormat(number, numberOfDecimals, decimalPoint, thousandSeparator));

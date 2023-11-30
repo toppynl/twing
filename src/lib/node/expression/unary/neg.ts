@@ -6,10 +6,8 @@ export interface TwingNegativeNode extends TwingBaseUnaryNode<typeof negativeNod
 }
 
 export const createNegativeNode = createUnaryNodeFactory<TwingNegativeNode>(negativeNodeType, {
-    execute: (baseNode, ...args) => {
-        const {operand} = baseNode.children;
-
-        return operand.execute(...args)
+    execute: (operand, executionContext) => {
+        return operand.execute(executionContext)
             .then((value) => -(value));
     }
 });

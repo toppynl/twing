@@ -229,7 +229,7 @@ export const createParser = (
             throw createParsingError(
                 `A template that extends another one cannot include content outside Twig blocks. Did you forget to put the content inside a {% block %} tag?`,
                 node,
-                stream.source.resolvedName
+                stream.source.name
             );
         }
 
@@ -301,7 +301,7 @@ export const createParser = (
                 console.warn(message);
             }
         } else if (strict) {
-            const error = createParsingError(`Unknown filter "${name}".`, {line, column}, stream.source.resolvedName);
+            const error = createParsingError(`Unknown filter "${name}".`, {line, column}, stream.source.name);
 
             error.addSuggestions(name, filterNames);
 
@@ -334,7 +334,7 @@ export const createParser = (
                 console.warn(message);
             }
         } else if (strict) {
-            const error = createParsingError(`Unknown function "${name}".`, {line, column}, stream.source.resolvedName);
+            const error = createParsingError(`Unknown function "${name}".`, {line, column}, stream.source.name);
 
             error.addSuggestions(name, functionNames);
 
@@ -350,11 +350,11 @@ export const createParser = (
                 parseArguments(stream);
 
                 if (!getBlockStack().length) {
-                    throw createParsingError('Calling "parent" outside a block is forbidden.', {line, column}, stream.source.resolvedName);
+                    throw createParsingError('Calling "parent" outside a block is forbidden.', {line, column}, stream.source.name);
                 }
 
                 if (!parent && !hasTraits()) {
-                    throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', {line, column}, stream.source.resolvedName);
+                    throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', {line, column}, stream.source.name);
                 }
 
                 return createParentFunctionNode(peekBlockStack(), line, column);
@@ -363,7 +363,7 @@ export const createParser = (
                 const keyValuePairs = getKeyValuePairs(blockArgs);
 
                 if (keyValuePairs.length < 1) {
-                    throw createParsingError('The "block" function takes one argument (the block name).', {line, column}, stream.source.resolvedName);
+                    throw createParsingError('The "block" function takes one argument (the block name).', {line, column}, stream.source.name);
                 }
 
                 return createBlockFunctionNode(keyValuePairs[0].value, keyValuePairs.length > 1 ? keyValuePairs[1].value : null, line, column);
@@ -372,7 +372,7 @@ export const createParser = (
                 const attributeKeyValuePairs = getKeyValuePairs(attributeArgs);
 
                 if (attributeKeyValuePairs.length < 2) {
-                    throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', {line, column}, stream.source.resolvedName);
+                    throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', {line, column}, stream.source.name);
                 }
 
                 return createAttributeAccessorNode(
@@ -538,7 +538,7 @@ export const createParser = (
             return name;
         }
 
-        const error = createParsingError(`Unknown test "${name}".`, {line, column}, stream.source.resolvedName);
+        const error = createParsingError(`Unknown test "${name}".`, {line, column}, stream.source.name);
 
         error.addSuggestions(name, testNames);
 
@@ -594,7 +594,7 @@ export const createParser = (
             }
         } catch (error: any) {
             if (!(error as TwingParsingError).source) {
-                (error as TwingParsingError).source = stream.source.resolvedName;
+                (error as TwingParsingError).source = stream.source.name;
             }
 
             throw error;
@@ -684,7 +684,7 @@ export const createParser = (
 
             if (namedArguments && (token = stream.nextIf("OPERATOR", '='))) {
                 if (!value.is("name")) {
-                    throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source.resolvedName);
+                    throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source.name);
                 }
 
                 key = createConstantNode(value.attributes.name, value.line, value.column);
@@ -695,7 +695,7 @@ export const createParser = (
                     const notConstantNode = checkConstantExpression(stream, value);
 
                     if (notConstantNode !== null) {
-                        throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode, stream.source.resolvedName);
+                        throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode, stream.source.name);
                     }
                 } else {
                     value = parseExpression(stream, 0, allowArrow);
@@ -772,7 +772,7 @@ export const createParser = (
             let value = token.value;
 
             if (['true', 'false', 'none', 'null'].indexOf(value.toLowerCase()) > -1) {
-                throw createParsingError(`You cannot assign a value to "${value}".`, token, stream.source.resolvedName);
+                throw createParsingError(`You cannot assign a value to "${value}".`, token, stream.source.name);
             }
 
             pushToRecord(targets, createAssignmentNode(value, token.line, token.column));
@@ -845,7 +845,7 @@ export const createParser = (
             token = stream.current;
 
             if (!token.test("NAME")) {
-                throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.resolvedName);
+                throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.name);
             }
 
             names[i++] = createAssignmentNode(token.value, token.line, token.column);
@@ -1040,7 +1040,7 @@ export const createParser = (
             } else {
                 const {type, line, value, column} = stream.current;
 
-                throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, {line, column}, stream.source.resolvedName);
+                throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, {line, column}, stream.source.name);
             }
 
             stream.expect("PUNCTUATION", ':', 'A hash key must be followed by a colon (:)');
@@ -1174,9 +1174,9 @@ export const createParser = (
                 } else if (token.test("PUNCTUATION", '{')) {
                     node = parseHashExpression(stream);
                 } else if (token.test("OPERATOR", '=') && (stream.look(-1).value === '==' || stream.look(-1).value === '!=')) {
-                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source.resolvedName);
+                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source.name);
                 } else {
-                    throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.resolvedName);
+                    throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.name);
                 }
         }
 
@@ -1247,7 +1247,7 @@ export const createParser = (
                     }
                 }
             } else {
-                throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.resolvedName);
+                throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.name);
             }
 
             if ((node.is("name")) && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
@@ -1398,7 +1398,7 @@ export const createParser = (
                     token = stream.current;
 
                     if (token.type !== "NAME") {
-                        throw createParsingError('A block must start with a tag name.', token, stream.source.resolvedName);
+                        throw createParsingError('A block must start with a tag name.', token, stream.source.name);
                     }
 
                     if ((test !== null) && test(token)) {
@@ -1416,7 +1416,7 @@ export const createParser = (
                             error = createParsingError(
                                 `Unexpected "${token.value}" tag`,
                                 token,
-                                stream.source.resolvedName
+                                stream.source.name
                             );
 
                             error.appendMessage(` (expecting closing tag for the "${tag}" tag defined line ${line}).`);
@@ -1424,7 +1424,7 @@ export const createParser = (
                             error = createParsingError(
                                 `Unknown "${token.value}" tag.`,
                                 token,
-                                stream.source.resolvedName
+                                stream.source.name
                             );
 
                             error.addSuggestions(token.value, tags);

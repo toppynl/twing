@@ -54,22 +54,22 @@ export const createChainLoader = (
                 return exists;
             })
         },
-        getCacheKey: (name, from) => {
-            const getCacheKeyAtIndex = (index: number): Promise<string | null> => {
+        resolve: (name, from) => {
+            const resolveAtIndex = (index: number): Promise<string | null> => {
                 if (index < loaders.length) {
                     const loader = loaders[index];
 
                     return loader.exists(name, from)
                         .then((exists) => {
                             if (!exists) {
-                                return getCacheKeyAtIndex(index + 1);
+                                return resolveAtIndex(index + 1);
                             } else {
-                                return loader.getCacheKey(name, from);
+                                return loader.resolve(name, from);
                             }
                         })
                         .then((key) => {
                             if (key === null) {
-                                return getCacheKeyAtIndex(index + 1);
+                                return resolveAtIndex(index + 1);
                             }
 
                             return key;
@@ -79,7 +79,7 @@ export const createChainLoader = (
                 }
             };
 
-            return getCacheKeyAtIndex(0)
+            return resolveAtIndex(0)
                 .then((key) => {
                     if (key) {
                         return key;
@@ -88,12 +88,12 @@ export const createChainLoader = (
                     }
                 });
         },
-        getSourceContext: (name, from) => {
+        getSource: (name, from) => {
             const getSourceContextAtIndex = (index: number): Promise<TwingSource | null> => {
                 if (index < loaders.length) {
                     let loader = loaders[index];
 
-                    return loader.getSourceContext(name, from)
+                    return loader.getSource(name, from)
                         .then((source) => {
                             if (source === null) {
                                 return getSourceContextAtIndex(index + 1);
@@ -134,33 +134,6 @@ export const createChainLoader = (
             };
 
             return isFreshAtIndex(0);
-        },
-        resolve: (name, from) => {
-            const resolveAtIndex = (index: number): Promise<string | null> => {
-                if (index < loaders.length) {
-                    const loader = loaders[index];
-
-                    return loader.resolve(name, from)
-                        .then((resolvedName) => {
-                            if (resolvedName === null) {
-                                return resolveAtIndex(index + 1);
-                            }
-                            
-                            return resolvedName;
-                        });
-                } else {
-                    return Promise.resolve(null);
-                }
-            };
-
-            return resolveAtIndex(0)
-                .then((resolvedName) => {
-                    if (resolvedName === null) {
-                        return null;
-                    }
-                    
-                    return resolvedName;
-                });
         }
     };
 

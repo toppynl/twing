@@ -63,15 +63,15 @@ export const createTemplateNode = (
         get source() {
             return source;
         },
-        execute: (...args) => {
-            const [template, , outputBuffer, , , sourceMapRuntime] = args;
+        execute: (executionContext) => {
+            const {template, outputBuffer, sourceMapRuntime} = executionContext;
             const {securityCheck, body} = templateNode.children;
 
-            return securityCheck.execute(...args)
+            return securityCheck.execute(executionContext)
                 .then(() => {
                     sourceMapRuntime?.enterSourceMapBlock(templateNode.line, templateNode.column, templateNode.type, template.source, outputBuffer);
 
-                    return body.execute(...args).then(() => {
+                    return body.execute(executionContext).then(() => {
                         sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);
                     });
                 });

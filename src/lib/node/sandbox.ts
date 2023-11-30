@@ -19,23 +19,13 @@ export const createSandboxNode = (
 
     return {
         ...baseNode,
-        execute: (...args) => {
-            const [template] = args;
-            const {environment} = template;
+        execute: (executionContext) => {
             const {body} = baseNode.children;
 
-            const alreadySandboxed = environment.isSandboxed;
-            
-            if (!alreadySandboxed) {
-                environment.isSandboxed = true;
-            }
-            
-            return body.execute(...args)
-                .finally(() => {
-                    if (!alreadySandboxed) {
-                        environment.isSandboxed = false;
-                    }
-                });
+            return body.execute({
+                ...executionContext,
+                sandboxed: true
+            });
         }
     };
 };

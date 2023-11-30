@@ -14,5 +14,5 @@ import {TwingTemplate} from "../../../template";
  * @returns {Promise<TwingTemplate>}
  */
 export function templateFromString(template: TwingTemplate, string: string, name: string | null): Promise<TwingTemplate> {
-    return template.environment.createTemplateFromString(string, name);
+    return template.createTemplateFromString(string, name);
 }

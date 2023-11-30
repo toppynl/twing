@@ -1,13 +1,8 @@
 import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
-import type {TwingNodeType} from "../../node";
+import type {TwingNodeExecutionContext, TwingNodeType} from "../../node";
 import type {TwingNegativeNode} from "./unary/neg";
 import type {TwingNotNode} from "./unary/not";
 import type {TwingPositiveNode} from "./unary/pos";
-import type {TwingTemplate} from "../../template";
-import type {TwingTemplateAliases, TwingTemplateBlockMap} from "../../template";
-import type {TwingContext} from "../../context";
-import type {TwingOutputBuffer} from "../../output-buffer";
-import {TwingSourceMapRuntime} from "../../source-map-runtime";
 
 export type TwingUnaryNode =
     | TwingNegativeNode
@@ -24,13 +19,8 @@ export const createUnaryNodeFactory = <InstanceType extends TwingBaseUnaryNode<a
     type: TwingNodeType<InstanceType>,
     definition: {
         execute: (
-            baseNode: TwingBaseUnaryNode<TwingNodeType<InstanceType>>,
-            template: TwingTemplate,
-            context: TwingContext<any, any>,
-            outputBuffer: TwingOutputBuffer,
-            blocks: TwingTemplateBlockMap,
-            aliases: TwingTemplateAliases,
-            sourceMapRuntime?: TwingSourceMapRuntime
+            operand: TwingBaseExpressionNode,
+            executionContext: TwingNodeExecutionContext
         ) => Promise<any>;
     }
 ) => {
@@ -43,8 +33,8 @@ export const createUnaryNodeFactory = <InstanceType extends TwingBaseUnaryNode<a
 
         return {
             ...baseNode,
-            execute: (...args) => {
-                return definition.execute(baseNode, ...args);
+            execute: (executionContext) => {
+                return definition.execute(baseNode.children.operand, executionContext);
             }
         } as InstanceType;
     };

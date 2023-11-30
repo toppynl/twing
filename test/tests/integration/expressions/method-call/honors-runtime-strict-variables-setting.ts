@@ -6,7 +6,6 @@ const createCache = (): TwingCache => {
     const container = new Map<string, TwingTemplateNode>();
 
     return {
-        generateKey: (hash) => Promise.resolve(hash),
         getTimestamp: () => Promise.resolve(Number.POSITIVE_INFINITY),
         load: (key) => Promise.resolve(container.get(key) || null),
         write: (key, content) => Promise.resolve(container.set(key, content)).then()

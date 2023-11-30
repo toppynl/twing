@@ -72,7 +72,7 @@ export class TwingLexer extends Lexer {
         } catch (error: any) {
             const {message, line, column} = (error as SyntaxError);
 
-            throw createParsingError(message, {line, column}, source.resolvedName, error);
+            throw createParsingError(message, {line, column}, source.name, error);
         }
     }
 }

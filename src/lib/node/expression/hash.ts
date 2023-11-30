@@ -20,31 +20,6 @@ export const createHashNode = (
         ...baseNode,
         is: (type) => {
             return type === "hash" || type === "array";
-        },
-        // compile: (compiler) => {
-        //     compiler
-        //         .write('new Map([')
-        //     ;
-        //
-        //     let first = true;
-        //
-        //     for (let pair of getKeyValuePairs(baseNode)) {
-        //         if (!first) {
-        //             compiler.write(', ');
-        //         }
-        //
-        //         first = false;
-        //
-        //         compiler
-        //             .write('[')
-        //             .subCompile(pair.key)
-        //             .write(', ')
-        //             .subCompile(pair.value)
-        //             .write(']')
-        //         ;
-        //     }
-        //
-        //     compiler.write('])');
-        // }
+        }
     };
 };

@@ -13,23 +13,20 @@ import {createCssEscapingStrategyHandler} from "./escaping-stragegy/css";
 import {createJsEscapingStrategyHandler} from "./escaping-stragegy/js";
 import {createUrlEscapingStrategyHandler} from "./escaping-stragegy/url";
 import {createHtmlAttributeEscapingStrategyHandler} from "./escaping-stragegy/html-attribute";
-import {createSource, TwingSource} from "./source";
+import {TwingSource} from "./source";
 import {createTokenStream, TwingTokenStream} from "./token-stream";
 import {TwingExtension} from "./extension";
 import {templateNodeType, TwingTemplateNode} from "./node/template";
 import {RawSourceMap} from "source-map";
 import {createSourceMapRuntime} from "./source-map-runtime";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
-import {isAMarkup, TwingMarkup} from "./markup";
 import {createTemplate, TwingTemplate} from "./template";
-import {createRuntimeError} from "./error/runtime";
 import {Settings as DateTimeSettings} from "luxon";
 import {EventEmitter} from "events";
 import {createTemplateLoadingError} from "./error/loader";
 import {TwingParsingError} from "./error/parsing";
 import {createLexer, TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
-import * as createHash from "create-hash";
 import {createCoreExtension} from "./extension/core";
 import {createAutoEscapeNode} from "../lib";
 
@@ -42,7 +39,7 @@ export type TwingNumberFormat = {
 export type TwingEnvironmentOptions = {
     /**
      * The implicit auto-escaping strategy to apply to the templates.
-     * 
+     *
      * Analogous to adding an `autoescape` tag at the top of each loaded template.
      */
     autoEscapingStrategy?: string;
@@ -83,10 +80,10 @@ export interface TwingEnvironment {
     readonly charset: string;
     readonly dateFormat: string;
     readonly dateIntervalFormat: string;
+    readonly escapingStrategyHandlers: Record<EscapingStrategy, EscapingStrategyHandler>;
     readonly numberFormat: TwingNumberFormat;
     readonly filters: Map<string, TwingFilter>;
     readonly functions: Map<string, TwingFunction>;
-    isSandboxed: boolean;
     readonly isStrictVariables: boolean;
     readonly loader: TwingLoader;
     readonly sandboxPolicy: TwingSandboxSecurityPolicy;
@@ -112,25 +109,18 @@ export interface TwingEnvironment {
 
     addTest(test: TwingTest): void;
 
-    createTemplateFromString(content: string, name: string | null): Promise<TwingTemplate>;
-
-    escape(template: TwingTemplate, value: string | boolean | TwingMarkup | null | undefined, strategy: EscapingStrategy | string, charset: string | null, autoEscape?: boolean): Promise<string | boolean | TwingMarkup>;
-
     /**
      * Loads a template by its name.
      *
-     * @param name The template name
+     * @param name The name of the template to load
+     * @param from The name of the template that requested the load
      *
      * @throws {TwingTemplateLoadingError}  When the template cannot be found
-     * @throws {TwingRuntimeError} ...
-     * @throws {TwingParsingError} When an error occurred during compilation
-     * @throws {TwingCompilationError}  When an error occurred during compilation
+     * @throws {TwingParsingError} When an error occurred during the parsing of the source
      *
      * @return
      */
     loadTemplate(name: string, from?: string | null): Promise<TwingTemplate>;
-
-    mergeGlobals(context: Map<any, any>): Map<any, any>;
 
     /**
      * Register the passed listener...
@@ -163,36 +153,7 @@ export interface TwingEnvironment {
     }>;
 
     registerEscapingStrategy(handler: EscapingStrategyHandler, name: string): void;
-
-    /**
-     * Registers a template [...]
-     *
-     * @param template
-     * @param name
-     */
-    registerTemplate(template: TwingTemplate, name: string): void;
-
-    /**
-     * Tries to load templates consecutively from an array.
-     *
-     * Similar to loadTemplate() but it also accepts instances of TwingTemplate and an array of templates where each is tried to be loaded.
-     *
-     * @param {string|TwingTemplate|Array<string|TwingTemplate>} names A template or an array of templates to try consecutively
-     * @param {TwingSource} from The source of the template that initiated the resolving.
-     *
-     * @return {Promise<TwingTemplate>}
-     *
-     */
-    resolveTemplate(names: Array<string | TwingTemplate | null>, from: string): Promise<TwingTemplate>;
-
-    /**
-     * Registers a Global.
-     *
-     * @param {string} name The global name
-     * @param {*} value The global value
-     */
-    setGlobal(name: string, value: any): void;
-
+    
     /**
      * Tokenizes a source code.
      *
@@ -240,7 +201,6 @@ export function createEnvironment(
         thousandSeparator: ','
     };
     const eventEmitter = new EventEmitter();
-    const globals: Map<string, any> = new Map();
     const sandboxPolicy = options?.sandboxPolicy || createSandboxSecurityPolicy();
 
     let isSandboxed = options?.sandboxed ? true : false;
@@ -248,16 +208,6 @@ export function createEnvironment(
     let parser: TwingParser;
 
     const loadedTemplates: Map<string, TwingTemplate> = new Map();
-
-    const getTemplateHash = async (name: string, from: string | null): Promise<string | null> => {
-        let key = await loader.getCacheKey(name, from);
-
-        if (key === null) {
-            return null;
-        }
-
-        return createHash("sha256").update(key).digest('hex');
-    };
 
     const environment: TwingEnvironment = {
         get charset() {
@@ -269,8 +219,8 @@ export function createEnvironment(
         get dateIntervalFormat() {
             return dateIntervalFormat;
         },
-        get numberFormat() {
-            return numberFormat;
+        get escapingStrategyHandlers() {
+            return escapingStrategyHandlers;
         },
         get filters() {
             return extensionSet.filters;
@@ -278,17 +228,14 @@ export function createEnvironment(
         get functions() {
             return extensionSet.functions;
         },
-        get isSandboxed() {
-            return isSandboxed;
-        },
-        set isSandboxed(value) {
-            isSandboxed = value;
-        },
         get isStrictVariables() {
             return options?.strictVariables ? true : false;
         },
         get loader() {
             return loader;
+        },
+        get numberFormat() {
+            return numberFormat;
         },
         get sandboxPolicy() {
             return sandboxPolicy;
@@ -306,66 +253,19 @@ export function createEnvironment(
         addOperator: extensionSet.addOperator,
         addTagHandler: extensionSet.addTagHandler,
         addTest: extensionSet.addTest,
-        createTemplateFromString: (code, name) => {
-            const hash: string = createHash("sha256").update(code).digest("hex").toString();
-
-            if (name !== null) {
-                name = `${name} (string template ${hash})`;
-            } else {
-                name = `__string_template__${hash}`;
-            }
-
-            const ast = environment.parse(environment.tokenize(createSource(name, code)));
-            const template = createTemplate(environment, ast);
-
-            environment.registerTemplate(template, name);
-
-            return Promise.resolve(template);
-        },
-        escape: (template, value, strategy, charset) => {
-            if (typeof value === "boolean") {
-                return Promise.resolve(value);
-            }
-
-            if (isAMarkup(value)) {
-                return Promise.resolve(value);
-            }
-
-            let result: string;
-
-            if ((value === null) || (value === undefined)) {
-                result = '';
-            } else {
-                const strategyHandler = escapingStrategyHandlers[strategy];
-
-                if (strategyHandler === undefined) {
-                    return Promise.reject(createRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(escapingStrategyHandlers).sort().join(', ')}).`));
-                }
-
-                result = strategyHandler(value.toString(), charset || environment.charset, template.templateName);
-            }
-
-            return Promise.resolve(result);
-        },
         loadTemplate: async (name, from = null) => {
             eventEmitter.emit('load', name, from);
 
-            let loadedTemplate: TwingTemplate | undefined;
-
-            const templateHash = await getTemplateHash(name, from);
-
-            if (templateHash) {
-                loadedTemplate = loadedTemplates.get(templateHash);
-            }
+            let templateFqn = await loader.resolve(name, from) || name;
+            let loadedTemplate = loadedTemplates.get(templateFqn);
 
             if (loadedTemplate) {
                 return Promise.resolve(loadedTemplate);
             } else {
-                const cacheKey = cache && templateHash ? await cache.generateKey(templateHash) : null;
-                const timestamp = cache && cacheKey ? await cache.getTimestamp(cacheKey) : 0;
+                const timestamp = cache ? await cache.getTimestamp(templateFqn) : 0;
 
                 const getAstFromCache = async (): Promise<TwingTemplateNode | null> => {
-                    if (cache === null || cacheKey === null) {
+                    if (cache === null) {
                         return Promise.resolve(null);
                     }
 
@@ -379,19 +279,19 @@ export function createEnvironment(
                         const isFresh = await loader.isFresh(name, timestamp, from);
 
                         if (isFresh) {
-                            content = await cache.load(cacheKey);
+                            content = await cache.load(name);
                         } else {
                             content = null;
                         }
                     } else {
-                        content = await cache.load(cacheKey);
+                        content = await cache.load(name);
                     }
 
                     return content;
                 };
 
                 const getAstFromLoader = async (): Promise<TwingTemplateNode | null> => {
-                    const source = await loader.getSourceContext(name, from);
+                    const source = await loader.getSource(name, from);
 
                     if (source === null) {
                         return null;
@@ -399,8 +299,8 @@ export function createEnvironment(
 
                     const ast = environment.parse(environment.tokenize(source));
 
-                    if (cache !== null && cacheKey !== null) {
-                        await cache.write(cacheKey, ast);
+                    if (cache !== null) {
+                        await cache.write(name, ast);
                     }
 
                     return ast;
@@ -418,19 +318,10 @@ export function createEnvironment(
 
                 const template = createTemplate(environment, ast);
 
-                environment.registerTemplate(template, templateHash!); // todo: can't we do better?
+                loadedTemplates.set(templateFqn, template);
 
                 return template;
             }
-        },
-        mergeGlobals: (context) => {
-            for (let [key, value] of globals) {
-                if (!context.has(key)) {
-                    context.set(key, value);
-                }
-            }
-
-            return context;
         },
         on: (eventName, listener) => {
             eventEmitter.on(eventName, listener);
@@ -481,19 +372,18 @@ export function createEnvironment(
                 const source = stream.source;
 
                 if (!(error as TwingParsingError).source) {
-                    (error as TwingParsingError).source = source.resolvedName;
+                    (error as TwingParsingError).source = source.name;
                 }
 
                 throw error;
             }
         },
-        registerTemplate: (template: TwingTemplate, name: string): void => {
-            loadedTemplates.set(name, template);
-        },
         render: (name, context) => {
             return environment.loadTemplate(name)
                 .then((template) => {
-                    return template.render(context);
+                    return template.render(context, {
+                        sandboxed: isSandboxed
+                    });
                 });
         },
         renderWithSourceMap: (name, context) => {
@@ -501,7 +391,10 @@ export function createEnvironment(
 
             return environment.loadTemplate(name)
                 .then((template) => {
-                    return template.render(context, undefined, sourceMapRuntime);
+                    return template.render(context, {
+                        sandboxed: isSandboxed,
+                        sourceMapRuntime
+                    });
                 })
                 .then((data) => {
                     const {sourceMap} = sourceMapRuntime;
@@ -511,37 +404,6 @@ export function createEnvironment(
                         sourceMap
                     };
                 });
-        },
-        resolveTemplate: (names, from) => {
-            const loadTemplateAtIndex = (index: number): Promise<TwingTemplate> => {
-                if (index < names.length) {
-                    const name = names[index];
-
-                    if (name === null) {
-                        return loadTemplateAtIndex(index + 1);
-                    } else if (typeof name !== "string") {
-                        return Promise.resolve(name);
-                    } else {
-                        return environment.loadTemplate(name, from)
-                            .catch(() => {
-                                return loadTemplateAtIndex(index + 1);
-                            });
-                    }
-                } else {
-                    return Promise.reject(createTemplateLoadingError((names as Array<string | null>).map((name) => {
-                        if (name === null) {
-                            return '';
-                        }
-
-                        return name;
-                    }), undefined, from));
-                }
-            };
-
-            return loadTemplateAtIndex(0);
-        },
-        setGlobal: (name, value) => {
-            globals.set(name, value);
         },
         tokenize: (source: TwingSource): TwingTokenStream => {
             if (!lexer) {

@@ -11,10 +11,7 @@ import {TwingTemplate} from "../../../template";
  * @return {Promise<string>} The template source
  */
 export const source = (template: TwingTemplate, name: string, ignoreMissing: boolean): Promise<string | null> => {
-    const environment = template.environment;
-    const from = template.templateName;
-
-    return environment.loader.getSourceContext(name, from)
+    return template.getTemplateSource(name)
         .then((source) => {
             if (!ignoreMissing && (source === null)) {
                 throw createTemplateLoadingError([name]);

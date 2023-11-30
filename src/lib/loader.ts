@@ -2,24 +2,24 @@ import type {TwingSource} from "./source";
 
 export interface TwingLoader {
     /**
-     * Returns the source context for a given template logical name.
+     * Returns the source for a given template logical name.
      *
      * @param {string} name The template logical name
      * @param {TwingSource} from The source that initiated the template loading
      *
      * @returns {Promise<TwingSource | string>}
      */
-    getSourceContext: (name: string, from: string | null) => Promise<TwingSource | null>;
-
+    getSource: (name: string, from: string | null) => Promise<TwingSource | null>;
+    
     /**
-     * Gets the cache key to use for the cache for a given template name.
+     * Resolve a template FQN from its name and the name of the template that initiated the loading.
      *
      * @param {string} name The name of the template to load
      * @param {TwingSource} from The source that initiated the template loading
      *
      * @returns {Promise<string | null>} The cache key
      */
-    getCacheKey: (name: string, from: string | null) => Promise<string | null>;
+    resolve: (name: string, from: string | null) => Promise<string | null>;
 
     /**
      * Returns true if the template is still fresh.
@@ -43,14 +43,4 @@ export interface TwingLoader {
      * @returns {Promise<boolean>} If the template source code is handled by this loader or not
      */
     exists: (name: string, from: string | null) => Promise<boolean>;
-
-    /**
-     * Resolve the path of a template, given its name, whatever it means in the context of the loader.
-     *
-     * @param {string} name The name of the template to resolve
-     * @param {TwingSource} from The source that initiated the template loading
-     *
-     * @returns {Promise<string | null>} The resolved path of the template
-     */
-    resolve: (name: string, from: string | null) => Promise<string | null>;
 }

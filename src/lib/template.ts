@@ -1,27 +1,43 @@
 import {createContext, TwingContext} from "./context";
-import {TwingEnvironment} from "./environment";
+import {TwingEnvironment, TwingNumberFormat} from "./environment";
 import {createOutputBuffer, TwingOutputBuffer} from "./output-buffer";
 import {TwingSourceMapRuntime} from "./source-map-runtime";
 import {TwingTemplateNode} from "./node/template";
 import {mergeIterables} from "./helpers/merge-iterables";
 import {createRuntimeError} from "./error/runtime";
 import {getChildren, getChildrenCount, TwingBaseNode} from "./node";
-import {isATwingError, TwingError} from "./error";
+import {TwingError} from "./error";
 import {isAMapLike} from "./helpers/map-like";
-import {createMarkup, TwingMarkup} from "./markup";
-import {include} from "./extension/core/functions/include";
-import {isATemplateLoadingError} from "./error/loader";
+import {createMarkup, isAMarkup, TwingMarkup} from "./markup";
+import {createTemplateLoadingError, isATemplateLoadingError} from "./error/loader";
 import {cloneMap} from "./helpers/clone-map";
 import {createBodyNode} from "./node/body";
 import {getKeyValuePairs} from "./node/expression/array";
 import {iteratorToMap} from "./helpers/iterator-to-map";
-import {TwingSource} from "./source";
+import {createSource, TwingSource} from "./source";
+import {TwingFilter} from "./filter";
+import {TwingFunction} from "./function";
+import {TwingTest} from "./test";
+import {getFilter} from "./helpers/get-filter";
+import {getTest} from "./helpers/get-test";
+import {getFunction} from "./helpers/get-function";
+import * as createHash from "create-hash";
+import {EscapingStrategy} from "./escaping-strategy";
+import {getTraceableMethod} from "./helpers/traceable-method";
 
 export type TwingTemplateBlockMap = Map<string, [TwingTemplate, string]>;
-export type BlockHandler = (context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, blocks: TwingTemplateBlockMap, sourceMapRuntime?: TwingSourceMapRuntime) => Promise<void>;
+export type BlockHandler = (
+    context: TwingContext<any, any>,
+    outputBuffer: TwingOutputBuffer,
+    blocks: TwingTemplateBlockMap,
+    sandboxed: boolean,
+    sourceMapRuntime?: TwingSourceMapRuntime
+) => Promise<void>;
 export type MacroHandler = (
     outputBuffer: TwingOutputBuffer,
-    sourceMapRuntime: TwingSourceMapRuntime | undefined, ...args: Array<any>
+    sandboxed: boolean,
+    sourceMapRuntime: TwingSourceMapRuntime | undefined,
+    ...macroArguments: Array<any>
 ) => Promise<TwingMarkup>;
 
 export type TwingTemplateAliases = TwingContext<string, TwingTemplate>;
@@ -30,24 +46,35 @@ export interface TwingTemplate {
     readonly aliases: TwingTemplateAliases;
     readonly blockHandlers: Map<string, BlockHandler>;
     readonly canBeUsedAsATrait: boolean;
-    readonly environment: TwingEnvironment;
-    readonly macroHandlers: Map<string, MacroHandler>;
+    readonly charset: string;
+    readonly dateFormat: string;
+    readonly dateIntervalFormat: string;
+    readonly isStrictVariables: boolean;
     readonly source: TwingSource;
-    readonly templateName: string;
-
-    assertToStringAllowed<T>(candidate: T): T;
-
-    callMacro(
-        template: TwingTemplate,
-        name: string,
-        outputBuffer: TwingOutputBuffer,
-        args: Array<any>,
-        line: number,
-        column: number,
-        context: TwingContext<any, any>,
-        templateName: string,
-        sourceMapRuntime?: TwingSourceMapRuntime
-    ): Promise<TwingMarkup>;
+    readonly macroHandlers: Map<string, MacroHandler>;
+    readonly name: string;
+    readonly numberFormat: TwingNumberFormat;
+    readonly timezone: string;
+    
+    /**
+     * @param candidate
+     * @param method
+     *
+     * @throws {@link TwingSandboxSecurityNotAllowedMethodError} When the method of the passed candidate is not allowed to be executed
+     */
+    checkMethodAllowed(candidate: any | TwingMarkup, method: string): void;
+    
+    /**
+     * @param candidate
+     * @param property
+     *
+     * @throws {@link TwingSandboxSecurityNotAllowedPropertyError} When the property of the passed candidate is not allowed to be accessed
+     */
+    checkPropertyAllowed(candidate: any | TwingMarkup, property: string): void;
+    
+    checkSecurity(tags: Array<string>, filters: Array<string>, functions: Array<string>): void;
+    
+    createTemplateFromString(content: string, name: string | null): Promise<TwingTemplate>;
 
     displayBlock(
         name: string,
@@ -55,21 +82,33 @@ export interface TwingTemplate {
         outputBuffer: TwingOutputBuffer,
         blocks: TwingTemplateBlockMap,
         useBlocks: boolean,
+        sandboxed: boolean,
         sourceMapRuntime?: TwingSourceMapRuntime
     ): Promise<void>;
+
+    escape(template: TwingTemplate, value: string | boolean | TwingMarkup | null | undefined, strategy: EscapingStrategy | string, charset: string | null, autoEscape?: boolean): Promise<string | boolean | TwingMarkup>;
 
     execute(
         context: TwingContext<any, any>,
         outputBuffer: TwingOutputBuffer,
-        blocks?: TwingTemplateBlockMap,
-        sourceMapRuntime?: TwingSourceMapRuntime
+        childBlocks: TwingTemplateBlockMap,
+        options?: {
+            sandboxed?: boolean,
+            sourceMapRuntime?: TwingSourceMapRuntime
+        }
     ): Promise<void>;
 
     getBlocks(): Promise<TwingTemplateBlockMap>;
 
-    getParent(context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer): Promise<TwingTemplate | null>;
+    getFilter(name: string): TwingFilter | null;
 
-    getTraceableMethod<M extends (...args: Array<any>) => Promise<any>>(method: M, line: number, column: number, templateName: string): M;
+    getFunction(name: string): TwingFunction | null;
+
+    getParent(context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, sandboxed: boolean): Promise<TwingTemplate | null>;
+
+    getTemplateSource(name: string): Promise<TwingSource | null>;
+
+    getTest(name: string): TwingTest | null;
 
     getTraits(): Promise<TwingTemplateBlockMap>;
 
@@ -78,34 +117,37 @@ export interface TwingTemplate {
         context: TwingContext<any, any>,
         outputBuffer: TwingOutputBuffer,
         blocks: TwingTemplateBlockMap,
+        sandboxed: boolean
     ): Promise<boolean>;
 
     hasMacro(name: string): Promise<boolean>;
 
-    include(
-        template: TwingTemplate,
-        context: TwingContext<any, any>,
-        outputBuffer: TwingOutputBuffer,
-        sourceMapRunTime: TwingSourceMapRuntime | null,
-        templates: string | Map<number, string | TwingTemplate> | TwingTemplate | null,
-        variables: Map<string, any>,
-        withContext: boolean,
-        ignoreMissing: boolean,
-        sandboxed: boolean,
-        line: number,
-        column: number
-    ): Promise<TwingMarkup>;
-
-    loadTemplate(
-        token: TwingTemplate | string | Map<number, TwingTemplate | null>,
-        line: number,
-        column: number,
-        index?: number
+    /**
+     * @param index
+     *
+     * @throws {TwingTemplateLoadingError} When no embedded template exists for the passed index.
+     */
+    loadEmbeddedTemplate(
+        index: number
     ): Promise<TwingTemplate>;
 
-    mergeGlobals(context: Map<any, any>): Map<any, any>;
+    /**
+     * @param identifier
+     *
+     * @throws {TwingTemplateLoadingError} When no embedded template exists for the passed identifier.
+     */
+    loadTemplate(
+        identifier: TwingTemplate | string | Map<number, TwingTemplate | null>
+    ): Promise<TwingTemplate>;
 
-    render(context: Record<string, any>, outputBuffer?: TwingOutputBuffer, sourceMapRuntime?: TwingSourceMapRuntime): Promise<string>;
+    render(
+        context: Record<string, any>,
+        options?: {
+            outputBuffer?: TwingOutputBuffer;
+            sandboxed?: boolean;
+            sourceMapRuntime?: TwingSourceMapRuntime;
+        }
+    ): Promise<string>;
 
     renderBlock(
         name: string,
@@ -113,6 +155,7 @@ export interface TwingTemplate {
         outputBuffer: TwingOutputBuffer,
         blocks: TwingTemplateBlockMap,
         useBlocks: boolean,
+        sandboxed: boolean,
         sourceMapRuntime?: TwingSourceMapRuntime
     ): Promise<string>;
 
@@ -120,38 +163,48 @@ export interface TwingTemplate {
         name: string,
         context: TwingContext<any, any>,
         outputBuffer: TwingOutputBuffer,
+        sandboxed: boolean,
         sourceMapRuntime?: TwingSourceMapRuntime
     ): Promise<string>;
+
+    /**
+     * Tries to load templates consecutively from an array.
+     *
+     * Similar to loadTemplate() but it also accepts instances of TwingTemplate and an array of templates where each is tried to be loaded.
+     *
+     * @param names A template or an array of templates to try consecutively
+     */
+    resolveTemplate(names: Array<string | TwingTemplate | null>): Promise<TwingTemplate>;
 }
 
 export const createTemplate = (
     environment: TwingEnvironment,
     ast: TwingTemplateNode
 ): TwingTemplate => {
-    let blockHandlers: Map<string, BlockHandler> = new Map();
-    let macroHandlers: Map<string, MacroHandler> = new Map();
+    // blocks
+    const blockHandlers: Map<string, BlockHandler> = new Map();
 
     let blocks: TwingTemplateBlockMap | null = null;
-    let parent: TwingTemplate | null = null;
 
-    // handle blocks
     const {blocks: blockNodes} = ast.children;
 
     for (const [name, blockNode] of getChildren(blockNodes)) {
-        const blockHandler: BlockHandler = (context, outputBuffer, blocks, sourceMapRuntime) => {
+        const blockHandler: BlockHandler = (context, outputBuffer, blocks, sandboxed, sourceMapRuntime) => {
             const aliases = template.aliases.clone();
 
-            return blockNode.children.body.execute(template, context, outputBuffer, blocks, aliases, sourceMapRuntime);
+            return blockNode.children.body.execute({template, context, outputBuffer, blocks, aliases, sandboxed, sourceMapRuntime});
         };
 
         blockHandlers.set(name, blockHandler);
     }
 
-    // handle macros
+    // macros
+    const macroHandlers: Map<string, MacroHandler> = new Map();
+
     const {macros: macrosNode} = ast.children;
 
     for (const [name, macroNode] of Object.entries(macrosNode.children)) {
-        const macroHandler: MacroHandler = async (outputBuffer, sourceMapRuntime, ...args) => {
+        const macroHandler: MacroHandler = async (outputBuffer, sandboxed, sourceMapRuntime, ...args) => {
             const {body, arguments: macroArguments} = macroNode.children;
             const keyValuePairs = getKeyValuePairs(macroArguments);
 
@@ -161,7 +214,15 @@ export const createTemplate = (
 
             for (const {key: keyNode, value: defaultValueNode} of keyValuePairs) {
                 const key = keyNode.attributes.value as string;
-                const defaultValue = await defaultValueNode.execute(template, createContext(), outputBuffer, new Map(), aliases, sourceMapRuntime);
+                const defaultValue = await defaultValueNode.execute({
+                    template,
+                    context: createContext(),
+                    outputBuffer,
+                    blocks: new Map(),
+                    aliases,
+                    sandboxed,
+                    sourceMapRuntime
+                });
 
                 let value = args.shift();
 
@@ -174,12 +235,12 @@ export const createTemplate = (
 
             localVariables.set('varargs', args);
 
-            const context = createContext(template.mergeGlobals(localVariables));
+            const context = createContext(localVariables);
             const blocks = new Map();
 
             outputBuffer.start();
 
-            return await body.execute(template, context, outputBuffer, blocks, aliases, sourceMapRuntime)
+            return await body.execute({template, context, outputBuffer, blocks, aliases, sandboxed, sourceMapRuntime})
                 .then(() => {
                     const content = outputBuffer.getContents();
 
@@ -193,17 +254,20 @@ export const createTemplate = (
         macroHandlers.set(name, macroHandler);
     }
 
-    // handle traits
+    // traits
     let traits: TwingTemplateBlockMap | null = null;
 
-    // handle embedded templates
+    // embedded templates
     const embeddedTemplates: Map<number, TwingTemplateNode> = new Map();
 
     for (const embeddedTemplate of ast.embeddedTemplates) {
         embeddedTemplates.set(embeddedTemplate.attributes.index, embeddedTemplate);
     }
 
-    const displayParentBlock = (name: string, context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, blocks: TwingTemplateBlockMap, sourceMapRuntime?: TwingSourceMapRuntime): Promise<void> => {
+    // parent
+    let parent: TwingTemplate | null = null;
+
+    const displayParentBlock = (name: string, context: TwingContext<any, any>, outputBuffer: TwingOutputBuffer, blocks: TwingTemplateBlockMap, sandboxed: boolean, sourceMapRuntime?: TwingSourceMapRuntime): Promise<void> => {
         return template.getTraits()
             .then((traits) => {
                 const trait = traits.get(name);
@@ -217,15 +281,16 @@ export const createTemplate = (
                         outputBuffer,
                         blocks,
                         false,
+                        sandboxed,
                         sourceMapRuntime
                     );
                 } else {
-                    return template.getParent(context, outputBuffer)
+                    return template.getParent(context, outputBuffer, sandboxed)
                         .then((parent) => {
                             if (parent !== null) {
-                                return parent.displayBlock(name, context, outputBuffer, blocks, false, sourceMapRuntime);
+                                return parent.displayBlock(name, context, outputBuffer, blocks, false, sandboxed, sourceMapRuntime);
                             } else {
-                                throw createRuntimeError(`The template has no parent and no traits defining the "${name}" block.`, undefined, template.templateName);
+                                throw createRuntimeError(`The template has no parent and no traits defining the "${name}" block.`, undefined, template.name);
                             }
                         });
                 }
@@ -273,56 +338,51 @@ export const createTemplate = (
         get canBeUsedAsATrait() {
             return canBeUsedAsATrait;
         },
-        get environment() {
-            return environment;
+        get charset() {
+            return environment.charset;
+        },
+        get dateFormat() {
+            return environment.dateFormat;
+        },
+        get dateIntervalFormat() {
+            return environment.dateIntervalFormat;
+        },
+        get isStrictVariables() {
+            return environment.isStrictVariables;
         },
         get macroHandlers() {
             return macroHandlers;
         },
+        get name() {
+            return template.source.name;
+        },
+        get numberFormat() {
+            return environment.numberFormat;
+        },
         get source() {
             return ast.attributes.source;
         },
-        get templateName() {
-            return template.source.name;
+        get timezone() {
+            return environment.timezone;
         },
-        assertToStringAllowed: (candidate) => {
-            if (environment.isSandboxed && typeof candidate === 'object') {
-                environment.sandboxPolicy.checkMethodAllowed(candidate, 'toString');
+        checkMethodAllowed: environment.sandboxPolicy.checkMethodAllowed,
+        checkPropertyAllowed: environment.sandboxPolicy.checkPropertyAllowed,
+        checkSecurity: environment.sandboxPolicy.checkSecurity,
+        createTemplateFromString: (code, name) => {
+            const hash: string = createHash("sha256").update(code).digest("hex").toString();
+
+            if (name !== null) {
+                name = `${name} (string template ${hash})`;
+            } else {
+                name = `__string_template__${hash}`;
             }
 
-            return candidate;
-        },
-        callMacro: (template, name, outputBuffer, args, line, column, context, templateName, sourceMapRuntime) => {
-            const getHandler = (template: TwingTemplate): Promise<MacroHandler | null> => {
-                const macroHandler = template.macroHandlers.get(name);
+            const ast = environment.parse(environment.tokenize(createSource(name, code)));
+            const template = createTemplate(environment, ast);
 
-                if (macroHandler) {
-                    return Promise.resolve(macroHandler);
-                } else {
-                    return template.getParent(context, outputBuffer)
-                        .then((parent) => {
-                            if (parent) {
-                                return getHandler(parent);
-                            } else {
-                                return null;
-                            }
-                        });
-                }
-            };
-
-            return getHandler(template)
-                .then((handler) => {
-                    if (handler) {
-                        return handler(outputBuffer, sourceMapRuntime, ...args);
-                    } else {
-                        throw createRuntimeError(`Macro "${name}" is not defined in template "${template.templateName}".`, {
-                            line,
-                            column
-                        }, templateName);
-                    }
-                });
+            return Promise.resolve(template);
         },
-        displayBlock: (name, context, outputBuffer, blocks, useBlocks, sourceMapRuntime) => {
+        displayBlock: (name, context, outputBuffer, blocks, useBlocks, sandboxed, sourceMapRuntime) => {
             return template.getBlocks()
                 .then((ownBlocks) => {
                     let blockHandler: BlockHandler | undefined;
@@ -339,20 +399,20 @@ export const createTemplate = (
                     }
 
                     if (blockHandler) {
-                        return blockHandler(context, outputBuffer, blocks, sourceMapRuntime);
+                        return blockHandler(context, outputBuffer, blocks, sandboxed, sourceMapRuntime);
                     } else {
-                        return template.getParent(context, outputBuffer).then((parent) => {
+                        return template.getParent(context, outputBuffer, sandboxed).then((parent) => {
                             if (parent) {
-                                return parent.displayBlock(name, context, outputBuffer, mergeIterables(ownBlocks, blocks), false, sourceMapRuntime);
+                                return parent.displayBlock(name, context, outputBuffer, mergeIterables(ownBlocks, blocks), false, sandboxed, sourceMapRuntime);
                             } else {
                                 const block = blocks.get(name);
 
                                 if (block) {
                                     const [blockTemplate] = block!;
 
-                                    throw createRuntimeError(`Block "${name}" should not call parent() in "${blockTemplate.templateName}" as the block does not exist in the parent template "${template.templateName}".`, undefined, blockTemplate.templateName);
+                                    throw createRuntimeError(`Block "${name}" should not call parent() in "${blockTemplate.name}" as the block does not exist in the parent template "${template.name}".`, undefined, blockTemplate.name);
                                 } else {
-                                    throw createRuntimeError(`Block "${name}" on template "${template.templateName}" does not exist.`, undefined, template.templateName);
+                                    throw createRuntimeError(`Block "${name}" on template "${template.name}" does not exist.`, undefined, template.name);
                                 }
                             }
                         });
@@ -360,30 +420,62 @@ export const createTemplate = (
                     }
                 });
         },
-        execute: async (context, outputBuffer, blocks = new Map(), sourceMapRuntime) => {
+        escape: (template, value, strategy, charset) => {
+            if (typeof value === "boolean") {
+                return Promise.resolve(value);
+            }
+
+            if (isAMarkup(value)) {
+                return Promise.resolve(value);
+            }
+
+            let result: string;
+
+            if ((value === null) || (value === undefined)) {
+                result = '';
+            } else {
+                const strategyHandler = environment.escapingStrategyHandlers[strategy];
+
+                if (strategyHandler === undefined) {
+                    return Promise.reject(createRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(environment.escapingStrategyHandlers).sort().join(', ')}).`));
+                }
+
+                result = strategyHandler(value.toString(), charset || environment.charset, template.name);
+            }
+
+            return Promise.resolve(result);
+        },
+        execute: async (context, outputBuffer, childBlocks, options) => {
             const aliases = template.aliases.clone();
 
+            const sandboxed = options?.sandboxed || false;
+            const sourceMapRuntime = options?.sourceMapRuntime;
+
             return Promise.all([
-                template.getParent(context, outputBuffer),
+                template.getParent(context, outputBuffer, sandboxed),
                 template.getBlocks()
             ]).then(([parent, ownBlocks]) => {
-                return ast.execute(
+                const blocks = mergeIterables(ownBlocks, childBlocks);
+
+                return ast.execute({
                     template,
                     context,
                     outputBuffer,
-                    mergeIterables(ownBlocks, blocks),
+                    blocks,
                     aliases,
+                    sandboxed,
                     sourceMapRuntime
-                ).then(() => {
+                }).then(() => {
                     if (parent) {
-                        const parentBlocks = mergeIterables(ownBlocks, blocks)
-
-                        return parent.execute(context, outputBuffer, parentBlocks, sourceMapRuntime);
+                        return parent.execute(context, outputBuffer, blocks, {
+                            sandboxed,
+                            sourceMapRuntime
+                        });
                     }
                 });
             }).catch((error: TwingError) => {
                 if (!error.source) {
-                    error.source = template.templateName;
+                    error.source = template.name;
                 }
 
                 if (isATemplateLoadingError(error)) {
@@ -407,7 +499,13 @@ export const createTemplate = (
                     });
             }
         },
-        getParent: async (context, outputBuffer) => {
+        getFilter: (name) => {
+            return getFilter(environment.filters, name);
+        },
+        getFunction: (name) => {
+            return getFunction(environment.functions, name);
+        },
+        getParent: async (context, outputBuffer, sandboxed) => {
             if (parent !== null) {
                 return Promise.resolve(parent);
             }
@@ -417,8 +515,23 @@ export const createTemplate = (
             if (parentNode) {
                 return template.getBlocks()
                     .then(async (blocks) => {
-                        const parentName = await parentNode.execute(template, context, outputBuffer, blocks, createContext());
-                        const loadedParent = await template.loadTemplate(parentName, parentNode.line, parentNode.column);
+                        const parentName = await parentNode.execute({
+                            template,
+                            context,
+                            outputBuffer,
+                            blocks,
+                            aliases: createContext(),
+                            sandboxed
+                        });
+
+                        const loadTemplate = getTraceableMethod(
+                            template.loadTemplate,
+                            parentNode.line,
+                            parentNode.column,
+                            template.name
+                        );
+
+                        const loadedParent = await loadTemplate(parentName);
 
                         if (parentNode.is("constant")) {
                             parent = loadedParent;
@@ -430,25 +543,11 @@ export const createTemplate = (
                 return Promise.resolve(null);
             }
         },
-        getTraceableMethod: (method, line, column, templateName) => {
-            return ((...args: Array<any>) => {
-                return method(...args)
-                    .catch((error) => {
-                        if (isATwingError(error)) {
-                            if (error.location === undefined) {
-                                error.location = {line, column};
-                                error.source = templateName;
-                            }
-                        } else {
-                            throw createRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, {
-                                line,
-                                column
-                            }, templateName, error);
-                        }
-
-                        throw error;
-                    });
-            }) as typeof method;
+        getTemplateSource: (name) => {
+            return environment.loader.getSource(name, template.name);
+        },
+        getTest: (name) => {
+            return getTest(environment.tests, name);
         },
         getTraits: async () => {
             if (traits === null) {
@@ -460,14 +559,17 @@ export const createTemplate = (
                     const {template: templateNameNode, targets} = traitNode.children;
                     const templateName = templateNameNode.attributes.value as string;
 
-                    const traitExecutionContext = (await template.loadTemplate(
-                        templateName,
+                    const loadTemplate = getTraceableMethod(
+                        template.loadTemplate,
                         templateNameNode.line,
-                        templateNameNode.column
-                    ));
+                        templateNameNode.column,
+                        template.name
+                    );
+
+                    const traitExecutionContext = await loadTemplate(templateName);
 
                     if (!traitExecutionContext.canBeUsedAsATrait) {
-                        throw createRuntimeError(`Template ${templateName} cannot be used as a trait.`, templateNameNode, template.templateName);
+                        throw createRuntimeError(`Template ${templateName} cannot be used as a trait.`, templateNameNode, template.name);
                     }
 
                     const traitBlocks = cloneMap(await traitExecutionContext.getBlocks());
@@ -476,7 +578,7 @@ export const createTemplate = (
                         const traitBlock = traitBlocks.get(key);
 
                         if (!traitBlock) {
-                            throw createRuntimeError(`Block "${key}" is not defined in trait "${templateName}".`, templateNameNode, template.templateName);
+                            throw createRuntimeError(`Block "${key}" is not defined in trait "${templateName}".`, templateNameNode, template.name);
                         }
 
                         const targetValue = target.attributes.value;
@@ -491,7 +593,7 @@ export const createTemplate = (
 
             return Promise.resolve(traits);
         },
-        hasBlock: (name, context, outputBuffer, blocks): Promise<boolean> => {
+        hasBlock: (name, context, outputBuffer, blocks, sandboxed): Promise<boolean> => {
             if (blocks.has(name)) {
                 return Promise.resolve(true);
             } else {
@@ -500,10 +602,10 @@ export const createTemplate = (
                         if (blocks.has(name)) {
                             return Promise.resolve(true);
                         } else {
-                            return template.getParent(context, outputBuffer)
+                            return template.getParent(context, outputBuffer, sandboxed)
                                 .then((parent) => {
                                     if (parent) {
-                                        return parent.hasBlock(name, context, outputBuffer, blocks);
+                                        return parent.hasBlock(name, context, outputBuffer, blocks, sandboxed);
                                     } else {
                                         return false;
                                     }
@@ -516,86 +618,89 @@ export const createTemplate = (
             // @see https://github.com/twigphp/Twig/issues/3174 as to why we don't check macro existence in parents
             return Promise.resolve(template.macroHandlers.has(name));
         },
-        include: (
-            template,
-            context,
-            outputBuffer,
-            sourceMapRunTime,
-            templates,
-            variables,
-            withContext,
-            ignoreMissing,
-            sandboxed,
-            line,
-            column
-        ) => {
-            return include(template, context, outputBuffer, sourceMapRunTime, templates, variables, withContext, ignoreMissing, sandboxed)
-                .catch((error: TwingError) => {
-                    if (error.location === undefined) {
-                        error.location = {line, column};
-                    }
+        loadEmbeddedTemplate: (index) => {
+            const ast = embeddedTemplates.get(index);
 
-                    throw error;
-                });
-        },
-        loadTemplate: (identifier, line, column, index) => {
-            let promise: Promise<TwingTemplate>;
-
-            if (index !== undefined) {
-                // this is an attempt to load an embedded template
-                const ast = embeddedTemplates.get(index)!; // it can't happen that the embedded template is not present in the register, by nature
-
-                promise = Promise.resolve(createTemplate(environment, ast));
-            } else {
-                if (typeof identifier === "string") {
-                    promise = environment.loadTemplate(identifier);
-                } else if (isAMapLike(identifier)) {
-                    promise = environment.resolveTemplate([...identifier.values()], template.templateName);
-                } else {
-                    promise = Promise.resolve(identifier);
-                }
+            if (ast === undefined) {
+                return Promise.reject(createTemplateLoadingError([`embedded#${index}`]));
             }
 
-            return promise
-                .catch((error: TwingError) => {
-                    if (error.location === undefined) {
-                        error.location = {line, column};
-                    }
-
-                    throw error;
-                });
+            return Promise.resolve(createTemplate(environment, ast));
         },
-        mergeGlobals: environment.mergeGlobals,
-        render: (context, outputBuffer, sourceMapRuntime) => {
-            const actualOutputBuffer: TwingOutputBuffer = outputBuffer || createOutputBuffer();
+        loadTemplate: (identifier) => {
+            let promise: Promise<TwingTemplate>;
+
+            if (typeof identifier === "string") {
+                promise = environment.loadTemplate(identifier, template.name);
+            } else if (isAMapLike(identifier)) {
+                promise = template.resolveTemplate([...identifier.values()]);
+            } else {
+                promise = Promise.resolve(identifier);
+            }
+
+            return promise;
+        },
+        render: (context, options) => {
+            const actualOutputBuffer: TwingOutputBuffer = options?.outputBuffer || createOutputBuffer();
 
             actualOutputBuffer.start();
 
             return template.execute(
-                createContext(environment.mergeGlobals(iteratorToMap(context))),
+                createContext(iteratorToMap(context)),
                 actualOutputBuffer,
-                undefined,
-                sourceMapRuntime
+                new Map(),
+                {
+                    sandboxed: options?.sandboxed,
+                    sourceMapRuntime: options?.sourceMapRuntime
+                }
             ).then(() => {
                 return actualOutputBuffer.getAndFlush();
             });
         },
-        renderBlock: (name, context, outputBuffer, blocks, useBlocks, sourceMapRuntime) => {
+        renderBlock: (name, context, outputBuffer, blocks, useBlocks, sandboxed, sourceMapRuntime) => {
             outputBuffer.start();
 
-            return template.displayBlock(name, context, outputBuffer, blocks, useBlocks, sourceMapRuntime).then(() => {
+            return template.displayBlock(name, context, outputBuffer, blocks, useBlocks, sandboxed, sourceMapRuntime).then(() => {
                 return outputBuffer.getAndClean();
             });
         },
-        renderParentBlock: (name, context, outputBuffer, sourceMapRuntime) => {
+        renderParentBlock: (name, context, outputBuffer, sandboxed, sourceMapRuntime) => {
             outputBuffer.start();
 
             return template.getBlocks()
                 .then((blocks) => {
-                    return displayParentBlock(name, context, outputBuffer, blocks, sourceMapRuntime).then(() => {
+                    return displayParentBlock(name, context, outputBuffer, blocks, sandboxed, sourceMapRuntime).then(() => {
                         return outputBuffer.getAndClean();
                     })
                 });
+        },
+        resolveTemplate: (names) => {
+            const loadTemplateAtIndex = (index: number): Promise<TwingTemplate> => {
+                if (index < names.length) {
+                    const name = names[index];
+
+                    if (name === null) {
+                        return loadTemplateAtIndex(index + 1);
+                    } else if (typeof name !== "string") {
+                        return Promise.resolve(name);
+                    } else {
+                        return template.loadTemplate(name)
+                            .catch(() => {
+                                return loadTemplateAtIndex(index + 1);
+                            });
+                    }
+                } else {
+                    return Promise.reject(createTemplateLoadingError((names as Array<string | null>).map((name) => {
+                        if (name === null) {
+                            return '';
+                        }
+
+                        return name;
+                    }), undefined, template.name));
+                }
+            };
+
+            return loadTemplateAtIndex(0);
         }
     };
 
