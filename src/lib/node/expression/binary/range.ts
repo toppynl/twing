@@ -5,9 +5,9 @@ export interface TwingRangeNode extends TwingBaseBinaryNode<"range"> {
 }
 
 export const createRangeNode = createBinaryNodeFactory<TwingRangeNode>("range", {
-    execute: async (baseNode, ...args) => {
-        const leftValue = await baseNode.children.left.execute(...args);
-        const rightValue = await baseNode.children.right.execute(...args);
+    execute: async (left, right, executionContext) => {
+        const leftValue = await left.execute(executionContext);
+        const rightValue = await right.execute(executionContext);
 
         return createRange(leftValue, rightValue, 1);
     }

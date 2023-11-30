@@ -26,13 +26,13 @@ export const createBaseTextNode = <Type extends string>(
 
     const node: BaseTextNode<Type> = {
         ...outputNode,
-        execute(...args) {
-            const [template, , outputBuffer, , , sourceMapRuntime] = args;
+        execute(executionContext) {
+            const {template, outputBuffer, sourceMapRuntime} = executionContext;
 
             sourceMapRuntime?.enterSourceMapBlock(node.line, node.column, node.type, template.source, outputBuffer);
 
             outputBuffer.echo(node.attributes.data);
-            
+
             sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);
 
             return Promise.resolve();

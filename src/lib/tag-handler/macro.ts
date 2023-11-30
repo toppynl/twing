@@ -51,7 +51,7 @@ export const createMacroTagHandler = (): TwingTagHandler => {
                     if (value != name) {
                         const {line, column} = nextToken;
 
-                        throw createParsingError(`Expected endmacro for macro "${name}" (but "${value}" given).`, {line, column}, stream.source.resolvedName);
+                        throw createParsingError(`Expected endmacro for macro "${name}" (but "${value}" given).`, {line, column}, stream.source.name);
                     }
                 }
 

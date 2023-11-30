@@ -16,15 +16,11 @@ export {createTemplateLoadingError, isATemplateLoadingError} from "./lib/error/l
 
 // loader
 export type {TwingFilesystemLoader, TwingFilesystemLoaderFilesystem} from "./lib/loader/filesystem";
-export type {
-    TwingRelativeFilesystemLoader, TwingRelativeFilesystemLoaderFilesystem
-} from "./lib/loader/relative-filesystem";
 export type {TwingArrayLoader} from "./lib/loader/array";
 export type {TwingChainLoader} from "./lib/loader/chain";
 export type {TwingLoader} from "./lib/loader";
 
 export {createFilesystemLoader} from "./lib/loader/filesystem";
-export {createRelativeFilesystemLoader} from "./lib/loader/relative-filesystem";
 export {createArrayLoader} from "./lib/loader/array";
 export {createChainLoader} from "./lib/loader/chain";
 
@@ -242,8 +238,10 @@ export type {TwingExtensionSet} from "./lib/extension-set";
 export type {TwingFilter} from "./lib/filter";
 export type {TwingFunction} from "./lib/function";
 export type {TwingLexer} from "./lib/lexer";
+export type {TwingBaseNode} from "./lib/node";
 export type {TwingNodeVisitor} from "./lib/node-visitor";
 export type {TwingOperator} from "./lib/operator";
+export type {TwingOutputBuffer} from "./lib/output-buffer";
 export type {TwingSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
 export type {TwingSandboxSecurityNotAllowedFilterError} from "./lib/sandbox/security-not-allowed-filter-error";
 export type {TwingSandboxSecurityNotAllowedFunctionError} from "./lib/sandbox/security-not-allowed-function-error";

@@ -20,12 +20,12 @@ export const createSpacelessNode = (
 
     const spacelessNode: TwingSpacelessNode = {
         ...baseNode,
-        execute: (...args) => {
-            const [, , outputBuffer] = args;
+        execute: (executionContext) => {
+            const {outputBuffer} = executionContext;
 
             outputBuffer.start();
 
-            return spacelessNode.children.body.execute(...args)
+            return spacelessNode.children.body.execute(executionContext)
                 .then(() => {
                     const content = outputBuffer.getAndClean().replace(/>\s+</g, '><').trim();
 

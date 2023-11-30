@@ -8,7 +8,6 @@ tape('library index', ({same, end}) => {
         'createRuntimeError', 'isARuntimeError',
         'createParsingError',
         'createFilesystemLoader',
-        'createRelativeFilesystemLoader',
         'createArrayLoader',
         'createChainLoader',
         'createMarkup', 'isAMarkup',
@@ -121,7 +120,7 @@ tape('library index', ({same, end}) => {
         'createSource',
         'createSourceMapRuntime',
         'createTemplate',
-        'createTest',
+        'createTest'
     ];
 
     const propertyNames = Object.getOwnPropertyNames(index).filter((name) => name !== '__esModule');

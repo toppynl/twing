@@ -8,11 +8,9 @@ export interface TwingConcatenateNode extends TwingBaseBinaryNode<typeof concate
 }
 
 export const createConcatenateNode = createBinaryNodeFactory<TwingConcatenateNode>(concatenateNodeTYpe, {
-    execute: async (binaryNode, ...args) => {
-        const {left, right} = binaryNode.children;
-
-        const leftValue = await left.execute(...args);
-        const rightValue = await right.execute(...args);
+    execute: async (left, right, executionContext) => {
+        const leftValue = await left.execute(executionContext);
+        const rightValue = await right.execute(executionContext);
 
         return concatenate(leftValue, rightValue);
     }

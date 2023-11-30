@@ -46,17 +46,17 @@ export const createSetNode = (
 
     const node: TwingSetNode = {
         ...baseNode,
-        execute: async (...args) => {
-            const [, context, outputBuffer] = args;
+        execute: async (executionContext) => {
+            const {context, outputBuffer} = executionContext;
             const {names: namesNode, values: valuesNode} = node.children;
             const {capture} = node.attributes;
 
-            const names: Array<string> = await namesNode.execute(...args);
+            const names: Array<string> = await namesNode.execute(executionContext);
 
             if (capture) {
                 outputBuffer.start();
 
-                await valuesNode.execute(...args);
+                await valuesNode.execute(executionContext);
 
                 const value = outputBuffer.getAndClean();
 
@@ -64,7 +64,7 @@ export const createSetNode = (
                     context.set(name, value);
                 }
             } else {
-                const values: Array<any> = await valuesNode.execute(...args);
+                const values: Array<any> = await valuesNode.execute(executionContext);
 
                 let index = 0;
 

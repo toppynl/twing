@@ -9,7 +9,7 @@ export const createImportTagHandler = (): TwingTagHandler => {
         tag,
         initialize: (parser) => {
             return (token, stream) => {
-                const macro = parser.parseExpression(stream);
+                const templateName = parser.parseExpression(stream);
 
                 stream.expect("NAME", 'as');
                 
@@ -18,7 +18,7 @@ export const createImportTagHandler = (): TwingTagHandler => {
                 stream.expect("TAG_END");
                 parser.addImportedSymbol('template', alias.attributes.name);
 
-                return createImportNode(macro, alias, parser.isMainScope(), token.line, token.column, tag);
+                return createImportNode(templateName, alias, parser.isMainScope(), token.line, token.column, tag);
             };
         }
     };

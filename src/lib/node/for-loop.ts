@@ -20,10 +20,10 @@ export const createForLoopNode = (
 
     const node: TwingForLoopNode = {
         ...baseNode,
-        execute: (...args) => {
+        execute: (executionContext) => {
             const {hasAnElse, hasAnIf} = node.attributes;
-            
-            const [, context] = args;
+
+            const {context} = executionContext;
 
             if (hasAnElse) {
                 context.set('_iterated', true);
@@ -40,7 +40,7 @@ export const createForLoopNode = (
                 loop.set('revindex', loop.get('revindex') - 1);
                 loop.set('last', loop.get('revindex0') === 0);
             }
-            
+
             return Promise.resolve();
         }
     };

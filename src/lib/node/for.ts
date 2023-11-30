@@ -76,14 +76,14 @@ export const createForNode = (
 
     const node: TwingForNode = {
         ...baseNode,
-        execute: async (...args) => {
-            const [, context] = args;
+        execute: async (executionContext) => {
+            const {context} = executionContext;
             const {sequence: sequenceNode, body, else: elseNode, valueTarget: targetValueNode, keyTarget: targetKeyNode} = node.children;
             const {hasAnIf} = node.attributes;
 
             context.set('_parent', context.clone());
 
-            const executedSequence: TwingContext<any, any> | any = await sequenceNode.execute(...args);
+            const executedSequence: TwingContext<any, any> | any = await sequenceNode.execute(executionContext);
 
             let sequence = ensureTraversable(executedSequence);
 
@@ -115,19 +115,19 @@ export const createForNode = (
                 loop.set('last', (length === 1));
             }
 
-            const targetKey = await targetKeyNode.execute(...args);
-            const targetValue = await targetValueNode.execute(...args);
+            const targetKey = await targetKeyNode.execute(executionContext);
+            const targetValue = await targetValueNode.execute(executionContext);
 
             await iterate(context.get('_seq'), async (key, value) => {
                 context.set(targetKey, key);
                 context.set(targetValue, value);
 
-                await body.execute(...args);
+                await body.execute(executionContext);
             });
 
             if (elseNode) {
                 if (context.get('_iterated') === false) {
-                    await elseNode.execute(...args);
+                    await elseNode.execute(executionContext);
                 }
             }
 

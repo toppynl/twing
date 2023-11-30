@@ -31,7 +31,7 @@ export const createForTagHandler = (): TwingTagHandler => {
     // the loop variable cannot be used in the condition
     const checkLoopUsageCondition = (stream: TwingTokenStream, node: TwingNode) => {
         if ((node.is("get_attribute")) && (node.children.target.is("name")) && (node.children.target.attributes.name === 'loop')) {
-            throw createParsingError('The "loop" variable cannot be used in a looping condition.', node, stream.source.resolvedName);
+            throw createParsingError('The "loop" variable cannot be used in a looping condition.', node, stream.source.name);
         }
 
         for (const [, child] of getChildren(node)) {
@@ -46,7 +46,7 @@ export const createForTagHandler = (): TwingTagHandler => {
             let attribute = node.children.attribute;
 
             if (attribute.is("constant") && (['length', 'revindex0', 'revindex', 'last'].indexOf(attribute.attributes.value as string) > -1)) {
-                throw createParsingError(`The "loop.${attribute.attributes.value}" variable is not defined when looping with a condition.`, node, stream.source.resolvedName);
+                throw createParsingError(`The "loop.${attribute.attributes.value}" variable is not defined when looping with a condition.`, node, stream.source.name);
             }
         }
 

@@ -6,7 +6,7 @@ import {createArrayLoader} from "../../../../src/lib/loader/array";
 
 const loader = createArrayLoader({});
 
-stub(loader, "getSourceContext").resolves(createSource(resolve('foo/bar'), '{% spaceless %} 5 {% endspaceless %}'));
+stub(loader, "getSource").resolves(createSource(resolve('foo/bar'), '{% spaceless %} 5 {% endspaceless %}'));
 
 runTest({
     description: '"spaceless" node source map',

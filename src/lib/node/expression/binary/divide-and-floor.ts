@@ -7,9 +7,7 @@ export interface TwingDivideAndFloorNode extends TwingBaseBinaryNode<typeof divi
 }
 
 export const createDivideAndFloorNode = createBinaryNodeFactory<TwingDivideAndFloorNode>(divideAndFloorNodeType, {
-    execute: async (baseNode, ...args) => {
-        const {left, right} = baseNode.children;
-
-        return Math.floor(await left.execute(...args) / await right.execute(...args));
+    execute: async (left, right, executionContext) => {
+        return Math.floor(await left.execute(executionContext) / await right.execute(executionContext));
     }
 });

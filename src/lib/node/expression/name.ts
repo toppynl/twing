@@ -1,6 +1,7 @@
 import type {TwingBaseExpressionNodeAttributes} from "../expression";
 import {createBaseNode, TwingBaseNode} from "../../node";
 import {getContextValue} from "../../helpers/get-context-value";
+import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export type TwingNameNodeAttributes = TwingBaseExpressionNodeAttributes & {
     name: string;
@@ -30,14 +31,14 @@ export const createNameNode = (
 
     const node: TwingNameNode = {
         ...baseNode,
-        execute: (template, context) => {
+        execute: ({template, context}) => {
             const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
-            const traceableGetContextValue = template.getTraceableMethod(
+            const traceableGetContextValue = getTraceableMethod(
                 getContextValue,
                 node.line,
                 node.column,
-                template.templateName
+                template.name
             );
 
             return traceableGetContextValue(

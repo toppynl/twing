@@ -2,7 +2,8 @@ import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseEx
 import type {TwingArrayNode} from "./array";
 import {getKeyValuePairs} from "./array";
 import {TwingBaseNode} from "../../node";
-import {TwingTemplate} from "../../template";
+import {MacroHandler, TwingTemplate} from "../../template";
+import {createRuntimeError} from "../../error/runtime";
 
 export const methodCallNodeType = "method_call";
 
@@ -38,12 +39,11 @@ export const createMethodCallNode = (
 
     const node: TwingMethodCallNode = {
         ...baseNode,
-        execute: async (...args) => {
-            const [template, context, outputBuffer, , aliases, sourceMapRuntime] = args;
+        execute: async (executionContext) => {
+            const {template, context, outputBuffer, aliases, sandboxed, sourceMapRuntime} = executionContext;
             const {methodName, shouldTestExistence} = baseNode.attributes;
             const {operand, arguments: methodArguments} = baseNode.children;
-            const {templateName} = template;
-
+            
             if (shouldTestExistence) {
                 return (aliases.get(operand.attributes.name) as TwingTemplate).hasMacro(methodName);
             } else {
@@ -52,22 +52,39 @@ export const createMethodCallNode = (
                 const macroArguments: Array<any> = [];
 
                 for (const {value: valueNode} of keyValuePairs) {
-                    const value = await valueNode.execute(...args);
+                    const value = await valueNode.execute(executionContext);
 
                     macroArguments.push(value);
                 }
+                
+                // by nature, the alias exists - the parser only creates a method call node when the name _is_ an alias.
+                const macroTemplate = aliases.get(operand.attributes.name)!;
 
-                return template.callMacro(
-                    aliases.get(operand.attributes.name) as TwingTemplate,
-                    methodName,
-                    outputBuffer,
-                    macroArguments,
-                    node.line,
-                    node.column,
-                    context,
-                    templateName,
-                    sourceMapRuntime
-                );
+                const getHandler = (template: TwingTemplate): Promise<MacroHandler | null> => {
+                    const macroHandler = template.macroHandlers.get(methodName);
+
+                    if (macroHandler) {
+                        return Promise.resolve(macroHandler);
+                    } else {
+                        return template.getParent(context, outputBuffer, sandboxed)
+                            .then((parent) => {
+                                if (parent) {
+                                    return getHandler(parent);
+                                } else {
+                                    return null;
+                                }
+                            });
+                    }
+                };
+
+                return getHandler(macroTemplate)
+                    .then((handler) => {
+                        if (handler) {
+                            return handler(outputBuffer, sandboxed, sourceMapRuntime, ...macroArguments);
+                        } else {
+                            throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, node, template.name);
+                        }
+                    });
             }
         }
     };

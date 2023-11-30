@@ -33,19 +33,19 @@ export const createCheckSecurityNode = (
 
     return {
         ...baseNode,
-        execute: (template) => {
-            const {environment} = template;
+        execute: (executionContext) => {
+            const {template, sandboxed} = executionContext;
             const {usedTags, usedFunctions, usedFilters} = baseNode.attributes;
 
             try {
-                environment.isSandboxed && environment.sandboxPolicy.checkSecurity(
+                sandboxed && template.checkSecurity(
                     [...usedTags.keys()],
                     [...usedFilters.keys()],
                     [...usedFunctions.keys()]
                 );
             } catch (error: any) {
                 const supplementError = (error: TwingSandboxSecurityNotAllowedFilterError | TwingSandboxSecurityNotAllowedFunctionError | TwingSandboxSecurityNotAllowedTagError) => {
-                    error.source = template.templateName;
+                    error.source = template.name;
 
                     if (isASandboxSecurityNotAllowedTagError(error)) {
                         error.location = usedTags.get(error.tagName);

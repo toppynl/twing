@@ -55,7 +55,7 @@ export function random(template: TwingTemplate, values: any | null, max: number 
                 return '';
             }
 
-            let charset = template.environment.charset;
+            let charset = template.charset;
 
             if (charset !== 'UTF-8') {
                 values = iconv(charset, 'UTF-8', values);

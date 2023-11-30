@@ -259,7 +259,6 @@ export const runTest = async (
         additionalTests,
         description,
         context,
-        globals,
         environmentOptions,
         expectation,
         expectedErrorMessage,
@@ -275,7 +274,7 @@ export const runTest = async (
         trimmedExpectation
     } = integrationTest;
 
-    tape(`Renderer - ${description}`, ({fail, same, end}) => {
+    tape(description, ({fail, same, end}) => {
         if (!isATestWithALoader(integrationTest)) {
             loader = createArrayLoader(integrationTest.templates);
         } else {
@@ -306,14 +305,6 @@ export const runTest = async (
             tests: additionalTests || [],
             operators: []
         });
-
-        if (globals) {
-            for (let key in globals) {
-                environment.setGlobal(key, globals[key]);
-            }
-        }
-
-        environment.setGlobal('global', 'global');
 
         let consoleStub: SinonStub | null = null;
         let consoleData: string[] = [];

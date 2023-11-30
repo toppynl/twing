@@ -28,11 +28,10 @@ import type {TwingWithNode} from "./node/with";
 import type {TwingIfNode} from "./node/if";
 import type {TwingMethodCallNode} from "./node/expression/method-call";
 import type {TwingEscapeNode} from "./node/expression/escape";
-import {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "./template";
-import {TwingContext} from "./context";
-import {TwingOutputBuffer} from "./output-buffer";
 import type {TwingApplyNode} from "./node/apply";
-import {TwingSourceMapRuntime} from "./source-map-runtime";
+import type {TwingNodeExecutionContext} from "./execution-context"; // todo: change
+
+export type {TwingNodeExecutionContext} from "./execution-context"; // todo: change
 
 export type TwingNode =
     | TwingApplyNode
@@ -88,16 +87,9 @@ export interface TwingBaseNode<
     readonly line: number;
     readonly tag: string | null;
     readonly type: Type;
-    
-    execute(
-        template: TwingTemplate,
-        context: TwingContext<any, any>,
-        outputBuffer: TwingOutputBuffer,
-        blocks: TwingTemplateBlockMap,
-        aliases: TwingTemplateAliases,
-        sourceMapRuntime?: TwingSourceMapRuntime
-    ): Promise<any>;
-    
+
+    execute(executionContext: TwingNodeExecutionContext): Promise<any>;
+
     is<Type extends string>(type: Type): this is TwingNode & {
         type: Type;
     };
@@ -137,11 +129,11 @@ export const createBaseNode = <
         tag,
         isACaptureNode: false,
         isAnOutputNode: false,
-        execute: async (...args) => {
+        execute: async (executionContext) => {
             const output: Array<any> = [];
-            
+
             for (const [, child] of getChildren(node)) {
-                output.push(await child.execute(...args));
+                output.push(await child.execute(executionContext));
             }
 
             return output;

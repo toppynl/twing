@@ -1,6 +1,7 @@
 import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
 import {TwingBaseNode} from "../../node";
 import {TwingTemplate} from "../../template";
+import {getTraceableMethod} from "../../helpers/traceable-method";
 
 type TwingBlockFunctionNodeAttributes = TwingBaseExpressionNodeAttributes & {
     shouldTestExistence: boolean;
@@ -37,18 +38,25 @@ export const createBlockFunctionNode = (
 
     const node: TwingBlockFunctionNode = {
         ...baseNode,
-        execute: async (...args) => {
-            const [template, context, outputBuffer, blocks, , sourceMapRuntime] = args;
+        execute: async (executionContext) => {
+            const {template, context, outputBuffer, blocks, sandboxed, sourceMapRuntime} = executionContext;
             const {template: templateNode, name: blockNameNode} = node.children;
 
-            const blockName = await blockNameNode.execute(...args);
+            const blockName = await blockNameNode.execute(executionContext);
 
             let resolveTemplate: Promise<TwingTemplate>;
 
             if (templateNode) {
-                const templateName = await templateNode.execute(...args);
+                const templateName = await templateNode.execute(executionContext);
 
-                resolveTemplate = template.loadTemplate(templateName, templateNode.line, templateNode.column);
+                const loadTemplate = getTraceableMethod(
+                    template.loadTemplate,
+                    templateNode.line,
+                    templateNode.column,
+                    template.name
+                );
+
+                resolveTemplate = loadTemplate(templateName);
             } else {
                 resolveTemplate = Promise.resolve(template)
             }
@@ -56,16 +64,16 @@ export const createBlockFunctionNode = (
             return resolveTemplate
                 .then<Promise<boolean | string>>((executionContextOfTheBlock) => {
                     if (node.attributes.shouldTestExistence) {
-                        const hasBlock = executionContextOfTheBlock.getTraceableMethod(executionContextOfTheBlock.hasBlock, node.line, node.column, template.templateName);
+                        const hasBlock = getTraceableMethod(executionContextOfTheBlock.hasBlock, node.line, node.column, template.name);
 
-                        return hasBlock(blockName, context.clone(), outputBuffer, blocks);
+                        return hasBlock(blockName, context.clone(), outputBuffer, blocks, sandboxed);
                     } else {
-                        const renderBlock = executionContextOfTheBlock.getTraceableMethod(executionContextOfTheBlock.renderBlock, node.line, node.column, template.templateName);
-                        
+                        const renderBlock = getTraceableMethod(executionContextOfTheBlock.renderBlock, node.line, node.column, template.name);
+
                         if (templateNode) {
-                            return renderBlock(blockName, context.clone(), outputBuffer, new Map(), false, sourceMapRuntime);
+                            return renderBlock(blockName, context.clone(), outputBuffer, new Map(), false, sandboxed, sourceMapRuntime);
                         } else {
-                            return renderBlock(blockName, context.clone(), outputBuffer, blocks, true, sourceMapRuntime);
+                            return renderBlock(blockName, context.clone(), outputBuffer, blocks, true, sandboxed, sourceMapRuntime);
                         }
                     }
                 });

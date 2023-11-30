@@ -1,5 +1,6 @@
 import {TwingBaseNodeAttributes} from "../../node";
 import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
+import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export const blockReferenceType = "block_reference";
 
@@ -22,14 +23,21 @@ export const createBlockReferenceNode = (
 
     const node: TwingBlockReferenceNode = {
         ...outputNode,
-        execute: (...args) => {
-            const [template, context, outputBuffer, blocks, , sourceMapRuntime] = args;
+        execute: (executionContext) => {
+            const {template, context, outputBuffer, blocks, sandboxed, sourceMapRuntime} = executionContext;
             const {name} = node.attributes;
 
-            const renderBlock = template.getTraceableMethod(template.renderBlock, node.line, node.column, template.templateName);
-            
-            return renderBlock(name, context.clone(), outputBuffer, blocks, true, sourceMapRuntime)
-                .then(outputBuffer.echo);
+            const renderBlock = getTraceableMethod(template.renderBlock, node.line, node.column, template.name);
+
+            return renderBlock(
+                name,
+                context.clone(),
+                outputBuffer,
+                blocks,
+                true,
+                sandboxed,
+                sourceMapRuntime
+            ).then(outputBuffer.echo);
         }
     };
 

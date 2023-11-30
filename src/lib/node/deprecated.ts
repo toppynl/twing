@@ -18,12 +18,13 @@ export const createDeprecatedNode = (
 
     const node: TwingDeprecatedNode = {
         ...baseNode,
-        execute: (template, ...args) => {
+        execute: (executionContext) => {
+            const {template} = executionContext;
             const {expr} = node.children;
 
-            return expr.execute(template, ...args)
+            return expr.execute(executionContext)
                 .then((message) => {
-                    console.warn(`${message} ("${template.templateName}" at line ${node.line}, column ${node.column})`);
+                    console.warn(`${message} ("${template.name}" at line ${node.line}, column ${node.column})`);
                 });
         }
     };

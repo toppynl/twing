@@ -19,12 +19,12 @@ export const createPrintNode = (
 
     const printNode: TwingPrintNode = {
         ...outputNode,
-        execute: (...args) => {
-            const [template, , outputBuffer, , , sourceMapRuntime] = args;
+        execute: (executionContext) => {
+            const {template, outputBuffer, sourceMapRuntime} = executionContext;
 
             sourceMapRuntime?.enterSourceMapBlock(printNode.line, printNode.column, printNode.type, template.source, outputBuffer);
-            
-            return printNode.children.expression.execute(...args)
+
+            return printNode.children.expression.execute(executionContext)
                 .then((result) => {
                     outputBuffer.echo(result);
 

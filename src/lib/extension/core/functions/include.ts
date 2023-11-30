@@ -36,9 +36,7 @@ export function include(
     ignoreMissing: boolean,
     sandboxed: boolean
 ): Promise<TwingMarkup> {
-    const environment = template.environment;
-    const from = template.templateName;
-    const alreadySandboxed = environment.isSandboxed;
+    const from = template.name;
 
     if (!isPlainObject(variables) && !isTraversable(variables)) {
         const isVariablesNullOrUndefined = variables === null || variables === undefined;
@@ -52,24 +50,12 @@ export function include(
         variables = mergeIterables(context, variables);
     }
 
-    if (sandboxed) {
-        if (!alreadySandboxed) {
-            environment.isSandboxed = true;
-        }
-    }
-
     if (!isAMapLike(templates)) {
         templates = new Map([[0, templates]]);
     }
 
-    const restoreSandbox = (): void => {
-        if (sandboxed && !alreadySandboxed) {
-            environment.isSandboxed = false;
-        }
-    };
-
     const resolveTemplate = (templates: Map<number, string | TwingTemplate | null>): Promise<TwingTemplate | null> => {
-        return template.environment.resolveTemplate([...templates.values()], from)
+        return template.resolveTemplate([...templates.values()])
             .catch((error) => {
                 if (!ignoreMissing) {
                     throw error;
@@ -79,24 +65,28 @@ export function include(
             });
     };
 
+    const {charset} = template;
+
     return resolveTemplate(templates)
         .then((template) => {
             outputBuffer.start();
-
-            const promise = template ? template.execute(
-                createContext(template.mergeGlobals(variables)),
-                outputBuffer,
-                undefined,
-                sourceMapRuntime || undefined
-            ) : Promise.resolve('');
-
-            return promise.then(() => {
-                const result = outputBuffer.getAndClean();
-
-                return createMarkup(result, environment.charset);
-            });
+            
+            if (template) {
+                return template.render(
+                    createContext(variables),
+                    {
+                        outputBuffer,
+                        sandboxed,
+                        sourceMapRuntime: sourceMapRuntime || undefined
+                    }
+                );
+            } else {
+                return Promise.resolve('');
+            }
         })
-        .finally(() => {
-            restoreSandbox();
+        .then(() => {
+            const result = outputBuffer.getAndClean();
+            
+            return createMarkup(result, charset);
         });
 }

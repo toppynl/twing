@@ -16,11 +16,11 @@ export const createFromTagHandler = (): TwingTagHandler => {
         tag,
         initialize: (parser) => {
             return (token, stream) => {
-                let macro = parser.parseExpression(stream);
+                const templateName = parser.parseExpression(stream);
 
                 stream.expect("NAME", 'import');
 
-                let targets = new Map();
+                const targets: Map<string, string> = new Map();
 
                 do {
                     let name = stream.expect("NAME").value;
@@ -39,13 +39,13 @@ export const createFromTagHandler = (): TwingTagHandler => {
 
                 stream.expect("TAG_END");
 
-                const nameNode = createAssignmentNode(parser.getVarName(), token.line, token.column);
-                const importNode = createImportNode(macro, nameNode, true, token.line, token.column, tag);
+                const aliasNode = createAssignmentNode(parser.getVarName(), token.line, token.column);
+                const importNode = createImportNode(templateName, aliasNode, true, token.line, token.column, tag);
 
                 for (const [name, alias] of targets) {
-                    parser.addImportedSymbol("method", alias, name, nameNode);
+                    parser.addImportedSymbol("method", alias, name, aliasNode);
                 }
-
+                
                 return importNode;
             };
         }

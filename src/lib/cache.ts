@@ -1,31 +1,20 @@
 import {TwingTemplateNode} from "./node/template";
 
 export interface TwingCache {
-    /**await
-     * Generates a cache key for the given template hash.
-     *
-     * @param {string} hash The template hash
-     *
-     * @return {Promise<string>}
-     */
-    generateKey: (hash: string) => Promise<string>;
-
     /**
-     * Writes the compiled template to cache.
+     * Writes a template AST to the cache.
      *
-     * @param {string} key The cache key
-     * @param {string} content The template representation as a PHP class
-     *
-     * @return {Promise<void>}
+     * @param key The cache key
+     * @param content The template AST
      */
     write: (key: string, content: TwingTemplateNode) => Promise<void>;
 
     /**
-     * Loads a compiled template from the cache.
+     * Loads a template AST from the cache.
      *
-     * @param {string} key The cache key
+     * @param key The cache key
      *
-     * @return {Promise<string | null>}
+     * @returns The template AST
      */
     load: (key: string) => Promise<TwingTemplateNode | null>;
 
@@ -34,7 +23,7 @@ export interface TwingCache {
      *
      * @param {string} key The cache key
      *
-     * @returns {Promise<number>}
+     * @returns The modification timestamp
      */
     getTimestamp: (key: string) => Promise<number>;
 }

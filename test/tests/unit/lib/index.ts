@@ -5,3 +5,4 @@ import "./lexer";
 import "./loader";
 import "./node-traverser";
 import "./output-buffer";
+import "./template";

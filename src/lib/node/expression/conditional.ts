@@ -27,10 +27,10 @@ export const createBaseConditionalNode = <Type extends string>(
 
     return {
         ...baseNode,
-        execute: async (...args) => {
+        execute: async (executionContext) => {
             const {expr1, expr2, expr3} = baseNode.children;
 
-            return (await expr1.execute(...args)) ? expr2.execute(...args) : expr3.execute(...args);
+            return (await expr1.execute(executionContext)) ? expr2.execute(executionContext) : expr3.execute(executionContext);
         }
     };
 };

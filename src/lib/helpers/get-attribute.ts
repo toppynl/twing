@@ -4,40 +4,38 @@ import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
 import type {TwingGetAttributeCallType} from "../node/expression/attribute-accessor";
-import {TwingEnvironment} from "../environment";
 import {isBoolean, isFloat} from "./php";
+import {TwingTemplate} from "../template";
 
 const isObject = require('isobject');
 
 /**
  * Returns the attribute value for a given array/object.
  *
- * @param {TwingEnvironment} environment
+ * @param {TwingTemplate} template
  * @param {*} object The object or array from where to get the item
  * @param {*} attribute The item to get from the array or object
  * @param {Map<any, any>} methodArguments A map of arguments to pass if the item is an object method
  * @param {string} type The type of attribute (@see Twig_Template constants)
  * @param {boolean} shouldTestExistence Whether this is only a defined check
  * @param {boolean} shouldIgnoreStrictCheck Whether to ignore the strict attribute check or not
- * @param {boolean} sandboxed
  *
  * @return {Promise<any>} The attribute value, or a boolean when isDefinedTest is true, or null when the attribute is not set and ignoreStrictCheck is true
  *
  * @throw {TwingErrorRuntime} if the attribute does not exist and Twing is running in strict mode and isDefinedTest is false
  */
 export const getAttribute = (
-    environment: TwingEnvironment,
+    template: TwingTemplate,
     object: any,
     attribute: any,
     methodArguments: Map<any, any>,
     type: TwingGetAttributeCallType,
     shouldTestExistence: boolean,
-    shouldIgnoreStrictCheck: boolean | null
+    shouldIgnoreStrictCheck: boolean | null,
+    sandboxed: boolean
 ): Promise<any> => {
-    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !environment.isStrictVariables : shouldIgnoreStrictCheck;
-
-    const {isSandboxed} = environment;
-
+    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !template.isStrictVariables : shouldIgnoreStrictCheck;
+    
     const _do = (): any => {
         let message: string;
 
@@ -59,8 +57,8 @@ export const getAttribute = (
                         return true;
                     }
 
-                    if (type !== "array" && isSandboxed) {
-                        environment.sandboxPolicy.checkPropertyAllowed(object, attribute);
+                    if (type !== "array" && sandboxed) {
+                        template.checkPropertyAllowed(object, attribute);
                     }
 
                     return get(object, arrayItem);
@@ -129,8 +127,8 @@ export const getAttribute = (
                     return true;
                 }
 
-                if (isSandboxed) {
-                    environment.sandboxPolicy.checkPropertyAllowed(object, attribute);
+                if (sandboxed) {
+                    template.checkPropertyAllowed(object, attribute);
                 }
 
                 return get(object, attribute);
@@ -219,8 +217,8 @@ export const getAttribute = (
             return true;
         }
 
-        if (isSandboxed) {
-            environment.sandboxPolicy.checkMethodAllowed(object, method);
+        if (sandboxed) {
+            template.checkMethodAllowed(object, method);
         }
 
         return get(object, method).apply(object, [...methodArguments.values()]);

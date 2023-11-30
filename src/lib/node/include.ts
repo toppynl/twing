@@ -1,9 +1,8 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNodeExecutionContext} from "../node";
 import type {TwingBaseExpressionNode} from "./expression";
-import type {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "../template";
-import type {TwingContext} from "../context";
-import type {TwingOutputBuffer} from "../output-buffer";
-import {TwingSourceMapRuntime} from "../source-map-runtime";
+import type {TwingTemplate} from "../template";
+import {getTraceableMethod} from "../helpers/traceable-method";
+import {include} from "../extension/core/functions/include";
 
 export type BaseIncludeNodeAttributes = TwingBaseNodeAttributes & {
     only: boolean;
@@ -25,14 +24,7 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
     type: Type,
     attributes: Attributes,
     children: Children,
-    getTemplate: (
-        template: TwingTemplate,
-        context: TwingContext<any, any>,
-        outputBuffer: TwingOutputBuffer,
-        blocks: TwingTemplateBlockMap,
-        aliases: TwingTemplateAliases,
-        sourceMapRuntime?: TwingSourceMapRuntime
-    ) => Promise<TwingTemplate | null>,
+    getTemplate: (executionContext: TwingNodeExecutionContext) => Promise<TwingTemplate | null>,
     line: number,
     column: number,
     tag: string
@@ -41,15 +33,14 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
 
     const node: TwingBaseIncludeNode<Type, Attributes, Children> = {
         ...baseNode,
-        execute: async (...args) => {
-            const [template, context, outputBuffer, , , sourceMapRuntime] = args;
-            const {include} = template;
+        execute: async (executionContext) => {
+            const {context, outputBuffer, sandboxed, sourceMapRuntime, template} = executionContext;
             const {variables} = node.children;
             const {only, ignoreMissing} = node.attributes;
 
-            const templateToInclude = await getTemplate(...args);
+            const templateToInclude = await getTemplate(executionContext);
 
-            const traceableInclude = template.getTraceableMethod(include, baseNode.line, baseNode.column, template.templateName);
+            const traceableInclude = getTraceableMethod(include, baseNode.line, baseNode.column, template.name);
 
             const output = await traceableInclude(
                 template,
@@ -57,12 +48,10 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
                 outputBuffer,
                 sourceMapRuntime || null,
                 templateToInclude,
-                await variables.execute(...args),
+                await variables.execute(executionContext),
                 !only,
                 ignoreMissing,
-                false,
-                node.line,
-                node.column
+                sandboxed
             );
 
             outputBuffer.echo(output);

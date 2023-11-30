@@ -10,12 +10,10 @@ export const getContextValue = (
     shouldIgnoreStrictCheck: boolean,
     shouldTestExistence: boolean
 ): Promise<any> => {
-    const {environment} = template;
-    
     const specialNames = new Map<string, any>([
-        ['_self', template.templateName],
+        ['_self', template.name],
         ['_context', context],
-        ['_charset', environment.charset]
+        ['_charset', template.charset]
     ]);
 
     const isSpecial = () => {
@@ -35,7 +33,7 @@ export const getContextValue = (
     } else if (isAlwaysDefined) {
         result = context.get(name);
     } else {
-        if (shouldIgnoreStrictCheck || !environment.isStrictVariables) {
+        if (shouldIgnoreStrictCheck || !template.isStrictVariables) {
             result = context.has(name) ? context.get(name) : null;
         } else {
             result = context.get(name);

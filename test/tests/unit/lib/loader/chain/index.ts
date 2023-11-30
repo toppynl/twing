@@ -12,7 +12,7 @@ tape('createChainLoader', ({test}) => {
 
         test('return the source context of the first loader that returns a source context', ({test}) => {
             test('foo', ({same, end}) => {
-                loader.getSourceContext('foo', null)
+                loader.getSource('foo', null)
                     .then((source) => {
                         same(source?.name, 'foo');
                         same(source?.code, 'bar');
@@ -22,7 +22,7 @@ tape('createChainLoader', ({test}) => {
             });
 
             test('errors/index.html', ({same, end}) => {
-                loader.getSourceContext('errors/index.html', null)
+                loader.getSource('errors/index.html', null)
                     .then((source) => {
                         same(source?.name, 'errors/index.html');
                         same(source?.code, 'baz');
@@ -35,43 +35,43 @@ tape('createChainLoader', ({test}) => {
         test('returns null when the template does not exist', async ({same, end}) => {
             const loader = createChainLoader([]);
 
-            same(await loader.getSourceContext('foo', null), null);
+            same(await loader.getSource('foo', null), null);
 
             end();
         });
     });
 
-    test('getCacheKey', async ({test}) => {
-        test('returns the cache key when the template exists', async ({same, end}) => {
+    test('resolve', async ({test}) => {
+        test('returns the template FQN when the template exists', async ({same, end}) => {
             let loader = createChainLoader([
                 createArrayLoader({'foo': 'bar'}),
                 createArrayLoader({'foo': 'foobar', 'bar': 'foo'}),
             ]);
 
-            same(await loader.getCacheKey('foo', null), 'foo:bar');
-            same(await loader.getCacheKey('bar', null), 'bar:foo');
+            same(await loader.resolve('foo', null), 'foo');
+            same(await loader.resolve('bar', null), 'bar');
 
-            let cacheKeyStub = stub(loader, 'getCacheKey').resolves(null);
+            let resolveStub = stub(loader, 'resolve').resolves(null);
 
             loader = createChainLoader([
                 loader
             ]);
 
-            same(await loader.getCacheKey('foo', null), null);
+            same(await loader.resolve('foo', null), null);
 
-            cacheKeyStub.restore();
+            resolveStub.restore();
 
             let loader2 = createArrayLoader({'foo': 'bar'});
 
-            cacheKeyStub = stub(loader2, 'getCacheKey').resolves(null);
+            resolveStub = stub(loader2, 'resolve').resolves(null);
 
             loader = createChainLoader([
                 loader2
             ]);
 
-            same(await loader.getCacheKey('foo', null), null);
+            same(await loader.resolve('foo', null), null);
 
-            cacheKeyStub.restore();
+            resolveStub.restore();
 
             end();
         });
@@ -79,7 +79,7 @@ tape('createChainLoader', ({test}) => {
         test('returns null when the template does not exist', async ({same, end}) => {
             const loader = createChainLoader([]);
 
-            same(await loader.getCacheKey('foo', null), null);
+            same(await loader.resolve('foo', null), null);
 
             end();
         });
@@ -89,7 +89,7 @@ tape('createChainLoader', ({test}) => {
         const loader = createChainLoader([]);
 
         loader.addLoader(createArrayLoader({'foo': 'bar'}));
-        loader.getSourceContext('foo', null)
+        loader.getSource('foo', null)
             .then((source) => {
                 same(source?.code, 'bar');
 
@@ -112,15 +112,15 @@ tape('createChainLoader', ({test}) => {
     test('exists', ({test}) => {
         let loader1 = createArrayLoader({});
         let loader1ExistsStub = stub(loader1, 'exists').returns(Promise.resolve(false));
-        let loader1GetSourceContextSpy = spy(loader1, 'getSourceContext');
+        let loader1GetSourceSpy = spy(loader1, 'getSource');
 
         let loader2 = createArrayLoader({});
         let loader2ExistsStub = stub(loader2, 'exists').returns(Promise.resolve(true));
-        let loader2GetSourceContextSpy = spy(loader2, 'getSourceContext');
+        let loader2GetSourceSpy = spy(loader2, 'getSource');
 
         let loader3 = createArrayLoader({});
         let loader3ExistsStub = stub(loader3, 'exists').returns(Promise.resolve(true));
-        let loader3GetSourceContextSpy = spy(loader3, 'getSourceContext');
+        let loader3GetSourceSpy = spy(loader3, 'getSource');
 
         test('resolves to true as soon as a loader resolves to true', async ({same, end}) => {
             let loader = createChainLoader([
@@ -133,9 +133,9 @@ tape('createChainLoader', ({test}) => {
             same(loader1ExistsStub.callCount, 1, 'loader 1 exists is called once');
             same(loader2ExistsStub.callCount, 1, 'loader 2 exists is called once');
             same(loader3ExistsStub.callCount, 0, 'loader 3 exists is not called');
-            same(loader1GetSourceContextSpy.callCount, 0, 'loader 1 getSourceContext is not called');
-            same(loader2GetSourceContextSpy.callCount, 0, 'loader 2 getSourceContext is not called');
-            same(loader3GetSourceContextSpy.callCount, 0, 'loader 3 getSourceContext is not called');
+            same(loader1GetSourceSpy.callCount, 0, 'loader 1 getSourceContext is not called');
+            same(loader2GetSourceSpy.callCount, 0, 'loader 2 getSourceContext is not called');
+            same(loader3GetSourceSpy.callCount, 0, 'loader 3 getSourceContext is not called');
 
             loader1ExistsStub.restore();
             loader2ExistsStub.restore();

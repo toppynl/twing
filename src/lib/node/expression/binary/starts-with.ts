@@ -4,16 +4,14 @@ export interface TwingStartsWithNode extends TwingBaseBinaryNode<"starts_with"> 
 }
 
 export const createStartsWithNode = createBinaryNodeFactory<TwingStartsWithNode>("starts_with", {
-    execute: async (baseNode, ...args) => {
-        const {left, right} = baseNode.children;
-
-        const leftValue = await left.execute(...args);
+    execute: async (left, right, executionContext) => {
+        const leftValue = await left.execute(executionContext);
 
         if (typeof leftValue !== "string") {
             return false;
         }
 
-        const rightValue = await right.execute(...args);
+        const rightValue = await right.execute(executionContext);
 
         if (typeof rightValue !== "string") {
             return false;

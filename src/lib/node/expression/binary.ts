@@ -1,5 +1,5 @@
 import type {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes} from "../expression";
-import type {TwingNode, TwingNodeType} from "../../node";
+import type {TwingNode, TwingNodeExecutionContext, TwingNodeType} from "../../node";
 import type {TwingAddNode} from "./binary/add";
 import type {TwingAndNode} from "./binary/and";
 import type {TwingBitwiseAndNode} from "./binary/bitwise-and";
@@ -26,10 +26,6 @@ import type {TwingRangeNode} from "./binary/range";
 import type {TwingStartsWithNode} from "./binary/starts-with";
 import type {TwingSubtractNode} from "./binary/subtract";
 import {createBaseExpressionNode} from "../expression";
-import type {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "../../template";
-import type {TwingContext} from "../../context";
-import type {TwingOutputBuffer} from "../../output-buffer";
-import {TwingSourceMapRuntime} from "../../source-map-runtime";
 
 export type TwingBinaryNode =
     | TwingAddNode
@@ -86,14 +82,10 @@ export const createBinaryNodeFactory = <InstanceType extends TwingBaseBinaryNode
     type: TwingNodeType<InstanceType>,
     definition: {
         execute: (
-            baseNode: TwingBaseBinaryNode<TwingNodeType<InstanceType>>,
-            template: TwingTemplate,
-            context: TwingContext<any, any>,
-            outputBuffer: TwingOutputBuffer,
-            blocks: TwingTemplateBlockMap,
-            aliases: TwingTemplateAliases,
-            sourceMapRuntime?: TwingSourceMapRuntime
-        ) => Promise<any>;
+            left: TwingBaseExpressionNode,
+            right: TwingBaseExpressionNode,
+            executionContext: TwingNodeExecutionContext
+        ) => Promise<any>
     }
 ) => {
     const factory = (
@@ -105,8 +97,8 @@ export const createBinaryNodeFactory = <InstanceType extends TwingBaseBinaryNode
 
         return {
             ...baseNode,
-            execute: (...args) => {
-                return definition.execute(baseNode, ...args);
+            execute: (executionContext) => {
+                return definition.execute(baseNode.children.left, baseNode.children.right, executionContext);
             }
         } as InstanceType;
     };

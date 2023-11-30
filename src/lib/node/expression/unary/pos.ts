@@ -6,10 +6,8 @@ export interface TwingPositiveNode extends TwingBaseUnaryNode<typeof positiveNod
 }
 
 export const createPositiveNode = createUnaryNodeFactory<TwingPositiveNode>(positiveNodeType, {
-    execute: (baseNode, ...args) => {
-        const {operand} = baseNode.children;
-
-        return operand.execute(...args)
+    execute: (operand, executionContext) => {
+        return operand.execute(executionContext)
             .then((value) => +(value));
     }
 });

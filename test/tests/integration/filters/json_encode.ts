@@ -33,7 +33,7 @@ class Test extends TestBase {
 ["apple","banana","peach","plum"]
 {"1":"apple","2":"banana","3":"peach","4":"plum"}
 
-{"foo":"foo","map":{"message":"Hello, world!"},"global":"global"}
+{"foo":"foo","map":{"message":"Hello, world!"}}
 `;
     }
 

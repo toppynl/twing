@@ -4,6 +4,7 @@ import {getChildren} from "../node";
 import {isMadeOfWhitespaceOnly} from "../helpers/is-made-of-whitespace-only";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
+import {includeNodeType} from "../node/include/include";
 
 export const createSandboxTagHandler = (): TwingTagHandler => {
     const tag = 'sandbox';
@@ -22,11 +23,11 @@ export const createSandboxTagHandler = (): TwingTagHandler => {
                 stream.expect("TAG_END");
 
                 // in a sandbox tag, only include tags are allowed
-                if (!body.is("include")) {
+                if (!body.is(includeNodeType)) {
                     for (const [, child] of getChildren(body)) {
                         if (!(child.is("text") && isMadeOfWhitespaceOnly(child.attributes.data))) {
-                            if (!child.is("include")) {
-                                throw createParsingError('Only "include" tags are allowed within a "sandbox" section.', child, stream.source.resolvedName);
+                            if (!child.is(includeNodeType)) {
+                                throw createParsingError('Only "include" tags are allowed within a "sandbox" section.', child, stream.source.name);
                             }
                         }
                     }

@@ -10,9 +10,6 @@ import {TwingCallableArgument, TwingCallableWrapper} from "../../callable-wrappe
 import type {TwingFilterNode} from "./call/filter";
 import type {TwingFunctionNode} from "./call/function";
 import type {TwingTestNode} from "./call/test";
-import {getFilter} from "../../helpers/get-filter";
-import {getTest} from "../../helpers/get-test";
-import {getFunction} from "../../helpers/get-function";
 import {createRuntimeError} from "../../error/runtime";
 
 const array_merge = require('locutus/php/array/array_merge');
@@ -166,26 +163,25 @@ export const createBaseCallNode = <Type extends CallType>(
 
     const node: TwingBaseCallNode<typeof type> = {
         ...baseNode,
-        execute: async (...args) => {
-            const [template, context, outputBuffer, , , sourceMapRuntime] = args;
-            const {environment} = template;
+        execute: async (executionContext) => {
+            const {template, context, outputBuffer, sourceMapRuntime} = executionContext
             const {operatorName} = node.attributes;
 
             let callableWrapper: TwingCallableWrapper<any> | null;
 
             switch (type) {
                 case "filter":
-                    callableWrapper = getFilter(environment.filters, operatorName);
+                    callableWrapper = template.getFilter(operatorName);
                     break;
 
                 case "function":
-                    callableWrapper = getFunction(environment.functions, operatorName);
+                    callableWrapper = template.getFunction(operatorName);
                     break;
 
                 // for some reason, using `case "test"` makes the compiler assume that callableWrapper is used
                 // before it is assigned a value; this is probably a bug of the compiler
                 default:
-                    callableWrapper = getTest(environment.tests, operatorName);
+                    callableWrapper = template.getTest(operatorName);
                     break;
             }
 
@@ -222,16 +218,16 @@ export const createBaseCallNode = <Type extends CallType>(
             actualArguments.push(...callableWrapper!.nativeArguments);
 
             if (operand) {
-                actualArguments.push(await operand.execute(...args));
+                actualArguments.push(await operand.execute(executionContext));
             }
 
             const providedArguments = await Promise.all([
-                ...argumentNodes.map((node) => node.execute(...args))
+                ...argumentNodes.map((node) => node.execute(executionContext))
             ]);
 
             actualArguments.push(...providedArguments);
 
-            const traceableCallable = callableWrapper.getTraceableCallable(node.line, node.column, template.templateName);
+            const traceableCallable = callableWrapper.getTraceableCallable(node.line, node.column, template.name);
 
             return traceableCallable(...actualArguments);
         }

@@ -4,6 +4,7 @@ import {
     createBaseExpressionNode
 } from "../expression";
 import {getAttribute} from "../../helpers/get-attribute";
+import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export type TwingGetAttributeCallType = "any" | "array" | "method";
 
@@ -43,28 +44,27 @@ export const createAttributeAccessorNode = (
 
     const node: TwingAttributeAccessorNode = {
         ...baseNode,
-        execute: (...args) => {
-            const [template] = args;
+        execute: (executionContext) => {
+            const {template, sandboxed} = executionContext;
             const {target, attribute, arguments: methodArguments} = node.children;
             const {type, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
-            const {environment} = template;
-
             return Promise.all([
-                target.execute(...args),
-                attribute.execute(...args),
-                methodArguments.execute(...args)
+                target.execute(executionContext),
+                attribute.execute(executionContext),
+                methodArguments.execute(executionContext)
             ]).then(([target, attribute, methodArguments]) => {
-                const traceableGetAttribute = template.getTraceableMethod(getAttribute, node.line, node.column, template.templateName);
-                
+                const traceableGetAttribute = getTraceableMethod(getAttribute, node.line, node.column, template.name);
+
                 return traceableGetAttribute(
-                    environment,
+                    template,
                     target,
                     attribute,
                     methodArguments,
                     type,
                     shouldTestExistence,
-                    shouldIgnoreStrictCheck || null
+                    shouldIgnoreStrictCheck || null,
+                    sandboxed
                 )
             })
         }

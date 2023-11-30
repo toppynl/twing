@@ -42,7 +42,7 @@ export const createSourceMapRuntime = (): TwingSourceMapRuntime => {
         enterSourceMapBlock: (line, column, nodeType, source, outputBuffer) => {
             outputBuffer.start();
 
-            let sourceName = source.resolvedName;
+            let sourceName = source.name;
 
             if (isAbsolute(sourceName)) {
                 sourceName = relative('.', sourceName);
