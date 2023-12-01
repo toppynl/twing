@@ -9,4 +9,5 @@ import "./not_valid2";
 import "./range_operator";
 import "./simple";
 import "./with-embed-tag";
+import "./with-missing-variable";
 import "./within-a-sandboxed-environment";
