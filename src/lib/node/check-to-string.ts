@@ -34,7 +34,7 @@ export const createCheckToStringNode = (
                 .then((value) => {
                     if (sandboxed) {
                         const assertToStringAllowed = getTraceableMethod((value: any) => {
-                            if (typeof value === 'object') {
+                            if ((value !== null) && (typeof value === 'object')) {
                                 try {
                                     template.checkMethodAllowed(value, 'toString');
                                 } catch (error) {
