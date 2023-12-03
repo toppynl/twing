@@ -1,5 +1,5 @@
 # Twing
-[![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage percentage][coveralls-image]][coveralls-url] [![Donate][donate-image]][donate-url]
+[![NPM version][npm-image]][npm-url] [![Build Status][build-image]][build-url] [![Coverage percentage][coveralls-image]][coveralls-url] [![Donate][donate-image]][donate-url]
 
 First-class JavaScript Twig compiler
 
@@ -54,8 +54,8 @@ Copyright © 2018 [Eric MORAND](https://github.com/ericmorand). Released under t
 
 [npm-image]: https://badge.fury.io/js/twing.svg
 [npm-url]: https://npmjs.org/package/twing
-[travis-image]: https://travis-ci.com/NightlyCommit/twing.svg?branch=master
-[travis-url]: https://travis-ci.com/NightlyCommit/twing
+[build-image]: https://gitlab.com/nightlycommit/twing/badges/main/pipeline.svg
+[build-url]: https://gitlab.com/nightlycommit/twing/-/pipelines
 [coveralls-image]: https://coveralls.io/repos/github/NightlyCommit/twing/badge.svg
 [coveralls-url]: https://coveralls.io/github/NightlyCommit/twing
 [donate-image]: https://img.shields.io/badge/Donate-PayPal-green.svg
