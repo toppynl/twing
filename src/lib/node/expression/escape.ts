@@ -33,7 +33,7 @@ export const createEscapeNode = (
                 .then((value) => {
                     const escape = getTraceableMethod(template.escape, node.line, node.column, template.name);
 
-                    return escape(template, value, strategy, null, true);
+                    return escape(value, strategy, null, true);
                 });
         }
     };

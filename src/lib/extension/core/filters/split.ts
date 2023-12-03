@@ -1,3 +1,5 @@
+import {TwingCallable} from "../../../callable-wrapper";
+
 const explode = require('locutus/php/strings/explode');
 
 /**
@@ -23,7 +25,7 @@ const explode = require('locutus/php/strings/explode');
  *
  * @returns {Promise<Array<string>>} The split string as an array
  */
-export const split = (value: string, delimiter: string, limit: number | null): Promise<Array<string>> => {
+export const split: TwingCallable = (_executionContext, value: string, delimiter: string, limit: number | null): Promise<Array<string>> => {
     let _do = (): Array<string> => {
         if (delimiter) {
             return !limit ? explode(delimiter, value) : explode(delimiter, value, limit);

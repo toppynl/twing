@@ -1,6 +1,6 @@
-import type {TwingRuntimeError} from "./error/runtime";
+import type {TwingExecutionContext} from "./execution-context";
 
-export type TwingCallable<R = any> = (...args: any[]) => Promise<R>;
+export type TwingCallable<A extends Array<any> = any, R = any> = (executionContext: TwingExecutionContext, ...args: A) => Promise<R>;
 
 export type TwingCallableArgument = {
     name: string;
@@ -8,19 +8,15 @@ export type TwingCallableArgument = {
 };
 
 export type TwingCallableWrapperOptions = {
-    needs_template?: boolean;
-    needs_context?: boolean;
-    needs_output_buffer?: boolean;
-    needs_source_map_runtime?: boolean;
     is_variadic?: boolean;
     deprecated?: boolean | string;
     alternative?: string;
 }
 
-export interface TwingCallableWrapper<Callable extends TwingCallable> {
+export interface TwingCallableWrapper {
     readonly acceptedArguments: Array<TwingCallableArgument>;
     readonly alternative: string | undefined;
-    readonly callable: Callable;
+    readonly callable: TwingCallable;
     readonly deprecatedVersion: string | boolean | undefined;
     readonly isDeprecated: boolean;
     readonly isVariadic: boolean;
@@ -31,23 +27,17 @@ export interface TwingCallableWrapper<Callable extends TwingCallable> {
      * would generate native arguments ["bar","oof"] when the operator name is "foo-bar-oof"
      */
     nativeArguments: Array<string>;
-    readonly needsContext: boolean;
-    readonly needsOutputBuffer: boolean;
-    readonly needsSourceMapRuntime: boolean;
-    readonly needsTemplate: boolean;
-    
-    getTraceableCallable(line: number, column: number, source: string): Callable;
 }
 
-export const createCallableWrapper = <Callable extends TwingCallable>(
+export const createCallableWrapper = (
     name: string,
-    callable: Callable,
+    callable: TwingCallable,
     acceptedArguments: Array<TwingCallableArgument>,
     options: TwingCallableWrapperOptions
-): TwingCallableWrapper<Callable> => {
+): TwingCallableWrapper => {
     let nativeArguments: Array<string> = [];
 
-    const callableWrapper: TwingCallableWrapper<Callable> = {
+    const callableWrapper: TwingCallableWrapper = {
         get callable() {
             return callable;
         },
@@ -74,34 +64,6 @@ export const createCallableWrapper = <Callable extends TwingCallable>(
         },
         set nativeArguments(values) {
             nativeArguments = values;
-        },
-        get needsContext() {
-            return options.needs_context || false;
-        },
-        get needsOutputBuffer() {
-            return options.needs_output_buffer || false;
-        },
-        get needsSourceMapRuntime() {
-            return options.needs_source_map_runtime || false;
-        },
-        get needsTemplate() {
-            return options.needs_template || false;
-        },
-        getTraceableCallable: (line, column, source) => {
-            return ((...args) => {
-                return callable(...args)
-                    .catch((error: TwingRuntimeError) => {
-                        if (error.location === undefined) {
-                            error.location = {line, column};
-                        }
-
-                        if (error.source === undefined) {
-                            error.source = source;
-                        }
-
-                        throw error;
-                    });
-            }) as typeof callable;
         }
     };
 

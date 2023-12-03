@@ -1,4 +1,4 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNodeExecutionContext} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingExecutionContext} from "../node";
 import type {TwingBaseExpressionNode} from "./expression";
 import type {TwingTemplate} from "../template";
 import {getTraceableMethod} from "../helpers/traceable-method";
@@ -24,7 +24,7 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
     type: Type,
     attributes: Attributes,
     children: Children,
-    getTemplate: (executionContext: TwingNodeExecutionContext) => Promise<TwingTemplate | null>,
+    getTemplate: (executionContext: TwingExecutionContext) => Promise<TwingTemplate | null | Array<TwingTemplate | null>>,
     line: number,
     column: number,
     tag: string
@@ -34,20 +34,17 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
     const node: TwingBaseIncludeNode<Type, Attributes, Children> = {
         ...baseNode,
         execute: async (executionContext) => {
-            const {context, outputBuffer, sandboxed, sourceMapRuntime, template} = executionContext;
+            const {outputBuffer, sandboxed, template} = executionContext;
             const {variables} = node.children;
             const {only, ignoreMissing} = node.attributes;
 
-            const templateToInclude = await getTemplate(executionContext);
-
+            const templatesToInclude = await getTemplate(executionContext);
+            
             const traceableInclude = getTraceableMethod(include, baseNode.line, baseNode.column, template.name);
 
             const output = await traceableInclude(
-                template,
-                context,
-                outputBuffer,
-                sourceMapRuntime || null,
-                templateToInclude,
+                executionContext,
+                templatesToInclude,
                 await variables.execute(executionContext),
                 !only,
                 ignoreMissing,

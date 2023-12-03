@@ -26,6 +26,10 @@ export const createPrintNode = (
 
             return printNode.children.expression.execute(executionContext)
                 .then((result) => {
+                    if (Array.isArray(result)) {
+                        result = 'Array';
+                    }
+                    
                     outputBuffer.echo(result);
 
                     sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);

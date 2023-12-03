@@ -2,7 +2,7 @@ import {iconv} from "../../../helpers/iconv";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
 import {createRuntimeError} from "../../../error/runtime";
-import {TwingTemplate} from "../../../template";
+import {TwingCallable} from "../../../callable-wrapper";
 
 const runes = require('runes');
 const mt_rand = require('locutus/php/math/mt_rand');
@@ -22,7 +22,9 @@ const array_rand = require('locutus/php/array/array_rand');
  *
  * @returns {Promise<any>} A random value from the given sequence
  */
-export function random(template: TwingTemplate, values: any | null, max: number | null): any {
+export const random: TwingCallable = (executionContext, values: any | null, max: number | null): any => {
+    const {charset} = executionContext;
+    
     let _do = (): any => {
         if (values === null) {
             return max === null ? mt_rand() : mt_rand(0, max);
@@ -54,9 +56,7 @@ export function random(template: TwingTemplate, values: any | null, max: number 
             if (values.toString() === '') {
                 return '';
             }
-
-            let charset = template.charset;
-
+            
             if (charset !== 'UTF-8') {
                 values = iconv(charset, 'UTF-8', values);
             }

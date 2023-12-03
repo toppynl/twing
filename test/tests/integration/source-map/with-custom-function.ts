@@ -4,9 +4,7 @@ import {createFunction} from "../../../../src/lib";
 runTest({
     description: "Source map supports custom function",
     additionalFunctions: [
-        createFunction('foo', () => Promise.resolve('foo'), [], {
-            needs_source_map_runtime: true
-        })
+        createFunction('foo', () => Promise.resolve('foo'), [])
     ],
     templates: {
         "index.twig": `{{ foo() }}`

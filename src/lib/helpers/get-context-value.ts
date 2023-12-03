@@ -1,9 +1,10 @@
 import type {TwingContext} from "../context";
 import {createRuntimeError} from "../error/runtime";
-import {TwingTemplate} from "../template";
 
 export const getContextValue = (
-    template: TwingTemplate,
+    charset: string,
+    templateName: string,
+    isStrictVariables: boolean,
     context: TwingContext<any, any>,
     name: string,
     isAlwaysDefined: boolean,
@@ -11,9 +12,9 @@ export const getContextValue = (
     shouldTestExistence: boolean
 ): Promise<any> => {
     const specialNames = new Map<string, any>([
-        ['_self', template.name],
+        ['_self', templateName],
         ['_context', context],
-        ['_charset', template.charset]
+        ['_charset', charset]
     ]);
 
     const isSpecial = () => {
@@ -33,7 +34,7 @@ export const getContextValue = (
     } else if (isAlwaysDefined) {
         result = context.get(name);
     } else {
-        if (shouldIgnoreStrictCheck || !template.isStrictVariables) {
+        if (shouldIgnoreStrictCheck || !isStrictVariables) {
             result = context.has(name) ? context.get(name) : null;
         } else {
             result = context.get(name);

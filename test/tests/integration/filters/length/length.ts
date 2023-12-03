@@ -1,5 +1,5 @@
-import TestBase, {runTest} from "../TestBase";
-import {createIntegrationTest} from "../test";
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
 
 class CountableMock {
     length: number;

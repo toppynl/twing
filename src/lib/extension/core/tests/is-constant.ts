@@ -1,11 +1,15 @@
-import type {TwingContext} from "../../../context";
 import {getConstant} from "../../../helpers/get-constant";
+import type {TwingCallable} from "../../../callable-wrapper";
 
-export function isConstant(
-    context: TwingContext<any, any>,
+export const isConstant: TwingCallable<[
     comparand: any,
     constant: any,
     object: any | null
-): Promise<boolean> {
-    return Promise.resolve(comparand === getConstant(context, constant, object));
-}
+], boolean> = (
+    executionContext,
+    comparand,
+    constant,
+    object
+) => {
+    return Promise.resolve(comparand === getConstant(executionContext.context, constant, object));
+};

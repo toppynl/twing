@@ -1,12 +1,15 @@
 import {iterate} from "../../../helpers/iterate";
 import {createMarkup, TwingMarkup} from "../../../markup";
 import {varDump} from "../../../helpers/php";
+import type {TwingCallable} from "../../../callable-wrapper";
 
-export const dump = (context: any, ...vars: Array<any>): Promise<TwingMarkup> => {
+export const dump: TwingCallable<[
+    ...vars: Array<any>
+], TwingMarkup> = (executionContext, ...vars) => {
     if (vars.length < 1) {
         const vars_ = new Map();
 
-        return iterate(context, (key, value) => {
+        return iterate(executionContext.context, (key, value) => {
             vars_.set(key, value);
 
             return Promise.resolve();

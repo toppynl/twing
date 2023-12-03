@@ -10,7 +10,7 @@ export interface TwingTagHandler {
     /**
      * Initializes the tag handler with a parser and returns a token parser.
      */
-    initialize(parser: TwingParser): TwingTokenParser;
+    initialize(parser: TwingParser, level: 2 | 3): TwingTokenParser;
 
     /**
      * The tag handled by the tag handler.

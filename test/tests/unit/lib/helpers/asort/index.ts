@@ -16,7 +16,7 @@ tape('asort', (test) => {
         let map = new Map([[1, 'foo'], [0, 'bar']]);
 
         asort(map, (a: any, b: any) => {
-            return (a > b) ? -1 : 1;
+            return Promise.resolve((a > b) ? -1 : 1);
         });
 
         test.same([...map.values()], ['foo', 'bar']);

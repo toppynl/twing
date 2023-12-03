@@ -1,3 +1,5 @@
-export function isNull(value: any): Promise<boolean> {
+import {TwingCallable} from "../../../callable-wrapper";
+
+export const isNull: TwingCallable<[value: any], boolean> = (_executionContext, value) => {
     return Promise.resolve(value === null);
-}
+};

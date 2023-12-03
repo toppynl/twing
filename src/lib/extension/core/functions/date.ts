@@ -1,7 +1,7 @@
 import {DateTime, Duration} from "luxon";
 import {modifyDate} from "../../../helpers/modify-date";
 import {createRuntimeError} from "../../../error/runtime";
-import {TwingTemplate} from "../../../template";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Converts an input to a DateTime instance.
@@ -19,12 +19,10 @@ import {TwingTemplate} from "../../../template";
  * @returns {Promise<DateTime | Duration>}
  */
 export const createDate = (
-    template: TwingTemplate,
+    defaultTimezone: string,
     input: Date | DateTime | number | string | null,
     timezone: string | null | false
 ): Promise<DateTime> => {
-    const defaultTimezone = template.timezone;
-    
     const _do = (): DateTime => {
         let result: DateTime;
 
@@ -37,7 +35,8 @@ export const createDate = (
         else if (typeof input === 'string') {
             if (input === 'now') {
                 result = DateTime.local();
-            } else {
+            }
+            else {
                 result = DateTime.fromISO(input, {
                     setZone: true
                 });
@@ -75,17 +74,17 @@ export const createDate = (
         if (!result || !result.isValid) {
             throw createRuntimeError(`Failed to parse date "${input}".`);
         }
-        
+
         // now let's apply timezone
         // determine the timezone
         if (timezone !== false) {
             if (timezone === null) {
                 timezone = defaultTimezone;
             }
-            
+
             result = result.setZone(timezone);
         }
-        
+
         return result;
     };
 
@@ -96,14 +95,14 @@ export const createDate = (
     }
 }
 
-export const date = (
-    template: TwingTemplate,
+export const date: TwingCallable = (
+    executionContext,
     date: Date | DateTime | Duration | number | string | null,
     timezone: string | null | false
 ): Promise<DateTime | Duration> => {
     if (date instanceof Duration) {
         return Promise.resolve(date);
     }
-    
-    return createDate(template, date, timezone);
+
+    return createDate(executionContext.timezone, date, timezone);
 }

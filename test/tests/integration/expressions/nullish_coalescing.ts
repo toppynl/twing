@@ -15,7 +15,7 @@ class Test extends TestBase {
 {{ foo ?? 'right' }}
 {{ [5] ?? 'wrong' }}
 {{ bar.foo ?? 'wrong' }}
-{{ constant("bar") ?? 'wrong' }}
+{{ constant("oof") ?? 'wrong' }}
 `
         };
     }
@@ -26,9 +26,9 @@ class Test extends TestBase {
 0
 right
 right
-[object Map]
+Array
 5
-[object Object]
+wrong
 `;
     }
 

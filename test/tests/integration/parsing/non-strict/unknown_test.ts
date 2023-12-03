@@ -4,7 +4,8 @@ runTest({
     description: 'Unknown one-word test throws a parsing error on strict mode',
     environmentOptions: {
         parserOptions: {
-            strict: false
+            strict: false,
+            level: 2
         }
     },
     templates: {
@@ -17,7 +18,8 @@ runTest({
     description: 'Unknown two-words test throws a parsing error on strict mode',
     environmentOptions: {
         parserOptions: {
-            strict: false
+            strict: false,
+            level: 2
         }
     },
     templates: {

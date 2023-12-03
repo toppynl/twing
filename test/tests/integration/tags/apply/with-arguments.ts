@@ -13,7 +13,7 @@ hangar
     expectation: `
 Hangar 18`,
     additionalFilters: [
-        createFilter('append', (operand: any, index: number) => {
+        createFilter('append', (_executionContext, operand: any, index: number) => {
             return Promise.resolve(`${operand} ${index}`);
         }, [{
             name: 'index'

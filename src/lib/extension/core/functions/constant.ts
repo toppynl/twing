@@ -1,10 +1,13 @@
-import type {TwingContext} from "../../../context";
 import {getConstant as constantHelper} from "../../../helpers/get-constant";
+import type {TwingCallable} from "../../../callable-wrapper";
 
-export const constant = (
-    context: TwingContext<any, any>, 
-    name: string, 
+export const constant: TwingCallable<[
+    name: string,
     object: any | null
+]> = (
+    executionContext,
+    name,
+    object
 ): Promise<any> => {
-    return Promise.resolve(constantHelper(context, name, object));
+    return Promise.resolve(constantHelper(executionContext.context, name, object));
 };

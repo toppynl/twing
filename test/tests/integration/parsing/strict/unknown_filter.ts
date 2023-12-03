@@ -5,8 +5,11 @@ runTest({
     templates: {
         "index.twig": '{{ 5|unknown }}'
     },
-    parserOptions: {
-        strict: true
+    environmentOptions: {
+        parserOptions: {
+            strict: true,
+            level: 2
+        }
     },
     expectedErrorMessage: 'TwingParsingError: Unknown filter "unknown" in "index.twig" at line 1, column 6.'
 });

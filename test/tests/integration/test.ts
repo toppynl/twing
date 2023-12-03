@@ -1,7 +1,6 @@
 import TestBase from "./TestBase";
 import {TwingEnvironmentOptions} from "../../../src/lib/environment";
 import {MappingItem} from "source-map";
-import {TwingParserOptions} from "../../../src/lib/parser";
 import {TwingFilter} from "../../../src/lib/filter";
 import {TwingFunction} from "../../../src/lib/function";
 import {TwingTest} from "../../../src/lib/test";
@@ -22,7 +21,6 @@ export type IntegrationTest = {
     expectedSourceMapMappings?: Array<MappingItem>;
     expectation?: string;
     globals?: Record<string, any>;
-    parserOptions?: TwingParserOptions;
     sandboxPolicy?: TwingSandboxSecurityPolicy;
     sandboxSecurityPolicyTags?: Array<string>;
     sandboxSecurityPolicyFilters?: Array<string>;

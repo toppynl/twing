@@ -32,7 +32,6 @@ import {createMatchesNode} from "../node/expression/binary/matches";
 import {createStartsWithNode} from "../node/expression/binary/starts-with";
 import {createEndsWithNode} from "../node/expression/binary/ends-with";
 import {createFilter} from "../filter";
-import {createApplyTagHandler} from "../tag-handler/apply";
 import {createOperator} from "../operator";
 import {isEven} from "./core/tests/is-even";
 import {isOdd} from "./core/tests/is-odd";
@@ -78,7 +77,6 @@ import {column} from "./core/filters/column";
 import {filter} from "./core/filters/filter";
 import {map} from "./core/filters/map";
 import {reduce} from "./core/filters/reduce";
-import {createAutoEscapeTagHandler} from "../tag-handler/auto-escape";
 import {range} from "./core/functions/range";
 import {constant} from "./core/functions/constant";
 import {cycle} from "./core/functions/cycle";
@@ -89,28 +87,11 @@ import {dump} from "./core/functions/dump";
 import {isEmpty} from "./core/tests/is-empty";
 import {isIterable} from "./core/tests/is-iterable";
 import {date as dateFunction} from "./core/functions/date";
-import {createSetTagHandler} from "../tag-handler/set";
-import {createIfTagHandler} from "../tag-handler/if";
-import {createForTagHandler} from "../tag-handler/for";
-import {createVerbatimTagHandler} from "../tag-handler/verbatim";
-import {createEmbedTagHandler} from "../tag-handler/embed";
-import {createExtendsTagHandler} from "../tag-handler/extends";
-import {createBlockTagHandler} from "../tag-handler/block";
-import {createSpacelessTagHandler} from "../tag-handler/spaceless";
-import {createIncludeTagHandler} from "../tag-handler/include";
-import {createDeprecatedTagHandler} from "../tag-handler/deprecated";
-import {createUseTagHandler} from "../tag-handler/use";
-import {createImportTagHandler} from "../tag-handler/import";
-import {createMacroTagHandler} from "../tag-handler/macro";
-import {createFilterTagHandler} from "../tag-handler/filter";
-import {createWithTagHandler} from "../tag-handler/with";
-import {createFromTagHandler} from "../tag-handler/from";
-import {createLineTagHandler} from "../tag-handler/line";
-import {createSandboxTagHandler} from "../tag-handler/sandbox";
-import {createDoTagHandler} from "../tag-handler/do";
-import {createFlushTagHandler} from "../tag-handler/flush";
 import {isDefined} from "./core/tests/is-defined";
 import {isConstant} from "./core/tests/is-constant";
+import {createSpaceshipNode} from "../node/expression/binary/spaceship";
+import {createHasEveryNode} from "../node/expression/binary/has-every";
+import {createHasSomeNode} from "../node/expression/binary/has-some";
 
 export const createCoreExtension = (): TwingExtension => {
     return {
@@ -125,9 +106,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'charset',
                         defaultValue: null
                     }
-                ], {
-                    needs_template: true
-                });
+                ]);
             });
 
             return [
@@ -169,16 +148,12 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'timezone',
                         defaultValue: null
                     }
-                ], {
-                    needs_template: true
-                }),
+                ]),
                 createFilter('date_modify', dateModify, [
                     {
                         name: 'modifier'
                     }
-                ], {
-                    needs_template: true
-                }),
+                ]),
                 createFilter('default', defaultFilter, [
                     {
                         name: 'default',
@@ -242,9 +217,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'thousand_sep',
                         defaultValue: null
                     }
-                ], {
-                    needs_template: true
-                }),
+                ]),
                 createFilter('raw', raw, []),
                 createFilter('reduce', reduce, [
                     {
@@ -289,7 +262,10 @@ export const createCoreExtension = (): TwingExtension => {
                         defaultValue: false
                     }
                 ]),
-                createFilter('sort', sort, []),
+                createFilter('sort', sort, [{
+                    name: 'arrow',
+                    defaultValue: null
+                }]),
                 createFilter('spaceless', spaceless, []),
                 createFilter('split', split, [
                     {
@@ -326,9 +302,7 @@ export const createCoreExtension = (): TwingExtension => {
                 createFunction('constant', constant, [
                     {name: 'name'},
                     {name: 'object', defaultValue: null}
-                ], {
-                    needs_context: true
-                }),
+                ]),
                 createFunction('cycle', cycle, [
                     {
                         name: 'values'
@@ -346,11 +320,8 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'timezone',
                         defaultValue: null
                     }
-                ], {
-                    needs_template: true
-                }),
+                ]),
                 createFunction('dump', dump, [], {
-                    needs_context: true,
                     is_variadic: true
                 }),
                 createFunction('include', include, [
@@ -373,12 +344,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'sandboxed',
                         defaultValue: false
                     }
-                ], {
-                    needs_template: true,
-                    needs_context: true,
-                    needs_output_buffer: true,
-                    needs_source_map_runtime: true
-                }),
+                ]),
                 createFunction('max', max, [], {
                     is_variadic: true
                 }),
@@ -394,9 +360,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'max',
                         defaultValue: null
                     }
-                ], {
-                    needs_template: true
-                }),
+                ]),
                 createFunction('range', range, [
                     {
                         name: 'low'
@@ -417,9 +381,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'ignore_missing',
                         defaultValue: false
                     }
-                ], {
-                    needs_template: true
-                }),
+                ]),
                 createFunction('template_from_string', templateFromString, [
                     {
                         name: 'template'
@@ -428,9 +390,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'name',
                         defaultValue: null
                     }
-                ], {
-                    needs_template: true
-                })
+                ])
             ];
         },
         get nodeVisitors() {
@@ -468,6 +428,9 @@ export const createCoreExtension = (): TwingExtension => {
                 createOperator('!=', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createIsNotEqualToNode(operands, line, column);
                 }),
+                createOperator('<=>', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+                    return createSpaceshipNode(operands, line, column);
+                }),
                 createOperator('<', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createIsLessThanNode(operands, line, column);
                 }),
@@ -495,6 +458,12 @@ export const createCoreExtension = (): TwingExtension => {
                 createOperator('ends with', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createEndsWithNode(operands, line, column);
                 }),
+                createOperator('has some', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+                    return createHasSomeNode(operands, line, column);
+                }, "LEFT", 3),
+                createOperator('has every', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+                    return createHasEveryNode(operands, line, column);
+                }, "LEFT", 3),
                 createOperator('..', "BINARY", 25, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createRangeNode(operands, line, column);
                 }),
@@ -528,30 +497,7 @@ export const createCoreExtension = (): TwingExtension => {
             ];
         },
         get tagHandlers() {
-            return [
-                createApplyTagHandler(),
-                createAutoEscapeTagHandler(),
-                createBlockTagHandler(),
-                createDeprecatedTagHandler(),
-                createDoTagHandler(),
-                createEmbedTagHandler(),
-                createExtendsTagHandler(),
-                createFilterTagHandler(),
-                createFlushTagHandler(),
-                createForTagHandler(),
-                createFromTagHandler(),
-                createIfTagHandler(),
-                createImportTagHandler(),
-                createIncludeTagHandler(),
-                createLineTagHandler(),
-                createMacroTagHandler(),
-                createSandboxTagHandler(),
-                createSetTagHandler(),
-                createSpacelessTagHandler(),
-                createUseTagHandler(),
-                createVerbatimTagHandler(),
-                createWithTagHandler()
-            ];
+            return [];
         },
         get tests() {
             return [
@@ -563,9 +509,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'object',
                         defaultValue: null
                     }
-                ], {
-                    needs_context: true
-                }),
+                ]),
                 createTest('divisible by', isDivisibleBy, [
                     {
                         name: 'divisor'

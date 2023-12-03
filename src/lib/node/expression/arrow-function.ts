@@ -27,7 +27,7 @@ export const createArrowFunctionNode = (
             const {context} = executionContext;
             const {expr} = baseNode.children;
             const assignmentNodes = Object.values(baseNode.children.names.children);
-
+            
             return Promise.resolve((...functionArgs: Array<any>): Promise<any> => {
                 let index = 0;
 
@@ -38,7 +38,7 @@ export const createArrowFunctionNode = (
 
                     index++;
                 }
-
+                
                 return expr.execute(executionContext);
             });
         }

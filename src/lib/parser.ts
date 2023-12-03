@@ -50,6 +50,29 @@ import {createTestNode} from "./node/expression/call/test";
 import {positiveNodeType} from "./node/expression/unary/pos";
 import {negativeNodeType} from "./node/expression/unary/neg";
 import {createEscaperNodeVisitor} from "./node-visitor/escaper";
+import {createApplyTagHandler} from "./tag-handler/apply";
+import {createAutoEscapeTagHandler} from "./tag-handler/auto-escape";
+import {createBlockTagHandler} from "./tag-handler/block";
+import {createDeprecatedTagHandler} from "./tag-handler/deprecated";
+import {createDoTagHandler} from "./tag-handler/do";
+import {createEmbedTagHandler} from "./tag-handler/embed";
+import {createExtendsTagHandler} from "./tag-handler/extends";
+import {createFilterTagHandler} from "./tag-handler/filter";
+import {createFlushTagHandler} from "./tag-handler/flush";
+import {createForTagHandler} from "./tag-handler/for";
+import {createFromTagHandler} from "./tag-handler/from";
+import {createIfTagHandler} from "./tag-handler/if";
+import {createImportTagHandler} from "./tag-handler/import";
+import {createIncludeTagHandler} from "./tag-handler/include";
+import {createLineTagHandler} from "./tag-handler/line";
+import {createMacroTagHandler} from "./tag-handler/macro";
+import {createSandboxTagHandler} from "./tag-handler/sandbox";
+import {createSetTagHandler} from "./tag-handler/set";
+import {createSpacelessTagHandler} from "./tag-handler/spaceless";
+import {createUseTagHandler} from "./tag-handler/use";
+import {createVerbatimTagHandler} from "./tag-handler/verbatim";
+import {createWithTagHandler} from "./tag-handler/with";
+import {createSpreadNode} from "./node/expression/spread";
 
 const nameRegExp = new RegExp(namePattern);
 
@@ -68,7 +91,8 @@ type TwingParserImportedSymbol = {
 };
 
 export type TwingParserOptions = {
-    strict: boolean;
+    strict?: boolean;
+    level?: 2 | 3
 };
 
 type ParseTest = [tag: string, test: (token: Token) => boolean];
@@ -136,21 +160,67 @@ export type StackEntry = {
 };
 
 const getNames = (
-    map: Map<string, TwingCallableWrapper<any>>
+    map: Map<string, TwingCallableWrapper>
 ): Array<string> => {
     return [...map.values()].map(({name}) => name);
 };
 
 export const createParser = (
-    unaryOperators: Map<string, TwingOperator>,
-    binaryOperators: Map<string, TwingOperator>,
-    tagHandlers: Array<TwingTagHandler>,
+    unaryOperators: Array<TwingOperator>,
+    binaryOperators: Array<TwingOperator>,
+    additionalTagHandlers: Array<TwingTagHandler>,
     visitors: Array<TwingNodeVisitor>,
     filters: Map<string, TwingFilter>,
     functions: Map<string, TwingFunction>,
     tests: Map<string, TwingTest>,
-    options: TwingParserOptions
+    options?: TwingParserOptions
 ): TwingParser => {
+    const strict = options?.strict !== undefined ? options.strict : true;
+    const level = options?.level || 3;
+
+    // operators
+    const binaryOperatorsRegister: Map<string, TwingOperator> = new Map(binaryOperators
+        .filter((operator) => operator.specificationLevel <= level)
+        .map((operator) => [operator.name, operator])
+    );
+
+    const unaryOperatorsRegister: Map<string, TwingOperator> = new Map(unaryOperators
+        .map((operator) => [operator.name, operator])
+    );
+
+    // tag handlers
+    const tagHandlers: Array<TwingTagHandler> = [
+        createApplyTagHandler(),
+        createAutoEscapeTagHandler(),
+        createBlockTagHandler(),
+        createDeprecatedTagHandler(),
+        createDoTagHandler(),
+        createEmbedTagHandler(),
+        createExtendsTagHandler(),
+        createFlushTagHandler(),
+        createForTagHandler(),
+        createFromTagHandler(),
+        createIfTagHandler(),
+        createImportTagHandler(),
+        createIncludeTagHandler(),
+        createLineTagHandler(),
+        createMacroTagHandler(),
+        createSandboxTagHandler(),
+        createSetTagHandler(),
+        createUseTagHandler(),
+        createVerbatimTagHandler(),
+        createWithTagHandler()
+    ];
+
+    if (level === 2) {
+        tagHandlers.push(...[
+            createFilterTagHandler(),
+            createSpacelessTagHandler(),
+        ]);
+    }
+
+    tagHandlers.push(...additionalTagHandlers);
+
     const tokenParsers: Map<string, TwingTokenParser> = new Map();
 
     let varNameSalt = 0;
@@ -182,7 +252,8 @@ export const createParser = (
                 name: name!,
                 node: node!
             });
-        } else {
+        }
+        else {
             localScope[type].push(alias);
         }
     };
@@ -216,7 +287,7 @@ export const createParser = (
         // non-empty text nodes are not allowed as direct child of a 
         if (node.is(textNodeType) && !isMadeOfWhitespaceOnly(node.attributes.data)) {
             const {data} = node.attributes;
-            
+
             if (data.indexOf(String.fromCharCode(0xEF, 0xBB, 0xBF)) > -1) {
                 const trailingData = data.substring(3);
 
@@ -248,9 +319,14 @@ export const createParser = (
         // the content of the block. In such a case, nesting it does not work as
         // expected as the definition is not part of the default template code flow.
         if (nested && (node.type === "block_reference")) {
-            console.warn(`Nesting a block definition under a non-capturing node in "${stream.source.name}" at line ${node.line} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
+            if (level >= 3) {
+                throw createParsingError(`A block definition cannot be nested under non-capturing nodes.`, node, stream.source.name);
+            }
+            else {
+                console.warn(`Nesting a block definition under a non-capturing node in "${stream.source.name}" at line ${node.line} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
 
-            return null;
+                return null;
+            }
         }
 
         if (node.isAnOutputNode && (node.type !== "spaceless")) {
@@ -279,7 +355,6 @@ export const createParser = (
     };
 
     const getFilterExpressionFactory = (stream: TwingTokenStream, name: string, line: number, column: number) => {
-        const {strict} = options;
         const filter = getFilter(filters, name);
 
         if (filter) {
@@ -300,7 +375,8 @@ export const createParser = (
 
                 console.warn(message);
             }
-        } else if (strict) {
+        }
+        else if (strict) {
             const error = createParsingError(`Unknown filter "${name}".`, {line, column}, stream.source.name);
 
             error.addSuggestions(name, filterNames);
@@ -312,9 +388,8 @@ export const createParser = (
     };
 
     const getFunctionExpressionFactory = (stream: TwingTokenStream, name: string, line: number, column: number) => {
-        const {strict} = options;
         const twingFunction = getFunction(functions, name);
-        
+
         if (twingFunction) {
             if (twingFunction.isDeprecated) {
                 let message = `Function "${twingFunction.name}" is deprecated`;
@@ -333,14 +408,15 @@ export const createParser = (
 
                 console.warn(message);
             }
-        } else if (strict) {
+        }
+        else if (strict) {
             const error = createParsingError(`Unknown function "${name}".`, {line, column}, stream.source.name);
 
             error.addSuggestions(name, functionNames);
 
             throw error;
         }
-        
+
         return createFunctionNode;
     };
 
@@ -350,11 +426,17 @@ export const createParser = (
                 parseArguments(stream);
 
                 if (!getBlockStack().length) {
-                    throw createParsingError('Calling "parent" outside a block is forbidden.', {line, column}, stream.source.name);
+                    throw createParsingError('Calling "parent" outside a block is forbidden.', {
+                        line,
+                        column
+                    }, stream.source.name);
                 }
 
                 if (!parent && !hasTraits()) {
-                    throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', {line, column}, stream.source.name);
+                    throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', {
+                        line,
+                        column
+                    }, stream.source.name);
                 }
 
                 return createParentFunctionNode(peekBlockStack(), line, column);
@@ -363,7 +445,10 @@ export const createParser = (
                 const keyValuePairs = getKeyValuePairs(blockArgs);
 
                 if (keyValuePairs.length < 1) {
-                    throw createParsingError('The "block" function takes one argument (the block name).', {line, column}, stream.source.name);
+                    throw createParsingError('The "block" function takes one argument (the block name).', {
+                        line,
+                        column
+                    }, stream.source.name);
                 }
 
                 return createBlockFunctionNode(keyValuePairs[0].value, keyValuePairs.length > 1 ? keyValuePairs[1].value : null, line, column);
@@ -372,7 +457,10 @@ export const createParser = (
                 const attributeKeyValuePairs = getKeyValuePairs(attributeArgs);
 
                 if (attributeKeyValuePairs.length < 2) {
-                    throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', {line, column}, stream.source.name);
+                    throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', {
+                        line,
+                        column
+                    }, stream.source.name);
                 }
 
                 return createAttributeAccessorNode(
@@ -461,11 +549,12 @@ export const createParser = (
             const expressionFactory = operator.expressionFactory;
 
             return parsePostfixExpression(stream, expressionFactory([expression, createBaseNode(null)], token.line, token.column), token);
-        } else if (token.test("PUNCTUATION", '(')) {
+        }
+        else if (token.test("PUNCTUATION", '(')) {
             stream.next();
 
             const expression = parseExpression(stream);
-
+            
             stream.expect("PUNCTUATION", ')', 'An opened parenthesis is not properly closed');
 
             return parsePostfixExpression(stream, expression, token);
@@ -476,7 +565,6 @@ export const createParser = (
 
     const getTestName = (stream: TwingTokenStream): string => {
         const {line, column} = stream.current;
-        const {strict} = options;
 
         let name = stream.expect("NAME").value;
         let test: Pick<TwingTest, "alternative" | "deprecatedVersion" | "isDeprecated" | "name"> | null = getTestByName(tests, name);
@@ -490,7 +578,8 @@ export const createParser = (
 
                 if (test) {
                     stream.next();
-                } else {
+                }
+                else {
                     // non-existing two-words test
                     if (!strict) {
                         stream.next();
@@ -503,7 +592,8 @@ export const createParser = (
                         };
                     }
                 }
-            } else {
+            }
+            else {
                 // non-existing one-word test
                 if (!strict) {
                     test = {
@@ -554,11 +644,11 @@ export const createParser = (
     };
 
     const isBinary = (token: Token): TwingOperator | null => {
-        return (token.test("OPERATOR") && binaryOperators.get(token.value)) || null;
+        return (token.test("OPERATOR") && binaryOperatorsRegister.get(token.value)) || null;
     };
 
     const isUnary = (token: Token): TwingOperator | null => {
-        return (token.test("OPERATOR") && unaryOperators.get(token.value)) || null;
+        return (token.test("OPERATOR") && unaryOperatorsRegister.get(token.value)) || null;
     };
 
     const parse: TwingParser["parse"] = (stream, tag = null, test = null) => {
@@ -642,6 +732,7 @@ export const createParser = (
     /**
      * Parses arguments.
      *
+     * @param stream
      * @param namedArguments {boolean} Whether to allow named arguments or not
      * @param definition {boolean} Whether we are parsing arguments for a macro definition
      * @param allowArrow {boolean}
@@ -676,7 +767,8 @@ export const createParser = (
                 const {line, column} = stream.current;
 
                 value = createNameNode(token.value, line, column);
-            } else {
+            }
+            else {
                 value = parseExpression(stream, 0, allowArrow);
             }
 
@@ -697,7 +789,8 @@ export const createParser = (
                     if (notConstantNode !== null) {
                         throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode, stream.source.name);
                     }
-                } else {
+                }
+                else {
                     value = parseExpression(stream, 0, allowArrow);
                 }
             }
@@ -743,7 +836,19 @@ export const createParser = (
 
             first = false;
 
-            elements.push(parseExpression(stream));
+            if (stream.test("SPREAD_OPERATOR")) {
+                const {current} = stream;
+                
+                stream.next();
+                
+                const expression = parseExpression(stream);
+                const spreadNode = createSpreadNode(expression, current.line, current.column);
+                
+                elements.push(spreadNode);
+            }
+            else {
+                elements.push(parseExpression(stream));
+            }
         }
 
         stream.expect("PUNCTUATION", ']', 'An opened array is not properly closed');
@@ -765,7 +870,8 @@ export const createParser = (
             if (stream.test("OPERATOR") && nameRegExp.exec(token.value)) {
                 // in this context, string operators are variable names
                 stream.next();
-            } else {
+            }
+            else {
                 stream.expect("NAME", null, 'Only variables can be assigned to');
             }
 
@@ -873,12 +979,14 @@ export const createParser = (
 
                 if (stream.nextIf("PUNCTUATION", ':')) {
                     expr3 = parseExpression(stream);
-                } else {
+                }
+                else {
                     const {line, column} = stream.current;
 
                     expr3 = createConstantNode('', line, column);
                 }
-            } else {
+            }
+            else {
                 expr2 = expression;
                 expr3 = parseExpression(stream);
             }
@@ -909,16 +1017,18 @@ export const createParser = (
 
             if (token.value === "is not") {
                 expression = parseNotTestExpression(stream, expression);
-            } else {
+            }
+            else {
                 expression = parseTestExpression(stream, expression);
             }
-        } else {
+        }
+        else {
             while (((operator = isBinary(token)) !== null) && operator.precedence >= precedence) {
                 stream.next();
 
                 const {expressionFactory} = operator;
 
-                const operand = parseExpression(stream, operator.associativity === "LEFT" ? operator.precedence + 1 : operator.precedence);
+                const operand = parseExpression(stream, operator.associativity === "LEFT" ? operator.precedence + 1 : operator.precedence, true);
 
                 expression = expressionFactory([expression, operand], token.line, token.column);
 
@@ -946,11 +1056,14 @@ export const createParser = (
             const token = stream.expect("NAME");
             const {value, line, column} = token;
 
+            getFilterExpressionFactory(stream, value, token.line, token.column);
+
             let methodArguments;
 
             if (!stream.test("PUNCTUATION", '(')) {
                 methodArguments = createArrayNode([], line, column);
-            } else {
+            }
+            else {
                 methodArguments = parseArguments(stream, true, false, true);
             }
 
@@ -980,7 +1093,8 @@ export const createParser = (
 
             if (!stream.test("PUNCTUATION", '(')) {
                 methodArguments = createArrayNode([], line, column);
-            } else {
+            }
+            else {
                 methodArguments = parseArguments(stream, true, false, true);
             }
 
@@ -988,7 +1102,8 @@ export const createParser = (
 
             if (filterNode === null) {
                 filterNode = factory(operand, value, methodArguments, token.line, token.column);
-            } else {
+            }
+            else {
                 filterNode = factory(filterNode, value, methodArguments, token.line, token.column);
             }
 
@@ -1008,7 +1123,7 @@ export const createParser = (
         let first = true;
 
         const elements: Array<{
-            key: TwingBaseExpressionNode;
+            key: TwingBaseNode;
             value: TwingBaseExpressionNode;
         }> = [];
 
@@ -1024,6 +1139,22 @@ export const createParser = (
 
             first = false;
 
+            if (stream.test("SPREAD_OPERATOR")) {
+                const {current} = stream;
+
+                stream.next();
+
+                const expression = parseExpression(stream);
+                const spreadNode = createSpreadNode(expression, current.line, current.column);
+
+                elements.push({
+                    key: createBaseNode(null),
+                    value: spreadNode
+                });
+                
+                continue;
+            }
+
             // a hash key can be:
             //
             //  * a number -- 12
@@ -1035,12 +1166,17 @@ export const createParser = (
 
             if ((token = stream.nextIf("STRING")) || (token = stream.nextIf("NAME")) || (token = stream.nextIf("NUMBER"))) {
                 key = createConstantNode(token.value, token.line, token.column);
-            } else if (stream.test("PUNCTUATION", '(')) {
+            }
+            else if (stream.test("PUNCTUATION", '(')) {
                 key = parseExpression(stream);
-            } else {
+            }
+            else {
                 const {type, line, value, column} = stream.current;
 
-                throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, {line, column}, stream.source.name);
+                throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, {
+                    line,
+                    column
+                }, stream.source.name);
             }
 
             stream.expect("PUNCTUATION", ':', 'A hash key must be followed by a colon (:)');
@@ -1087,12 +1223,15 @@ export const createParser = (
             if (token.type === "PUNCTUATION") {
                 if (token.value === '.' || token.value === '[') {
                     node = parseSubscriptExpression(stream, node, prefixToken);
-                } else if (token.value === '|') {
+                }
+                else if (token.value === '|') {
                     node = parseFilterExpression(stream, node);
-                } else {
+                }
+                else {
                     break;
                 }
-            } else {
+            }
+            else {
                 break;
             }
         }
@@ -1130,7 +1269,8 @@ export const createParser = (
                     default:
                         if ('(' === stream.current.value) {
                             node = getFunctionNode(stream, token.value, token.line, token.column);
-                        } else {
+                        }
+                        else {
                             node = createNameNode(token.value, token.line, token.column);
                         }
                 }
@@ -1155,8 +1295,9 @@ export const createParser = (
                     node = createNameNode(token.value, token.line, token.column);
 
                     break;
-                } else if (unaryOperators.has(token.value)) {
-                    const operator = unaryOperators.get(token.value)!;
+                }
+                else if (unaryOperatorsRegister.has(token.value)) {
+                    const operator = unaryOperatorsRegister.get(token.value)!;
 
                     stream.next();
 
@@ -1171,11 +1312,14 @@ export const createParser = (
             default:
                 if (token.test("PUNCTUATION", '[')) {
                     node = parseArrayExpression(stream);
-                } else if (token.test("PUNCTUATION", '{')) {
+                }
+                else if (token.test("PUNCTUATION", '{')) {
                     node = parseHashExpression(stream);
-                } else if (token.test("OPERATOR", '=') && (stream.look(-1).value === '==' || stream.look(-1).value === '!=')) {
+                }
+                else if (token.test("OPERATOR", '=') && (stream.look(-1).value === '==' || stream.look(-1).value === '!=')) {
                     throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source.name);
-                } else {
+                }
+                else {
                     throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.name);
                 }
         }
@@ -1194,11 +1338,13 @@ export const createParser = (
             if (nextCanBeString && (token = stream.nextIf("STRING"))) {
                 nodes.push(createConstantNode(token.value, token.line, token.column));
                 nextCanBeString = false;
-            } else if (stream.nextIf("INTERPOLATION_START")) {
+            }
+            else if (stream.nextIf("INTERPOLATION_START")) {
                 nodes.push(parseExpression(stream));
                 stream.expect("INTERPOLATION_END");
                 nextCanBeString = true;
-            } else {
+            }
+            else {
                 break;
             }
         }
@@ -1236,7 +1382,7 @@ export const createParser = (
 
             if ((token.type === "NAME") || (token.type === "NUMBER") || (token.type === "OPERATOR" && (match !== null))) {
                 attribute = createConstantNode(token.value, line, column);
-                
+
                 if (stream.test("PUNCTUATION", '(')) {
                     type = "method";
 
@@ -1246,7 +1392,8 @@ export const createParser = (
                         elements.push(value);
                     }
                 }
-            } else {
+            }
+            else {
                 throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.name);
             }
 
@@ -1256,7 +1403,8 @@ export const createParser = (
 
                 return methodCallNode;
             }
-        } else {
+        }
+        else {
             type = "array";
 
             // slice?
@@ -1265,7 +1413,8 @@ export const createParser = (
             if (stream.test("PUNCTUATION", ':')) {
                 slice = true;
                 attribute = createConstantNode(0, token.line, token.column);
-            } else {
+            }
+            else {
                 attribute = parseExpression(stream);
             }
 
@@ -1278,7 +1427,8 @@ export const createParser = (
 
                 if (stream.test("PUNCTUATION", ']')) {
                     length = createConstantNode(null, token.line, token.column);
-                } else {
+                }
+                else {
                     length = parseExpression(stream) as TwingConstantNode;
                 }
 
@@ -1315,7 +1465,7 @@ export const createParser = (
         if (stream.test("PUNCTUATION", '(')) {
             testArguments = parseArguments(stream, true);
         }
-        
+
         if ((name === 'defined') && (node.is("name"))) {
             const alias = getImportedMethod(node.attributes.name);
 
@@ -1361,12 +1511,12 @@ export const createParser = (
     const setMacro: TwingParser["setMacro"] = (name, node) => {
         macros[name] = node
     };
-    
+
     const subparse: TwingParser["subparse"] = (stream, tag, test) => {
         // token parsers
         if (tokenParsers.size === 0) {
             for (const handler of tagHandlers) {
-                tokenParsers.set(handler.tag, handler.initialize(parser));
+                tokenParsers.set(handler.tag, handler.initialize(parser, level));
             }
         }
 
@@ -1411,7 +1561,7 @@ export const createParser = (
 
                     if (!tokenParsers.has(token.value)) {
                         let error;
-                        
+
                         if (test !== null) {
                             error = createParsingError(
                                 `Unexpected "${token.value}" tag`,
@@ -1420,7 +1570,8 @@ export const createParser = (
                             );
 
                             error.appendMessage(` (expecting closing tag for the "${tag}" tag defined line ${line}).`);
-                        } else {
+                        }
+                        else {
                             error = createParsingError(
                                 `Unknown "${token.value}" tag.`,
                                 token,

@@ -4,7 +4,7 @@ import {
     TwingCallable, TwingCallableWrapper, createCallableWrapper
 } from "./callable-wrapper";
 
-export interface TwingFunction extends TwingCallableWrapper<TwingCallable> {
+export interface TwingFunction extends TwingCallableWrapper {
     
 }
 

@@ -3,6 +3,7 @@ import {iteratorToArray} from "../../../helpers/iterator-to-array";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {isTraversable} from "../../../helpers/is-traversable";
+import {TwingCallable} from "../../../callable-wrapper";
 
 function isPureArray(map: Map<any, any>): boolean {
     let result: boolean = true;
@@ -21,8 +22,8 @@ function isPureArray(map: Map<any, any>): boolean {
     return result;
 }
 
-export function jsonEncode(value: any): Promise<string> {
-    const _sanitize = (value: any): any=> {
+export const jsonEncode: TwingCallable = (_executionContext, value: any): Promise<string> => {
+    const _sanitize = (value: any): any => {
         if (isTraversable(value) || isPlainObject(value)) {
             value = iteratorToMap(value);
         }
@@ -38,7 +39,8 @@ export function jsonEncode(value: any): Promise<string> {
                 for (const key in value) {
                     sanitizedValue.push(_sanitize(value[key]));
                 }
-            } else {
+            }
+            else {
                 value = iteratorToHash(value);
 
                 sanitizedValue = {};

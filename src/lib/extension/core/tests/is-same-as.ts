@@ -1,3 +1,5 @@
-export function isSameAs(a: any, b: any): Promise<boolean> {
-    return Promise.resolve(a === b);
-}
+import {TwingCallable} from "../../../callable-wrapper";
+
+export const isSameAs: TwingCallable<[a: any, comparand: any], boolean> = (_executionContext, a, comparand) => {
+    return Promise.resolve(a === comparand);
+};

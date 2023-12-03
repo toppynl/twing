@@ -1,6 +1,10 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
+import {TwingCallable} from "../../../callable-wrapper";
 
-export const map = async (map: any, callback: (...args: Array<any>) => Promise<any>): Promise<Map<any, any>> => {
+export const map: TwingCallable<[
+    map: any,
+    callback: (...args: Array<any>) => Promise<any>
+], Map<any, any>> = async (_executionContext, map, callback) => {
     const result: Map<any, any> = new Map();
 
     map = iteratorToMap(map);

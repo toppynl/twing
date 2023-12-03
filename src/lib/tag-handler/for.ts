@@ -62,7 +62,7 @@ export const createForTagHandler = (): TwingTagHandler => {
 
     return {
         tag,
-        initialize: (parser) => {
+        initialize: (parser, level) => {
             return (token, stream) => {
                 const {line, column} = token;
                 const targets = parser.parseAssignmentExpression(stream);
@@ -73,7 +73,7 @@ export const createForTagHandler = (): TwingTagHandler => {
 
                 let ifExpression = null;
 
-                if (stream.nextIf("NAME", 'if')) {
+                if ((level < 3) && stream.nextIf("NAME", 'if')) {
                     console.warn(`Using an "if" condition on "for" tag in "${stream.source.name}" at line ${line} is deprecated since Twig 2.10.0, use a "filter" filter or an "if" condition inside the "for" body instead (if your condition depends on a variable updated inside the loop).`);
 
                     ifExpression = parser.parseExpression(stream);

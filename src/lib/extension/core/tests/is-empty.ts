@@ -1,4 +1,5 @@
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
+import {TwingCallable} from "../../../callable-wrapper";
 
 const isPlainObject = require('is-plain-object');
 
@@ -12,11 +13,12 @@ const isPlainObject = require('is-plain-object');
  * {% endif %}
  * </pre>
  *
+ * @param executionContext
  * @param value A variable
  *
  * @returns {boolean} true if the value is empty, false otherwise
  */
-export function isEmpty(value: any): Promise<boolean> {
+export const isEmpty: TwingCallable<[value: any], boolean> = (executionContext, value) => {
     if (value === null || value === undefined) {
         return Promise.resolve(true);
     }
@@ -31,7 +33,7 @@ export function isEmpty(value: any): Promise<boolean> {
 
     if (isPlainObject(value)) {
         if (value.hasOwnProperty('toString') && typeof value.toString === 'function') {
-            return isEmpty(value.toString());
+            return isEmpty(executionContext, value.toString());
         }
         else {
             return Promise.resolve(iteratorToArray(value).length < 1);
@@ -39,8 +41,8 @@ export function isEmpty(value: any): Promise<boolean> {
     }
 
     if (typeof value === 'object' && value.toString && typeof value.toString === 'function') {
-        return isEmpty(value.toString());
+        return isEmpty(executionContext, value.toString());
     }
 
     return Promise.resolve(value === false);
-}
+};

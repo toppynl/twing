@@ -29,9 +29,9 @@ import type {TwingIfNode} from "./node/if";
 import type {TwingMethodCallNode} from "./node/expression/method-call";
 import type {TwingEscapeNode} from "./node/expression/escape";
 import type {TwingApplyNode} from "./node/apply";
-import type {TwingNodeExecutionContext} from "./execution-context"; // todo: change
+import type {TwingExecutionContext} from "./execution-context"; // todo: change
 
-export type {TwingNodeExecutionContext} from "./execution-context"; // todo: change
+export type {TwingExecutionContext} from "./execution-context"; // todo: change
 
 export type TwingNode =
     | TwingApplyNode
@@ -88,7 +88,7 @@ export interface TwingBaseNode<
     readonly tag: string | null;
     readonly type: Type;
 
-    execute(executionContext: TwingNodeExecutionContext): Promise<any>;
+    execute(executionContext: TwingExecutionContext): Promise<any>;
 
     is<Type extends string>(type: Type): this is TwingNode & {
         type: Type;
