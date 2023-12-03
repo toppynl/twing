@@ -74,10 +74,14 @@ tape('TwingExtensionCore', (test) => {
          * @param {TwingFunction} f
          * @param fixture
          */
-        const testAcceptedArguments = (test: tape.Test, name: string, f: TwingFunction, fixture: { name: string, arguments: TwingCallableArgument[] }) => {
+        const testAcceptedArguments = (test: tape.Test, name: string, f: TwingFunction, fixture: {
+            name: string,
+            arguments: TwingCallableArgument[]
+        }) => {
             if (!fixture) {
                 test.fail(`${name} function has no registered fixture`);
-            } else {
+            }
+            else {
                 test.same(f.getAcceptedArgments(), fixture.arguments, `${name} function accepted arguments are as expected`);
             }
         };
@@ -167,10 +171,14 @@ tape('TwingExtensionCore', (test) => {
          * @param {TwingFilter} f
          * @param fixture
          */
-        const testAcceptedArguments = (test: tape.Test, name: string, f: TwingFilter, fixture: { name: string, arguments: TwingCallableArgument[] }) => {
+        const testAcceptedArguments = (test: tape.Test, name: string, f: TwingFilter, fixture: {
+            name: string,
+            arguments: TwingCallableArgument[]
+        }) => {
             if (!fixture) {
                 test.fail(`${name} filter has no registered fixture`);
-            } else {
+            }
+            else {
                 test.same(f.getAcceptedArgments(), fixture.arguments, `${name} filter accepted arguments are as expected`);
             }
         };
@@ -344,7 +352,9 @@ tape('TwingExtensionCore', (test) => {
             },
             {
                 name: 'sort',
-                arguments: []
+                arguments: [
+                    {name: 'arrow', defaultValue: null}
+                ]
             },
             {
                 name: 'spaceless',

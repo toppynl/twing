@@ -851,7 +851,17 @@ export class TwingParser {
             let token;
             let key;
 
-            if ((token = stream.nextIf(TokenType.STRING)) || (token = stream.nextIf(TokenType.NAME)) || (token = stream.nextIf(TokenType.NUMBER))) {
+            if (token = stream.nextIf(TokenType.NAME)) {
+                key = new TwingNodeExpressionConstant(token.value, token.line, token.column);
+
+                // {a} is a shortcut for {a:a}
+                if (stream.test(TokenType.PUNCTUATION, [',', '}'])) {
+                    node.addElement(new TwingNodeExpressionName(token.value, token.line, token.column), key);
+                    
+                    continue;
+                }
+            }
+            else if ((token = stream.nextIf(TokenType.STRING)) || (token = stream.nextIf(TokenType.NUMBER))) {
                 key = new TwingNodeExpressionConstant(token.value, token.line, token.column);
             } else if (stream.test(TokenType.PUNCTUATION, '(')) {
                 key = this.parseExpression();

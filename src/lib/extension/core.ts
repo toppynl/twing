@@ -127,6 +127,7 @@ import {TwingNodeVisitorMacroAutoImport} from "../node-visitor/macro-auto-import
 import {TwingTokenParserLine} from "../token-parser/line";
 import {extname, basename} from "path";
 import {TwingEscapingStrategyResolver} from "../environment";
+import {TwingNodeExpressionBinarySpaceship} from "../node/expression/binary/spaceship";
 
 export class TwingExtensionCore extends TwingExtension {
     private dateFormats: Array<string> = ['F j, Y H:i', '%d days'];
@@ -432,7 +433,10 @@ export class TwingExtensionCore extends TwingExtension {
                 {name: 'length', defaultValue: null},
                 {name: 'preserve_keys', defaultValue: false}
             ]),
-            new TwingFilter('sort', sort, []),
+            new TwingFilter('sort', sort, [{
+                name: 'arrow',
+                defaultValue: null
+            }]),
             new TwingFilter('spaceless', spaceless, [], {
                 is_safe: ['html']
             }),
@@ -570,6 +574,9 @@ export class TwingExtensionCore extends TwingExtension {
             }),
             new TwingOperator('!=', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
                 return new TwingNodeExpressionBinaryNotEqual(operands, lineno, columnno);
+            }),
+            new TwingOperator('<=>', TwingOperatorType.BINARY, 20, (operands: [TwingNode, TwingNode], line: number, column: number) => {
+                return new TwingNodeExpressionBinarySpaceship(operands, line, column);
             }),
             new TwingOperator('<', TwingOperatorType.BINARY, 20, function (operands: [TwingNode, TwingNode], lineno: number, columnno: number) {
                 return new TwingNodeExpressionBinaryLess(operands, lineno, columnno);

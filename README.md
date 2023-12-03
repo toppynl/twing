@@ -68,13 +68,14 @@ Twing's strategy here is to stick strictly to Semantic Versioning rules and *nev
 
 Here is the compatibility chart between minor versions of Twing and Twig specifications levels, along with a summary of notable features provided by each Twig specifications level. Note that Twig minor versions don't always provide new language-related features (because of Twig's team perpetuating the confusion between Twig and their reference implementation, TwigPHP).
 
-|Twing version|Twig specifications level|Notable features|
-|:---:|:---:|---|
-|3.0|2.11|[Macros scoping](https://twig.symfony.com/doc/2.x/tags/macro.html#macros-scoping)|
-|2.3|2.10|`spaceless`, `column`, `filter`, `map` and `reduce` filters, `apply` tag, `line whitespace trimming` whitespace control modifier|
-|2.2|2.6|`deprecated` tag|
-|1.3|2.5|`spaceless` and `block`-related deprecations|
-|1.0|2.4|   |
+| Twing version | Twig specifications level | Notable features                                                                                                                 |
+|:-------------:|:-------------------------:|----------------------------------------------------------------------------------------------------------------------------------|
+|      5.2      |           2.14            | `spaceship` operator, `sort` filter comparator`, hash “short” syntax                                                                 |
+|      3.0      |           2.11            | [Macros scoping](https://twig.symfony.com/doc/2.x/tags/macro.html#macros-scoping)                                                |
+|      2.3      |           2.10            | `spaceless`, `column`, `filter`, `map` and `reduce` filters, `apply` tag, `line whitespace trimming` whitespace control modifier |
+|      2.2      |            2.6            | `deprecated` tag                                                                                                                 |
+|      1.3      |            2.5            | `spaceless` and `block`-related deprecations                                                                                     |
+|      1.0      |            2.4            |                                                                                                                                  |
 
 It is highly recommended to always use the latest version of Twing available as bug fixes will always target the latest version.
 
