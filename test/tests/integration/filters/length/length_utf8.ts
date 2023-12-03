@@ -1,6 +1,6 @@
-import TestBase, {runTest} from "../TestBase";
-import {createMarkup} from "../../../../src/lib/markup";
-import {createIntegrationTest} from "../test";
+import TestBase, {runTest} from "../../TestBase";
+import {createMarkup} from "../../../../../src/lib/markup";
+import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
     getDescription() {

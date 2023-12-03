@@ -6,7 +6,7 @@ import {
 
 export type TwingFilterOptions = TwingCallableWrapperOptions;
 
-export interface TwingFilter extends TwingCallableWrapper<TwingCallable> {
+export interface TwingFilter extends TwingCallableWrapper {
     
 }
 

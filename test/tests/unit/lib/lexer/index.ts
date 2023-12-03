@@ -5,15 +5,19 @@ import {createOperator} from "../../../../../src/lib/operator";
 tape('lexer', (test) => {
     test.test('constructor', (test) => {
         test.test('support custom operators', (test) => {
-            let lexer = new TwingLexer(new Map([
-                ['foo', createOperator('foo', "BINARY", 0, () => {
-                    return null as any;
-                }, "LEFT")]
-            ]), new Map([
-                ['bar', createOperator('bar', "UNARY", 0, () => {
-                    return null as any;
-                }, "LEFT")]
-            ]));
+            let lexer = new TwingLexer(
+                2,
+                [
+                    createOperator('foo', "BINARY", 0, () => {
+                        return null as any;
+                    }, "LEFT")
+                ],
+                [
+                    createOperator('bar', "UNARY", 0, () => {
+                        return null as any;
+                    }, "LEFT")
+                ]
+            );
 
             let tokens = lexer.tokenize(`{{a foo b}}{{bar a}}`);
 

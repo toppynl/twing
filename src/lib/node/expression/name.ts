@@ -31,7 +31,7 @@ export const createNameNode = (
 
     const node: TwingNameNode = {
         ...baseNode,
-        execute: ({template, context}) => {
+        execute: async ({template, context, charset, isStrictVariables}) => {
             const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
             const traceableGetContextValue = getTraceableMethod(
@@ -40,9 +40,11 @@ export const createNameNode = (
                 node.column,
                 template.name
             );
-
+            
             return traceableGetContextValue(
-                template,
+                charset,
+                template.name,
+                isStrictVariables,
                 context,
                 name,
                 isAlwaysDefined,

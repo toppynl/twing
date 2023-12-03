@@ -1,5 +1,6 @@
 import {reverse as reverseHelper} from "../../../helpers/reverse";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
+import {TwingCallable} from "../../../callable-wrapper";
 
 const esrever = require('esrever');
 
@@ -11,7 +12,7 @@ const esrever = require('esrever');
  *
  * @returns {Promise<string | Map<any, any>>} The reversed input
  */
-export const reverse = (item: any, preserveKeys: boolean): Promise<string | Map<any, any>> => {
+export const reverse: TwingCallable = (_executionContext, item: any, preserveKeys: boolean): Promise<string | Map<any, any>> => {
     if (typeof item === 'string') {
         return Promise.resolve(esrever.reverse(item));
     } else {

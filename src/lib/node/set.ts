@@ -65,14 +65,14 @@ export const createSetNode = (
                 }
             } else {
                 const values: Array<any> = await valuesNode.execute(executionContext);
-
+                
                 let index = 0;
 
                 for (const name of names) {
                     const value = values[index];
 
                     context.set(name, value);
-
+                    
                     index++;
                 }
             }

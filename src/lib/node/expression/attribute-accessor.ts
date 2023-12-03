@@ -45,7 +45,7 @@ export const createAttributeAccessorNode = (
     const node: TwingAttributeAccessorNode = {
         ...baseNode,
         execute: (executionContext) => {
-            const {template, sandboxed} = executionContext;
+            const {template, sandboxed, isStrictVariables} = executionContext;
             const {target, attribute, arguments: methodArguments} = node.children;
             const {type, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
@@ -64,7 +64,8 @@ export const createAttributeAccessorNode = (
                     type,
                     shouldTestExistence,
                     shouldIgnoreStrictCheck || null,
-                    sandboxed
+                    sandboxed,
+                    isStrictVariables
                 )
             })
         }

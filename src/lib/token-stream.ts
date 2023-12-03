@@ -61,9 +61,9 @@ export const createTokenStream = (
 
             if (!token.test(type, value || undefined)) {
                 const {line, column} = token;
-
+                
                 throw createParsingError(
-                    message ? `${message}.` : `Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}" ("${typeToEnglish(type)}" expected${value ? ` with value "${value}"` : ''}).`,
+                    `${message ? message + '. ' : ''}Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}" ("${typeToEnglish(type)}" expected${value ? ` with value "${value}"` : ''}).`,
                     {line, column},
                     source.name
                 );

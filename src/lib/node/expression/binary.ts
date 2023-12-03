@@ -1,5 +1,5 @@
 import type {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes} from "../expression";
-import type {TwingNode, TwingNodeExecutionContext, TwingNodeType} from "../../node";
+import type {TwingNode, TwingExecutionContext, TwingNodeType} from "../../node";
 import type {TwingAddNode} from "./binary/add";
 import type {TwingAndNode} from "./binary/and";
 import type {TwingBitwiseAndNode} from "./binary/bitwise-and";
@@ -26,6 +26,9 @@ import type {TwingRangeNode} from "./binary/range";
 import type {TwingStartsWithNode} from "./binary/starts-with";
 import type {TwingSubtractNode} from "./binary/subtract";
 import {createBaseExpressionNode} from "../expression";
+import type {TwingSpaceshipNode} from "./binary/spaceship";
+import type {TwingHasEveryNode} from "./binary/has-every";
+import type {TwingHasSomeNode} from "./binary/has-some";
 
 export type TwingBinaryNode =
     | TwingAddNode
@@ -36,6 +39,8 @@ export type TwingBinaryNode =
     | TwingConcatenateNode
     | TwingDivideNode
     | TwingEndsWithNode
+    | TwingHasEveryNode
+    | TwingHasSomeNode
     | TwingIsEqualToNode
     | TwingDivideAndFloorNode
     | TwingIsGreaterThanNode
@@ -51,6 +56,7 @@ export type TwingBinaryNode =
     | TwingOrNode
     | TwingPowerNode
     | TwingRangeNode
+    | TwingSpaceshipNode
     | TwingStartsWithNode
     | TwingSubtractNode
     ;
@@ -84,7 +90,7 @@ export const createBinaryNodeFactory = <InstanceType extends TwingBaseBinaryNode
         execute: (
             left: TwingBaseExpressionNode,
             right: TwingBaseExpressionNode,
-            executionContext: TwingNodeExecutionContext
+            executionContext: TwingExecutionContext
         ) => Promise<any>
     }
 ) => {

@@ -1,14 +1,21 @@
-import {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "./template";
-import {TwingContext} from "./context";
-import {TwingOutputBuffer} from "./output-buffer";
-import {TwingSourceMapRuntime} from "./source-map-runtime";
+import type {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "./template";
+import type {TwingContext} from "./context";
+import type {TwingOutputBuffer} from "./output-buffer";
+import type {TwingSourceMapRuntime} from "./source-map-runtime";
+import type {TwingNumberFormat} from "./environment";
 
-export type TwingNodeExecutionContext = {
+export type TwingExecutionContext = {
     aliases: TwingTemplateAliases;
     blocks: TwingTemplateBlockMap;
+    charset: string,
     context: TwingContext<any, any>;
-    sandboxed: boolean;
+    dateFormat: string;
+    dateIntervalFormat: string;
+    isStrictVariables: boolean;
+    numberFormat: TwingNumberFormat;
     outputBuffer: TwingOutputBuffer;
+    sandboxed: boolean;
     sourceMapRuntime?: TwingSourceMapRuntime;
     template: TwingTemplate;
+    timezone: string;
 };

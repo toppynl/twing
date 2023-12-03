@@ -1,20 +1,26 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Returns the keys of the passed array.
  *
- * @param {Array<any>} array An array
+ * @param _executionContext
+ * @param values An array
  *
  * @returns {Promise<Array<any>>} The keys
  */
-
-export const keys = (array: Array<any>): Promise<Array<any>> => {
+export const keys: TwingCallable<[
+    values: Array<any>
+], Array<any>> = (
+    _executionContext,
+    values
+) => {
     let traversable;
 
-    if ((array === null) || (array === undefined)) {
+    if ((values === null) || (values === undefined)) {
         traversable = new Map();
     } else {
-        traversable = iteratorToMap(array);
+        traversable = iteratorToMap(values);
     }
 
     return Promise.resolve([...traversable.keys()]);

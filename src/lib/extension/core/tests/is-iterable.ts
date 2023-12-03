@@ -1,3 +1,5 @@
+import {TwingCallable} from "../../../callable-wrapper";
+
 /**
  * Checks if a variable is traversable.
  *
@@ -12,7 +14,7 @@
  *
  * @return {Promise<boolean>} true if the value is traversable
  */
-export function isIterable(value: any): Promise<boolean> {
+export const isIterable: TwingCallable<[value: any], boolean> = (_executionContext, value) => {
     let _do = (): boolean => {
         /*
             Prevent `(null)[Symbol.iterator]`/`(undefined)[Symbol.iterator]` error,
@@ -49,4 +51,4 @@ export function isIterable(value: any): Promise<boolean> {
     };
 
     return Promise.resolve(_do());
-}
+};

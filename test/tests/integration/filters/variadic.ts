@@ -12,7 +12,7 @@ runTest({
 `
     },
     additionalFilters: [
-        createFilter('variadic', (operand: string, ...values: Array<number>) => {
+        createFilter('variadic', (_executionContext, operand: string, ...values: Array<number>) => {
             return Promise.resolve(`${operand}=>${values.join(',')}`);
         }, [], {
             is_variadic: true

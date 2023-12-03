@@ -32,10 +32,11 @@ export const getAttribute = (
     type: TwingGetAttributeCallType,
     shouldTestExistence: boolean,
     shouldIgnoreStrictCheck: boolean | null,
-    sandboxed: boolean
+    sandboxed: boolean,
+    isStrictVariables: boolean
 ): Promise<any> => {
-    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !template.isStrictVariables : shouldIgnoreStrictCheck;
-    
+    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !isStrictVariables : shouldIgnoreStrictCheck;
+
     const _do = (): any => {
         let message: string;
 
@@ -45,14 +46,20 @@ export const getAttribute = (
 
             if (isBoolean(attribute)) {
                 arrayItem = attribute ? 1 : 0;
-            } else if (isFloat(attribute)) {
+            }
+            else if (isFloat(attribute)) {
                 arrayItem = parseInt(attribute);
-            } else {
+            }
+            else {
                 arrayItem = attribute;
             }
 
             if (object) {
-                if ((isAMapLike(object) && object.has(arrayItem)) || (isPlainObject(object) && Reflect.has(object, arrayItem))) {
+                if (
+                    (isAMapLike(object) && object.has(arrayItem))
+                    || (Array.isArray(object) && (typeof arrayItem === "number") && (object.length > arrayItem))
+                    || (isPlainObject(object) && Reflect.has(object, arrayItem))
+                ) {
                     if (shouldTestExistence) {
                         return true;
                     }
@@ -65,7 +72,12 @@ export const getAttribute = (
                 }
             }
 
-            if ((type === "array") || (isAMapLike(object)) || (object === null) || (typeof object !== 'object')) {
+            if ((type === "array") 
+                || (isAMapLike(object)) 
+                || (Array.isArray(object))
+                || (object === null) 
+                || (typeof object !== 'object')
+            ) {
                 if (shouldTestExistence) {
                     return false;
                 }
@@ -73,24 +85,37 @@ export const getAttribute = (
                 if (shouldIgnoreStrictCheck) {
                     return;
                 }
-
-                if (isAMapLike(object)) {
-                    if ((object as Map<any, any>).size < 1) {
-                        message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
-                    } else {
-                        message = `Index "${arrayItem}" is out of bounds for array [${[...(object as Map<any, any>).values()]}].`;
-                    }
-                } else if (type === "array") {
-                    // object is another kind of object
-                    if (object === null) {
-                        message = `Impossible to access a key ("${attribute}") on a null variable.`;
-                    } else {
-                        message = `Impossible to access a key ("${attribute}") on a ${typeof object} variable ("${object.toString()}").`;
-                    }
-                } else if (object === null) {
+                
+                if (object === null) {
                     // object is null
-                    message = `Impossible to access an attribute ("${attribute}") on a null variable.`;
-                } else {
+                    if (type === "array") {
+                        message = `Impossible to access a key ("${attribute}") on a null variable.`;
+                    }
+                    else {
+                        message = `Impossible to access an attribute ("${attribute}") on a null variable.`;
+                    }
+                }
+                else if (isAMapLike(object)) {
+                    if (object.size < 1) {
+                        message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
+                    }
+                    else {
+                        message = `Index "${arrayItem}" is out of bounds for array [${[...object.values()]}].`;
+                    }
+                }
+                else if (Array.isArray(object)) {
+                    if (object.length < 1) {
+                        message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
+                    }
+                    else {
+                        message = `Index "${arrayItem}" is out of bounds for array [${[...object]}].`;
+                    }
+                }
+                else if (type === "array") {
+                    // object is another kind of object
+                    message = `Impossible to access a key ("${attribute}") on a ${typeof object} variable ("${object.toString()}").`;
+                }
+                else {
                     // object is a primitive
                     message = `Impossible to access an attribute ("${attribute}") on a ${typeof object} variable ("${object}").`;
                 }
@@ -111,9 +136,11 @@ export const getAttribute = (
 
             if (object === null) {
                 message = `Impossible to invoke a method ("${attribute}") on a null variable.`;
-            } else if (isAMapLike(object)) {
+            }
+            else if (isAMapLike(object) || Array.isArray(object)) {
                 message = `Impossible to invoke a method ("${attribute}") on an array.`;
-            } else {
+            }
+            else {
                 message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
             }
 
@@ -167,17 +194,20 @@ export const getAttribute = (
             if (lcName[0] === 'g' && lcName.indexOf('get') === 0) {
                 name = method.substr(3);
                 lcName = lcName.substr(3);
-            } else if (lcName[0] === 'i' && lcName.indexOf('is') === 0) {
+            }
+            else if (lcName[0] === 'i' && lcName.indexOf('is') === 0) {
                 name = method.substr(2);
                 lcName = lcName.substr(2);
-            } else if (lcName[0] === 'h' && lcName.indexOf('has') === 0) {
+            }
+            else if (lcName[0] === 'h' && lcName.indexOf('has') === 0) {
                 name = method.substr(3);
                 lcName = lcName.substr(3);
 
                 if (lcMethods.includes('is' + lcName)) {
                     continue;
                 }
-            } else {
+            }
+            else {
                 continue;
             }
 
@@ -199,9 +229,11 @@ export const getAttribute = (
 
         if (candidates.has(attribute)) {
             method = candidates.get(attribute);
-        } else if (candidates.has(lcItem = itemAsString.toLowerCase())) {
+        }
+        else if (candidates.has(lcItem = itemAsString.toLowerCase())) {
             method = candidates.get(lcItem);
-        } else {
+        }
+        else {
             if (shouldTestExistence) {
                 return false;
             }

@@ -1,5 +1,3 @@
-import {iteratorToMap} from "./helpers/iterator-to-map";
-
 export interface TwingContext<K, V> {
     readonly size: number;
 
@@ -16,6 +14,8 @@ export interface TwingContext<K, V> {
     has(key: K): boolean;
 
     set(key: K, value: V): TwingContext<K, V>;
+    
+    values(): IterableIterator<V>;
 }
 
 export const createContext = <K extends string, V>(
@@ -44,13 +44,7 @@ export const createContext = <K extends string, V>(
             return container.entries();
         },
         get: (key) => {
-            let value: any = container.get(key);
-
-            if (Array.isArray(value)) {
-                value = iteratorToMap(value);
-            }
-
-            return value;
+            return container.get(key);
         },
         has: (key) => {
             return container.has(key);
@@ -59,6 +53,9 @@ export const createContext = <K extends string, V>(
             container.set(key, value);
 
             return context;
+        },
+        values: () => {
+            return container.values();
         }
     };
 

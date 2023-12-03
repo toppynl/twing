@@ -1,6 +1,7 @@
 import type {TwingMarkup} from "../../../markup";
+import type {TwingCallable} from "../../../callable-wrapper";
 
-const words = require('capitalize');
+const words: (value: string) => string = require('capitalize');
 
 /**
  * Returns a capitalized string.
@@ -9,7 +10,9 @@ const words = require('capitalize');
  *
  * @returns {Promise<string>} The capitalized string
  */
-export const capitalize = (string: string | TwingMarkup): Promise<string> => {
+export const capitalize: TwingCallable<[
+    string: string | TwingMarkup
+], string> = (_executionContext, string) => {
     if ((string === null) || (string === undefined) || string === '') {
         return Promise.resolve(string);
     }

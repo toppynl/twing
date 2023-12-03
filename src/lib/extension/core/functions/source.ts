@@ -1,16 +1,21 @@
 import {createTemplateLoadingError} from "../../../error/loader";
-import {TwingTemplate} from "../../../template";
+import type {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Returns a template content without rendering it.
  *
- * @param {TwingTemplate} template
- * @param {string} name The template name
- * @param {boolean} ignoreMissing Whether to ignore missing templates or not
+ * @param executionContext
+ * @param name The template name
+ * @param ignoreMissing Whether to ignore missing templates or not
  *
  * @return {Promise<string>} The template source
  */
-export const source = (template: TwingTemplate, name: string, ignoreMissing: boolean): Promise<string | null> => {
+export const source: TwingCallable<[
+    name: string,
+    ignoreMissing: boolean
+], string | null> = (executionContext, name, ignoreMissing) => {
+    const {template} = executionContext;
+
     return template.getTemplateSource(name)
         .then((source) => {
             if (!ignoreMissing && (source === null)) {

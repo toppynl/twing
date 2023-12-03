@@ -1,6 +1,6 @@
 import {DateTime} from "luxon";
 import {createDate} from "../functions/date";
-import {TwingTemplate} from "../../../template";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Returns a new date object modified.
@@ -15,12 +15,14 @@ import {TwingTemplate} from "../../../template";
  *
  * @returns {Promise<DateTime>} A new date object
  */
-export const dateModify = (
-    template: TwingTemplate,
+export const dateModify: TwingCallable = (
+    executionContext,
     date: Date | DateTime | string,
     modifier: string
 ): Promise<DateTime> => {
-    return createDate(template, date, null)
+    const {timezone: defaultTimezone} = executionContext;
+
+    return createDate(defaultTimezone, date, null)
         .then((dateTime) => {
             let regExp = new RegExp(/(\+|-)([0-9])(.*)/);
             let parts = regExp.exec(modifier)!;

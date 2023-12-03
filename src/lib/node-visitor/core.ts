@@ -1,9 +1,9 @@
 import {TwingNodeVisitor} from "../node-visitor";
 import {cloneGetAttributeNode, TwingAttributeAccessorNode} from "../node/expression/attribute-accessor";
-import {cloneNameNode} from "../node/expression/name";
+import {cloneNameNode, nameNodeType} from "../node/expression/name";
 import {blockFunctionNodeType, cloneBlockReferenceExpressionNode} from "../node/expression/block-function";
-import {createConstantNode} from "../node/expression/constant";
-import {cloneMethodCallNode} from "../node/expression/method-call";
+import {constantNodeType, createConstantNode} from "../node/expression/constant";
+import {cloneMethodCallNode, methodCallNodeType} from "../node/expression/method-call";
 import {TwingBaseExpressionNode} from "../node/expression";
 import {createParsingError} from "../error/parsing";
 import {createTestNode, testNodeType, TwingTestNode} from "../node/expression/call/test";
@@ -11,10 +11,8 @@ import {createArrayNode, getKeyValuePairs} from "../node/expression/array";
 import {createConditionalNode} from "../node/expression/conditional";
 import {functionNodeType} from "../node/expression/call/function";
 import {filterNodeType, TwingFilterNode} from "../node/expression/call/filter";
+import {hashNodeType} from "../node/expression/hash";
 
-/**
- * todo: describe
- */
 export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     const enteredNodes: Array<TwingBaseExpressionNode> = [];
 
@@ -50,12 +48,13 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
         const operand = node.children.operand!;
 
         if (
-            !operand.is("name") &&
+            !operand.is(nameNodeType) &&
             !operand.is("get_attribute") &&
             !operand.is(blockFunctionNodeType) &&
-            !operand.is("constant") &&
+            !operand.is(constantNodeType) &&
             !operand.is("array") &&
-            !operand.is("method_call") &&
+            !operand.is(hashNodeType) &&
+            !operand.is(methodCallNodeType) &&
             !(operand.is(functionNodeType) && (operand.attributes.operatorName === 'constant'))
         ) {
             throw createParsingError('The "defined" test only works with simple variables.', node);

@@ -1,11 +1,13 @@
 import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface TwingEndsWithNode extends TwingBaseBinaryNode<"ends_with"> {
+export const endsWithNodeType = "ends_with";
+
+export interface TwingEndsWithNode extends TwingBaseBinaryNode<typeof endsWithNodeType> {
 
 }
 
 export const createEndsWithNode = createBinaryNodeFactory<TwingEndsWithNode>(
-    'ends_with',
+    endsWithNodeType,
     {
         execute: async (left, right, executionContext) => {
             const leftValue = await left.execute(executionContext);

@@ -1,4 +1,5 @@
 import {createRuntimeError} from "../../../error/runtime";
+import {TwingCallable} from "../../../callable-wrapper";
 
 const phpRound = require('locutus/php/math/round');
 const phpCeil = require('locutus/php/math/ceil');
@@ -13,7 +14,7 @@ const phpFloor = require('locutus/php/math/floor');
  *
  * @returns {Promise<number>} The rounded number
  */
-export const round = (value: any, precision: number, method: string): Promise<number> => {
+export const round: TwingCallable = (_executionContext, value: any, precision: number, method: string): Promise<number> => {
     const _do = (): number => {
         if (method === 'common') {
             return phpRound(value, precision);

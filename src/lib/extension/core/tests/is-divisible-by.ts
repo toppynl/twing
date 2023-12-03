@@ -1,3 +1,5 @@
-export function isDivisibleBy(a: any, b: any): Promise<boolean> {
-    return Promise.resolve(a % b === 0);
-}
+import type {TwingCallable} from "../../../callable-wrapper";
+
+export const isDivisibleBy: TwingCallable<[a: any, divisor: any], boolean> = (_executionContext, a, divisor) => {
+    return Promise.resolve(a % divisor === 0);
+};

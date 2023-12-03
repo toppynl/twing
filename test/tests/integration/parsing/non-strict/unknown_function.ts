@@ -4,7 +4,8 @@ runTest({
     description: 'Unknown function throws a parsing error on strict mode',
     environmentOptions: {
         parserOptions: {
-            strict: false
+            strict: false,
+            level: 2
         }
     },
     templates: {

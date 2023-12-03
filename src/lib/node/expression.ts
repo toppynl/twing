@@ -16,6 +16,7 @@ import type {TwingMethodCallNode} from "./expression/method-call";
 import type {TwingNullishCoalescingNode} from "./expression/nullish-coalescing";
 import type {TwingParentFunctionNode} from "./expression/parent-function";
 import type {ArgumentsNode} from "./expression/arguments";
+import type {TwingSpreadNode} from "./expression/spread";
 
 export type TwingExpressionNode =
     | ArgumentsNode
@@ -34,6 +35,7 @@ export type TwingExpressionNode =
     | TwingNameNode
     | TwingNullishCoalescingNode
     | TwingParentFunctionNode
+    | TwingSpreadNode
     | TwingUnaryNode
     ;
 

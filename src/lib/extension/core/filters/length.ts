@@ -1,3 +1,5 @@
+import {TwingCallable} from "../../../callable-wrapper";
+
 /**
  * Returns the length of a thing.
  *
@@ -5,7 +7,7 @@
  *
  * @returns {Promise<number>} The length of the thing
  */
-export const length = (thing: any): Promise<number> => {
+export const length: TwingCallable = (_executionContext,thing: any): Promise<number> => {
     let length: number;
 
     if ((thing === null) || (thing === undefined)) {

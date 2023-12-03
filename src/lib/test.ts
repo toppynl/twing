@@ -5,7 +5,7 @@ import {
     TwingCallableWrapperOptions
 } from "./callable-wrapper";
 
-export interface TwingTest extends TwingCallableWrapper<TwingCallable<boolean>> {
+export interface TwingTest extends TwingCallableWrapper {
 
 }
 
@@ -17,7 +17,7 @@ export interface TwingTest extends TwingCallableWrapper<TwingCallable<boolean>> 
  * @param {TwingCallableArgument[]} acceptedArguments
  * @param {TwingCallableWrapperOptions} options Options
  */
-export const createTest = <Callable extends TwingCallable<boolean>>(
+export const createTest = <Callable extends TwingCallable<any, boolean>>(
     name: string,
     callable: Callable,
     acceptedArguments: TwingCallableArgument[],

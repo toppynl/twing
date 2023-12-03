@@ -1,6 +1,7 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToHash} from "../../../helpers/iterator-to-hash";
 import {createRuntimeError} from "../../../error/runtime";
+import {TwingCallable} from "../../../callable-wrapper";
 
 const phpStrtr = require('locutus/php/strings/strtr');
 
@@ -12,7 +13,7 @@ const phpStrtr = require('locutus/php/strings/strtr');
  *
  * @returns {Promise<string>}
  */
-export const replace = (value: string | null, from: any): Promise<string> => {
+export const replace: TwingCallable = (_executionContext,value: string | null, from: any): Promise<string> => {
     const _do = (): string => {
         if (isTraversable(from)) {
             from = iteratorToHash(from);

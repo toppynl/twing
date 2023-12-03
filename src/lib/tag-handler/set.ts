@@ -18,7 +18,7 @@ export const createSetTagHandler = (): TwingTagHandler => {
 
                 if (stream.nextIf("OPERATOR", '=')) {
                     values = parser.parseMultiTargetExpression(stream);
-
+                    
                     stream.expect("TAG_END");
 
                     if (getChildrenCount(names) !== getChildrenCount(values)) {

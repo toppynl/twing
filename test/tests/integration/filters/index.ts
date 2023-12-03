@@ -18,7 +18,6 @@ import "./json_encode";
 import "./keys";
 import "./last";
 import "./length";
-import "./length_utf8";
 import "./lower";
 import "./map_on_object";
 import "./merge";

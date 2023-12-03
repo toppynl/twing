@@ -2,6 +2,7 @@ import {mergeIterables} from "../../../helpers/merge-iterables";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {createRuntimeError} from "../../../error/runtime";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Merges an array with another one.
@@ -19,7 +20,7 @@ import {iteratorToMap} from "../../../helpers/iterator-to-map";
  *
  * @return {Promise<Map<any, any>>} The merged map
  */
-export const merge = (iterable1: any, source: any): Promise<Map<any, any>> => {
+export const merge: TwingCallable = (_executionContext, iterable1: any, source: any): Promise<Map<any, any>> => {
     const isIterable1NullOrUndefined = (iterable1 === null) || (iterable1 === undefined);
 
     if (isIterable1NullOrUndefined || (!isTraversable(iterable1) && (typeof iterable1 !== 'object'))) {

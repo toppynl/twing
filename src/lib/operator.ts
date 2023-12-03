@@ -22,6 +22,8 @@ export interface TwingOperator {
 
     readonly associativity: OperatorAssociativity | null;
 
+    readonly specificationLevel: 2 | 3;
+
     readonly expressionFactory: TwingOperatorExpressionFactory;
 }
 
@@ -30,7 +32,8 @@ export const createOperator = (
     type: OperatorType,
     precedence: number,
     expressionFactory: TwingOperatorExpressionFactory,
-    associativity: OperatorAssociativity | null = null
+    associativity: OperatorAssociativity | null = null,
+    specificationLevel: 2 | 3 = 2,
 ): TwingOperator => {
     associativity = type === "BINARY" ? (associativity || "LEFT") : null;
 
@@ -46,6 +49,9 @@ export const createOperator = (
         },
         get precedence() {
             return precedence;
+        },
+        get specificationLevel() {
+            return specificationLevel;
         },
         get type() {
             return type;

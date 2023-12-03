@@ -1,5 +1,5 @@
 import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
-import type {TwingNodeExecutionContext, TwingNodeType} from "../../node";
+import type {TwingExecutionContext, TwingNodeType} from "../../node";
 import type {TwingNegativeNode} from "./unary/neg";
 import type {TwingNotNode} from "./unary/not";
 import type {TwingPositiveNode} from "./unary/pos";
@@ -20,7 +20,7 @@ export const createUnaryNodeFactory = <InstanceType extends TwingBaseUnaryNode<a
     definition: {
         execute: (
             operand: TwingBaseExpressionNode,
-            executionContext: TwingNodeExecutionContext
+            executionContext: TwingExecutionContext
         ) => Promise<any>;
     }
 ) => {

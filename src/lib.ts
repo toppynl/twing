@@ -76,7 +76,7 @@ export {createMacroNode} from "./lib/node/macro";
 export {createTemplateNode, templateNodeType} from "./lib/node/template";
 export {createSandboxNode, sandboxNodeType} from "./lib/node/sandbox";
 export {createSetNode} from "./lib/node/set";
-export {createTraitNode} from "./lib/node/trait";
+export {createTraitNode, traitNodeType} from "./lib/node/trait";
 export {createWithNode} from "./lib/node/with";
 
 // node/expression
@@ -105,7 +105,7 @@ export {createBaseBinaryNode} from "./lib/node/expression/binary";
 export {createBlockFunctionNode, blockFunctionNodeType} from "./lib/node/expression/block-function";
 export {createBaseCallNode} from "./lib/node/expression/call";
 export {createBaseConditionalNode, createConditionalNode, conditionalNodeType} from "./lib/node/expression/conditional";
-export {createConstantNode} from "./lib/node/expression/constant";
+export {createConstantNode, constantNodeType} from "./lib/node/expression/constant";
 export {createEscapeNode} from "./lib/node/expression/escape";
 export {createHashNode, hashNodeType} from "./lib/node/expression/hash";
 export {createMethodCallNode, methodCallNodeType} from "./lib/node/expression/method-call";
@@ -149,7 +149,9 @@ export {createBitwiseXorNode, bitwiseXorNodeType} from "./lib/node/expression/bi
 export {createConcatenateNode, concatenateNodeTYpe} from "./lib/node/expression/binary/concatenate";
 export {createDivideAndFloorNode, divideAndFloorNodeType} from "./lib/node/expression/binary/divide-and-floor";
 export {createDivideNode, divideNodeType} from "./lib/node/expression/binary/divide";
-export {createEndsWithNode} from "./lib/node/expression/binary/ends-with";
+export {createEndsWithNode, endsWithNodeType} from "./lib/node/expression/binary/ends-with";
+export {createHasEveryNode, hasEveryNodeType} from "./lib/node/expression/binary/has-every";
+export {createHasSomeNode, hasSomeNodeType} from "./lib/node/expression/binary/has-some";
 export {createIsEqualNode} from "./lib/node/expression/binary/is-equal-to";
 export {createIsGreaterThanNode} from "./lib/node/expression/binary/is-greater-than";
 export {createIsGreaterThanOrEqualToNode} from "./lib/node/expression/binary/is-greater-than-or-equal-to";

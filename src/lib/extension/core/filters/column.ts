@@ -2,6 +2,7 @@ import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {createRuntimeError} from "../../../error/runtime";
 import {isPlainObject} from "../../../helpers/is-plain-object";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Return the values from a single column in the input array.
@@ -11,7 +12,7 @@ import {isPlainObject} from "../../../helpers/is-plain-object";
  *
  * @return {Promise<Array<any>>} The array of values
  */
-export const column = (thing: any, columnKey: any): Promise<Array<any>> => {
+export const column: TwingCallable = (_executionContext, thing: any, columnKey: any): Promise<Array<any>> => {
     let map: Map<any, any>;
 
     if (!isTraversable(thing) || isPlainObject(thing)) {

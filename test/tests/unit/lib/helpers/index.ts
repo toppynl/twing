@@ -17,3 +17,4 @@ import "./ksort";
 import "./modify-date";
 import "./reverse";
 import "./slice";
+import "./sort";

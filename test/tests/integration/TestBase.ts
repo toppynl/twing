@@ -15,7 +15,7 @@ import {TwingTagHandler} from "../../../src/lib/tag-handler";
 import {MappingItem, RawSourceMap, SourceMapConsumer} from "source-map";
 import {TwingLoader} from "../../../src/lib/loader";
 import {Settings} from "luxon";
-import {TwingTemplate} from "../../../src/lib/template";
+import type {TwingExecutionContext} from "../../../src/lib/execution-context";
 
 const createSectionTokenParser = (): TwingTagHandler => {
     return {
@@ -31,7 +31,7 @@ const createSectionTokenParser = (): TwingTagHandler => {
 };
 
 class TwingTestExtension implements TwingExtension {
-    static staticCall(value: string) {
+    static staticCall(_executionContext: TwingExecutionContext, value: string) {
         return Promise.resolve(`*${value}*`);
     }
 
@@ -63,9 +63,7 @@ class TwingTestExtension implements TwingExtension {
 
     get filters() {
         return [
-            createFilter('escape_and_nl2br', escape_and_nl2br, [], {
-                needs_template: true
-            }),
+            createFilter('escape_and_nl2br', escape_and_nl2br, []),
             // name this filter "nl2br_" to allow the core "nl2br" filter to be tested
             createFilter('nl2br_', nl2br, [{
                 name: 'separator'
@@ -83,7 +81,7 @@ class TwingTestExtension implements TwingExtension {
             }, []),
             createFilter('*_path', dynamic_path, []),
             createFilter('*_foo_*_bar', dynamic_foo, []),
-            createFilter('anon_foo', (name: string) => {
+            createFilter('anon_foo', (_executionContext: TwingExecutionContext, name: string) => {
                 return Promise.resolve('*' + name + '*');
             }, []),
         ];
@@ -108,12 +106,12 @@ class TwingTestExtension implements TwingExtension {
             createFunction('*_foo_*_bar', dynamic_foo, [{
                 name: 'item'
             }]),
-            createFunction('anon_foo', (name: string) => {
+            createFunction('anon_foo', (_executionContext: TwingExecutionContext, name: string) => {
                 return Promise.resolve('*' + name + '*');
             }, [{
                 name: 'name'
             }]),
-            createFunction('createObject', (attributes: Map<string, any>) => {
+            createFunction('createObject', (_executionContext: TwingExecutionContext, attributes: Map<string, any>) => {
                 const object: {
                     [p: string]: any
                 } = {};
@@ -136,11 +134,11 @@ class TwingTestExtension implements TwingExtension {
         ];
     }
 
-    sectionFilter(value: string) {
+    sectionFilter(_executionContext: TwingExecutionContext, value: string) {
         return Promise.resolve(`§${value}§`);
     }
 
-    sectionFunction(value: string) {
+    sectionFunction(_executionContext: TwingExecutionContext, value: string) {
         return Promise.resolve(`§${value}§`);
     }
 
@@ -148,11 +146,11 @@ class TwingTestExtension implements TwingExtension {
         return Promise.resolve('<br />');
     }
 
-    is_multi_word(value: string) {
+    is_multi_word(_executionContext: TwingExecutionContext, value: string) {
         return Promise.resolve(value.indexOf(' ') > -1);
     }
 
-    dynamic_test(element: any, item: any) {
+    dynamic_test(_executionContext: TwingExecutionContext, element: any, item: any) {
         return Promise.resolve(element === item);
     }
 }
@@ -210,32 +208,32 @@ export default abstract class {
 /**
  * nl2br which also escapes, for testing escaper filters.
  */
-function escape_and_nl2br(template: TwingTemplate, value: string, sep = '<br />') {
-    return escape(template, value, 'html', 'UTF-8').then((result) => {
-        return nl2br(result?.toString() || '', sep);
+function escape_and_nl2br(executionContext: TwingExecutionContext, value: string, sep = '<br />') {
+    return escape(executionContext, value, 'html').then((result) => {
+        return nl2br(executionContext, result?.toString() || '', sep);
     });
 }
 
 /**
  * nl2br only, for testing filters with pre_escape.
  */
-function nl2br(value: string, sep = '<br />') {
+function nl2br(_executionContext: TwingExecutionContext, value: string, sep = '<br />') {
     return Promise.resolve(value.replace('\n', `${sep}\n`));
 }
 
-function escape_something(value: string) {
+function escape_something(_executionContext: TwingExecutionContext, value: string) {
     return Promise.resolve(value.toUpperCase());
 }
 
-function preserves_safety(value: string) {
+function preserves_safety(_executionContext: TwingExecutionContext, value: string) {
     return Promise.resolve(value.toUpperCase());
 }
 
-function dynamic_path(element: string, item: string) {
+function dynamic_path(_executionContext: TwingExecutionContext, element: string, item: string) {
     return Promise.resolve(element + '/' + item);
 }
 
-function dynamic_foo(foo: string, bar: string, item: string) {
+function dynamic_foo(_executionContext: TwingExecutionContext, foo: string, bar: string, item: string) {
     return Promise.resolve(foo + '/' + bar + '/' + item);
 }
 
@@ -252,7 +250,7 @@ export const runTest = async (
 
     let loader: TwingLoader;
 
-    const {
+    let {
         additionalFilters,
         additionalFunctions,
         additionalNodeVisitors,
@@ -270,15 +268,27 @@ export const runTest = async (
         sandboxSecurityPolicyFunctions,
         sandboxSecurityPolicyMethods,
         sandboxSecurityPolicyProperties,
-        parserOptions,
         trimmedExpectation
     } = integrationTest;
 
     tape(description, ({fail, same, end}) => {
         if (!isATestWithALoader(integrationTest)) {
             loader = createArrayLoader(integrationTest.templates);
-        } else {
+        }
+        else {
             loader = integrationTest.loader;
+        }
+
+        if (environmentOptions === undefined) {
+            environmentOptions = {};
+        }
+
+        if (environmentOptions.parserOptions === undefined) {
+            environmentOptions.parserOptions = {};
+        }
+
+        if (environmentOptions.parserOptions.level === undefined) {
+            environmentOptions.parserOptions.level = 2;
         }
 
         let environment = createEnvironment(loader, Object.assign({}, <TwingEnvironmentOptions>{
@@ -290,9 +300,8 @@ export const runTest = async (
                 allowedProperties: sandboxSecurityPolicyProperties
             }),
             strictVariables: true,
-            emitsSourceMap: expectedSourceMapMappings !== undefined,
-            parserOptions
-        }, environmentOptions || {}));
+            emitsSourceMap: expectedSourceMapMappings !== undefined
+        }, environmentOptions));
 
         environment.addExtension(new TwingTestExtension());
         environment.registerEscapingStrategy((value) => `custom ${value}`, 'custom');
@@ -328,7 +337,8 @@ export const runTest = async (
 
                         actual = result.data;
                         sourceMap = result.sourceMap;
-                    } else {
+                    }
+                    else {
                         actual = await environment.render('index.twig', context);
                     }
 
@@ -377,7 +387,8 @@ export const runTest = async (
 
                     fail(`${description}: should not throw an error (${e})`);
                 }
-            } else {
+            }
+            else {
                 try {
                     console.time(description);
 
@@ -386,7 +397,7 @@ export const runTest = async (
                     fail(`${description}: should throw an error`);
                 } catch (error: any) {
                     console.timeEnd(description);
-
+                    
                     same(`${error.name}: ${error.message}`, expectedErrorMessage, `${description}: throws error`);
                 }
             }

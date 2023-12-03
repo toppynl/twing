@@ -9,13 +9,23 @@ import {DateTime} from "luxon";
 import {isAMapLike, MapLike} from "./map-like";
 import {isAMarkup, TwingMarkup} from "../markup";
 import {TwingContext} from "../context";
+import {iteratorToMap} from "./iterator-to-map";
 
-type Operand = Buffer | TwingMarkup | DateTime | MapLike<any, any> | string | boolean | number | null | object;
+type Operand = Buffer | TwingMarkup | DateTime | MapLike<any, any> | string | boolean | number | null | object | Array<any>;
 
 export function compare(
     firstOperand: Operand, 
     secondOperand: Operand
 ): boolean {
+    // Array<any>
+    if (Array.isArray(firstOperand)) {
+        firstOperand = iteratorToMap(firstOperand);
+    }
+
+    if (Array.isArray(secondOperand)) {
+        secondOperand = iteratorToMap(secondOperand);
+    }
+    
     // null
     if (firstOperand === null) {
         return compareToNull(secondOperand);

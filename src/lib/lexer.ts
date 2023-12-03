@@ -42,6 +42,8 @@ export const typeToEnglish = (type: TokenType): string => {
             return 'end of comment statement';
         case "ARROW":
             return 'arrow function';
+        case "SPREAD_OPERATOR":
+            return 'spread operator';
         default:
             throw new Error(`Token of type "${type}" does not exist.`)
     }
@@ -49,16 +51,17 @@ export const typeToEnglish = (type: TokenType): string => {
 
 export class TwingLexer extends Lexer {
     constructor(
-        binaryOperators: Map<string, TwingOperator>,
-        unaryOperators: Map<string, TwingOperator>
+        level: 2 | 3,
+        binaryOperators: Array<TwingOperator>,
+        unaryOperators: Array<TwingOperator>
     ) {
-        super();
+        super(level);
 
         // custom operators
-        for (let operators of [binaryOperators, unaryOperators]) {
-            for (let [key] of operators) {
-                if (!this.operators.includes(key)) {
-                    this.operators.push(key);
+        for (const operators of [binaryOperators, unaryOperators]) {
+            for (const {name} of operators) {
+                if (!this.operators.includes(name)) {
+                    this.operators.push(name);
                 }
             }
         }
@@ -78,8 +81,15 @@ export class TwingLexer extends Lexer {
 }
 
 export const createLexer = (
-    binaryOperators: Map<string, TwingOperator>,
-    unaryOperators: Map<string, TwingOperator>
+    level: 2 | 3,
+    binaryOperators: Array<TwingOperator>,
+    unaryOperators: Array<TwingOperator>
 ): TwingLexer => {
-    return new TwingLexer(binaryOperators, unaryOperators);
+    const keepCompatibleOperators = (operator: TwingOperator) => operator.specificationLevel <= level;
+    
+    return new TwingLexer(
+        level, 
+        binaryOperators.filter(keepCompatibleOperators), 
+        unaryOperators.filter(keepCompatibleOperators)
+    );
 };

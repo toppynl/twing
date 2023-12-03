@@ -7,13 +7,13 @@ import {TwingOperator} from "./operator";
 import type {TwingExtension} from "./extension";
 
 export interface TwingExtensionSet {
-    readonly binaryOperators: Map<string, TwingOperator>;
+    readonly binaryOperators: Array<TwingOperator>;
     readonly filters: Map<string, TwingFilter>;
     readonly functions: Map<string, TwingFunction>;
     readonly nodeVisitors: Array<TwingNodeVisitor>;
     readonly tagHandlers: Array<TwingTagHandler>;
     readonly tests: Map<string, TwingTest>;
-    readonly unaryOperators: Map<string, TwingOperator>;
+    readonly unaryOperators: Array<TwingOperator>;
 
     addExtension(extension: TwingExtension): void;
 
@@ -31,13 +31,13 @@ export interface TwingExtensionSet {
 }
 
 export const createExtensionSet = (): TwingExtensionSet => {
-    const binaryOperators: Map<string, TwingOperator> = new Map();
+    const binaryOperators: Array<TwingOperator> = [];
     const filters: Map<string, TwingFilter> = new Map();
     const functions: Map<string, TwingFunction> = new Map();
     const nodeVisitors: Array<TwingNodeVisitor> = [];
     const tagHandlers: Array<TwingTagHandler> = [];
     const tests: Map<string, TwingTest> = new Map();
-    const unaryOperators: Map<string, TwingOperator> = new Map();
+    const unaryOperators: Array<TwingOperator> = [];
 
     const extensionSet: TwingExtensionSet = {
         get binaryOperators() {
@@ -102,7 +102,7 @@ export const createExtensionSet = (): TwingExtensionSet => {
             nodeVisitors.push(nodeVisitor);
         },
         addOperator: (operator) => {
-            let bucket: Map<string, TwingOperator>;
+            let bucket: Array<TwingOperator>;
 
             if (operator.type === "UNARY") {
                 bucket = unaryOperators;
@@ -110,7 +110,7 @@ export const createExtensionSet = (): TwingExtensionSet => {
                 bucket = binaryOperators;
             }
 
-            bucket.set(operator.name, operator);
+            bucket.push(operator);
         },
         addTagHandler: (tagHandler) => {
             tagHandlers.push(tagHandler);

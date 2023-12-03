@@ -5,5 +5,5 @@ runTest({
     templates: {
         "index.twig": '{{ [a b]}}'
     },
-    expectedErrorMessage: 'TwingParsingError: An array element must be followed by a comma in "index.twig" at line 1, column 7.'
+    expectedErrorMessage: 'TwingParsingError: An array element must be followed by a comma. Unexpected token "name" of value "b" ("punctuation" expected with value ",") in "index.twig" at line 1, column 7.'
 });

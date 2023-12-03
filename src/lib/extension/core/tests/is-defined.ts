@@ -1,5 +1,10 @@
-export function isDefined(
+import {TwingCallable} from "../../../callable-wrapper";
+
+export const isDefined: TwingCallable<[
     value: any
-): Promise<boolean> {
+], boolean> = (
+    _executionContext,
+    value
+) => {
     return Promise.resolve(!!value);
-}
+};

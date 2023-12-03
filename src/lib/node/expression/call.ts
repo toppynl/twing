@@ -11,6 +11,7 @@ import type {TwingFilterNode} from "./call/filter";
 import type {TwingFunctionNode} from "./call/function";
 import type {TwingTestNode} from "./call/test";
 import {createRuntimeError} from "../../error/runtime";
+import {getTraceableMethod} from "../../helpers/traceable-method";
 
 const array_merge = require('locutus/php/array/array_merge');
 const snakeCase = require('snake-case');
@@ -82,7 +83,8 @@ export const createBaseCallNode = <Type extends CallType>(
             if (typeof name === "string") {
                 named = true;
                 name = normalizeName(name);
-            } else if (named) {
+            }
+            else if (named) {
                 throw createRuntimeError(`Positional arguments cannot be used after named arguments for ${callType} "${callName}".`, baseNode);
             }
 
@@ -115,7 +117,8 @@ export const createBaseCallNode = <Type extends CallType>(
                 arguments_.push(parameter.value);
                 parameters.delete(name);
                 optionalArguments = [];
-            } else {
+            }
+            else {
                 const parameter = parameters.get(position);
 
                 if (parameter) {
@@ -124,9 +127,11 @@ export const createBaseCallNode = <Type extends CallType>(
                     parameters.delete(position);
                     optionalArguments = [];
                     ++position;
-                } else if (callableParameter.defaultValue !== undefined) {
+                }
+                else if (callableParameter.defaultValue !== undefined) {
                     arguments_.push(createConstantNode(callableParameter.defaultValue, line, column));
-                } else {
+                }
+                else {
                     throw createRuntimeError(`Value for argument "${name}" is required for ${callType} "${callName}".`, baseNode);
                 }
             }
@@ -164,10 +169,10 @@ export const createBaseCallNode = <Type extends CallType>(
     const node: TwingBaseCallNode<typeof type> = {
         ...baseNode,
         execute: async (executionContext) => {
-            const {template, context, outputBuffer, sourceMapRuntime} = executionContext
+            const {template} = executionContext
             const {operatorName} = node.attributes;
 
-            let callableWrapper: TwingCallableWrapper<any> | null;
+            let callableWrapper: TwingCallableWrapper | null;
 
             switch (type) {
                 case "filter":
@@ -199,22 +204,6 @@ export const createBaseCallNode = <Type extends CallType>(
 
             const actualArguments: Array<any> = [];
 
-            if (callableWrapper!.needsTemplate) {
-                actualArguments.push(template);
-            }
-
-            if (callableWrapper!.needsContext) {
-                actualArguments.push(context);
-            }
-
-            if (callableWrapper!.needsOutputBuffer) {
-                actualArguments.push(outputBuffer);
-            }
-
-            if (callableWrapper!.needsSourceMapRuntime) {
-                actualArguments.push(sourceMapRuntime);
-            }
-
             actualArguments.push(...callableWrapper!.nativeArguments);
 
             if (operand) {
@@ -227,9 +216,9 @@ export const createBaseCallNode = <Type extends CallType>(
 
             actualArguments.push(...providedArguments);
 
-            const traceableCallable = callableWrapper.getTraceableCallable(node.line, node.column, template.name);
+            const traceableCallable = getTraceableMethod(callableWrapper.callable, node.line, node.column, template.name);
 
-            return traceableCallable(...actualArguments);
+            return traceableCallable(executionContext, ...actualArguments);
         }
     };
 

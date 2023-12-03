@@ -153,7 +153,7 @@ export interface TwingEnvironment {
     }>;
 
     registerEscapingStrategy(handler: EscapingStrategyHandler, name: string): void;
-    
+
     /**
      * Tokenizes a source code.
      *
@@ -169,10 +169,10 @@ export interface TwingEnvironment {
  * @param loader
  * @param options
  */
-export function createEnvironment(
+export const createEnvironment = (
     loader: TwingLoader,
     options?: TwingEnvironmentOptions
-): TwingEnvironment {
+): TwingEnvironment => {
     const cssEscapingStrategy = createCssEscapingStrategyHandler();
     const htmlEscapingStrategy = createHtmlEscapingStrategyHandler();
     const htmlAttributeEscapingStrategy = createHtmlAttributeEscapingStrategyHandler();
@@ -261,7 +261,8 @@ export function createEnvironment(
 
             if (loadedTemplate) {
                 return Promise.resolve(loadedTemplate);
-            } else {
+            }
+            else {
                 const timestamp = cache ? await cache.getTimestamp(templateFqn) : 0;
 
                 const getAstFromCache = async (): Promise<TwingTemplateNode | null> => {
@@ -280,10 +281,12 @@ export function createEnvironment(
 
                         if (isFresh) {
                             content = await cache.load(name);
-                        } else {
+                        }
+                        else {
                             content = null;
                         }
-                    } else {
+                    }
+                    else {
                         content = await cache.load(name);
                     }
 
@@ -361,7 +364,8 @@ export function createEnvironment(
                     extensionSet.functions,
                     extensionSet.tests,
                     parserOptions || options?.parserOptions || {
-                        strict: true
+                        strict: true,
+                        level: 3
                     }
                 );
             }
@@ -406,8 +410,14 @@ export function createEnvironment(
                 });
         },
         tokenize: (source: TwingSource): TwingTokenStream => {
+            const level = options?.parserOptions?.level || 3;
+            
             if (!lexer) {
-                lexer = createLexer(extensionSet.binaryOperators, extensionSet.unaryOperators);
+                lexer = createLexer(
+                    level,
+                    extensionSet.binaryOperators,
+                    extensionSet.unaryOperators
+                );
             }
 
             const stream = lexer.tokenizeSource(source);

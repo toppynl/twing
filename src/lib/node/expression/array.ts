@@ -5,6 +5,7 @@ import {
 } from "../expression";
 import {TwingConstantNode, createConstantNode} from "./constant";
 import {pushToRecord} from "../../helpers/record";
+import {spreadNodeType} from "./spread";
 
 const array_chunk = require('locutus/php/array/array_chunk');
 
@@ -47,19 +48,7 @@ export const createBaseArrayNode = <Type extends string>(
     const baseNode = createBaseExpressionNode(type, {}, children, line, column);
 
     const node: TwingBaseArrayNode<Type> = {
-        ...baseNode,
-        execute: (executionContext): Promise<Map<string, any>> => {
-            const keyValuePairs = getKeyValuePairs(node);
-            const promises = keyValuePairs.map(async ({key, value}) => {
-                return await Promise.all([
-                    key.execute(executionContext),
-                    value.execute(executionContext)
-                ]);
-            });
-
-            return Promise.all(promises)
-                .then((entries) => new Map(entries));
-        }
+        ...baseNode
     };
 
     return node;
@@ -83,6 +72,23 @@ export const createArrayNode = (
     }), line, column);
 
     return {
-        ...baseNode
+        ...baseNode,
+        execute: async (executionContext) => {
+            const keyValuePairs = getKeyValuePairs(baseNode);
+            const array: Array<any> = [];
+            
+            for (const {value: valueNode} of keyValuePairs) {
+                const value = await valueNode.execute(executionContext);
+                
+                if (valueNode.is(spreadNodeType)) {
+                    array.push(...value);
+                }
+                else {
+                    array.push(value);
+                }
+            }
+            
+            return array;
+        }
     };
 };
