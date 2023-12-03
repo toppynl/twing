@@ -1,7 +1,8 @@
 import {TwingNode} from "./node";
 import {TwingEnvironment} from "./environment";
 import {isNullOrUndefined} from "util";
-import {addcslashes} from "locutus/php/strings";
+
+const addcslashes = require('locutus/php/strings/addcslashes');
 
 export class TwingCompiler {
     private readonly environment: TwingEnvironment;
