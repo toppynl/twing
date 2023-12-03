@@ -1164,7 +1164,20 @@ export const createParser = (
             let token;
             let key: TwingBaseExpressionNode;
 
-            if ((token = stream.nextIf("STRING")) || (token = stream.nextIf("NAME")) || (token = stream.nextIf("NUMBER"))) {
+            if (token = stream.nextIf("NAME")) {
+                key = createConstantNode(token.value, token.line, token.column);
+
+                // {a} is a shortcut for {a:a}
+                if (stream.test("PUNCTUATION", [',', '}'])) {
+                    elements.push({
+                        key,
+                        value: createNameNode(token.value, token.line, token.column)
+                    });
+                    
+                    continue;
+                }
+            }
+            else if ((token = stream.nextIf("STRING")) || (token = stream.nextIf("NUMBER"))) {
                 key = createConstantNode(token.value, token.line, token.column);
             }
             else if (stream.test("PUNCTUATION", '(')) {
