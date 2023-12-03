@@ -3,11 +3,10 @@ import {sort} from "../../../../../../../../src/lib/extension/core/filters/sort"
 
 tape('sort', async (test) => {
     try {
-        await sort(5 as any);
+        await sort(5 as any, () => Promise.resolve(-1));
 
         test.fail();
-    }
-    catch (e) {
+    } catch (e) {
         test.same(e.message, 'The sort filter only works with iterables, got "number".');
     }
 

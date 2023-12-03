@@ -10,14 +10,17 @@ import {asort} from "../../../helpers/asort";
  *
  * @returns {Promise<Map<any, any>>}
  */
-export function sort(iterable: Map<any, any>): Promise<Map<any, any>> {
+export async function sort(
+    iterable: Map<any, any>,
+    arrow: ((a: any, b: any) => Promise<-1 | 0 | 1>) | null
+): Promise<Map<any, any>> {
     if (!isTraversable(iterable)) {
         throw new TwingErrorRuntime(`The sort filter only works with iterables, got "${typeof iterable}".`);
     }
 
     let map = iteratorToMap(iterable);
 
-    asort(map);
+    await asort(map, arrow || undefined);
 
     return Promise.resolve(map);
 }
