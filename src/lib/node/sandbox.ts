@@ -1,19 +1,17 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 
-export const sandboxNodeType = "sandbox";
-
-export interface TwingSandboxNode extends TwingBaseNode<typeof sandboxNodeType, TwingBaseNodeAttributes, {
-    body: TwingNode;
+export interface TwingSandboxNode extends TwingBaseNode<"sandbox", TwingBaseNodeAttributes, {
+    body: TwingBaseNode;
 }> {
 }
 
 export const createSandboxNode = (
-    body: TwingNode,
+    body: TwingBaseNode,
     line: number,
     column: number,
     tag: string
 ): TwingSandboxNode => {
-    const baseNode = createBaseNode(sandboxNodeType, {}, {
+    const baseNode = createBaseNode("sandbox", {}, {
         body
     }, line, column, tag);
 

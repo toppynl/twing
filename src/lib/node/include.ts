@@ -1,26 +1,27 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingExecutionContext} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 import type {TwingBaseExpressionNode} from "./expression";
 import type {TwingTemplate} from "../template";
 import {getTraceableMethod} from "../helpers/traceable-method";
 import {include} from "../extension/core/functions/include";
+import type {TwingExecutionContext} from "../execution-context";
 
-export type BaseIncludeNodeAttributes = TwingBaseNodeAttributes & {
+export type TwingBaseIncludeNodeAttributes = TwingBaseNodeAttributes & {
     only: boolean;
     ignoreMissing: boolean;
 };
 
-export type BaseIncludeNodeChildren = {
+export type TwingBaseIncludeNodeChildren = {
     variables: TwingBaseExpressionNode;
 };
 
 export interface TwingBaseIncludeNode<
     Type extends string,
-    Attributes extends BaseIncludeNodeAttributes = BaseIncludeNodeAttributes,
-    Children extends BaseIncludeNodeChildren = BaseIncludeNodeChildren
+    Attributes extends TwingBaseIncludeNodeAttributes = TwingBaseIncludeNodeAttributes,
+    Children extends TwingBaseIncludeNodeChildren = TwingBaseIncludeNodeChildren
 > extends TwingBaseNode<Type, Attributes, Children> {
 }
 
-export const createBaseIncludeNode = <Type extends string, Attributes extends BaseIncludeNodeAttributes, Children extends BaseIncludeNodeChildren = BaseIncludeNodeChildren>(
+export const createBaseIncludeNode = <Type extends string, Attributes extends TwingBaseIncludeNodeAttributes, Children extends TwingBaseIncludeNodeChildren = TwingBaseIncludeNodeChildren>(
     type: Type,
     attributes: Attributes,
     children: Children,
@@ -31,12 +32,12 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
 ): TwingBaseIncludeNode<Type, Attributes, Children> => {
     const baseNode = createBaseNode(type, attributes, children, line, column, tag);
 
-    const node: TwingBaseIncludeNode<Type, Attributes, Children> = {
+    const baseIncludeNode: TwingBaseIncludeNode<Type, Attributes, Children> = {
         ...baseNode,
         execute: async (executionContext) => {
             const {outputBuffer, sandboxed, template} = executionContext;
-            const {variables} = node.children;
-            const {only, ignoreMissing} = node.attributes;
+            const {variables} = baseIncludeNode.children;
+            const {only, ignoreMissing} = baseIncludeNode.attributes;
 
             const templatesToInclude = await getTemplate(executionContext);
             
@@ -55,5 +56,5 @@ export const createBaseIncludeNode = <Type extends string, Attributes extends Ba
         }
     };
 
-    return node;
+    return baseIncludeNode;
 };

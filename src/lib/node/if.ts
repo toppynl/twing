@@ -1,7 +1,7 @@
 import {TwingBaseNode, createBaseNode, getChildrenCount, TwingBaseNodeAttributes} from "../node";
 import {evaluate} from "../helpers/evaluate";
 
-type TwingIfNodeChildren = {
+export type TwingIfNodeChildren = {
     tests: TwingBaseNode;
     else?: TwingBaseNode;
 };
@@ -26,7 +26,7 @@ export const createIfNode = (
 
     const baseNode = createBaseNode('if', {}, children, line, column, tag);
 
-    const node: TwingIfNode = {
+    const ifNode: TwingIfNode = {
         ...baseNode,
         execute: async (executionContext) => {
             const count = getChildrenCount(testNode);
@@ -53,5 +53,5 @@ export const createIfNode = (
         }
     };
 
-    return node;
+    return ifNode;
 }

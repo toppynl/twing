@@ -29,9 +29,8 @@ import type {TwingIfNode} from "./node/if";
 import type {TwingMethodCallNode} from "./node/expression/method-call";
 import type {TwingEscapeNode} from "./node/expression/escape";
 import type {TwingApplyNode} from "./node/apply";
-import type {TwingExecutionContext} from "./execution-context"; // todo: change
-
-export type {TwingExecutionContext} from "./execution-context"; // todo: change
+import type {TwingExecutionContext} from "./execution-context";
+import type {TwingWrapperNode} from "./node/wrapper";
 
 export type TwingNode =
     | TwingApplyNode
@@ -65,6 +64,7 @@ export type TwingNode =
     | TwingTraitNode
     | TwingVerbatimNode
     | TwingWithNode
+    | TwingWrapperNode
     ;
 
 export type TwingNodeType<T> = T extends TwingBaseNode<infer Type, any, any> ? Type : never;
@@ -89,13 +89,9 @@ export interface TwingBaseNode<
     readonly type: Type;
 
     execute(executionContext: TwingExecutionContext): Promise<any>;
-
-    is<Type extends string>(type: Type): this is TwingNode & {
-        type: Type;
-    };
 }
 
-type KeysOf<T> = T extends T ? keyof T : never;
+export type KeysOf<T> = T extends T ? keyof T : never;
 
 export const getChildren = <
     T extends TwingBaseNode
@@ -121,7 +117,7 @@ export const createBaseNode = <
     column: number = 0,
     tag: string | null = null
 ): TwingBaseNode<Type, Attributes, Children> => {
-    const node: TwingBaseNode<Type, Attributes, Children> = {
+    return {
         attributes,
         children,
         column,
@@ -132,15 +128,12 @@ export const createBaseNode = <
         execute: async (executionContext) => {
             const output: Array<any> = [];
 
-            for (const [, child] of getChildren(node)) {
+            for (const [, child] of Object.entries(children)) {
                 output.push(await child.execute(executionContext));
             }
 
             return output;
         },
-        is: (aType) => (aType as string) === node.type,
         type
     };
-
-    return node;
 };

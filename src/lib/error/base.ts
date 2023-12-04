@@ -1,4 +1,4 @@
-export type ErrorLocation = {
+export type TwingErrorLocation = {
     line: number;
     column: number;
 };
@@ -7,14 +7,14 @@ export interface TwingBaseError<Name extends string> extends Error {
     readonly name: Name;
     readonly previous: any | undefined;
     readonly rootMessage: string;
-    location: ErrorLocation | undefined;
+    location: TwingErrorLocation | undefined;
     source: string | undefined;
     
     appendMessage(message: string): void;
 }
 
 export const createBaseError = <Name extends string>(
-    name: Name, message: string, location?: ErrorLocation, source?: string, previous?: any
+    name: Name, message: string, location?: TwingErrorLocation, source?: string, previous?: any
 ): TwingBaseError<Name> => {
     const baseError = Error(message);
 
@@ -23,7 +23,7 @@ export const createBaseError = <Name extends string>(
     const error = Object.create(baseError, {
         location: {
             get: () => location,
-            set: (value: ErrorLocation) => {
+            set: (value: TwingErrorLocation) => {
                 location = value;
 
                 updateRepresentation();

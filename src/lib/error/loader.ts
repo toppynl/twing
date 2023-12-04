@@ -1,4 +1,4 @@
-import {createBaseError, ErrorLocation, TwingBaseError} from "./base";
+import {createBaseError, TwingErrorLocation, TwingBaseError} from "./base";
 
 export const templateLoadingError = 'TwingTemplateLoadingError';
 
@@ -9,7 +9,7 @@ export interface TwingTemplateLoadingError extends TwingBaseError<typeof templat
 
 }
 
-export const createTemplateLoadingError = (names: Array<string | null>, location?: ErrorLocation, source?: string, previous?: any): TwingTemplateLoadingError => {
+export const createTemplateLoadingError = (names: Array<string | null>, location?: TwingErrorLocation, source?: string, previous?: any): TwingTemplateLoadingError => {
     let message: string;
     
     if (names.length === 1) {

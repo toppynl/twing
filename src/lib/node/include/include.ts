@@ -1,29 +1,27 @@
 import {
     TwingBaseIncludeNode,
-    BaseIncludeNodeAttributes,
-    BaseIncludeNodeChildren,
+    TwingBaseIncludeNodeAttributes,
+    TwingBaseIncludeNodeChildren,
     createBaseIncludeNode
 } from "../include";
 import {TwingBaseExpressionNode} from "../expression";
 
-export const includeNodeType = "include";
-
-export type TwingIncludeNodeChildren = BaseIncludeNodeChildren & {
+export type TwingIncludeNodeChildren = TwingBaseIncludeNodeChildren & {
     expression: TwingBaseExpressionNode;
 };
 
-export interface TwingIncludeNode extends TwingBaseIncludeNode<typeof includeNodeType, BaseIncludeNodeAttributes, TwingIncludeNodeChildren> {
+export interface TwingIncludeNode extends TwingBaseIncludeNode<"include", TwingBaseIncludeNodeAttributes, TwingIncludeNodeChildren> {
 }
 
 export const createIncludeNode = (
-    attributes: BaseIncludeNodeAttributes,
+    attributes: TwingBaseIncludeNodeAttributes,
     children: TwingIncludeNodeChildren,
     line: number,
     column: number,
     tag: string
 ): TwingIncludeNode => {
     const baseNode = createBaseIncludeNode(
-        includeNodeType,
+        "include",
         attributes,
         children,
         children.expression.execute,
@@ -32,9 +30,9 @@ export const createIncludeNode = (
         tag
     );
 
-    const node: TwingIncludeNode = {
+    const includeNode: TwingIncludeNode = {
         ...baseNode
     };
 
-    return node;
+    return includeNode;
 }

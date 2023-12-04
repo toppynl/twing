@@ -1,5 +1,5 @@
 import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
-import type {TwingBaseExpressionNode} from "./expression";
+import type {TwingBaseExpressionNode, TwingExpressionNode} from "./expression";
 import type {TwingAssignmentNode} from "./expression/assignment";
 import type {TwingTemplate} from "../template";
 import {getTraceableMethod} from "../helpers/traceable-method";
@@ -15,7 +15,7 @@ export interface TwingImportNode extends TwingBaseNode<"import", TwingImportNode
 }
 
 export const createImportNode = (
-    templateName: TwingBaseExpressionNode,
+    templateName: TwingExpressionNode,
     alias: TwingAssignmentNode,
     global: boolean,
     line: number,
@@ -29,7 +29,7 @@ export const createImportNode = (
         alias
     }, line, column, tag);
 
-    const node: TwingImportNode = {
+    const importNode: TwingImportNode = {
         ...baseNode,
         execute: async (executionContext) => {
             const {template, aliases} = executionContext;
@@ -39,12 +39,12 @@ export const createImportNode = (
 
             let aliasValue: TwingTemplate;
 
-            if (templateNameNode.is("name") && templateNameNode.attributes.name === '_self') {
+            if (templateNameNode.type === "name" && templateNameNode.attributes.name === '_self') {
                 aliasValue = template;
             } else {
                 const templateName = await templateNameNode.execute(executionContext);
 
-                const loadTemplate = getTraceableMethod(template.loadTemplate, node.line, node.column, template.name);
+                const loadTemplate = getTraceableMethod(template.loadTemplate, importNode.line, importNode.column, template.name);
 
                 aliasValue = await loadTemplate(templateName);
             }
@@ -57,5 +57,5 @@ export const createImportNode = (
         }
     };
 
-    return node;
+    return importNode;
 };

@@ -1,13 +1,11 @@
 import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
 import {getTraceableMethod} from "../../helpers/traceable-method";
 
-export const parentFunctionNodeType = "parent_function";
-
 export type ParentNodeAttributes = TwingBaseExpressionNodeAttributes & {
     name: string;
 };
 
-export interface TwingParentFunctionNode extends TwingBaseExpressionNode<typeof parentFunctionNodeType, ParentNodeAttributes> {
+export interface TwingParentFunctionNode extends TwingBaseExpressionNode<"parent_function", ParentNodeAttributes> {
 }
 
 export const createParentFunctionNode = (
@@ -15,21 +13,21 @@ export const createParentFunctionNode = (
     line: number,
     column: number
 ): TwingParentFunctionNode => {
-    const baseNode = createBaseExpressionNode(parentFunctionNodeType, {
+    const baseNode = createBaseExpressionNode("parent_function", {
         name,
         //output: false
     }, {}, line, column);
 
-    const node: TwingParentFunctionNode = {
+    const parentFunctionNode: TwingParentFunctionNode = {
         ...baseNode,
         execute: (executionContext) => {
             const {template, context, outputBuffer, sandboxed, sourceMapRuntime} = executionContext;
-            const {name} = node.attributes;
-            const renderParentBlock = getTraceableMethod(template.renderParentBlock, node.line, node.column, template.name);
+            const {name} = parentFunctionNode.attributes;
+            const renderParentBlock = getTraceableMethod(template.renderParentBlock, parentFunctionNode.line, parentFunctionNode.column, template.name);
 
             return renderParentBlock(name, context, outputBuffer, sandboxed, sourceMapRuntime);
         }
     };
 
-    return node;
+    return parentFunctionNode;
 };

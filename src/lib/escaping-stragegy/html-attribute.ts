@@ -1,8 +1,8 @@
-import {EscapingStrategyHandler} from "../escaping-strategy";
+import {TwingEscapingStrategyHandler} from "../escaping-strategy";
 
 const phpOrd = require('locutus/php/strings/ord');
 
-export const createHtmlAttributeEscapingStrategyHandler = (): EscapingStrategyHandler => {
+export const createHtmlAttributeEscapingStrategyHandler = (): TwingEscapingStrategyHandler => {
     return (value) => {
         value = value.replace(/[^a-zA-Z0-9,.\-_]/ug, function (matches: string) {
             /**

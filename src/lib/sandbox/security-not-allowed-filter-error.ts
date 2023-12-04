@@ -3,7 +3,7 @@ import {
     createBaseSandboxSecurityError,
     TwingSandboxSecurityError
 } from "./security-error";
-import {ErrorLocation} from "../error/base";
+import {TwingErrorLocation} from "../error/base";
 
 /**
  * Exception thrown when a not allowed filter is used in a template.
@@ -12,7 +12,7 @@ export interface TwingSandboxSecurityNotAllowedFilterError extends BaseSandboxSe
     readonly filterName: string;
 }
 
-export const createSandboxSecurityNotAllowedFilterError = (message: string, filterName: string, location?: ErrorLocation, source?: string): TwingSandboxSecurityNotAllowedFilterError => {
+export const createSandboxSecurityNotAllowedFilterError = (message: string, filterName: string, location?: TwingErrorLocation, source?: string): TwingSandboxSecurityNotAllowedFilterError => {
     const error = createBaseSandboxSecurityError(message, location, source);
 
     Error.captureStackTrace(error, createSandboxSecurityNotAllowedFilterError);

@@ -1,12 +1,10 @@
 import type {TwingBaseBinaryNode} from "../binary";
 import {createBinaryNodeFactory} from "../binary";
 
-export const bitwiseOrNodeType = "bitwise_or";
-
-export interface TwingBitwiseOrNode extends TwingBaseBinaryNode<typeof bitwiseOrNodeType> {
+export interface TwingBitwiseOrNode extends TwingBaseBinaryNode<"bitwise_or"> {
 }
 
-export const createBitwiseOrNode = createBinaryNodeFactory<TwingBitwiseOrNode>(bitwiseOrNodeType, {
+export const createBitwiseOrNode = createBinaryNodeFactory<TwingBitwiseOrNode>("bitwise_or", {
     execute: async (left, right, executionContext) => {
         return await left.execute(executionContext) | await right.execute(executionContext);
     }

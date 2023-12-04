@@ -5,14 +5,20 @@ import {createSource} from "../source";
 
 const rtrim = require('locutus/php/strings/rtrim');
 
-interface Stats {
+export interface TwingFilesystemLoaderFilesystemStats {
     isFile(): boolean;
 
     readonly mtime: Date;
 }
 
 export interface TwingFilesystemLoaderFilesystem {
-    stat(path: string, callback: (error: Error | null, stats: Stats | null) => void): void;
+    stat(
+        path: string, 
+        callback: (
+            error: Error | null, 
+            stats: TwingFilesystemLoaderFilesystemStats | null
+        ) => void
+    ): void;
 
     readFile(path: string, callback: (error: Error | null, data: Buffer | null) => void): void;
 }
@@ -40,7 +46,7 @@ export const createFilesystemLoader = (
 ): TwingFilesystemLoader => {
     const namespacedPaths: Map<string, Array<string>> = new Map();
     
-    const stat = (path: string): Promise<Stats | null> => {
+    const stat = (path: string): Promise<TwingFilesystemLoaderFilesystemStats | null> => {
         return new Promise((resolve) => {
             filesystem.stat(path, (error, stats) => {
                 if (error) {

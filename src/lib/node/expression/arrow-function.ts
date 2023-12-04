@@ -4,20 +4,20 @@ import type {TwingAssignmentNode} from "./assignment";
 import {createBaseExpressionNode} from "../expression";
 
 export interface TwingArrowFunctionNode extends TwingBaseExpressionNode<"arrow_function", TwingBaseExpressionNodeAttributes, {
-    expr: TwingBaseExpressionNode;
+    body: TwingBaseExpressionNode;
     names: TwingBaseNode<any, any, Record<string, TwingAssignmentNode>>;
 }> {
 
 }
 
 export const createArrowFunctionNode = (
-    expr: TwingBaseExpressionNode,
+    body: TwingBaseExpressionNode,
     names: TwingBaseNode<any, any, Record<any, TwingAssignmentNode>>,
     line: number,
     column: number
 ): TwingArrowFunctionNode => {
     const baseNode = createBaseExpressionNode("arrow_function", {}, {
-        expr,
+        body,
         names
     }, line, column);
 
@@ -25,7 +25,7 @@ export const createArrowFunctionNode = (
         ...baseNode,
         execute: (executionContext) => {
             const {context} = executionContext;
-            const {expr} = baseNode.children;
+            const {body} = baseNode.children;
             const assignmentNodes = Object.values(baseNode.children.names.children);
             
             return Promise.resolve((...functionArgs: Array<any>): Promise<any> => {
@@ -39,7 +39,7 @@ export const createArrowFunctionNode = (
                     index++;
                 }
                 
-                return expr.execute(executionContext);
+                return body.execute(executionContext);
             });
         }
     };

@@ -1,26 +1,26 @@
 import type {TwingBaseNode} from "./node";
 import type {TwingExpressionNode} from "./node/expression";
 
-export type OperatorType =
+export type TwingOperatorType =
     | 'BINARY'
     | 'UNARY'
     ;
 
-export type OperatorAssociativity =
+export type TwingOperatorAssociativity =
     | 'LEFT'
     | 'RIGHT'
     ;
 
-type TwingOperatorExpressionFactory = (operands: [TwingBaseNode, TwingBaseNode], line: number, column: number) => TwingExpressionNode;
+export type TwingOperatorExpressionFactory = (operands: [TwingBaseNode, TwingBaseNode], line: number, column: number) => TwingExpressionNode;
 
 export interface TwingOperator {
     readonly name: string;
 
-    readonly type: OperatorType;
+    readonly type: TwingOperatorType;
 
     readonly precedence: number;
 
-    readonly associativity: OperatorAssociativity | null;
+    readonly associativity: TwingOperatorAssociativity | null;
 
     readonly specificationLevel: 2 | 3;
 
@@ -29,10 +29,10 @@ export interface TwingOperator {
 
 export const createOperator = (
     name: string,
-    type: OperatorType,
+    type: TwingOperatorType,
     precedence: number,
     expressionFactory: TwingOperatorExpressionFactory,
-    associativity: OperatorAssociativity | null = null,
+    associativity: TwingOperatorAssociativity | null = null,
     specificationLevel: 2 | 3 = 2,
 ): TwingOperator => {
     associativity = type === "BINARY" ? (associativity || "LEFT") : null;

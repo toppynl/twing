@@ -1,9 +1,7 @@
-import {TwingBaseExpressionNode} from "../expression";
 import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
+import {TwingBaseExpressionNode} from "../expression";
 
-export const printNodeType = "print";
-
-export interface TwingPrintNode extends TwingBaseOutputNode<typeof printNodeType, {}, {
+export interface TwingPrintNode extends TwingBaseOutputNode<"print", {}, {
     expression: TwingBaseExpressionNode;
 }> {
 }
@@ -13,7 +11,7 @@ export const createPrintNode = (
     line: number,
     column: number
 ): TwingPrintNode => {
-    const outputNode: TwingPrintNode = createBaseOutputNode(printNodeType, {}, {
+    const outputNode: TwingPrintNode = createBaseOutputNode("print", {}, {
         expression: expression
     }, line, column, null);
 

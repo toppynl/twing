@@ -1,24 +1,25 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 import {createRuntimeError} from "../error/runtime";
 import {createContext, TwingContext} from "../context";
 import {mergeIterables} from "../helpers/merge-iterables";
 import {iteratorToMap} from "../helpers/iterator-to-map";
+import {TwingBaseExpressionNode} from "./expression";
 
 export type TwingWithNodeAttributes = TwingBaseNodeAttributes & {
     only: boolean;
 };
 
 export type TwingWithNodeChildren = {
-    body: TwingNode;
-    variables?: TwingNode;
+    body: TwingBaseNode;
+    variables?: TwingBaseExpressionNode;
 };
 
 export interface TwingWithNode extends TwingBaseNode<"with", TwingWithNodeAttributes, TwingWithNodeChildren> {
 }
 
 export const createWithNode = (
-    body: TwingNode,
-    variables: TwingNode | null,
+    body: TwingBaseNode,
+    variables: TwingBaseExpressionNode | null,
     only: boolean,
     line: number,
     column: number,
@@ -36,7 +37,7 @@ export const createWithNode = (
         only
     }, children, line, column, tag);
 
-    const node: TwingWithNode = {
+    const withNode: TwingWithNode = {
         ...baseNode,
         execute: async (executionContext) => {
             const {template, context} = executionContext;
@@ -49,7 +50,7 @@ export const createWithNode = (
                 const variables = await variablesNode.execute(executionContext);
 
                 if (typeof variables !== "object") {
-                    throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, node, template.name);
+                    throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, withNode, template.name);
                 }
 
                 if (only) {
@@ -75,5 +76,5 @@ export const createWithNode = (
         }
     };
 
-    return node;
+    return withNode;
 };

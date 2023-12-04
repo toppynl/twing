@@ -3,7 +3,7 @@ import {createRuntimeError} from "../error/runtime";
 import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
-import type {TwingGetAttributeCallType} from "../node/expression/attribute-accessor";
+import type {TwingAttributeAccessorCallType} from "../node/expression/attribute-accessor";
 import {isBoolean, isFloat} from "./php";
 import {TwingTemplate} from "../template";
 
@@ -29,7 +29,7 @@ export const getAttribute = (
     object: any,
     attribute: any,
     methodArguments: Map<any, any>,
-    type: TwingGetAttributeCallType,
+    type: TwingAttributeAccessorCallType,
     shouldTestExistence: boolean,
     shouldIgnoreStrictCheck: boolean | null,
     sandboxed: boolean,

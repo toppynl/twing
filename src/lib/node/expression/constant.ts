@@ -1,15 +1,13 @@
 import type {TwingBaseExpressionNode} from "../expression";
 import {createBaseExpressionNode} from "../expression";
 
-export const constantNodeType = "constant";
-
 export type TwingConstantNodeValue = string | number | boolean | null;
 
-type TwingConstantNodeAttributes<Value extends TwingConstantNodeValue> = {
+export type TwingConstantNodeAttributes<Value extends TwingConstantNodeValue> = {
     value: Value;
 };
 
-export interface TwingConstantNode<Value extends TwingConstantNodeValue = TwingConstantNodeValue> extends TwingBaseExpressionNode<typeof constantNodeType, TwingConstantNodeAttributes<Value>> {
+export interface TwingConstantNode<Value extends TwingConstantNodeValue = TwingConstantNodeValue> extends TwingBaseExpressionNode<"constant", TwingConstantNodeAttributes<Value>> {
 }
 
 export const createConstantNode = <Value extends string | number | boolean | null>(
@@ -17,16 +15,16 @@ export const createConstantNode = <Value extends string | number | boolean | nul
     line: number,
     column: number
 ): TwingConstantNode<Value> => {
-    const parent = createBaseExpressionNode(constantNodeType, {
+    const parent = createBaseExpressionNode("constant", {
         value
     }, {}, line, column);
 
-    const node: TwingConstantNode<Value> = {
+    const constantNode: TwingConstantNode<Value> = {
         ...parent,
         execute: () => {
-            return Promise.resolve(node.attributes.value);
+            return Promise.resolve(constantNode.attributes.value);
         }
     };
 
-    return node;
+    return constantNode;
 };

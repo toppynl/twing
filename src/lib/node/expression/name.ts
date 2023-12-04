@@ -10,9 +10,7 @@ export type TwingNameNodeAttributes = TwingBaseExpressionNodeAttributes & {
     shouldTestExistence: boolean;
 };
 
-export const nameNodeType = "name";
-
-export interface TwingNameNode extends TwingBaseNode<typeof nameNodeType, TwingNameNodeAttributes> {
+export interface TwingNameNode extends TwingBaseNode<"name", TwingNameNodeAttributes> {
 }
 
 export const createNameNode = (
@@ -27,20 +25,20 @@ export const createNameNode = (
         shouldTestExistence: false
     };
 
-    const baseNode = createBaseNode(nameNodeType, attributes, {}, line, column);
+    const baseNode = createBaseNode("name", attributes, {}, line, column);
 
-    const node: TwingNameNode = {
+    const nameNode: TwingNameNode = {
         ...baseNode,
         execute: async ({template, context, charset, isStrictVariables}) => {
-            const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
+            const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = nameNode.attributes;
 
             const traceableGetContextValue = getTraceableMethod(
                 getContextValue,
-                node.line,
-                node.column,
+                nameNode.line,
+                nameNode.column,
                 template.name
             );
-            
+
             return traceableGetContextValue(
                 charset,
                 template.name,
@@ -54,15 +52,15 @@ export const createNameNode = (
         }
     };
 
-    return node;
+    return nameNode;
 };
 
 export const cloneNameNode = (
-    node: TwingNameNode
+    nameNode: TwingNameNode
 ): TwingNameNode => {
     return createNameNode(
-        node.attributes.name,
-        node.line,
-        node.column
+        nameNode.attributes.name,
+        nameNode.line,
+        nameNode.column
     );
 };

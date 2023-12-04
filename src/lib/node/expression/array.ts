@@ -5,7 +5,7 @@ import {
 } from "../expression";
 import {TwingConstantNode, createConstantNode} from "./constant";
 import {pushToRecord} from "../../helpers/record";
-import {spreadNodeType} from "./spread";
+import type {TwingNode} from "../../node";
 
 const array_chunk = require('locutus/php/array/array_chunk');
 
@@ -76,18 +76,18 @@ export const createArrayNode = (
         execute: async (executionContext) => {
             const keyValuePairs = getKeyValuePairs(baseNode);
             const array: Array<any> = [];
-            
+
             for (const {value: valueNode} of keyValuePairs) {
                 const value = await valueNode.execute(executionContext);
-                
-                if (valueNode.is(spreadNodeType)) {
+
+                if ((valueNode as TwingNode).type === "spread") {
                     array.push(...value);
                 }
                 else {
                     array.push(value);
                 }
             }
-            
+
             return array;
         }
     };

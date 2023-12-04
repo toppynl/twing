@@ -5,6 +5,7 @@ export type {TwingCache} from "./lib/cache";
 
 // error
 export type {TwingError} from "./lib/error";
+export type {TwingBaseError, TwingErrorLocation} from "./lib/error/base";
 export type {TwingParsingError} from "./lib/error/parsing";
 export type {TwingRuntimeError} from "./lib/error/runtime";
 export type {TwingTemplateLoadingError} from "./lib/error/loader";
@@ -15,7 +16,9 @@ export {createRuntimeError, isARuntimeError} from "./lib/error/runtime";
 export {createTemplateLoadingError, isATemplateLoadingError} from "./lib/error/loader";
 
 // loader
-export type {TwingFilesystemLoader, TwingFilesystemLoaderFilesystem} from "./lib/loader/filesystem";
+export type {
+    TwingFilesystemLoader, TwingFilesystemLoaderFilesystem, TwingFilesystemLoaderFilesystemStats
+} from "./lib/loader/filesystem";
 export type {TwingArrayLoader} from "./lib/loader/array";
 export type {TwingChainLoader} from "./lib/loader/chain";
 export type {TwingLoader} from "./lib/loader";
@@ -30,35 +33,49 @@ export type {TwingMarkup} from "./lib/markup";
 export {createMarkup, isAMarkup} from "./lib/markup";
 
 // node
-export type {TwingNodeAttributes, TwingNodeChildren, TwingNodeType} from "./lib/node";
-export type {TwingApplyNode} from "./lib/node/apply";
-export type {TwingAutoEscapeNode} from "./lib/node/auto-escape";
-export type {TwingBlockNode} from "./lib/node/block";
+export type {
+    TwingBaseNode,
+    TwingBaseNodeAttributes,
+    TwingBaseNodeChildren,
+    TwingNode,
+    TwingNodeAttributes,
+    TwingNodeChildren,
+    TwingNodeType,
+    KeysOf
+} from "./lib/node";
+export type {TwingApplyNode, TwingApplyNodeAttributes, TwingApplyNodeChildren} from "./lib/node/apply";
+export type {TwingAutoEscapeNode, TwingAutoEscapeNodeAttributes} from "./lib/node/auto-escape";
+export type {TwingBlockNode, TwingBlockNodeAttributes} from "./lib/node/block";
 export type {TwingBodyNode} from "./lib/node/body";
-export type {TwingCheckSecurityNode} from "./lib/node/check-security";
+export type {TwingCheckSecurityNode, TwingCheckSecurityNodeAttributes} from "./lib/node/check-security";
 export type {TwingCheckToStringNode} from "./lib/node/check-to-string";
-export type {TwingCommentNode} from "./lib/node/comment";
+export type {TwingCommentNode, TwingCommentNodeAttributes} from "./lib/node/comment";
 export type {TwingDeprecatedNode} from "./lib/node/deprecated";
 export type {TwingDoNode} from "./lib/node/do";
-export type {TwingExpressionNode, TwingBaseExpressionNode} from "./lib/node/expression";
+export type {
+    TwingExpressionNode, TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes
+} from "./lib/node/expression";
 export type {TwingFlushNode} from "./lib/node/flush";
-export type {TwingForNode} from "./lib/node/for";
-export type {TwingForLoopNode} from "./lib/node/for-loop";
-export type {TwingIfNode} from "./lib/node/if";
-export type {TwingImportNode} from "./lib/node/import";
-export type {TwingBaseIncludeNode} from "./lib/node/include";
-export type {TwingLineNode} from "./lib/node/line";
-export type {TwingMacroNode} from "./lib/node/macro";
-export type {TwingTemplateNode} from "./lib/node/template";
+export type {TwingForNode, TwingForNodeAttributes, TwingForNodeChildren} from "./lib/node/for";
+export type {TwingForLoopNode, TwingForLoopNodeAttributes} from "./lib/node/for-loop";
+export type {TwingIfNode, TwingIfNodeChildren} from "./lib/node/if";
+export type {TwingImportNode, TwingImportNodeAttributes} from "./lib/node/import";
+export type {
+    TwingBaseIncludeNode, TwingBaseIncludeNodeAttributes, TwingBaseIncludeNodeChildren
+} from "./lib/node/include";
+export type {TwingLineNode, TwingLineNodeAttributes} from "./lib/node/line";
+export type {TwingMacroNode, TwingMacroNodeAttributes} from "./lib/node/macro";
 export type {TwingBaseOutputNode} from "./lib/node/output";
+export type {TwingTemplateNode, TwingTemplateNodeAttributes, TwingTemplateNodeChildren} from "./lib/node/template";
 export type {TwingSandboxNode} from "./lib/node/sandbox";
-export type {TwingSetNode} from "./lib/node/set";
+export type {TwingSetNode, TwingSetNodeAttributes} from "./lib/node/set";
 export type {TwingTraitNode} from "./lib/node/trait";
-export type {TwingWithNode} from "./lib/node/with";
+export type {TwingWithNode, TwingWithNodeAttributes, TwingWithNodeChildren} from "./lib/node/with";
+export type {TwingWrapperNode, TwingWrapperNodeChildren} from "./lib/node/wrapper";
 
-export {createApplyNode, applyNodeType} from "./lib/node/apply";
-export {createAutoEscapeNode, autoEscapeNodeType} from "./lib/node/auto-escape";
-export {createBlockNode, blockNodeType} from "./lib/node/block";
+export {createApplyNode} from "./lib/node/apply";
+export {createAutoEscapeNode} from "./lib/node/auto-escape";
+export {createBlockNode} from "./lib/node/block";
 export {createBodyNode} from "./lib/node/body";
 export {createCheckSecurityNode} from "./lib/node/check-security";
 export {createCheckToStringNode} from "./lib/node/check-to-string";
@@ -73,45 +90,59 @@ export {createImportNode} from "./lib/node/import";
 export {createBaseIncludeNode} from "./lib/node/include";
 export {createLineNode} from "./lib/node/line";
 export {createMacroNode} from "./lib/node/macro";
-export {createTemplateNode, templateNodeType} from "./lib/node/template";
-export {createSandboxNode, sandboxNodeType} from "./lib/node/sandbox";
+export {createTemplateNode} from "./lib/node/template";
+export {createSandboxNode} from "./lib/node/sandbox";
 export {createSetNode} from "./lib/node/set";
-export {createTraitNode, traitNodeType} from "./lib/node/trait";
+export {createTraitNode} from "./lib/node/trait";
 export {createWithNode} from "./lib/node/with";
+export {createWrapperNode} from "./lib/node/wrapper";
 
 // node/expression
 export type {TwingBaseArrayNode, TwingArrayNode} from "./lib/node/expression/array";
 export type {TwingArrowFunctionNode} from "./lib/node/expression/arrow-function";
-export type {TwingAssignmentNode} from "./lib/node/expression/assignment";
-export type {TwingAttributeAccessorNode} from "./lib/node/expression/attribute-accessor";
+export type {TwingAssignmentNode, TwingAssignmentNodeAttributes} from "./lib/node/expression/assignment";
+export type {
+    TwingAttributeAccessorNode,
+    TwingAttributeAccessorNodeAttributes,
+    TwingAttributeAccessorNodeChildren,
+    TwingAttributeAccessorCallType
+} from "./lib/node/expression/attribute-accessor";
 export type {TwingBaseBinaryNode, TwingBinaryNode} from "./lib/node/expression/binary";
-export type {TwingBlockFunctionNode} from "./lib/node/expression/block-function";
-export type {TwingBaseCallNode, TwingCallNode} from "./lib/node/expression/call";
+export type {
+    TwingBlockFunctionNode, TwingBlockFunctionNodeAttributes, TwingBlockFunctionNodeChildren
+} from "./lib/node/expression/block-function";
+export type {
+    TwingBaseCallNode, TwingCallNode, TwingBaseCallNodeChildren, TwingBaseCallNodeAttributes
+} from "./lib/node/expression/call";
 export type {TwingBaseConditionalNode, TwingConditionalNode} from "./lib/node/expression/conditional";
-export type {TwingConstantNode} from "./lib/node/expression/constant";
-export type {TwingEscapeNode} from "./lib/node/expression/escape";
+export type {
+    TwingConstantNode, TwingConstantNodeAttributes, TwingConstantNodeValue
+} from "./lib/node/expression/constant";
+export type {TwingEscapeNode, TwingEscapeNodeAttributes} from "./lib/node/expression/escape";
 export type {TwingHashNode} from "./lib/node/expression/hash";
-export type {TwingMethodCallNode} from "./lib/node/expression/method-call";
-export type {TwingNameNode} from "./lib/node/expression/name";
+export type {TwingMethodCallNode, TwingMethodCallNodeAttributes} from "./lib/node/expression/method-call";
+export type {TwingNameNode, TwingNameNodeAttributes} from "./lib/node/expression/name";
 export type {TwingNullishCoalescingNode} from "./lib/node/expression/nullish-coalescing";
 export type {TwingParentFunctionNode} from "./lib/node/expression/parent-function";
+export type {TwingSpreadNode} from "./lib/node/expression/spread";
 export type {TwingBaseUnaryNode, TwingUnaryNode} from "./lib/node/expression/unary";
 
 export {createBaseArrayNode, createArrayNode} from "./lib/node/expression/array";
 export {createArrowFunctionNode} from "./lib/node/expression/arrow-function";
-export {createAssignmentNode, assignmentNodeType} from "./lib/node/expression/assignment";
+export {createAssignmentNode} from "./lib/node/expression/assignment";
 export {createAttributeAccessorNode} from "./lib/node/expression/attribute-accessor";
 export {createBaseBinaryNode} from "./lib/node/expression/binary";
-export {createBlockFunctionNode, blockFunctionNodeType} from "./lib/node/expression/block-function";
+export {createBlockFunctionNode} from "./lib/node/expression/block-function";
 export {createBaseCallNode} from "./lib/node/expression/call";
-export {createBaseConditionalNode, createConditionalNode, conditionalNodeType} from "./lib/node/expression/conditional";
-export {createConstantNode, constantNodeType} from "./lib/node/expression/constant";
+export {createBaseConditionalNode, createConditionalNode} from "./lib/node/expression/conditional";
+export {createConstantNode} from "./lib/node/expression/constant";
 export {createEscapeNode} from "./lib/node/expression/escape";
-export {createHashNode, hashNodeType} from "./lib/node/expression/hash";
-export {createMethodCallNode, methodCallNodeType} from "./lib/node/expression/method-call";
-export {createNameNode, nameNodeType} from "./lib/node/expression/name";
-export {createNullishCoalescingNode, nullishCoalescingNodeType} from "./lib/node/expression/nullish-coalescing";
-export {createParentFunctionNode, parentFunctionNodeType} from "./lib/node/expression/parent-function";
+export {createHashNode} from "./lib/node/expression/hash";
+export {createMethodCallNode} from "./lib/node/expression/method-call";
+export {createNameNode} from "./lib/node/expression/name";
+export {createNullishCoalescingNode} from "./lib/node/expression/nullish-coalescing";
+export {createParentFunctionNode} from "./lib/node/expression/parent-function";
+export {createSpreadNode} from "./lib/node/expression/spread";
 export {createBaseUnaryNode} from "./lib/node/expression/unary";
 
 // node/expression/binary
@@ -124,6 +155,8 @@ export type {TwingConcatenateNode} from "./lib/node/expression/binary/concatenat
 export type {TwingDivideAndFloorNode} from "./lib/node/expression/binary/divide-and-floor";
 export type {TwingDivideNode} from "./lib/node/expression/binary/divide";
 export type {TwingEndsWithNode} from "./lib/node/expression/binary/ends-with";
+export type {TwingHasEveryNode} from "./lib/node/expression/binary/has-every";
+export type {TwingHasSomeNode} from "./lib/node/expression/binary/has-some";
 export type {TwingIsEqualToNode} from "./lib/node/expression/binary/is-equal-to";
 export type {TwingIsGreaterThanOrEqualToNode} from "./lib/node/expression/binary/is-greater-than-or-equal-to";
 export type {TwingIsGreaterThanNode} from "./lib/node/expression/binary/is-greater-than";
@@ -138,20 +171,21 @@ export type {TwingMultiplyNode} from "./lib/node/expression/binary/multiply";
 export type {TwingOrNode} from "./lib/node/expression/binary/or";
 export type {TwingPowerNode} from "./lib/node/expression/binary/power";
 export type {TwingRangeNode} from "./lib/node/expression/binary/range";
+export type {TwingSpaceshipNode} from "./lib/node/expression/binary/spaceship";
 export type {TwingStartsWithNode} from "./lib/node/expression/binary/starts-with";
 export type {TwingSubtractNode} from "./lib/node/expression/binary/subtract";
 
-export {createAddNode, addNodeType} from "./lib/node/expression/binary/add";
-export {createAndNode, andNodeType} from "./lib/node/expression/binary/and";
-export {createBitwiseAndNode, bitwiseAndNodeType} from "./lib/node/expression/binary/bitwise-and";
-export {createBitwiseOrNode, bitwiseOrNodeType} from "./lib/node/expression/binary/bitwise-or";
-export {createBitwiseXorNode, bitwiseXorNodeType} from "./lib/node/expression/binary/bitwise-xor";
-export {createConcatenateNode, concatenateNodeTYpe} from "./lib/node/expression/binary/concatenate";
-export {createDivideAndFloorNode, divideAndFloorNodeType} from "./lib/node/expression/binary/divide-and-floor";
-export {createDivideNode, divideNodeType} from "./lib/node/expression/binary/divide";
-export {createEndsWithNode, endsWithNodeType} from "./lib/node/expression/binary/ends-with";
-export {createHasEveryNode, hasEveryNodeType} from "./lib/node/expression/binary/has-every";
-export {createHasSomeNode, hasSomeNodeType} from "./lib/node/expression/binary/has-some";
+export {createAddNode} from "./lib/node/expression/binary/add";
+export {createAndNode} from "./lib/node/expression/binary/and";
+export {createBitwiseAndNode} from "./lib/node/expression/binary/bitwise-and";
+export {createBitwiseOrNode} from "./lib/node/expression/binary/bitwise-or";
+export {createBitwiseXorNode} from "./lib/node/expression/binary/bitwise-xor";
+export {createConcatenateNode} from "./lib/node/expression/binary/concatenate";
+export {createDivideAndFloorNode} from "./lib/node/expression/binary/divide-and-floor";
+export {createDivideNode} from "./lib/node/expression/binary/divide";
+export {createEndsWithNode} from "./lib/node/expression/binary/ends-with";
+export {createHasEveryNode} from "./lib/node/expression/binary/has-every";
+export {createHasSomeNode} from "./lib/node/expression/binary/has-some";
 export {createIsEqualNode} from "./lib/node/expression/binary/is-equal-to";
 export {createIsGreaterThanNode} from "./lib/node/expression/binary/is-greater-than";
 export {createIsGreaterThanOrEqualToNode} from "./lib/node/expression/binary/is-greater-than-or-equal-to";
@@ -174,38 +208,38 @@ export type {TwingFilterNode} from "./lib/node/expression/call/filter";
 export type {TwingFunctionNode} from "./lib/node/expression/call/function";
 export type {TwingTestNode} from "./lib/node/expression/call/test";
 
-export {createFilterNode, filterNodeType} from "./lib/node/expression/call/filter";
-export {createFunctionNode, functionNodeType} from "./lib/node/expression/call/function";
-export {createTestNode, testNodeType} from "./lib/node/expression/call/test";
+export {createFilterNode} from "./lib/node/expression/call/filter";
+export {createFunctionNode} from "./lib/node/expression/call/function";
+export {createTestNode} from "./lib/node/expression/call/test";
 
 // node/expression/unary
-export type {TwingNegativeNode} from "./lib/node/expression/unary/neg";
+export type {TwingNegativeNode} from "./lib/node/expression/unary/negative";
 export type {TwingNotNode} from "./lib/node/expression/unary/not";
-export type {TwingPositiveNode} from "./lib/node/expression/unary/pos";
+export type {TwingPositiveNode} from "./lib/node/expression/unary/positive";
 
-export {createNegativeNode, negativeNodeType} from "./lib/node/expression/unary/neg";
-export {createNotNode, notNodeType} from "./lib/node/expression/unary/not";
-export {createPositiveNode, positiveNodeType} from "./lib/node/expression/unary/pos";
+export {createNegativeNode} from "./lib/node/expression/unary/negative";
+export {createNotNode} from "./lib/node/expression/unary/not";
+export {createPositiveNode} from "./lib/node/expression/unary/positive";
 
 // node/include
-export type {TwingEmbedNode} from "./lib/node/include/embed";
-export type {TwingIncludeNode} from "./lib/node/include/include";
+export type {TwingEmbedNode, TwingEmbedNodeAttributes} from "./lib/node/include/embed";
+export type {TwingIncludeNode, TwingIncludeNodeChildren} from "./lib/node/include/include";
 
-export {createEmbedNode, embedNodeType} from "./lib/node/include/embed";
-export {createIncludeNode, includeNodeType} from "./lib/node/include/include";
+export {createEmbedNode} from "./lib/node/include/embed";
+export {createIncludeNode} from "./lib/node/include/include";
 
 // node/output
-export type {TwingBlockReferenceNode} from "./lib/node/output/block-reference";
+export type {TwingBlockReferenceNode, TwingBlockReferenceNodeAttributes} from "./lib/node/output/block-reference";
 export type {TwingPrintNode} from "./lib/node/output/print";
 export type {TwingSpacelessNode} from "./lib/node/output/spaceless";
-export type {TwingTextNode} from "./lib/node/output/text";
+export type {TwingTextNode, TwingBaseTextNode, TwingBaseTextNodeAttributes} from "./lib/node/output/text";
 export type {TwingVerbatimNode} from "./lib/node/output/verbatim";
 
-export {createBlockReferenceNode, blockReferenceType} from "./lib/node/output/block-reference";
-export {createPrintNode, printNodeType} from "./lib/node/output/print";
-export {createSpacelessNode, spacelessNodeType} from "./lib/node/output/spaceless";
-export {createTextNode, textNodeType} from "./lib/node/output/text";
-export {createVerbatimNode, verbatimNodeType} from "./lib/node/output/verbatim";
+export {createBlockReferenceNode} from "./lib/node/output/block-reference";
+export {createPrintNode} from "./lib/node/output/print";
+export {createSpacelessNode} from "./lib/node/output/spaceless";
+export {createTextNode} from "./lib/node/output/text";
+export {createVerbatimNode} from "./lib/node/output/verbatim";
 
 // tag handlers
 export type {TwingTagHandler, TwingTokenParser} from "./lib/tag-handler";
@@ -234,16 +268,27 @@ export {createVerbatimTagHandler} from "./lib/tag-handler/verbatim";
 export {createWithTagHandler} from "./lib/tag-handler/with";
 
 // core
+export type {
+    TwingCallable, TwingCallableArgument, TwingCallableWrapperOptions, TwingCallableWrapper
+} from "./lib/callable-wrapper";
+export type {TwingContext} from "./lib/context";
 export type {TwingEnvironment, TwingEnvironmentOptions, TwingNumberFormat} from "./lib/environment";
+export type {
+    TwingEscapingStrategy, TwingEscapingStrategyHandler, TwingEscapingStrategyResolver
+} from "./lib/escaping-strategy";
+export type {TwingExecutionContext} from "./lib/execution-context";
 export type {TwingExtension} from "./lib/extension";
 export type {TwingExtensionSet} from "./lib/extension-set";
 export type {TwingFilter} from "./lib/filter";
 export type {TwingFunction} from "./lib/function";
 export type {TwingLexer} from "./lib/lexer";
-export type {TwingBaseNode} from "./lib/node";
 export type {TwingNodeVisitor} from "./lib/node-visitor";
-export type {TwingOperator} from "./lib/operator";
+export type {
+    TwingOperator, TwingOperatorAssociativity, TwingOperatorType, TwingOperatorExpressionFactory
+} from "./lib/operator";
 export type {TwingOutputBuffer} from "./lib/output-buffer";
+export type {TwingParser, TwingParserOptions} from "./lib/parser";
+export type {TwingSandboxSecurityError} from "./lib/sandbox/security-error";
 export type {TwingSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
 export type {TwingSandboxSecurityNotAllowedFilterError} from "./lib/sandbox/security-not-allowed-filter-error";
 export type {TwingSandboxSecurityNotAllowedFunctionError} from "./lib/sandbox/security-not-allowed-function-error";
@@ -251,7 +296,14 @@ export type {TwingSandboxSecurityNotAllowedMethodError} from "./lib/sandbox/secu
 export type {TwingSandboxSecurityNotAllowedPropertyError} from "./lib/sandbox/security-not-allowed-property-error";
 export type {TwingSandboxSecurityNotAllowedTagError} from "./lib/sandbox/security-not-allowed-tag-error";
 export type {TwingSource} from "./lib/source";
-export type {TwingTemplate} from "./lib/template";
+export type {TwingSourceMapRuntime} from "./lib/source-map-runtime";
+export type {
+    TwingTemplate,
+    TwingTemplateAliases,
+    TwingTemplateBlockMap,
+    TwingTemplateBlockHandler,
+    TwingTemplateMacroHandler
+} from "./lib/template";
 export type {TwingTest} from "./lib/test";
 export type {TwingTokenStream} from "./lib/token-stream";
 

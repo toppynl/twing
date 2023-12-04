@@ -1,17 +1,19 @@
 import {TwingNodeVisitor} from "../node-visitor";
-import {cloneGetAttributeNode, TwingAttributeAccessorNode} from "../node/expression/attribute-accessor";
-import {cloneNameNode, nameNodeType} from "../node/expression/name";
-import {blockFunctionNodeType, cloneBlockReferenceExpressionNode} from "../node/expression/block-function";
-import {constantNodeType, createConstantNode} from "../node/expression/constant";
-import {cloneMethodCallNode, methodCallNodeType} from "../node/expression/method-call";
+import {
+    cloneGetAttributeNode,
+    TwingAttributeAccessorNode
+} from "../node/expression/attribute-accessor";
+import {cloneNameNode} from "../node/expression/name";
+import {cloneBlockReferenceExpressionNode} from "../node/expression/block-function";
+import {createConstantNode} from "../node/expression/constant";
+import {cloneMethodCallNode} from "../node/expression/method-call";
 import {TwingBaseExpressionNode} from "../node/expression";
 import {createParsingError} from "../error/parsing";
-import {createTestNode, testNodeType, TwingTestNode} from "../node/expression/call/test";
+import {createTestNode, TwingTestNode} from "../node/expression/call/test";
 import {createArrayNode, getKeyValuePairs} from "../node/expression/array";
 import {createConditionalNode} from "../node/expression/conditional";
-import {functionNodeType} from "../node/expression/call/function";
-import {filterNodeType, TwingFilterNode} from "../node/expression/call/filter";
-import {hashNodeType} from "../node/expression/hash";
+import {TwingFilterNode} from "../node/expression/call/filter";
+import type {TwingNode} from "../node";
 
 export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     const enteredNodes: Array<TwingBaseExpressionNode> = [];
@@ -23,7 +25,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
 
         let newNode: TwingBaseExpressionNode;
 
-        if (operand.is("name") || operand.is("get_attribute")) {
+        if (operand.type === "name" || operand.type === "attribute_accessor") {
             const testNode = createTestNode(
                 operand,
                 "defined",
@@ -37,7 +39,8 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
 
             newNode = createConditionalNode(testNode, node, falseNode, line, column);
 
-        } else {
+        }
+        else {
             newNode = node;
         }
 
@@ -45,44 +48,48 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     };
 
     const enterDefinedTestNode = (node: TwingTestNode): TwingTestNode => {
-        const operand = node.children.operand!;
-
+        const operand = node.children.operand! as TwingNode;
+        
         if (
-            !operand.is(nameNodeType) &&
-            !operand.is("get_attribute") &&
-            !operand.is(blockFunctionNodeType) &&
-            !operand.is(constantNodeType) &&
-            !operand.is("array") &&
-            !operand.is(hashNodeType) &&
-            !operand.is(methodCallNodeType) &&
-            !(operand.is(functionNodeType) && (operand.attributes.operatorName === 'constant'))
+            operand.type !== "name" &&
+            operand.type !== "attribute_accessor" &&
+            operand.type !== "block_function" &&
+            operand.type !== "constant" &&
+            operand.type !== "array" &&
+            operand.type !== "hash" &&
+            operand.type !== "method_call" &&
+            !(operand.type === "function" && operand.attributes.operatorName === 'constant')
         ) {
             throw createParsingError('The "defined" test only works with simple variables.', node);
         }
 
         let newOperand: TwingBaseExpressionNode;
 
-        if (operand.is(blockFunctionNodeType)) {
+        if (operand.type === "block_function") {
             const blockReferenceExpressionNode = cloneBlockReferenceExpressionNode(operand);
 
             blockReferenceExpressionNode.attributes.shouldTestExistence = true;
 
             newOperand = blockReferenceExpressionNode;
-        } else if (operand.is("constant") || operand.is("array")) {
+        }
+        else if (operand.type === "constant" || operand.type === "array") {
             newOperand = createConstantNode(true, operand.line, operand.column);
-        } else if (operand.is("name")) {
+        }
+        else if (operand.type === "name") {
             const nameNode = cloneNameNode(operand);
 
             nameNode.attributes.shouldTestExistence = true;
 
             newOperand = nameNode;
-        } else if (operand.is("method_call")) {
+        }
+        else if (operand.type === "method_call") {
             const methodCallNode = cloneMethodCallNode(operand);
 
             methodCallNode.attributes.shouldTestExistence = true;
 
             newOperand = methodCallNode;
-        } else if (operand.is("get_attribute")) {
+        }
+        else if (operand.type === "attribute_accessor") {
             const getAttributeNode = cloneGetAttributeNode(operand);
 
             getAttributeNode.attributes.shouldTestExistence = true;
@@ -91,7 +98,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
                 node.attributes.isOptimizable = false;
                 node.attributes.shouldIgnoreStrictCheck = true;
 
-                if (node.children.target.is("get_attribute")) {
+                if (node.children.target.type === "attribute_accessor") {
                     const clonedTarget = cloneGetAttributeNode(node.children.target);
 
                     traverse(clonedTarget);
@@ -103,7 +110,8 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
             traverse(getAttributeNode);
 
             newOperand = getAttributeNode;
-        } else {
+        }
+        else {
             newOperand = operand;
         }
 
@@ -117,7 +125,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
         const {target} = node.children;
 
         if (shouldIgnoreStrictCheck) {
-            if (target.is("name")) {
+            if (target.type === "name") {
                 const nameNode = cloneNameNode(target);
 
                 nameNode.attributes.shouldIgnoreStrictCheck = true;
@@ -130,17 +138,17 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     };
 
     return {
-        enterNode: (node) => {
+        enterNode: (node: TwingNode) => {
             if (!enteredNodes.includes(node)) {
                 enteredNodes.push(node);
 
-                if (node.is(filterNodeType)) {
+                if (node.type === "filter") {
                     if (node.attributes.operatorName === "default") {
                         return enterDefaultFilterNode(node);
                     }
                 }
 
-                if (node.is(testNodeType)) {
+                if (node.type === "test") {
                     if (node.attributes.operatorName === "defined") {
                         return enterDefinedTestNode(node);
                     }
@@ -149,8 +157,8 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
 
             return node;
         },
-        leaveNode: (node) => {
-            if (node.is("get_attribute")) {
+        leaveNode: (node: TwingNode) => {
+            if (node.type === "attribute_accessor") {
                 return leaveGetAttributeNode(node);
             }
 

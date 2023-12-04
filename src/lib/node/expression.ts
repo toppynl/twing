@@ -15,11 +15,9 @@ import type {TwingAttributeAccessorNode} from "./expression/attribute-accessor";
 import type {TwingMethodCallNode} from "./expression/method-call";
 import type {TwingNullishCoalescingNode} from "./expression/nullish-coalescing";
 import type {TwingParentFunctionNode} from "./expression/parent-function";
-import type {ArgumentsNode} from "./expression/arguments";
 import type {TwingSpreadNode} from "./expression/spread";
 
 export type TwingExpressionNode =
-    | ArgumentsNode
     | TwingArrayNode
     | TwingArrowFunctionNode
     | TwingAssignmentNode
@@ -41,11 +39,10 @@ export type TwingExpressionNode =
 
 export type TwingBaseExpressionNodeAttributes = TwingBaseNodeAttributes;
 
-// todo: this is a base node, no need for a type
 export type TwingBaseExpressionNode<
     Type extends string = any,
     AdditionalAttributes extends TwingBaseExpressionNodeAttributes = TwingBaseExpressionNodeAttributes,
-    AdditionalChildren extends TwingBaseNodeChildren = TwingBaseNodeChildren,
-> = TwingBaseNode<Type, TwingBaseExpressionNodeAttributes & AdditionalAttributes, TwingBaseNodeChildren & AdditionalChildren>;
+    Children extends TwingBaseNodeChildren = TwingBaseNodeChildren,
+> = TwingBaseNode<Type, TwingBaseExpressionNodeAttributes & AdditionalAttributes, Children>;
 
 export const createBaseExpressionNode = createBaseNode;

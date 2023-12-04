@@ -1,4 +1,5 @@
 import {runTest} from "../TestBase";
+import {TwingNode} from "../../../../src/lib/node";
 
 runTest({
     description: "Supports custom node visitors",
@@ -8,14 +9,14 @@ runTest({
     trimmedExpectation: `foo visited`,
     additionalNodeVisitors: [
         {
-            enterNode: (node) => {
+            enterNode: (node: TwingNode) => {
                 return node;
             },
-            leaveNode: (node) => {
-                if (node.is("text")) {
+            leaveNode: (node: TwingNode) => {
+                if (node.type === "text") {
                     node.attributes.data = `${node.attributes.data} visited`;
                 }
-                
+
                 return node;
             }
         }

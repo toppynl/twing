@@ -1,16 +1,14 @@
 import {TwingBaseNodeAttributes} from "../../node";
 import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
 
-export const textNodeType = "text";
-
-export type BaseTextNodeAttributes = TwingBaseNodeAttributes & {
+export type TwingBaseTextNodeAttributes = TwingBaseNodeAttributes & {
     data: string;
 };
 
-export interface BaseTextNode<Type extends string> extends TwingBaseOutputNode<Type, BaseTextNodeAttributes> {
+export interface TwingBaseTextNode<Type extends string> extends TwingBaseOutputNode<Type, TwingBaseTextNodeAttributes> {
 }
 
-export interface TwingTextNode extends BaseTextNode<typeof textNodeType> {
+export interface TwingTextNode extends TwingBaseTextNode<"text"> {
 }
 
 export const createBaseTextNode = <Type extends string>(
@@ -19,19 +17,19 @@ export const createBaseTextNode = <Type extends string>(
     line: number,
     column: number,
     tag: string | null = null
-): BaseTextNode<Type> => {
+): TwingBaseTextNode<Type> => {
     const outputNode = createBaseOutputNode(type, {
         data
     }, {}, line, column, tag);
 
-    const node: BaseTextNode<Type> = {
+    const textNode: TwingBaseTextNode<Type> = {
         ...outputNode,
         execute(executionContext) {
             const {template, outputBuffer, sourceMapRuntime} = executionContext;
 
-            sourceMapRuntime?.enterSourceMapBlock(node.line, node.column, node.type, template.source, outputBuffer);
+            sourceMapRuntime?.enterSourceMapBlock(textNode.line, textNode.column, textNode.type, template.source, outputBuffer);
 
-            outputBuffer.echo(node.attributes.data);
+            outputBuffer.echo(textNode.attributes.data);
 
             sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);
 
@@ -39,11 +37,11 @@ export const createBaseTextNode = <Type extends string>(
         }
     };
 
-    return node;
+    return textNode;
 };
 
 export const createTextNode = (
     data: string,
     line: number,
     column: number
-): TwingTextNode => createBaseTextNode(textNodeType, data, line, column);
+): TwingTextNode => createBaseTextNode("text", data, line, column);

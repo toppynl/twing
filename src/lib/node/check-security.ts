@@ -9,13 +9,13 @@ import {
 } from "../sandbox/security-not-allowed-tag-error";
 import {TwingSandboxSecurityNotAllowedFunctionError} from "../sandbox/security-not-allowed-function-error";
 
-export type CheckSecurityNodeAttributes = TwingBaseNodeAttributes & {
+export type TwingCheckSecurityNodeAttributes = TwingBaseNodeAttributes & {
     usedFilters: Map<string, TwingNode | string>;
     usedTags: Map<string, TwingNode | string>;
     usedFunctions: Map<string, TwingNode | string>;
 };
 
-export interface TwingCheckSecurityNode extends TwingBaseNode<"check_security", CheckSecurityNodeAttributes> {
+export interface TwingCheckSecurityNode extends TwingBaseNode<"check_security", TwingCheckSecurityNodeAttributes> {
 }
 
 export const createCheckSecurityNode = (

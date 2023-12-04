@@ -1,11 +1,9 @@
-import {BaseTextNode, createBaseTextNode} from "./text";
-
-export const verbatimNodeType = "verbatim";
+import {TwingBaseTextNode, createBaseTextNode} from "./text";
 
 /**
  * Represents a verbatim node.
  */
-export interface TwingVerbatimNode extends BaseTextNode<typeof verbatimNodeType> {
+export interface TwingVerbatimNode extends TwingBaseTextNode<"verbatim"> {
 }
 
 export const createVerbatimNode = (
@@ -13,4 +11,4 @@ export const createVerbatimNode = (
     line: number,
     column: number,
     tag: string
-): TwingVerbatimNode => createBaseTextNode(verbatimNodeType, data, line, column, tag);
+): TwingVerbatimNode => createBaseTextNode("verbatim", data, line, column, tag);

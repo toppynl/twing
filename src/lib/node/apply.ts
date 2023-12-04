@@ -1,18 +1,16 @@
-import {createBaseNode, TwingBaseNode, TwingBaseNodeAttributes, TwingBaseNodeChildren} from "../node";
+import {createBaseNode, TwingBaseNode, TwingBaseNodeAttributes} from "../node";
 import {getKeyValuePairs, TwingArrayNode} from "./expression/array";
 import {createFilterNode} from "./expression/call/filter";
 import {createConstantNode} from "./expression/constant";
 
-export const applyNodeType = "apply";
-
 export type TwingApplyNodeAttributes = TwingBaseNodeAttributes & {};
 
-export type TwingApplyNodeChildren = TwingBaseNodeChildren & {
+export type TwingApplyNodeChildren = {
     body: TwingBaseNode;
     filters: TwingArrayNode;
 };
 
-export interface TwingApplyNode extends TwingBaseNode<typeof applyNodeType, TwingApplyNodeAttributes, TwingApplyNodeChildren> {
+export interface TwingApplyNode extends TwingBaseNode<"apply", TwingApplyNodeAttributes, TwingApplyNodeChildren> {
 
 }
 
@@ -22,17 +20,17 @@ export const createApplyNode = (
     line: number,
     column: number
 ): TwingApplyNode => {
-    const baseNode = createBaseNode(applyNodeType, {}, {
+    const baseNode = createBaseNode("apply", {}, {
         body,
         filters
     }, line, column, 'apply');
 
-    const node: TwingApplyNode = {
+    const applyNode: TwingApplyNode = {
         ...baseNode,
         execute: async (executionContext) => {
             const {outputBuffer} = executionContext;
-            const {body, filters} = node.children;
-            const {line, column} = node;
+            const {body, filters} = applyNode.children;
+            const {line, column} = applyNode;
 
             outputBuffer.start();
 
@@ -56,5 +54,5 @@ export const createApplyNode = (
         }
     };
 
-    return node;
+    return applyNode;
 };

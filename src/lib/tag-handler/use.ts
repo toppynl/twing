@@ -3,7 +3,7 @@ import {TwingConstantNode, createConstantNode} from "../node/expression/constant
 import {createBaseNode} from "../node";
 import {createTraitNode} from "../node/trait";
 import {TwingTagHandler} from "../tag-handler";
-import {createArgumentsNode} from "../node/expression/arguments";
+import {createWrapperNode} from "../node/wrapper";
 
 export const createUseTagHandler = (): TwingTagHandler => {
     const tag = 'use';
@@ -15,7 +15,7 @@ export const createUseTagHandler = (): TwingTagHandler => {
                 const {line, column} = token;
                 const template = parser.parseExpression(stream);
 
-                if (!template.is("constant")) {
+                if (template.type !== "constant") {
                     throw createParsingError('The template references in a "use" statement must be a string.', {line, column}, stream.source.name);
                 }
                 
@@ -41,7 +41,7 @@ export const createUseTagHandler = (): TwingTagHandler => {
 
                 stream.expect("TAG_END");
                 
-                parser.addTrait(createTraitNode(template, createArgumentsNode(targets, line, column), line, column));
+                parser.addTrait(createTraitNode(template, createWrapperNode(targets, line, column), line, column));
 
                 return createBaseNode(null);
             };

@@ -1,9 +1,7 @@
 import {TwingBaseNode, TwingBaseNodeAttributes} from "../../node";
 import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
 
-export const spacelessNodeType = "spaceless";
-
-export interface TwingSpacelessNode extends TwingBaseOutputNode<typeof spacelessNodeType, TwingBaseNodeAttributes, {
+export interface TwingSpacelessNode extends TwingBaseOutputNode<"spaceless", TwingBaseNodeAttributes, {
     body: TwingBaseNode;
 }> {
 }
@@ -14,7 +12,7 @@ export const createSpacelessNode = (
     column: number,
     tag: string
 ): TwingSpacelessNode => {
-    const baseNode = createBaseOutputNode(spacelessNodeType, {}, {
+    const baseNode = createBaseOutputNode("spaceless", {}, {
         body
     }, line, column, tag);
 

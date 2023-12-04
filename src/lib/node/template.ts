@@ -6,8 +6,6 @@ import {TwingMacroNode} from "./macro";
 import {TwingBlockNode} from "./block";
 import {TwingBodyNode} from "./body";
 
-export const templateNodeType = "template";
-
 export type TwingTemplateNodeAttributes = TwingBaseNodeAttributes & {
     index: number;
     source: TwingSource;
@@ -22,7 +20,7 @@ export type TwingTemplateNodeChildren = {
     parent?: TwingBaseExpressionNode;
 };
 
-export interface TwingTemplateNode extends TwingBaseNode<typeof templateNodeType, TwingTemplateNodeAttributes, TwingTemplateNodeChildren> {
+export interface TwingTemplateNode extends TwingBaseNode<"template", TwingTemplateNodeAttributes, TwingTemplateNodeChildren> {
     readonly embeddedTemplates: Array<TwingTemplateNode>;
     readonly source: TwingSource;
 }
@@ -50,7 +48,7 @@ export const createTemplateNode = (
         children.parent = parent;
     }
 
-    const baseNode = createBaseNode(templateNodeType, {
+    const baseNode = createBaseNode("template", {
         index: 0,
         source
     }, children, line, column);

@@ -2,10 +2,10 @@ import type {TwingTokenStream} from "./token-stream";
 import {TwingTagHandler, TwingTokenParser} from "./tag-handler";
 import {TwingNodeVisitor} from "./node-visitor";
 import {createParsingError, TwingParsingError} from "./error/parsing";
-import {TwingBaseNode, createBaseNode, getChildren} from "./node";
-import {createTextNode, textNodeType} from "./node/output/text";
+import {TwingBaseNode, createBaseNode, getChildren, TwingNode} from "./node";
+import {createTextNode} from "./node/output/text";
 import {createPrintNode} from "./node/output/print";
-import {TwingBaseExpressionNode} from "./node/expression";
+import {TwingBaseExpressionNode, TwingExpressionNode} from "./node/expression";
 import {createBodyNode} from "./node/body";
 import {createTemplateNode, TwingTemplateNode} from "./node/template";
 import {createNodeTraverser} from "./node-traverser";
@@ -21,11 +21,11 @@ import {createParentFunctionNode} from "./node/expression/parent-function";
 import {createBlockFunctionNode} from "./node/expression/block-function";
 import {
     createAttributeAccessorNode,
-    TwingGetAttributeCallType
+    TwingAttributeAccessorCallType
 } from "./node/expression/attribute-accessor";
 import {TwingArrayNode, createArrayNode, getKeyValuePairs} from "./node/expression/array";
 import {createMethodCallNode} from "./node/expression/method-call";
-import {createHashNode, hashNodeType, TwingHashNode} from "./node/expression/hash";
+import {createHashNode, TwingHashNode} from "./node/expression/hash";
 import {TwingTest} from "./test";
 import {createNotNode} from "./node/expression/unary/not";
 import {createConditionalNode} from "./node/expression/conditional";
@@ -36,7 +36,6 @@ import {createFunctionNode} from "./node/expression/call/function";
 import {createFilterNode, TwingFilterNode} from "./node/expression/call/filter";
 import type {TwingTraitNode} from "./node/trait";
 import {pushToRecord} from "./helpers/record";
-import {ArgumentsNode, createArgumentsNode} from "./node/expression/arguments";
 import {TwingFilter} from "./filter";
 import {TwingFunction} from "./function";
 import {TwingCallableWrapper} from "./callable-wrapper";
@@ -47,8 +46,6 @@ import {getTest as getTestByName} from "./helpers/get-test";
 import {createCoreNodeVisitor} from "./node-visitor/core";
 import {createSandboxNodeVisitor} from "./node-visitor/sandbox";
 import {createTestNode} from "./node/expression/call/test";
-import {positiveNodeType} from "./node/expression/unary/pos";
-import {negativeNodeType} from "./node/expression/unary/neg";
 import {createEscaperNodeVisitor} from "./node-visitor/escaper";
 import {createApplyTagHandler} from "./tag-handler/apply";
 import {createAutoEscapeTagHandler} from "./tag-handler/auto-escape";
@@ -73,16 +70,15 @@ import {createUseTagHandler} from "./tag-handler/use";
 import {createVerbatimTagHandler} from "./tag-handler/verbatim";
 import {createWithTagHandler} from "./tag-handler/with";
 import {createSpreadNode} from "./node/expression/spread";
+import {createWrapperNode, TwingWrapperNode} from "./node/wrapper";
 
 const nameRegExp = new RegExp(namePattern);
 
-type NodeWithName = TwingBaseNode<any, {
-    name: string;
-}>;
-
 type TwingParserImportedSymbolAlias = {
     name: string,
-    node: NodeWithName
+    node: TwingBaseNode<any, {
+        name: string;
+    }>
 };
 type TwingParserImportedSymbolType = Map<string, TwingParserImportedSymbolAlias>;
 type TwingParserImportedSymbol = {
@@ -102,7 +98,9 @@ export interface TwingParser {
 
     addImportedSymbol(type: 'template', alias: string): void;
 
-    addImportedSymbol(type: 'method', alias: string, name: string, node: NodeWithName): void;
+    addImportedSymbol(type: 'method', alias: string, name: string, node: TwingBaseNode<any, {
+        name: string;
+    }>): void;
 
     addTrait(trait: TwingTraitNode): void;
 
@@ -118,9 +116,9 @@ export interface TwingParser {
 
     parseArguments(stream: TwingTokenStream, namedArguments?: boolean, definition?: boolean, allowArrow?: true): TwingArrayNode;
 
-    parseAssignmentExpression(stream: TwingTokenStream): ArgumentsNode<TwingAssignmentNode>;
+    parseAssignmentExpression(stream: TwingTokenStream): TwingWrapperNode<TwingAssignmentNode>;
 
-    parseExpression(stream: TwingTokenStream, precedence?: number, allowArrow?: true): TwingBaseExpressionNode;
+    parseExpression(stream: TwingTokenStream, precedence?: number, allowArrow?: true): TwingExpressionNode;
 
     parseFilterDefinitions(stream: TwingTokenStream): Array<{
         name: string;
@@ -129,7 +127,7 @@ export interface TwingParser {
 
     parseFilterExpressionRaw(stream: TwingTokenStream, node: TwingBaseExpressionNode, tag?: string | null): TwingFilterNode;
 
-    parseMultiTargetExpression(stream: TwingTokenStream): TwingBaseExpressionNode;
+    parseMultiTargetExpression(stream: TwingTokenStream): TwingWrapperNode;
 
     peekBlockStack(): string;
 
@@ -244,7 +242,9 @@ export const createParser = (
 
     const stack: Array<StackEntry> = [];
 
-    const addImportedSymbol: TwingParser["addImportedSymbol"] = (type, alias, name?: string, node?: NodeWithName) => {
+    const addImportedSymbol: TwingParser["addImportedSymbol"] = (type, alias, name?: string, node?: TwingBaseNode<any, {
+        name: string;
+    }>) => {
         const localScope = importedSymbols[0];
 
         if (type === "method") {
@@ -264,7 +264,13 @@ export const createParser = (
 
     // checks that the node only contains "constant" elements
     const checkConstantExpression = (stackEntry: TwingTokenStream, node: TwingBaseNode): TwingBaseNode | null => {
-        if (!(node.is("constant") || node.is("array") || node.is(hashNodeType) || node.is(negativeNodeType) || node.is(positiveNodeType))) {
+        if (!(
+            (node as TwingNode).type === "constant" 
+            || (node as TwingNode).type === "array" 
+            || (node as TwingNode).type === "hash" 
+            || (node as TwingNode).type === "negative" 
+            || (node as TwingNode).type === "positive"
+        )) {
             return node;
         }
 
@@ -285,8 +291,10 @@ export const createParser = (
 
     const filterChildBodyNode = (stream: TwingTokenStream, node: TwingBaseNode, nested: boolean = false): TwingBaseNode | null => {
         // non-empty text nodes are not allowed as direct child of a 
-        if (node.is(textNodeType) && !isMadeOfWhitespaceOnly(node.attributes.data)) {
-            const {data} = node.attributes;
+        const testedNode = node as TwingNode;
+        
+        if (testedNode.type === "text" && !isMadeOfWhitespaceOnly(testedNode.attributes.data)) {
+            const {data} = testedNode.attributes;
 
             if (data.indexOf(String.fromCharCode(0xEF, 0xBB, 0xBF)) > -1) {
                 const trailingData = data.substring(3);
@@ -335,11 +343,11 @@ export const createParser = (
 
         // here, nested means "being at the root level of a child template"
         // we need to discard the wrapping node for the "body" node
-        nested = nested || (node.type !== null);
+        nested = nested || (node.type !== "wrapper");
 
-        for (let [key, child] of getChildren(node)) {
+        for (const [key, child] of getChildren(node)) {
             if (child !== null && (filterChildBodyNode(stream, child, nested) === null)) {
-                delete node.children[key];
+                delete (node.children as any)[key];
             }
         }
 
@@ -554,7 +562,7 @@ export const createParser = (
             stream.next();
 
             const expression = parseExpression(stream);
-            
+
             stream.expect("PUNCTUATION", ')', 'An opened parenthesis is not properly closed');
 
             return parsePostfixExpression(stream, expression, token);
@@ -751,7 +759,7 @@ export const createParser = (
             value: TwingBaseExpressionNode;
         }> = [];
 
-        let value: TwingBaseExpressionNode;
+        let value: TwingExpressionNode;
         let token: Token;
 
         stream.expect("PUNCTUATION", '(');
@@ -775,7 +783,7 @@ export const createParser = (
             let key: TwingConstantNode | undefined = undefined;
 
             if (namedArguments && (token = stream.nextIf("OPERATOR", '='))) {
-                if (!value.is("name")) {
+                if (value.type !== "name") {
                     throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source.name);
                 }
 
@@ -838,12 +846,12 @@ export const createParser = (
 
             if (stream.test("SPREAD_OPERATOR")) {
                 const {current} = stream;
-                
+
                 stream.next();
-                
+
                 const expression = parseExpression(stream);
                 const spreadNode = createSpreadNode(expression, current.line, current.column);
-                
+
                 elements.push(spreadNode);
             }
             else {
@@ -887,8 +895,8 @@ export const createParser = (
                 break;
             }
         }
-
-        return createArgumentsNode(targets, line, column);
+        
+        return createWrapperNode(targets, line, column);
     };
 
     const parseArrow = (stream: TwingTokenStream): TwingArrowFunctionNode | null => {
@@ -1151,7 +1159,7 @@ export const createParser = (
                     key: createBaseNode(null),
                     value: spreadNode
                 });
-                
+
                 continue;
             }
 
@@ -1173,7 +1181,7 @@ export const createParser = (
                         key,
                         value: createNameNode(token.value, token.line, token.column)
                     });
-                    
+
                     continue;
                 }
             }
@@ -1220,7 +1228,7 @@ export const createParser = (
             }
         }
 
-        return createArgumentsNode(targets, line, column);
+        return createWrapperNode(targets, line, column);
     };
 
     const parseNotTestExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingBaseExpressionNode => {
@@ -1371,10 +1379,10 @@ export const createParser = (
         return expression;
     };
 
-    const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode, prefixToken: Token) => {
+    const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingExpressionNode, prefixToken: Token) => {
         let token = stream.next();
         let attribute: TwingBaseExpressionNode;
-        let type: TwingGetAttributeCallType = "any";
+        let type: TwingAttributeAccessorCallType = "any";
 
         const {line, column} = token;
         const {line: prefixTokenLine, column: prefixTokenColumn} = prefixToken;
@@ -1410,7 +1418,7 @@ export const createParser = (
                 throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.name);
             }
 
-            if ((node.is("name")) && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
+            if ((node.type === "name") && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
                 const name = (attribute as TwingConstantNode<string>).attributes.value;
                 const methodCallNode = createMethodCallNode(node, name, createArrayNodeFromElements(), line, column);
 
@@ -1469,7 +1477,7 @@ export const createParser = (
         return createAttributeAccessorNode(node, attribute, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn);
     };
 
-    const parseTestExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingBaseExpressionNode => {
+    const parseTestExpression = (stream: TwingTokenStream, node: TwingExpressionNode): TwingBaseExpressionNode => {
         const {line, column} = stream.current;
         const name = getTestName(stream);
 
@@ -1479,7 +1487,7 @@ export const createParser = (
             testArguments = parseArguments(stream, true);
         }
 
-        if ((name === 'defined') && (node.is("name"))) {
+        if ((name === 'defined') && (node.type === "name")) {
             const alias = getImportedMethod(node.attributes.name);
 
             if (alias !== null) {
@@ -1569,7 +1577,7 @@ export const createParser = (
                             return children[0];
                         }
 
-                        return createBaseNode(null, {}, children, line, column);
+                        return createWrapperNode(children, line, column);
                     }
 
                     if (!tokenParsers.has(token.value)) {
@@ -1626,7 +1634,7 @@ export const createParser = (
             return children[0];
         }
 
-        return createBaseNode(null, {}, children, line, column);
+        return createWrapperNode(children, line, column);
     };
 
     const parser = {

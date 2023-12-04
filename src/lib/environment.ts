@@ -7,7 +7,7 @@ import {TwingLoader} from "./loader";
 import {TwingTest} from "./test";
 import {TwingFunction} from "./function";
 import {TwingOperator} from "./operator";
-import {EscapingStrategy, EscapingStrategyHandler} from "./escaping-strategy";
+import {TwingEscapingStrategy, TwingEscapingStrategyHandler} from "./escaping-strategy";
 import {createHtmlEscapingStrategyHandler} from "./escaping-stragegy/html";
 import {createCssEscapingStrategyHandler} from "./escaping-stragegy/css";
 import {createJsEscapingStrategyHandler} from "./escaping-stragegy/js";
@@ -16,7 +16,7 @@ import {createHtmlAttributeEscapingStrategyHandler} from "./escaping-stragegy/ht
 import {TwingSource} from "./source";
 import {createTokenStream, TwingTokenStream} from "./token-stream";
 import {TwingExtension} from "./extension";
-import {templateNodeType, TwingTemplateNode} from "./node/template";
+import {TwingTemplateNode} from "./node/template";
 import {RawSourceMap} from "source-map";
 import {createSourceMapRuntime} from "./source-map-runtime";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
@@ -80,7 +80,7 @@ export interface TwingEnvironment {
     readonly charset: string;
     readonly dateFormat: string;
     readonly dateIntervalFormat: string;
-    readonly escapingStrategyHandlers: Record<EscapingStrategy, EscapingStrategyHandler>;
+    readonly escapingStrategyHandlers: Record<TwingEscapingStrategy, TwingEscapingStrategyHandler>;
     readonly numberFormat: TwingNumberFormat;
     readonly filters: Map<string, TwingFilter>;
     readonly functions: Map<string, TwingFunction>;
@@ -152,7 +152,7 @@ export interface TwingEnvironment {
         sourceMap: RawSourceMap;
     }>;
 
-    registerEscapingStrategy(handler: EscapingStrategyHandler, name: string): void;
+    registerEscapingStrategy(handler: TwingEscapingStrategyHandler, name: string): void;
 
     /**
      * Tokenizes a source code.
@@ -179,7 +179,7 @@ export const createEnvironment = (
     const jsEscapingStrategy = createJsEscapingStrategyHandler();
     const urlEscapingStrategy = createUrlEscapingStrategyHandler();
 
-    const escapingStrategyHandlers: Record<EscapingStrategy, EscapingStrategyHandler> = {
+    const escapingStrategyHandlers: Record<TwingEscapingStrategy, TwingEscapingStrategyHandler> = {
         css: cssEscapingStrategy,
         html: htmlEscapingStrategy,
         html_attr: htmlAttributeEscapingStrategy,
@@ -344,7 +344,7 @@ export const createEnvironment = (
                             return node;
                         },
                         leaveNode: (node) => {
-                            if (node.is(templateNodeType)) {
+                            if (node.type === "template") {
                                 const autoEscapeNode = createAutoEscapeNode(strategy, node.children.body.children.content, node.line, node.column, 'foo');
 
                                 node.children.body.children.content = autoEscapeNode;
@@ -411,7 +411,7 @@ export const createEnvironment = (
         },
         tokenize: (source: TwingSource): TwingTokenStream => {
             const level = options?.parserOptions?.level || 3;
-            
+
             if (!lexer) {
                 lexer = createLexer(
                     level,

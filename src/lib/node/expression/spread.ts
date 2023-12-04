@@ -1,8 +1,6 @@
 import {createBaseExpressionNode, TwingBaseExpressionNode} from "../expression";
 
-export const spreadNodeType = "spread";
-
-export interface TwingSpreadNode extends TwingBaseExpressionNode<typeof spreadNodeType, {}, {
+export interface TwingSpreadNode extends TwingBaseExpressionNode<"spread", {}, {
     iterable: TwingBaseExpressionNode;
 }> {
 
@@ -13,7 +11,7 @@ export const createSpreadNode = (
     line: number,
     column: number
 ): TwingSpreadNode => {
-    const baseNode = createBaseExpressionNode(spreadNodeType, {}, {
+    const baseNode = createBaseExpressionNode("spread", {}, {
         iterable
     }, line, column);
 

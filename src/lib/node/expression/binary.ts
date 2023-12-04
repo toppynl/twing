@@ -1,5 +1,5 @@
 import type {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes} from "../expression";
-import type {TwingNode, TwingExecutionContext, TwingNodeType} from "../../node";
+import type {TwingNodeType} from "../../node";
 import type {TwingAddNode} from "./binary/add";
 import type {TwingAndNode} from "./binary/and";
 import type {TwingBitwiseAndNode} from "./binary/bitwise-and";
@@ -29,6 +29,7 @@ import {createBaseExpressionNode} from "../expression";
 import type {TwingSpaceshipNode} from "./binary/spaceship";
 import type {TwingHasEveryNode} from "./binary/has-every";
 import type {TwingHasSomeNode} from "./binary/has-some";
+import type {TwingExecutionContext} from "../../execution-context";
 
 export type TwingBinaryNode =
     | TwingAddNode
@@ -62,8 +63,8 @@ export type TwingBinaryNode =
     ;
 
 export interface TwingBaseBinaryNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, {
-    left: TwingNode;
-    right: TwingNode;
+    left: TwingBaseExpressionNode;
+    right: TwingBaseExpressionNode;
 }> {
 
 }

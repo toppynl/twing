@@ -2,9 +2,7 @@ import {TwingBaseNode} from "../../../node";
 import {TwingBaseCallNode, createBaseCallNode} from "../call";
 import type {TwingArrayNode} from "../array";
 
-export const filterNodeType = "filter";
-
-export interface TwingFilterNode extends TwingBaseCallNode<typeof filterNodeType> {
+export interface TwingFilterNode extends TwingBaseCallNode<"filter"> {
 }
 
 export const createFilterNode = (
@@ -14,7 +12,7 @@ export const createFilterNode = (
     line: number,
     column: number
 ): TwingFilterNode => {
-    const node = createBaseCallNode(filterNodeType, filterName, operand, filterArguments, line, column);
+    const node = createBaseCallNode("filter", filterName, operand, filterArguments, line, column);
 
     return node;
 };

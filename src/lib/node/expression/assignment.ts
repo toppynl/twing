@@ -1,13 +1,11 @@
 import {createBaseNode, TwingBaseNode} from "../../node";
 import {TwingBaseExpressionNodeAttributes} from "../expression";
 
-export const assignmentNodeType = "assign_name";
-
 export type TwingAssignmentNodeAttributes = TwingBaseExpressionNodeAttributes & {
     name: string;
 };
 
-export interface TwingAssignmentNode extends TwingBaseNode<typeof assignmentNodeType, TwingAssignmentNodeAttributes> {
+export interface TwingAssignmentNode extends TwingBaseNode<"assignment", TwingAssignmentNodeAttributes> {
 }
 
 // todo: probably a useless node
@@ -16,16 +14,16 @@ export const createAssignmentNode = (
     line: number,
     column: number
 ): TwingAssignmentNode => {
-    const baseNode = createBaseNode(assignmentNodeType, {
+    const baseNode = createBaseNode("assignment", {
         name
     }, {}, line, column);
     
-    const node: TwingAssignmentNode = {
+    const assignmentNode: TwingAssignmentNode = {
         ...baseNode,
         execute: () => {
-            return Promise.resolve(node.attributes.name);
+            return Promise.resolve(assignmentNode.attributes.name);
         }
     };
     
-    return node;
+    return assignmentNode;
 };
