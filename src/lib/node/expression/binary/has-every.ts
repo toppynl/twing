@@ -1,14 +1,12 @@
 import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 import {every, isAMapLike} from "../../../helpers/map-like";
 
-export const hasEveryNodeType = "has_every";
-
-export interface TwingHasEveryNode extends TwingBaseBinaryNode<typeof hasEveryNodeType> {
+export interface TwingHasEveryNode extends TwingBaseBinaryNode<"has_every"> {
 
 }
 
 export const createHasEveryNode = createBinaryNodeFactory<TwingHasEveryNode>(
-    hasEveryNodeType,
+    "has_every",
     {
         execute: async (left, right, executionContext) => {
             const leftValue = await left.execute(executionContext);

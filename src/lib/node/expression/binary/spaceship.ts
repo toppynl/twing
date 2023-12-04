@@ -2,12 +2,10 @@ import type {TwingBaseBinaryNode} from "../binary";
 import {createBinaryNodeFactory} from "../binary";
 import {compare} from "../../../helpers/compare";
 
-export const spaceshipNodeType = "spaceship";
-
-export interface TwingSpaceshipNode extends TwingBaseBinaryNode<typeof spaceshipNodeType> {
+export interface TwingSpaceshipNode extends TwingBaseBinaryNode<"spaceship"> {
 }
 
-export const createSpaceshipNode = createBinaryNodeFactory<TwingSpaceshipNode>(spaceshipNodeType, {
+export const createSpaceshipNode = createBinaryNodeFactory<TwingSpaceshipNode>("spaceship", {
     execute: async (left, right, executionContext) => {
         const leftValue = await left.execute(executionContext);
         const rightValue = await right.execute(executionContext);

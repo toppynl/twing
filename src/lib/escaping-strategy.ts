@@ -1,3 +1,3 @@
-export type EscapingStrategyResolver = (templateName: string) => string | null;
-export type EscapingStrategy = "css" | "html" | "html_attr" | "js" | "url" | string; // todo: remove true
-export type EscapingStrategyHandler = (value: string, charset: string, templateName: string) => string;
+export type TwingEscapingStrategyResolver = (templateName: string) => string | null;
+export type TwingEscapingStrategy = "css" | "html" | "html_attr" | "js" | "url" | string; // todo: remove true
+export type TwingEscapingStrategyHandler = (value: string, charset: string, templateName: string) => string;

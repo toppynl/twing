@@ -22,9 +22,7 @@ export type TwingCallNode =
     | TwingTestNode
     ;
 
-type CallType = "filter" | "function" | "test";
-
-type TwingBaseCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
+export type TwingBaseCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
     operatorName: string;
 };
 
@@ -33,11 +31,11 @@ export type TwingBaseCallNodeChildren = {
     operand?: TwingBaseNode;
 };
 
-export interface TwingBaseCallNode<Type extends CallType> extends TwingBaseExpressionNode<Type, TwingBaseCallNodeAttributes, TwingBaseCallNodeChildren> {
+export interface TwingBaseCallNode<Type extends "filter" | "function" | "test"> extends TwingBaseExpressionNode<Type, TwingBaseCallNodeAttributes, TwingBaseCallNodeChildren> {
 
 }
 
-export const createBaseCallNode = <Type extends CallType>(
+export const createBaseCallNode = <Type extends "filter" | "function" | "test">(
     type: Type,
     operatorName: string,
     operand: TwingBaseNode | null,
@@ -166,11 +164,11 @@ export const createBaseCallNode = <Type extends CallType>(
         return arguments_;
     }
 
-    const node: TwingBaseCallNode<typeof type> = {
+    const baseCallNode: TwingBaseCallNode<typeof type> = {
         ...baseNode,
         execute: async (executionContext) => {
             const {template} = executionContext
-            const {operatorName} = node.attributes;
+            const {operatorName} = baseCallNode.attributes;
 
             let callableWrapper: TwingCallableWrapper | null;
 
@@ -194,7 +192,7 @@ export const createBaseCallNode = <Type extends CallType>(
                 throw createRuntimeError(`Unknown ${type} "${operatorName}".`, baseNode);
             }
 
-            const {operand, arguments: callArguments} = node.children;
+            const {operand, arguments: callArguments} = baseCallNode.children;
 
             const argumentNodes = getArguments(
                 callArguments,
@@ -216,11 +214,11 @@ export const createBaseCallNode = <Type extends CallType>(
 
             actualArguments.push(...providedArguments);
 
-            const traceableCallable = getTraceableMethod(callableWrapper.callable, node.line, node.column, template.name);
+            const traceableCallable = getTraceableMethod(callableWrapper.callable, baseCallNode.line, baseCallNode.column, template.name);
 
             return traceableCallable(executionContext, ...actualArguments);
         }
     };
 
-    return node;
+    return baseCallNode;
 };

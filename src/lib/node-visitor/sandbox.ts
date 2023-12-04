@@ -1,11 +1,8 @@
-import {TwingBaseNode, getChildren} from "../node";
+import {TwingBaseNode, getChildren, TwingNode} from "../node";
 import {createCheckSecurityNode} from "../node/check-security";
 import {createCheckToStringNode} from "../node/check-to-string";
 import {createNodeVisitor, TwingNodeVisitor} from "../node-visitor";
-import {ArgumentsNode} from "../node/expression/arguments";
-import {functionNodeType} from "../node/expression/call/function";
-import {filterNodeType} from "../node/expression/call/filter";
-import {templateNodeType} from "../node/template";
+import type {TwingWrapperNode} from "../node/wrapper";
 
 export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
     let tags: Map<string, TwingBaseNode>;
@@ -14,14 +11,15 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
 
     let shouldWrap: boolean = true;
 
-    const enterNode: TwingNodeVisitor["enterNode"] = (node) => {
-        if (node.is(templateNodeType)) {
+    const enterNode: TwingNodeVisitor["enterNode"] = (node: TwingNode) => {
+        if (node.type === "template") {
             tags = new Map();
             filters = new Map();
             functions = new Map();
 
             return node;
-        } else {
+        }
+        else {
             // look for tags
             const {tag} = node;
 
@@ -30,7 +28,7 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
             }
 
             // look for filters
-            if (node.is(filterNodeType)) {
+            if (node.type === "filter") {
                 const {operatorName} = node.attributes;
 
                 if (!filters.has(operatorName)) {
@@ -39,7 +37,7 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
             }
 
             // look for functions
-            if (node.is(functionNodeType)) {
+            if (node.type === "function") {
                 const {operatorName} = node.attributes;
 
                 if (!functions.has(operatorName)) {
@@ -48,35 +46,35 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
             }
 
             // the .. operator is equivalent to the range() function
-            if (node.is("range") && !(functions.has('range'))) {
+            if (node.type === "range" && !(functions.has('range'))) {
                 functions.set('range', node);
             }
 
-            if (node.is("print")) {
+            if (node.type === "print") {
                 shouldWrap = true;
                 wrapNode(node, "expression");
             }
 
-            if (node.is("set")) {
+            if (node.type === "set") {
                 shouldWrap = true;
             }
 
             if (shouldWrap) {
-                if (node.is("concat")) {
+                if (node.type === "concatenate") {
                     wrapNode(node, "left");
                     wrapNode(node, "right");
                 }
 
-                if (node.is(filterNodeType)) {
+                if (node.type === "filter") {
                     wrapNode(node, "operand");
                     wrapArrayNode(node, "arguments");
                 }
 
-                if (node.is(functionNodeType)) {
+                if (node.type === "function") {
                     wrapArrayNode(node, "arguments");
                 }
 
-                if (node.is("escape")) {
+                if (node.type === "escape") {
                     wrapNode(node, "body");
                 }
             }
@@ -85,26 +83,27 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
         return node;
     };
 
-    const leaveNode: TwingNodeVisitor["leaveNode"] = (node) => {
-        if (node.is(templateNodeType)) {
+    const leaveNode: TwingNodeVisitor["leaveNode"] = (node: TwingNode) => {
+        if (node.type === "template") {
             node.children.securityCheck = createCheckSecurityNode(filters, tags, functions, node.line, node.column);
-        } else if (node.is("print") || node.is("set")) {
+        }
+        else if (node.type === "print" || node.type === "set") {
             shouldWrap = false;
         }
 
         return node;
     };
 
-    const wrapNode = <T extends TwingBaseNode>(node: T, name: keyof T["children"]) => {
-        const expression: TwingBaseNode = node.children[name as any];
-        
-        if (expression.is("name") || expression.is("get_attribute")) {
-            node.children[name as any] = createCheckToStringNode(expression, expression.line, expression.column);
+    const wrapNode = <T extends TwingNode>(node: T, name: keyof T["children"]) => {
+        const expression: TwingNode = (node.children as any)[name];
+
+        if (expression.type === "name" || expression.type === "attribute_accessor") {
+            (node.children as any)[name] = createCheckToStringNode(expression, expression.line, expression.column);
         }
     };
 
-    const wrapArrayNode = <T extends TwingBaseNode>(node: T, name: keyof T["children"]) => {
-        const args: ArgumentsNode = node.children[name as any];
+    const wrapArrayNode = <T extends TwingNode>(node: T, name: keyof T["children"]) => {
+        const args: TwingWrapperNode = (node.children as any)[name]; // todo: check with TS team with we have to cast children as any
 
         for (const [name] of getChildren(args)) {
             wrapNode(args, name);
@@ -113,6 +112,6 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
 
     return createNodeVisitor(
         enterNode,
-        leaveNode   
+        leaveNode
     );
 };

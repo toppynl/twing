@@ -25,9 +25,9 @@ export const createEmbedTagHandler = (): TwingTagHandler => {
 
                 parentToken = fakeParentToken = new Token("STRING", '__parent__', token.line, token.column);
 
-                if (parent.is("constant")) {
+                if (parent.type === "constant") {
                     parentToken = new Token("STRING", parent.attributes.value, token.line, token.column);
-                } else if (parent.is("name")) {
+                } else if (parent.type === "name") {
                     parentToken = new Token("NAME", parent.attributes.name, token.line, token.column);
                 }
 

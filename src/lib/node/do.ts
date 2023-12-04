@@ -8,22 +8,22 @@ import type {TwingBaseExpressionNode} from "./expression";
  * {% do 1 + 2 %}
  */
 export interface TwingDoNode extends TwingBaseNode<"do", TwingBaseNodeAttributes, {
-    expr: TwingBaseExpressionNode;
+    body: TwingBaseExpressionNode;
 }> {
 }
 
 export const createDoNode = (
-    expr: TwingBaseExpressionNode,
+    body: TwingBaseExpressionNode,
     line: number,
     column: number,
     tag: string | null
 ): TwingDoNode => {
     const baseNode = createBaseNode("do", {}, {
-        expr
+        body
     }, line, column, tag);
 
     return {
         ...baseNode,
-        execute: baseNode.children.expr.execute
+        execute: baseNode.children.body.execute
     };
 };

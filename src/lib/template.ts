@@ -21,18 +21,19 @@ import {getFilter} from "./helpers/get-filter";
 import {getTest} from "./helpers/get-test";
 import {getFunction} from "./helpers/get-function";
 import * as createHash from "create-hash";
-import {EscapingStrategy} from "./escaping-strategy";
+import {TwingEscapingStrategy} from "./escaping-strategy";
 import {getTraceableMethod} from "./helpers/traceable-method";
+import {TwingConstantNode} from "./node/expression/constant";
 
 export type TwingTemplateBlockMap = Map<string, [TwingTemplate, string]>;
-export type BlockHandler = (
+export type TwingTemplateBlockHandler = (
     context: TwingContext<any, any>,
     outputBuffer: TwingOutputBuffer,
     blocks: TwingTemplateBlockMap,
     sandboxed: boolean,
     sourceMapRuntime?: TwingSourceMapRuntime
 ) => Promise<void>;
-export type MacroHandler = (
+export type TwingTemplateMacroHandler = (
     outputBuffer: TwingOutputBuffer,
     sandboxed: boolean,
     sourceMapRuntime: TwingSourceMapRuntime | undefined,
@@ -43,10 +44,10 @@ export type TwingTemplateAliases = TwingContext<string, TwingTemplate>;
 
 export interface TwingTemplate {
     readonly aliases: TwingTemplateAliases;
-    readonly blockHandlers: Map<string, BlockHandler>;
+    readonly blockHandlers: Map<string, TwingTemplateBlockHandler>;
     readonly canBeUsedAsATrait: boolean;
     readonly source: TwingSource;
-    readonly macroHandlers: Map<string, MacroHandler>;
+    readonly macroHandlers: Map<string, TwingTemplateMacroHandler>;
     readonly name: string;
 
     /**
@@ -79,7 +80,7 @@ export interface TwingTemplate {
         sourceMapRuntime?: TwingSourceMapRuntime
     ): Promise<void>;
 
-    escape(value: string | boolean | TwingMarkup | null | undefined, strategy: EscapingStrategy | string, charset: string | null, autoEscape?: boolean): Promise<string | boolean | TwingMarkup>;
+    escape(value: string | boolean | TwingMarkup | null | undefined, strategy: TwingEscapingStrategy | string, charset: string | null, autoEscape?: boolean): Promise<string | boolean | TwingMarkup>;
 
     execute(
         context: TwingContext<any, any>,
@@ -183,14 +184,14 @@ export const createTemplate = (
     const {charset, dateFormat, dateIntervalFormat, isStrictVariables, numberFormat, timezone} = environment
 
     // blocks
-    const blockHandlers: Map<string, BlockHandler> = new Map();
+    const blockHandlers: Map<string, TwingTemplateBlockHandler> = new Map();
 
     let blocks: TwingTemplateBlockMap | null = null;
 
     const {blocks: blockNodes} = ast.children;
 
     for (const [name, blockNode] of getChildren(blockNodes)) {
-        const blockHandler: BlockHandler = (context, outputBuffer, blocks, sandboxed, sourceMapRuntime) => {
+        const blockHandler: TwingTemplateBlockHandler = (context, outputBuffer, blocks, sandboxed, sourceMapRuntime) => {
             const aliases = template.aliases.clone();
 
             return blockNode.children.body.execute({
@@ -214,12 +215,12 @@ export const createTemplate = (
     }
 
     // macros
-    const macroHandlers: Map<string, MacroHandler> = new Map();
+    const macroHandlers: Map<string, TwingTemplateMacroHandler> = new Map();
 
     const {macros: macrosNode} = ast.children;
 
     for (const [name, macroNode] of Object.entries(macrosNode.children)) {
-        const macroHandler: MacroHandler = async (outputBuffer, sandboxed, sourceMapRuntime, ...args) => {
+        const macroHandler: TwingTemplateMacroHandler = async (outputBuffer, sandboxed, sourceMapRuntime, ...args) => {
             const {body, arguments: macroArguments} = macroNode.children;
             const keyValuePairs = getKeyValuePairs(macroArguments);
 
@@ -405,7 +406,7 @@ export const createTemplate = (
         displayBlock: (name, context, outputBuffer, blocks, useBlocks, sandboxed, sourceMapRuntime) => {
             return template.getBlocks()
                 .then((ownBlocks) => {
-                    let blockHandler: BlockHandler | undefined;
+                    let blockHandler: TwingTemplateBlockHandler | undefined;
                     let block: [TwingTemplate, string] | undefined;
 
                     if (useBlocks && (block = blocks.get(name)) !== undefined) {
@@ -481,7 +482,7 @@ export const createTemplate = (
                 template.getBlocks()
             ]).then(([parent, ownBlocks]) => {
                 const blocks = mergeIterables(ownBlocks, childBlocks);
-
+                
                 return ast.execute({
                     aliases,
                     blocks,
@@ -572,7 +573,7 @@ export const createTemplate = (
 
                         const loadedParent = await loadTemplate(parentName);
 
-                        if (parentNode.is("constant")) {
+                        if (parentNode.type === "constant") {
                             parent = loadedParent;
                         }
 
@@ -615,16 +616,16 @@ export const createTemplate = (
                     const traitBlocks = cloneMap(await traitExecutionContext.getBlocks());
 
                     for (const [key, target] of getChildren(targets)) {
-                        const traitBlock = traitBlocks.get(key);
+                        const traitBlock = traitBlocks.get(key as string);
 
                         if (!traitBlock) {
                             throw createRuntimeError(`Block "${key}" is not defined in trait "${templateName}".`, templateNameNode, template.name);
                         }
 
-                        const targetValue = target.attributes.value;
+                        const targetValue = (target as TwingConstantNode<string>).attributes.value;
 
                         traitBlocks.set(targetValue, traitBlock);
-                        traitBlocks.delete(key);
+                        traitBlocks.delete((key as string));
                     }
 
                     traits = mergeIterables(traits, traitBlocks);

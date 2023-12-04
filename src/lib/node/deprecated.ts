@@ -2,32 +2,32 @@ import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 import {TwingBaseExpressionNode} from "./expression";
 
 export interface TwingDeprecatedNode extends TwingBaseNode<"deprecated", TwingBaseNodeAttributes, {
-    expr: TwingBaseExpressionNode;
+    message: TwingBaseExpressionNode;
 }> {
 }
 
 export const createDeprecatedNode = (
-    expr: TwingBaseExpressionNode,
+    message: TwingBaseExpressionNode,
     line: number,
     column: number,
     tag: string
 ): TwingDeprecatedNode => {
     const baseNode = createBaseNode("deprecated", {}, {
-        expr
+        message
     }, line, column, tag);
 
-    const node: TwingDeprecatedNode = {
+    const deprecatedNode: TwingDeprecatedNode = {
         ...baseNode,
         execute: (executionContext) => {
             const {template} = executionContext;
-            const {expr} = node.children;
+            const {message} = deprecatedNode.children;
 
-            return expr.execute(executionContext)
+            return message.execute(executionContext)
                 .then((message) => {
-                    console.warn(`${message} ("${template.name}" at line ${node.line}, column ${node.column})`);
+                    console.warn(`${message} ("${template.name}" at line ${deprecatedNode.line}, column ${deprecatedNode.column})`);
                 });
         }
     };
 
-    return node;
+    return deprecatedNode;
 };

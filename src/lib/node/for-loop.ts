@@ -18,10 +18,10 @@ export const createForLoopNode = (
         hasAnElse: false
     }, {}, line, column, tag);
 
-    const node: TwingForLoopNode = {
+    const forLoopNode: TwingForLoopNode = {
         ...baseNode,
         execute: (executionContext) => {
-            const {hasAnElse, hasAnIf} = node.attributes;
+            const {hasAnElse, hasAnIf} = forLoopNode.attributes;
 
             const {context} = executionContext;
 
@@ -45,5 +45,5 @@ export const createForLoopNode = (
         }
     };
 
-    return node;
+    return forLoopNode;
 };

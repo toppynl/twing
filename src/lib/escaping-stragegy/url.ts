@@ -1,7 +1,7 @@
-import {EscapingStrategyHandler} from "../escaping-strategy";
+import {TwingEscapingStrategyHandler} from "../escaping-strategy";
 
 const phpRawurlencode = require('locutus/php/url/rawurlencode');
 
-export const createUrlEscapingStrategyHandler = (): EscapingStrategyHandler => {
+export const createUrlEscapingStrategyHandler = (): TwingEscapingStrategyHandler => {
     return phpRawurlencode;
 };

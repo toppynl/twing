@@ -1,20 +1,19 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
 import {createConstantNode} from "./expression/constant";
-import {textNodeType} from "./output/text";
-import {createArgumentsNode} from "./expression/arguments";
+import {createWrapperNode} from "./wrapper";
 
-export type SetNodeAttributes = TwingBaseNodeAttributes & {
-    capture: boolean; // todo: rename
+export type TwingSetNodeAttributes = TwingBaseNodeAttributes & {
+    captures: boolean;
 };
 
-export interface TwingSetNode extends TwingBaseNode<"set", SetNodeAttributes, {
+export interface TwingSetNode extends TwingBaseNode<"set", TwingSetNodeAttributes, {
     names: TwingBaseNode;
     values: TwingBaseNode;
 }> {
 }
 
 export const createSetNode = (
-    capture: boolean,
+    captures: boolean,
     names: TwingSetNode["children"]["names"],
     values: TwingSetNode["children"]["values"],
     line: number,
@@ -22,7 +21,7 @@ export const createSetNode = (
     tag: string
 ): TwingSetNode => {
     const baseNode = createBaseNode("set", {
-        capture
+        captures
     }, {
         names,
         values
@@ -33,27 +32,27 @@ export const createSetNode = (
      *
      * {% set foo %}foo{% endset %} is compiled to $context['foo'] = new Twig_Markup("foo");
      */
-    if (baseNode.attributes.capture) {
-        const {values} = baseNode.children;
+    if (baseNode.attributes.captures) {
+        const values = baseNode.children.values as TwingNode;
 
-        if (values.is(textNodeType)) {
-            baseNode.children.values = createArgumentsNode({
+        if (values.type === "text") {
+            baseNode.children.values = createWrapperNode({
                 0: createConstantNode(values.attributes.data, values.line, values.column)
             }, values.line, values.column);
-            baseNode.attributes.capture = false;
+            baseNode.attributes.captures = false;
         }
     }
 
-    const node: TwingSetNode = {
+    const setNode: TwingSetNode = {
         ...baseNode,
         execute: async (executionContext) => {
             const {context, outputBuffer} = executionContext;
-            const {names: namesNode, values: valuesNode} = node.children;
-            const {capture} = node.attributes;
+            const {names: namesNode, values: valuesNode} = setNode.children;
+            const {captures} = setNode.attributes;
 
             const names: Array<string> = await namesNode.execute(executionContext);
 
-            if (capture) {
+            if (captures) {
                 outputBuffer.start();
 
                 await valuesNode.execute(executionContext);
@@ -63,16 +62,17 @@ export const createSetNode = (
                 for (const name of names) {
                     context.set(name, value);
                 }
-            } else {
+            }
+            else {
                 const values: Array<any> = await valuesNode.execute(executionContext);
-                
+
                 let index = 0;
 
                 for (const name of names) {
                     const value = values[index];
 
                     context.set(name, value);
-                    
+
                     index++;
                 }
             }
@@ -80,5 +80,5 @@ export const createSetNode = (
         isACaptureNode: true
     };
 
-    return node;
+    return setNode;
 };

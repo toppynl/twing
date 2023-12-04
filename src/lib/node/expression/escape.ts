@@ -22,21 +22,21 @@ export const createEscapeNode = (
         body
     }, body.line, body.column);
 
-    const node: TwingEscapeNode = {
+    const escapeNode: TwingEscapeNode = {
         ...baseNode,
         execute: (executionContext) => {
             const {template} = executionContext;
-            const {strategy} = node.attributes;
-            const {body} = node.children;
+            const {strategy} = escapeNode.attributes;
+            const {body} = escapeNode.children;
 
             return body.execute(executionContext)
                 .then((value) => {
-                    const escape = getTraceableMethod(template.escape, node.line, node.column, template.name);
+                    const escape = getTraceableMethod(template.escape, escapeNode.line, escapeNode.column, template.name);
 
                     return escape(value, strategy, null, true);
                 });
         }
     };
 
-    return node;
+    return escapeNode;
 };

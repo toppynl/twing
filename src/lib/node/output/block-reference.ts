@@ -2,13 +2,11 @@ import {TwingBaseNodeAttributes} from "../../node";
 import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
 import {getTraceableMethod} from "../../helpers/traceable-method";
 
-export const blockReferenceType = "block_reference";
-
-export type BlockReferenceNodeAttributes = TwingBaseNodeAttributes & {
+export type TwingBlockReferenceNodeAttributes = TwingBaseNodeAttributes & {
     name: string;
 };
 
-export interface TwingBlockReferenceNode extends TwingBaseOutputNode<typeof blockReferenceType, BlockReferenceNodeAttributes, {}> {
+export interface TwingBlockReferenceNode extends TwingBaseOutputNode<"block_reference", TwingBlockReferenceNodeAttributes, {}> {
 }
 
 export const createBlockReferenceNode = (
@@ -17,17 +15,17 @@ export const createBlockReferenceNode = (
     column: number,
     tag: string
 ): TwingBlockReferenceNode => {
-    const outputNode = createBaseOutputNode(blockReferenceType, {
+    const outputNode = createBaseOutputNode("block_reference", {
         name
     }, {}, line, column, tag);
 
-    const node: TwingBlockReferenceNode = {
+    const blockReferenceNode: TwingBlockReferenceNode = {
         ...outputNode,
         execute: (executionContext) => {
             const {template, context, outputBuffer, blocks, sandboxed, sourceMapRuntime} = executionContext;
-            const {name} = node.attributes;
+            const {name} = blockReferenceNode.attributes;
 
-            const renderBlock = getTraceableMethod(template.renderBlock, node.line, node.column, template.name);
+            const renderBlock = getTraceableMethod(template.renderBlock, blockReferenceNode.line, blockReferenceNode.column, template.name);
 
             return renderBlock(
                 name,
@@ -41,5 +39,5 @@ export const createBlockReferenceNode = (
         }
     };
 
-    return node;
+    return blockReferenceNode;
 };

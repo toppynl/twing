@@ -1,10 +1,8 @@
 import {TwingBaseArrayNode, createBaseArrayNode, getKeyValuePairs} from "./array";
 import type {TwingBaseExpressionNode} from "../expression";
-import {spreadNodeType} from "./spread";
+import type {TwingNode} from "../../node";
 
-export const hashNodeType = 'hash'
-
-export interface TwingHashNode extends TwingBaseArrayNode<typeof hashNodeType> {
+export interface TwingHashNode extends TwingBaseArrayNode<"hash"> {
 }
 
 export const createHashNode = (
@@ -15,7 +13,7 @@ export const createHashNode = (
     line: number,
     column: number
 ): TwingHashNode => {
-    const baseNode = createBaseArrayNode(hashNodeType, elements, line, column);
+    const baseNode = createBaseArrayNode("hash", elements, line, column);
 
     const hashNode: TwingHashNode = {
         ...baseNode,
@@ -23,14 +21,14 @@ export const createHashNode = (
             const keyValuePairs = getKeyValuePairs(hashNode);
 
             const hash: Map<any, any> = new Map();
-            
+
             for (const {key: keyNode, value: valueNode} of keyValuePairs) {
                 const [key, value] = await Promise.all([
                     keyNode.execute(executionContext),
                     valueNode.execute(executionContext)
                 ]);
-                
-                if (valueNode.is(spreadNodeType)) {
+
+                if ((valueNode as TwingNode).type === "spread") {
                     for (const [valueKey, valueValue] of value as Map<any, any>) {
                         hash.set(valueKey, valueValue);
                     }
@@ -39,13 +37,9 @@ export const createHashNode = (
                     hash.set(key, value);
                 }
             }
-            
+
             return hash;
-        },
-        // todo: remove once confirmed that it is not needed
-        // is: (type) => {
-        //     return type === "hash" || type === "array";
-        // }
+        }
     };
 
     return hashNode;

@@ -1,5 +1,5 @@
 import {TwingNodeVisitor} from "./node-visitor";
-import {TwingBaseNode, getChildren, TwingNode} from "./node";
+import {TwingBaseNode, getChildren} from "./node";
 
 /**
  * TwingNodeTraverser is a node traverser.
@@ -30,7 +30,7 @@ export const createNodeTraverser = (
     };
 
     return (node) => {
-        let result: TwingNode | null = node;
+        let result: TwingBaseNode | null = node;
         
         for (const visitor of visitors) {
             result = traverseWithVisitor(visitor, node);

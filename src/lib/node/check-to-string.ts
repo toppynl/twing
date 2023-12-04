@@ -11,26 +11,26 @@ import {getTraceableMethod} from "../helpers/traceable-method";
  * or {{ random(article) }}.
  */
 export interface TwingCheckToStringNode extends TwingBaseNode<"check_to_string", TwingBaseNodeAttributes, {
-    expr: TwingBaseExpressionNode;
+    value: TwingBaseExpressionNode;
 }> {
 }
 
 export const createCheckToStringNode = (
-    expression: TwingBaseExpressionNode,
+    value: TwingBaseExpressionNode,
     line: number,
     column: number
 ): TwingCheckToStringNode => {
     const baseNode = createBaseNode("check_to_string", {}, {
-        expr: expression
+        value
     }, line, column);
 
     return {
         ...baseNode,
         execute: (executionContext) => {
             const {template, sandboxed} = executionContext;
-            const {expr} = baseNode.children;
+            const {value: valueNode} = baseNode.children;
 
-            return expr.execute(executionContext)
+            return valueNode.execute(executionContext)
                 .then((value) => {
                     if (sandboxed) {
                         const assertToStringAllowed = getTraceableMethod((value: any) => {
@@ -43,7 +43,7 @@ export const createCheckToStringNode = (
                             }
 
                             return Promise.resolve(value);
-                        }, expr.line, expr.column, template.name)
+                        }, valueNode.line, valueNode.column, template.name)
 
                         return assertToStringAllowed(value);
                     }

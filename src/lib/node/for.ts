@@ -12,7 +12,7 @@ export type TwingForNodeAttributes = TwingBaseNodeAttributes & {
     hasAnIf: boolean;
 };
 
-type TwingForNodeChildren = {
+export type TwingForNodeChildren = {
     keyTarget: TwingAssignmentNode;
     valueTarget: TwingAssignmentNode;
     sequence: TwingBaseExpressionNode;
@@ -74,12 +74,12 @@ export const createForNode = (
         hasAnIf: ifExpression !== null
     }, children, line, column, tag);
 
-    const node: TwingForNode = {
+    const forNode: TwingForNode = {
         ...baseNode,
         execute: async (executionContext) => {
             const {context} = executionContext;
-            const {sequence: sequenceNode, body, else: elseNode, valueTarget: targetValueNode, keyTarget: targetKeyNode} = node.children;
-            const {hasAnIf} = node.attributes;
+            const {sequence: sequenceNode, body, else: elseNode, valueTarget: targetValueNode, keyTarget: targetKeyNode} = forNode.children;
+            const {hasAnIf} = forNode.attributes;
 
             context.set('_parent', context.clone());
 
@@ -148,5 +148,5 @@ export const createForNode = (
         }
     };
 
-    return node;
+    return forNode;
 };

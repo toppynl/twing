@@ -1,4 +1,4 @@
-import {createBaseError, ErrorLocation, TwingBaseError} from "./base";
+import {createBaseError, TwingErrorLocation, TwingBaseError} from "./base";
 
 export const runtimeErrorName = 'TwingRuntimeError';
 
@@ -10,7 +10,7 @@ export const isARuntimeError = (candidate: Error): candidate is TwingRuntimeErro
     return (candidate as TwingRuntimeError).name === runtimeErrorName;
 };
 
-export const createRuntimeError = (message: string, location?: ErrorLocation, source?: string, previous?: Error): TwingRuntimeError => {
+export const createRuntimeError = (message: string, location?: TwingErrorLocation, source?: string, previous?: Error): TwingRuntimeError => {
     const error = createBaseError(runtimeErrorName, message, location, source, previous);
     
     Error.captureStackTrace(error, createRuntimeError);

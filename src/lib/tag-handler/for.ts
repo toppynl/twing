@@ -30,7 +30,7 @@ export const createForTagHandler = (): TwingTagHandler => {
 
     // the loop variable cannot be used in the condition
     const checkLoopUsageCondition = (stream: TwingTokenStream, node: TwingNode) => {
-        if ((node.is("get_attribute")) && (node.children.target.is("name")) && (node.children.target.attributes.name === 'loop')) {
+        if ((node.type === "attribute_accessor") && (node.children.target.type === "name") && (node.children.target.attributes.name === 'loop')) {
             throw createParsingError('The "loop" variable cannot be used in a looping condition.', node, stream.source.name);
         }
 
@@ -42,16 +42,16 @@ export const createForTagHandler = (): TwingTagHandler => {
     // check usage of non-defined loop-items
     // it does not catch all problems (for instance when a for is included into another or when the variable is used in an include)
     const checkLoopUsageBody = (stream: TwingTokenStream, node: TwingNode) => {
-        if ((node.is("get_attribute")) && (node.children.target.is("name")) && (node.children.target.attributes.name === "loop")) {
-            let attribute = node.children.attribute;
+        if ((node.type === "attribute_accessor") && (node.children.target.type === "name") && (node.children.target.attributes.name === "loop")) {
+            const {attribute} = node.children;
 
-            if (attribute.is("constant") && (['length', 'revindex0', 'revindex', 'last'].indexOf(attribute.attributes.value as string) > -1)) {
+            if (attribute.type === "constant" && (['length', 'revindex0', 'revindex', 'last'].indexOf(attribute.attributes.value as string) > -1)) {
                 throw createParsingError(`The "loop.${attribute.attributes.value}" variable is not defined when looping with a condition.`, node, stream.source.name);
             }
         }
 
         // should check for parent.loop.XXX usage
-        if (node.is("for")) {
+        if (node.type === "for") {
             return;
         }
 
@@ -86,11 +86,12 @@ export const createForTagHandler = (): TwingTagHandler => {
 
                 if (stream.next().value == 'else') {
                     stream.expect("TAG_END");
-                    
+
                     elseToken = parser.subparse(stream, tag, decideForEnd);
 
                     stream.next();
-                } else {
+                }
+                else {
                     elseToken = null;
                 }
 
@@ -105,7 +106,8 @@ export const createForTagHandler = (): TwingTagHandler => {
 
                     valueTarget = targets.children[1];
                     valueTarget = createAssignmentNode(valueTarget.attributes.name, valueTarget.line, valueTarget.column);
-                } else {
+                }
+                else {
                     keyTarget = createAssignmentNode('_key', line, column);
 
                     valueTarget = targets.children[0];

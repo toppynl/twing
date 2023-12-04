@@ -1,11 +1,9 @@
 import {TwingBaseUnaryNode, createUnaryNodeFactory} from "../unary";
 
-export const notNodeType = "not";
-
-export interface TwingNotNode extends TwingBaseUnaryNode<typeof notNodeType> {
+export interface TwingNotNode extends TwingBaseUnaryNode<"not"> {
 }
 
-export const createNotNode = createUnaryNodeFactory<TwingNotNode>(notNodeType, {
+export const createNotNode = createUnaryNodeFactory<TwingNotNode>("not", {
     execute: (operand, executionContext) => {
         return operand.execute(executionContext)
             .then((value) => !(value));

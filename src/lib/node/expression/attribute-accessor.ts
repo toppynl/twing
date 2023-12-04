@@ -1,38 +1,38 @@
 import {
     TwingBaseExpressionNode,
     TwingBaseExpressionNodeAttributes,
-    createBaseExpressionNode
+    createBaseExpressionNode, TwingExpressionNode
 } from "../expression";
 import {getAttribute} from "../../helpers/get-attribute";
 import {getTraceableMethod} from "../../helpers/traceable-method";
 
-export type TwingGetAttributeCallType = "any" | "array" | "method";
+export type TwingAttributeAccessorCallType = "any" | "array" | "method";
 
 export type TwingAttributeAccessorNodeAttributes = TwingBaseExpressionNodeAttributes & {
     isOptimizable: boolean;
-    type: TwingGetAttributeCallType;
+    type: TwingAttributeAccessorCallType;
     shouldIgnoreStrictCheck?: boolean;
     shouldTestExistence: boolean;
 };
 
 export type TwingAttributeAccessorNodeChildren = {
-    target: TwingBaseExpressionNode;
-    attribute: TwingBaseExpressionNode;
-    arguments: TwingBaseExpressionNode;
+    target: TwingExpressionNode;
+    attribute: TwingExpressionNode;
+    arguments: TwingExpressionNode;
 };
 
-export interface TwingAttributeAccessorNode extends TwingBaseExpressionNode<"get_attribute", TwingAttributeAccessorNodeAttributes, TwingAttributeAccessorNodeChildren> {
+export interface TwingAttributeAccessorNode extends TwingBaseExpressionNode<"attribute_accessor", TwingAttributeAccessorNodeAttributes, TwingAttributeAccessorNodeChildren> {
 }
 
 export const createAttributeAccessorNode = (
-    target: TwingBaseExpressionNode,
-    attribute: TwingBaseExpressionNode,
-    methodArguments: TwingBaseExpressionNode,
-    type: TwingGetAttributeCallType,
+    target: TwingExpressionNode,
+    attribute: TwingExpressionNode,
+    methodArguments: TwingExpressionNode,
+    type: TwingAttributeAccessorCallType,
     line: number,
     column: number
 ): TwingAttributeAccessorNode => {
-    const baseNode = createBaseExpressionNode("get_attribute", {
+    const baseNode = createBaseExpressionNode("attribute_accessor", {
         isOptimizable: true,
         type,
         shouldTestExistence: false
@@ -42,19 +42,19 @@ export const createAttributeAccessorNode = (
         arguments: methodArguments
     }, line, column);
 
-    const node: TwingAttributeAccessorNode = {
+    const attributeAccessorNode: TwingAttributeAccessorNode = {
         ...baseNode,
         execute: (executionContext) => {
             const {template, sandboxed, isStrictVariables} = executionContext;
-            const {target, attribute, arguments: methodArguments} = node.children;
-            const {type, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
+            const {target, attribute, arguments: methodArguments} = attributeAccessorNode.children;
+            const {type, shouldIgnoreStrictCheck, shouldTestExistence} = attributeAccessorNode.attributes;
 
             return Promise.all([
                 target.execute(executionContext),
                 attribute.execute(executionContext),
                 methodArguments.execute(executionContext)
             ]).then(([target, attribute, methodArguments]) => {
-                const traceableGetAttribute = getTraceableMethod(getAttribute, node.line, node.column, template.name);
+                const traceableGetAttribute = getTraceableMethod(getAttribute, attributeAccessorNode.line, attributeAccessorNode.column, template.name);
 
                 return traceableGetAttribute(
                     template,
@@ -71,13 +71,13 @@ export const createAttributeAccessorNode = (
         }
     };
 
-    return node;
+    return attributeAccessorNode;
 };
 
 export const cloneGetAttributeNode = (
-    node: TwingAttributeAccessorNode
+    attributeAccessorNode: TwingAttributeAccessorNode
 ): TwingAttributeAccessorNode => {
-    const {children, attributes, line, column} = node;
+    const {children, attributes, line, column} = attributeAccessorNode;
     const {arguments: methodArguments, attribute, target} = children;
     const {type} = attributes;
 

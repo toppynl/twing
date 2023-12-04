@@ -2,34 +2,32 @@ import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseEx
 import type {TwingArrayNode} from "./array";
 import {getKeyValuePairs} from "./array";
 import {TwingBaseNode} from "../../node";
-import {MacroHandler, TwingTemplate} from "../../template";
+import {TwingTemplateMacroHandler, TwingTemplate} from "../../template";
 import {createRuntimeError} from "../../error/runtime";
-
-export const methodCallNodeType = "method_call";
 
 export type TwingMethodCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
     methodName: string;
     shouldTestExistence: boolean;
 };
 
-type NodeWithName = TwingBaseNode<any, {
-    name: string;
-}>;
-
-export interface TwingMethodCallNode extends TwingBaseExpressionNode<typeof methodCallNodeType, TwingMethodCallNodeAttributes, {
-    operand: NodeWithName;
+export interface TwingMethodCallNode extends TwingBaseExpressionNode<"method_call", TwingMethodCallNodeAttributes, {
+    operand: TwingBaseNode<any, {
+        name: string;
+    }>;
     arguments: TwingArrayNode;
 }> {
 }
 
 export const createMethodCallNode = (
-    operand: NodeWithName,
+    operand: TwingBaseNode<any, {
+        name: string;
+    }>,
     methodName: string,
     methodArguments: TwingArrayNode,
     line: number,
     column: number
 ): TwingMethodCallNode => {
-    const baseNode = createBaseExpressionNode(methodCallNodeType, {
+    const baseNode = createBaseExpressionNode("method_call", {
         methodName,
         shouldTestExistence: false
     }, {
@@ -37,7 +35,7 @@ export const createMethodCallNode = (
         arguments: methodArguments
     }, line, column);
 
-    const node: TwingMethodCallNode = {
+    const methodCallNode: TwingMethodCallNode = {
         ...baseNode,
         execute: async (executionContext) => {
             const {template, context, outputBuffer, aliases, sandboxed, sourceMapRuntime} = executionContext;
@@ -60,7 +58,7 @@ export const createMethodCallNode = (
                 // by nature, the alias exists - the parser only creates a method call node when the name _is_ an alias.
                 const macroTemplate = aliases.get(operand.attributes.name)!;
 
-                const getHandler = (template: TwingTemplate): Promise<MacroHandler | null> => {
+                const getHandler = (template: TwingTemplate): Promise<TwingTemplateMacroHandler | null> => {
                     const macroHandler = template.macroHandlers.get(methodName);
 
                     if (macroHandler) {
@@ -82,24 +80,24 @@ export const createMethodCallNode = (
                         if (handler) {
                             return handler(outputBuffer, sandboxed, sourceMapRuntime, ...macroArguments);
                         } else {
-                            throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, node, template.name);
+                            throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, methodCallNode, template.name);
                         }
                     });
             }
         }
     };
 
-    return node;
+    return methodCallNode;
 };
 
 export const cloneMethodCallNode = (
-    node: TwingMethodCallNode
+    methodCallNode: TwingMethodCallNode
 ): TwingMethodCallNode => {
     return createMethodCallNode(
-        node.children.operand,
-        node.attributes.methodName,
-        node.children.arguments,
-        node.line,
-        node.column
+        methodCallNode.children.operand,
+        methodCallNode.attributes.methodName,
+        methodCallNode.children.arguments,
+        methodCallNode.line,
+        methodCallNode.column
     );
 };

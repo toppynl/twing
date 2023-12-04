@@ -1,36 +1,33 @@
 import {
     TwingBaseIncludeNode,
-    BaseIncludeNodeAttributes,
-    BaseIncludeNodeChildren,
+    TwingBaseIncludeNodeAttributes,
+    TwingBaseIncludeNodeChildren,
     createBaseIncludeNode
 } from "../include";
-import {includeNodeType} from "./include";
 import {getTraceableMethod} from "../../helpers/traceable-method";
 
-export const embedNodeType = "embed";
-
-type TwingEmbedNodeAttributes = BaseIncludeNodeAttributes & {
+export type TwingEmbedNodeAttributes = TwingBaseIncludeNodeAttributes & {
     index: number;
 };
 
-export interface TwingEmbedNode extends TwingBaseIncludeNode<typeof embedNodeType, TwingEmbedNodeAttributes> {
+export interface TwingEmbedNode extends TwingBaseIncludeNode<"embed", TwingEmbedNodeAttributes> {
 }
 
 export const createEmbedNode = (
     attributes: TwingEmbedNodeAttributes,
-    children: Omit<BaseIncludeNodeChildren, "expression">,
+    children: Omit<TwingBaseIncludeNodeChildren, "expression">,
     line: number,
     column: number,
     tag: string
 ): TwingEmbedNode => {
-    const baseNode = createBaseIncludeNode(
-        embedNodeType,
+    const embedNode: TwingEmbedNode = createBaseIncludeNode(
+        "embed",
         attributes,
         children,
         ({template}) => {
-            const {index} = node.attributes;
+            const {index} = embedNode.attributes;
 
-            const loadTemplate = getTraceableMethod(template.loadEmbeddedTemplate, node.line, node.column, template.name);
+            const loadTemplate = getTraceableMethod(template.loadEmbeddedTemplate, embedNode.line, embedNode.column, template.name);
 
             return loadTemplate(index);
         },
@@ -39,11 +36,5 @@ export const createEmbedNode = (
         tag
     );
 
-    const node: TwingEmbedNode = Object.assign(baseNode, <Partial<TwingEmbedNode>>{
-        is: (type) => {
-            return type === embedNodeType || type === includeNodeType; // todo: this should probably be handled by the base include node
-        }
-    });
-
-    return node;
+    return embedNode;
 };

@@ -1,10 +1,10 @@
-import type {EscapingStrategyHandler} from "../escaping-strategy";
+import type {TwingEscapingStrategyHandler} from "../escaping-strategy";
 
 const phpBin2hex = require("locutus/php/strings/bin2hex");
 const phpSprintf = require('locutus/php/strings/sprintf');
 const strlen = require('utf8-binary-cutter').getBinarySize;
 
-export const createJsEscapingStrategyHandler = (): EscapingStrategyHandler => {
+export const createJsEscapingStrategyHandler = (): TwingEscapingStrategyHandler => {
     return (value) => {
         // escape all non-alphanumeric characters
         // into their \x or \uHHHH representations

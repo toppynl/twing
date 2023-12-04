@@ -1,9 +1,9 @@
-import type {EscapingStrategyHandler} from "../escaping-strategy";
+import type {TwingEscapingStrategyHandler} from "../escaping-strategy";
 const phpBin2hex = require("locutus/php/strings/bin2hex");
 const phpLtrim = require('locutus/php/strings/ltrim');
 const strlen = require('utf8-binary-cutter').getBinarySize;
 
-export const createCssEscapingStrategyHandler = (): EscapingStrategyHandler => {
+export const createCssEscapingStrategyHandler = (): TwingEscapingStrategyHandler => {
     return (value) => {
         value = value.replace(/[^a-zA-Z0-9]/ug, (matches: string) => {
             let char = matches;

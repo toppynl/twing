@@ -1,7 +1,9 @@
-import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
+import {
+    TwingBaseExpressionNode,
+    TwingBaseExpressionNodeAttributes,
+    createBaseExpressionNode
+} from "../expression";
 import {TwingBaseNode} from "../../node";
-
-export const conditionalNodeType = "conditional";
 
 export interface TwingBaseConditionalNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, {
     expr1: TwingBaseNode;
@@ -10,7 +12,7 @@ export interface TwingBaseConditionalNode<Type extends string> extends TwingBase
 }> {
 }
 
-export interface TwingConditionalNode extends TwingBaseConditionalNode<typeof conditionalNodeType> {
+export interface TwingConditionalNode extends TwingBaseConditionalNode<"conditional"> {
 }
 
 export const createBaseConditionalNode = <Type extends string>(
@@ -41,4 +43,4 @@ export const createConditionalNode = (
     expr3: TwingBaseNode,
     line: number,
     column: number
-) => createBaseConditionalNode(conditionalNodeType, expr1, expr2, expr3, line, column);
+) => createBaseConditionalNode("conditional", expr1, expr2, expr3, line, column);
