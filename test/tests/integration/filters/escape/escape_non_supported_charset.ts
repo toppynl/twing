@@ -1,0 +1,23 @@
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"escape" filter with non-supported charset';
+    }
+
+    getTemplates() {
+        return {
+            'index.twig': `
+{{ "愛していますか？ <br />"|e }}`
+        };
+    }
+
+    getExpected() {
+        return `
+愛していますか？ &lt;br /&gt;
+`;
+    }
+}
+
+runTest(createIntegrationTest(new Test()));

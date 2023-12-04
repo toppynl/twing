@@ -1,5 +1,7 @@
-const strip_tags = require('locutus/php/strings/strip_tags');
+import {TwingCallable} from "../../../callable-wrapper";
 
-export function striptags(...args: any[]): Promise<string> {
-    return Promise.resolve(strip_tags(...args));
-}
+const phpStripTags = require('locutus/php/strings/strip_tags');
+
+export const striptags: TwingCallable = (_executionContext, input: string, allowedTags: string): Promise<string> => {
+    return Promise.resolve(phpStripTags(input, allowedTags));
+};

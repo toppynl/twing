@@ -1,172 +1,152 @@
-import {TwingNode} from "../node";
-import {TwingNodeExpression} from "./expression";
-import {TwingNodeExpressionAssignName} from "./expression/assign-name";
-import {TwingNodeForLoop} from "./for-loop";
-import {TwingNodeIf} from "./if";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import type {TwingAssignmentNode} from "./expression/assignment";
+import {createForLoopNode} from "./for-loop";
+import {createIfNode} from "./if";
+import type {TwingBaseExpressionNode} from "./expression";
+import {TwingContext} from "../context";
+import {ensureTraversable} from "../helpers/ensure-traversable";
+import {count} from "../helpers/count";
+import {iterate} from "../helpers/iterate";
 
-export const type = new TwingNodeType('for');
+export type TwingForNodeAttributes = TwingBaseNodeAttributes & {
+    hasAnIf: boolean;
+};
 
-export class TwingNodeFor extends TwingNode {
-    private loop: TwingNodeForLoop;
+type TwingForNodeChildren = {
+    keyTarget: TwingAssignmentNode;
+    valueTarget: TwingAssignmentNode;
+    sequence: TwingBaseExpressionNode;
+    body: TwingBaseNode;
+    else?: TwingBaseNode;
+};
 
-    constructor(keyTarget: TwingNodeExpressionAssignName, valueTarget: TwingNodeExpressionAssignName, seq: TwingNodeExpression, ifexpr: TwingNodeExpression, body: TwingNode, elseNode: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let loop = new TwingNodeForLoop(lineno, columnno, tag);
+export interface TwingForNode extends TwingBaseNode<"for", TwingForNodeAttributes, TwingForNodeChildren> {
+}
 
-        let bodyNodes = new Map();
+export const createForNode = (
+    keyTarget: TwingAssignmentNode,
+    valueTarget: TwingAssignmentNode,
+    sequence: TwingBaseExpressionNode,
+    ifExpression: TwingBaseExpressionNode | null,
+    body: TwingBaseNode,
+    elseNode: TwingBaseNode | null,
+    line: number,
+    column: number,
+    tag: string
+): TwingForNode => {
+    const loop = createForLoopNode(line, column, tag);
+    const bodyChildren: Record<number, TwingBaseNode> = {};
+
+    let i: number = 0;
+
+    bodyChildren[i++] = body;
+    bodyChildren[i++] = loop;
+
+    let actualBody: TwingBaseNode = createBaseNode(null, {}, bodyChildren, line, column);
+
+    if (ifExpression) {
+        const ifChildren: Record<number, TwingBaseNode> = {};
+
         let i: number = 0;
 
-        bodyNodes.set(i++, body);
-        bodyNodes.set(i++, loop);
+        ifChildren[i++] = ifExpression;
+        ifChildren[i++] = actualBody;
 
-        body = new TwingNode(bodyNodes);
+        actualBody = createIfNode(createBaseNode(null, {}, ifChildren, line, column), null, line, column);
 
-        if (ifexpr) {
-            let ifNodes = new Map();
-            let i: number = 0;
-
-            ifNodes.set(i++, ifexpr);
-            ifNodes.set(i++, body);
-
-            body = new TwingNodeIf(new TwingNode(ifNodes), null, lineno, columnno, tag);
-        }
-
-        let nodes = new Map();
-
-        nodes.set('key_target', keyTarget);
-        nodes.set('value_target', valueTarget);
-        nodes.set('seq', seq);
-        nodes.set('body', body);
-
-        if (elseNode) {
-            nodes.set('else', elseNode);
-        }
-
-        let attributes = new Map();
-
-        attributes.set('with_loop', true);
-        attributes.set('ifexpr', ifexpr !== null);
-
-        super(nodes, attributes, lineno, columnno, tag);
-
-        this.loop = loop;
+        loop.attributes.hasAnIf = true;
     }
 
-    get type() {
-        return type;
+    const children: TwingForNodeChildren = {
+        keyTarget: keyTarget,
+        valueTarget: valueTarget,
+        sequence: sequence,
+        body: actualBody,
+    };
+
+    if (elseNode) {
+        children.else = elseNode;
+
+        loop.attributes.hasAnElse = true;
     }
 
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write("context.set('_parent', context.clone());\n\n")
-            .write('await (async () => {\n')
-            .indent()
-            .write('let c = this.ensureTraversable(')
-            .subcompile(this.getNode('seq'))
-            .raw(");\n\n")
-            .write('if (c === context) {\n')
-            .indent()
-            .write("context.set('_seq', context.clone());\n")
-            .outdent()
-            .write("}\n")
-            .write("else {\n")
-            .indent()
-            .write("context.set('_seq', c);\n")
-            .outdent()
-            .write("}\n")
-            .outdent()
-            .write("})();\n\n")
-        ;
+    const baseNode = createBaseNode("for", {
+        hasAnIf: ifExpression !== null
+    }, children, line, column, tag);
 
-        if (this.hasNode('else')) {
-            compiler.write("context.set('_iterated', false);\n");
-        }
+    const node: TwingForNode = {
+        ...baseNode,
+        execute: async (executionContext) => {
+            const {context} = executionContext;
+            const {sequence: sequenceNode, body, else: elseNode, valueTarget: targetValueNode, keyTarget: targetKeyNode} = node.children;
+            const {hasAnIf} = node.attributes;
 
-        if (this.getAttribute('with_loop')) {
-            compiler
-                .write("context.set('loop', new Map([\n")
-                .write("  ['parent', context.get('_parent')],\n")
-                .write("  ['index0', 0],\n")
-                .write("  ['index', 1],\n")
-                .write("  ['first', true]\n")
-                .write("]));\n")
-            ;
+            context.set('_parent', context.clone());
 
-            if (!this.getAttribute('ifexpr')) {
-                compiler
-                    .write("if ((typeof context.get('_seq') === 'object') && this.isCountable(context.get('_seq'))) {\n")
-                    .indent()
-                    .write("let length = this.count(context.get('_seq'));\n")
-                    .write("let loop = context.get('loop');\n")
-                    .write("loop.set('revindex0', length - 1);\n")
-                    .write("loop.set('revindex', length);\n")
-                    .write("loop.set('length', length);\n")
-                    .write("loop.set('last', (length === 1));\n")
-                    .outdent()
-                    .write("}\n")
-                ;
+            const executedSequence: TwingContext<any, any> | any = await sequenceNode.execute(executionContext);
+
+            let sequence = ensureTraversable(executedSequence);
+
+            if (sequence === context) {
+                context.set('_seq', context.clone());
+            } else {
+                context.set('_seq', sequence);
+            }
+
+            if (elseNode) {
+                context.set('_iterated', false);
+            }
+
+            context.set('loop', new Map([
+                ['parent', context.get('_parent')],
+                ['index0', 0],
+                ['index', 1],
+                ['first', true],
+            ]));
+
+            if (!hasAnIf) {
+                const length = count(context.get('_seq'));
+
+                const loop: Map<string, any> = context.get('loop');
+
+                loop.set('revindex0', length - 1);
+                loop.set('revindex', length);
+                loop.set('length', length);
+                loop.set('last', (length === 1));
+            }
+
+            const targetKey = await targetKeyNode.execute(executionContext);
+            const targetValue = await targetValueNode.execute(executionContext);
+
+            await iterate(context.get('_seq'), async (key, value) => {
+                context.set(targetKey, key);
+                context.set(targetValue, value);
+
+                await body.execute(executionContext);
+            });
+
+            if (elseNode) {
+                if (context.get('_iterated') === false) {
+                    await elseNode.execute(executionContext);
+                }
+            }
+
+            const parent = context.get('_parent');
+
+            context.delete('_seq');
+            context.delete('_iterated');
+            context.delete(keyTarget.attributes.name);
+            context.delete(valueTarget.attributes.name);
+            context.delete('_parent');
+            context.delete('loop');
+
+            for (const [key, value] of parent) {
+                if (!context.has(key)) {
+                    context.set(key, value);
+                }
             }
         }
+    };
 
-        this.loop.setAttribute('else', this.hasNode('else'));
-        this.loop.setAttribute('with_loop', this.getAttribute('with_loop'));
-        this.loop.setAttribute('ifexpr', this.getAttribute('ifexpr'));
-
-        compiler
-            .write("await this.iterate(context.get('_seq'), async (__key__, __value__) => {\n")
-            .indent()
-            .subcompile(this.getNode('key_target'), false)
-            .raw(' = __key__;\n')
-            .subcompile(this.getNode('value_target'), false)
-            .raw(' = __value__;\n')
-            .subcompile(this.getNode('body'))
-            .outdent()
-            .write("});\n")
-        ;
-
-        if (this.hasNode('else')) {
-            compiler
-                .write("if (context.get('_iterated') === false) {\n")
-                .indent()
-                .subcompile(this.getNode('else'))
-                .outdent()
-                .write("}\n")
-            ;
-        }
-
-        compiler
-            .write("(() => {\n")
-            .indent()
-            .write(`let parent = context.get('_parent');\n`)
-        ;
-
-        // remove some "private" loop variables (needed for nested loops)
-        compiler
-            .write('context.delete(\'_seq\');\n')
-            .write('context.delete(\'_iterated\');\n')
-            .write('context.delete(\'' + this.getNode('key_target').getAttribute('name') + '\');\n')
-            .write('context.delete(\'' + this.getNode('value_target').getAttribute('name') + '\');\n')
-            .write('context.delete(\'_parent\');\n')
-            .write('context.delete(\'loop\');\n')
-        ;
-
-        // keep the values set in the inner context for variables defined in the outer context
-        compiler
-            .write(`for (let [k, v] of parent) {\n`)
-            .indent()
-            .write('if (!context.has(k)) {\n')
-            .indent()
-            .write(`context.set(k, v);\n`)
-            .outdent()
-            .write('}\n')
-            .outdent()
-            .write('}\n')
-        ;
-
-        compiler
-            .outdent()
-            .write("})();\n")
-        ;
-    }
-}
+    return node;
+};

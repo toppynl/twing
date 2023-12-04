@@ -1,128 +1,164 @@
-import {TwingTemplate} from "../template";
-import {isMap} from "./is-map";
-import {TwingErrorRuntime} from "../error/runtime";
+import {isAMapLike} from "./map-like";
+import {createRuntimeError} from "../error/runtime";
 import {examineObject} from "./examine-object";
-import {TwingEnvironment} from "../environment";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
+import type {TwingGetAttributeCallType} from "../node/expression/attribute-accessor";
+import {isBoolean, isFloat} from "./php";
+import {TwingTemplate} from "../template";
 
-const isBool = require('locutus/php/var/is_bool');
-const isFloat = require('locutus/php/var/is_float');
 const isObject = require('isobject');
 
 /**
  * Returns the attribute value for a given array/object.
  *
- * @param {TwingEnvironment} env
+ * @param {TwingTemplate} template
  * @param {*} object The object or array from where to get the item
- * @param {*} item The item to get from the array or object
- * @param {Map<any, any>} _arguments A map of arguments to pass if the item is an object method
+ * @param {*} attribute The item to get from the array or object
+ * @param {Map<any, any>} methodArguments A map of arguments to pass if the item is an object method
  * @param {string} type The type of attribute (@see Twig_Template constants)
- * @param {boolean} isDefinedTest Whether this is only a defined check
- * @param {boolean} ignoreStrictCheck Whether to ignore the strict attribute check or not
- * @param {boolean} sandboxed
+ * @param {boolean} shouldTestExistence Whether this is only a defined check
+ * @param {boolean} shouldIgnoreStrictCheck Whether to ignore the strict attribute check or not
  *
  * @return {Promise<any>} The attribute value, or a boolean when isDefinedTest is true, or null when the attribute is not set and ignoreStrictCheck is true
  *
  * @throw {TwingErrorRuntime} if the attribute does not exist and Twing is running in strict mode and isDefinedTest is false
  */
-export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arguments: Map<any, any> = new Map(), type: string = TwingTemplate.ANY_CALL, isDefinedTest: boolean = false, ignoreStrictCheck: boolean = false, sandboxed: boolean = false): Promise<any> => {
-    let _do = (): any => {
+export const getAttribute = (
+    template: TwingTemplate,
+    object: any,
+    attribute: any,
+    methodArguments: Map<any, any>,
+    type: TwingGetAttributeCallType,
+    shouldTestExistence: boolean,
+    shouldIgnoreStrictCheck: boolean | null,
+    sandboxed: boolean,
+    isStrictVariables: boolean
+): Promise<any> => {
+    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !isStrictVariables : shouldIgnoreStrictCheck;
+
+    const _do = (): any => {
         let message: string;
 
         // ANY_CALL or ARRAY_CALL
-        if (type !== TwingTemplate.METHOD_CALL) {
+        if (type !== "method") {
             let arrayItem;
 
-            if (isBool(item)) {
-                arrayItem = item ? 1 : 0;
-            } else if (isFloat(item)) {
-                arrayItem = parseInt(item);
-            } else {
-                arrayItem = item;
+            if (isBoolean(attribute)) {
+                arrayItem = attribute ? 1 : 0;
+            }
+            else if (isFloat(attribute)) {
+                arrayItem = parseInt(attribute);
+            }
+            else {
+                arrayItem = attribute;
             }
 
             if (object) {
-                if ((isMap(object) && (object as Map<any, any>).has(arrayItem)) || (isPlainObject(object) && Reflect.has(object, arrayItem))) {
-                    if (isDefinedTest) {
+                if (
+                    (isAMapLike(object) && object.has(arrayItem))
+                    || (Array.isArray(object) && (typeof arrayItem === "number") && (object.length > arrayItem))
+                    || (isPlainObject(object) && Reflect.has(object, arrayItem))
+                ) {
+                    if (shouldTestExistence) {
                         return true;
+                    }
+
+                    if (type !== "array" && sandboxed) {
+                        template.checkPropertyAllowed(object, attribute);
                     }
 
                     return get(object, arrayItem);
                 }
             }
 
-            if ((type === TwingTemplate.ARRAY_CALL) || (isMap(object)) || (object === null) || (typeof object !== 'object')) {
-                if (isDefinedTest) {
+            if ((type === "array") 
+                || (isAMapLike(object)) 
+                || (Array.isArray(object))
+                || (object === null) 
+                || (typeof object !== 'object')
+            ) {
+                if (shouldTestExistence) {
                     return false;
                 }
 
-                if (ignoreStrictCheck || !env.isStrictVariables()) {
+                if (shouldIgnoreStrictCheck) {
                     return;
                 }
-
-                if (isMap(object)) {
-                    if ((object as Map<any, any>).size < 1) {
-                        message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
-                    } else {
-                        message = `Index "${arrayItem}" is out of bounds for array [${[...(object as Map<any, any>).values()]}].`;
-                    }
-                } else if (type === TwingTemplate.ARRAY_CALL) {
-                    // object is another kind of object
-                    if (object === null) {
-                        message = `Impossible to access a key ("${item}") on a null variable.`;
-                    } else {
-                        message = `Impossible to access a key ("${item}") on a ${typeof object} variable ("${object.toString()}").`;
-                    }
-                } else if (object === null) {
+                
+                if (object === null) {
                     // object is null
-                    message = `Impossible to access an attribute ("${item}") on a null variable.`;
-                } else {
+                    if (type === "array") {
+                        message = `Impossible to access a key ("${attribute}") on a null variable.`;
+                    }
+                    else {
+                        message = `Impossible to access an attribute ("${attribute}") on a null variable.`;
+                    }
+                }
+                else if (isAMapLike(object)) {
+                    if (object.size < 1) {
+                        message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
+                    }
+                    else {
+                        message = `Index "${arrayItem}" is out of bounds for array [${[...object.values()]}].`;
+                    }
+                }
+                else if (Array.isArray(object)) {
+                    if (object.length < 1) {
+                        message = `Index "${arrayItem}" is out of bounds as the array is empty.`;
+                    }
+                    else {
+                        message = `Index "${arrayItem}" is out of bounds for array [${[...object]}].`;
+                    }
+                }
+                else if (type === "array") {
+                    // object is another kind of object
+                    message = `Impossible to access a key ("${attribute}") on a ${typeof object} variable ("${object.toString()}").`;
+                }
+                else {
                     // object is a primitive
-                    message = `Impossible to access an attribute ("${item}") on a ${typeof object} variable ("${object}").`;
+                    message = `Impossible to access an attribute ("${attribute}") on a ${typeof object} variable ("${object}").`;
                 }
 
-                throw new TwingErrorRuntime(message);
+                throw createRuntimeError(message);
             }
         }
 
         // ANY_CALL or METHOD_CALL
-        if ((object === null) || (!isObject(object)) || (isMap(object))) {
-            if (isDefinedTest) {
+        if ((object === null) || (!isObject(object)) || (isAMapLike(object))) {
+            if (shouldTestExistence) {
                 return false;
             }
 
-            if (ignoreStrictCheck || !env.isStrictVariables()) {
+            if (shouldIgnoreStrictCheck) {
                 return;
             }
 
             if (object === null) {
-                message = `Impossible to invoke a method ("${item}") on a null variable.`;
-            } else if (isMap(object)) {
-                message = `Impossible to invoke a method ("${item}") on an array.`;
-            } else {
-                message = `Impossible to invoke a method ("${item}") on a ${typeof object} variable ("${object}").`;
+                message = `Impossible to invoke a method ("${attribute}") on a null variable.`;
+            }
+            else if (isAMapLike(object) || Array.isArray(object)) {
+                message = `Impossible to invoke a method ("${attribute}") on an array.`;
+            }
+            else {
+                message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
             }
 
-            throw new TwingErrorRuntime(message);
-        }
-
-        if (object instanceof TwingTemplate) {
-            throw new TwingErrorRuntime('Accessing TwingTemplate attributes is forbidden.');
+            throw createRuntimeError(message);
         }
 
         // object property
-        if (type !== TwingTemplate.METHOD_CALL) {
-            if (Reflect.has(object, item) && (typeof object[item] !== 'function')) {
-                if (isDefinedTest) {
+        if (type !== "method") {
+            if (Reflect.has(object, attribute) && (typeof object[attribute] !== 'function')) {
+                if (shouldTestExistence) {
                     return true;
                 }
 
                 if (sandboxed) {
-                    env.checkPropertyAllowed(object, item);
+                    template.checkPropertyAllowed(object, attribute);
                 }
 
-                return get(object, item);
+                return get(object, attribute);
             }
         }
 
@@ -153,27 +189,30 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
             candidates.set(method, method);
             candidates.set(lcName, method);
 
-            let name: string;
+            let name: string = '';
 
             if (lcName[0] === 'g' && lcName.indexOf('get') === 0) {
                 name = method.substr(3);
                 lcName = lcName.substr(3);
-            } else if (lcName[0] === 'i' && lcName.indexOf('is') === 0) {
+            }
+            else if (lcName[0] === 'i' && lcName.indexOf('is') === 0) {
                 name = method.substr(2);
                 lcName = lcName.substr(2);
-            } else if (lcName[0] === 'h' && lcName.indexOf('has') === 0) {
+            }
+            else if (lcName[0] === 'h' && lcName.indexOf('has') === 0) {
                 name = method.substr(3);
                 lcName = lcName.substr(3);
 
                 if (lcMethods.includes('is' + lcName)) {
                     continue;
                 }
-            } else {
+            }
+            else {
                 continue;
             }
 
             // skip get() and is() methods (in which case, name is empty)
-            if (name) {
+            if (name.length > 0) {
                 if (!candidates.has(name)) {
                     candidates.set(name, method);
                 }
@@ -184,35 +223,37 @@ export const getAttribute = (env: TwingEnvironment, object: any, item: any, _arg
             }
         }
 
-        let itemAsString: string = item as string;
-        let method: string = null;
+        let itemAsString: string = attribute as string;
+        let method: string;
         let lcItem: string;
 
-        if (candidates.has(item)) {
-            method = candidates.get(item);
-        } else if (candidates.has(lcItem = itemAsString.toLowerCase())) {
+        if (candidates.has(attribute)) {
+            method = candidates.get(attribute);
+        }
+        else if (candidates.has(lcItem = itemAsString.toLowerCase())) {
             method = candidates.get(lcItem);
-        } else {
-            if (isDefinedTest) {
+        }
+        else {
+            if (shouldTestExistence) {
                 return false;
             }
 
-            if (ignoreStrictCheck || !env.isStrictVariables()) {
+            if (shouldIgnoreStrictCheck) {
                 return;
             }
 
-            throw new TwingErrorRuntime(`Neither the property "${item}" nor one of the methods ${item}()" or "get${item}()"/"is${item}()"/"has${item}()" exist and have public access in class "${object.constructor.name}".`);
+            throw createRuntimeError(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
         }
 
-        if (isDefinedTest) {
+        if (shouldTestExistence) {
             return true;
         }
 
         if (sandboxed) {
-            env.checkMethodAllowed(object, method);
+            template.checkMethodAllowed(object, method);
         }
 
-        return get(object, method).apply(object, [..._arguments.values()]);
+        return get(object, method).apply(object, [...methodArguments.values()]);
     };
 
     try {

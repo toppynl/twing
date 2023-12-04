@@ -1,23 +1,10 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_or');
-
-export class TwingNodeExpressionBinaryOr extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('!!')
-        ;
-
-        super.compile(compiler);
-    }
-
-    operator(compiler: TwingCompiler): TwingCompiler {
-        return compiler.raw('||');
-    }
+export interface TwingOrNode extends TwingBaseBinaryNode<"or"> {
 }
+
+export const createOrNode = createBinaryNodeFactory<TwingOrNode>("or", {
+    execute: async (left, right, executionContext) => {
+        return !!(await left.execute(executionContext) || await right.execute(executionContext));
+    }
+});

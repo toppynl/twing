@@ -1,62 +1,57 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, createBaseNode, getChildrenCount, TwingBaseNodeAttributes} from "../node";
+import {evaluate} from "../helpers/evaluate";
 
-export const type = new TwingNodeType('if');
+type TwingIfNodeChildren = {
+    tests: TwingBaseNode;
+    else?: TwingBaseNode;
+};
 
-export class TwingNodeIf extends TwingNode {
-    constructor(tests: TwingNode, elseNode: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
+export interface TwingIfNode extends TwingBaseNode<'if', TwingBaseNodeAttributes, TwingIfNodeChildren> {
+}
 
-        nodes.set('tests', tests);
+export const createIfNode = (
+    testNode: TwingBaseNode,
+    elseNode: TwingBaseNode | null,
+    line: number,
+    column: number,
+    tag: string | null = null
+): TwingIfNode => {
+    const children: TwingIfNodeChildren = {
+        tests: testNode
+    };
 
-        if (elseNode) {
-            nodes.set('else', elseNode);
-        }
-
-        super(nodes, new Map(), lineno, columnno, tag);
+    if (elseNode) {
+        children.else = elseNode;
     }
 
-    get type() {
-        return type;
-    }
+    const baseNode = createBaseNode('if', {}, children, line, column, tag);
 
-    compile(compiler: TwingCompiler) {
-        let count = this.getNode('tests').getNodes().size;
+    const node: TwingIfNode = {
+        ...baseNode,
+        execute: async (executionContext) => {
+            const count = getChildrenCount(testNode);
 
-        for (let i = 0; i < count; i += 2) {
-            if (i > 0) {
-                compiler
-                    .outdent()
-                    .write('}\n')
-                    .write('else if (this.evaluate(')
-                ;
-            } else {
-                compiler
-                    .write('if (this.evaluate(')
-                ;
+            let index: number = 0;
+
+            while (index < count) {
+                const condition = testNode.children[index];
+                const conditionResult = await condition.execute(executionContext);
+
+                if (evaluate(conditionResult)) {
+                    // the condition is satisfied, we execute the belonging body and return the result
+                    const body = testNode.children[index + 1];
+
+                    return body.execute(executionContext);
+                }
+
+                index += 2;
             }
 
-            compiler
-                .subcompile(this.getNode('tests').getNode(i))
-                .raw(")) {\n")
-                .indent()
-                .subcompile(this.getNode('tests').getNode(i + 1))
-            ;
+            if (elseNode !== null) {
+                return elseNode.execute(executionContext);
+            }
         }
+    };
 
-        if (this.hasNode('else')) {
-            compiler
-                .outdent()
-                .write("}\n")
-                .write("else {\n")
-                .indent()
-                .subcompile(this.getNode('else'))
-            ;
-        }
-
-        compiler
-            .outdent()
-            .write("}\n");
-    }
+    return node;
 }

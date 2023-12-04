@@ -8,12 +8,12 @@ import {iterate} from "./iterate";
  * @param {boolean} preserveKeys
  * @returns {Promise<Array<Map<any, any>>>}
  */
-export async function chunk(hash: any, size: number, preserveKeys: boolean = false): Promise<Array<Map<any, any>>> {
+export async function chunk(hash: any, size: number, preserveKeys: boolean): Promise<Array<Map<any, any>>> {
     let result: Array<Map<any, any>> = [];
     let count = 0;
-    let currentMap: Map<any, any>;
+    let currentMap: Map<any, any> | null;
 
-   await iterate(hash, (key: any, value: any) => {
+    await iterate(hash, (key: any, value: any) => {
         if (!currentMap) {
             currentMap = new Map();
 

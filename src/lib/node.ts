@@ -1,202 +1,146 @@
-import {TwingCompiler} from "./compiler";
-import {TwingNodeType} from "./node-type";
+import type {TwingExpressionNode} from "./node/expression";
+import type {TwingPrintNode} from "./node/output/print";
+import type {TwingBlockReferenceNode} from "./node/output/block-reference";
+import type {TwingTextNode} from "./node/output/text";
+import type {TwingAutoEscapeNode} from "./node/auto-escape";
+import type {TwingBodyNode} from "./node/body";
+import type {TwingCheckSecurityNode} from "./node/check-security";
+import type {TwingCheckToStringNode} from "./node/check-to-string";
+import type {TwingCommentNode} from "./node/comment";
+import type {TwingDeprecatedNode} from "./node/deprecated";
+import type {TwingDoNode} from "./node/do";
+import type {TwingEmbedNode} from "./node/include/embed";
+import type {TwingIncludeNode} from "./node/include/include";
+import type {TwingFlushNode} from "./node/flush";
+import type {TwingForNode} from "./node/for";
+import type {TwingForLoopNode} from "./node/for-loop";
+import type {TwingImportNode} from "./node/import";
+import type {TwingLineNode} from "./node/line";
+import type {TwingMacroNode} from "./node/macro";
+import type {TwingTemplateNode} from "./node/template";
+import type {TwingBlockNode} from "./node/block";
+import type {TwingTraitNode} from "./node/trait";
+import type {TwingSetNode} from "./node/set";
+import type {TwingVerbatimNode} from "./node/output/verbatim";
+import type {TwingSandboxNode} from "./node/sandbox";
+import type {TwingSpacelessNode} from "./node/output/spaceless";
+import type {TwingWithNode} from "./node/with";
+import type {TwingIfNode} from "./node/if";
+import type {TwingMethodCallNode} from "./node/expression/method-call";
+import type {TwingEscapeNode} from "./node/expression/escape";
+import type {TwingApplyNode} from "./node/apply";
+import type {TwingExecutionContext} from "./execution-context"; // todo: change
 
-const var_export = require('locutus/php/var/var_export');
+export type {TwingExecutionContext} from "./execution-context"; // todo: change
 
-export class TwingNode {
-    protected nodes: Map<number | string, TwingNode>;
-    protected attributes: Map<string, any>;
-    protected lineno: number;
-    protected columnno: number;
-    protected tag: string;
-    private name: string = null;
+export type TwingNode =
+    | TwingApplyNode
+    | TwingAutoEscapeNode
+    | TwingBlockNode
+    | TwingBlockReferenceNode
+    | TwingBodyNode
+    | TwingCheckSecurityNode
+    | TwingCheckToStringNode
+    | TwingCommentNode
+    | TwingDeprecatedNode
+    | TwingDoNode
+    | TwingEmbedNode
+    | TwingEscapeNode
+    | TwingExpressionNode
+    | TwingFlushNode
+    | TwingForLoopNode
+    | TwingForNode
+    | TwingIfNode
+    | TwingImportNode
+    | TwingIncludeNode
+    | TwingLineNode
+    | TwingMacroNode
+    | TwingMethodCallNode
+    | TwingTemplateNode
+    | TwingPrintNode
+    | TwingSandboxNode
+    | TwingSetNode
+    | TwingSpacelessNode
+    | TwingTextNode
+    | TwingTraitNode
+    | TwingVerbatimNode
+    | TwingWithNode
+    ;
 
-    /**
-     * Constructor.
-     *
-     * The nodes are automatically made available as properties ($this->node).
-     * The attributes are automatically made available as array items ($this['name']).
-     *
-     * @param nodes Map<string | number, TwingNode>  A map of named nodes
-     * @param attributes Map<string, any> A map of attributes (should not be nodes)
-     * @param lineno number The line number
-     * @param columnno number The column number
-     * @param tag string The tag name associated with the Node
-     */
-    constructor(nodes: Map<string | number, TwingNode> = new Map(), attributes: Map<string, any> = new Map(), lineno: number = 0, columnno: number = 0, tag: string = null) {
-        this.nodes = nodes;
-        this.attributes = attributes;
-        this.lineno = lineno;
-        this.columnno = columnno;
-        this.tag = tag;
-    }
+export type TwingNodeType<T> = T extends TwingBaseNode<infer Type, any, any> ? Type : never;
+export type TwingNodeAttributes<T> = T extends TwingBaseNode<any, infer Attributes, any> ? Attributes : never;
+export type TwingNodeChildren<T> = T extends TwingBaseNode<any, any, infer Children> ? Children : never;
 
-    /**
-     * @returns {TwingNode}
-     */
-    clone(): TwingNode {
-        let result: TwingNode = Reflect.construct(this.constructor, []);
+export type TwingBaseNodeAttributes = Record<never, never>;
+export type TwingBaseNodeChildren = Record<string, TwingBaseNode>;
 
-        for (let [name, node] of this.getNodes()) {
-            result.setNode(name as string, node.clone());
-        }
+export interface TwingBaseNode<
+    Type extends string | null = any,
+    Attributes extends TwingBaseNodeAttributes = TwingBaseNodeAttributes,
+    Children extends TwingBaseNodeChildren = TwingBaseNodeChildren
+> {
+    readonly attributes: Attributes;
+    readonly children: Children;
+    readonly column: number;
+    readonly isACaptureNode: boolean;
+    readonly isAnOutputNode: boolean;
+    readonly line: number;
+    readonly tag: string | null;
+    readonly type: Type;
 
-        for (let [name, node] of this.attributes) {
-            if (node instanceof TwingNode) {
-                node = node.clone();
-            }
+    execute(executionContext: TwingExecutionContext): Promise<any>;
 
-            result.setAttribute(name, node);
-        }
-
-        result.lineno = this.lineno;
-        result.columnno = this.columnno;
-        result.tag = this.tag;
-
-        return result;
-    }
-
-    toString() {
-        let attributes = [];
-
-        for (let [name, value] of this.attributes) {
-            let attributeRepr: string;
-
-            if (value instanceof TwingNode) {
-                attributeRepr = '' + value.toString();
-            } else {
-                attributeRepr = '' + var_export(value, true);
-            }
-
-            attributes.push(`${name}: ${attributeRepr.replace(/\n/g, '')}`);
-        }
-
-        attributes.push(`line: ${this.getTemplateLine()}`);
-        attributes.push(`column: ${this.getTemplateColumn()}`);
-
-        let repr = [this.constructor.name + '(' + attributes.join(', ')];
-
-        if (this.nodes.size > 0) {
-            for (let [name, node] of this.nodes) {
-                let len = ('' + name).length + 4;
-                let nodeRepr = [];
-
-                for (let line of node.toString().split('\n')) {
-                    nodeRepr.push(' '.repeat(len) + line);
-                }
-
-                repr.push(`  ${name}: ${nodeRepr.join('\n').trimLeft()}`);
-            }
-
-            repr.push(')');
-        } else {
-            repr[0] += ')';
-        }
-
-        return repr.join('\n');
-    }
-
-    get type(): TwingNodeType {
-        return null;
-    }
-
-    is(type: TwingNodeType): boolean {
-        return this.type === type;
-    }
-
-    compile(compiler: TwingCompiler): void {
-        for (let node of this.nodes.values()) {
-            node.compile(compiler);
-        }
-    }
-
-    getTemplateLine() {
-        return this.lineno;
-    }
-
-    getTemplateColumn() {
-        return this.columnno;
-    }
-
-    getNodeTag() {
-        return this.tag;
-    }
-
-    /**
-     * @returns booleqn
-     */
-    hasAttribute(name: string) {
-        return this.attributes.has(name);
-    }
-
-    /**
-     *
-     * @param {string} name
-     * @returns any
-     */
-    getAttribute(name: string): any {
-        if (!this.attributes.has(name)) {
-            throw new Error(`Attribute "${name}" does not exist for Node "${this.constructor.name}".`);
-        }
-
-        return this.attributes.get(name);
-    }
-
-    /**
-     * @param {string} name
-     * @param {*} value
-     */
-    setAttribute(name: string, value: any) {
-        this.attributes.set(name, value);
-    }
-
-    removeAttribute(name: string) {
-        this.attributes.delete(name);
-    }
-
-    /**
-     * @return bool
-     */
-    hasNode(name: any) {
-        return this.nodes.has(name);
-    }
-
-    /**
-     * @return TwingNode
-     */
-    getNode(name: string | number): TwingNode {
-        if (!this.nodes.has(name)) {
-            throw new Error(`Node "${name}" does not exist for Node "${this.constructor.name}".`);
-        }
-
-        return this.nodes.get(name);
-    }
-
-    setNode(name: string | number, node: TwingNode) {
-        this.nodes.set(name, node);
-    }
-
-    removeNode(name: string | number) {
-        this.nodes.delete(name);
-    }
-
-    count() {
-        return this.nodes.size;
-    }
-
-    setTemplateName(name: string) {
-        this.name = name;
-
-        for (let node of this.nodes.values()) {
-            node.setTemplateName(name);
-        }
-    }
-
-    getTemplateName() {
-        return this.name;
-    }
-
-    getNodes() {
-        return this.nodes;
-    }
+    is<Type extends string>(type: Type): this is TwingNode & {
+        type: Type;
+    };
 }
+
+type KeysOf<T> = T extends T ? keyof T : never;
+
+export const getChildren = <
+    T extends TwingBaseNode
+>(node: T): Array<[KeysOf<TwingNodeChildren<T>>, TwingNodeChildren<T>[any]]> => {
+    return Object.entries(node.children) as Array<[KeysOf<TwingNodeChildren<T>>, TwingNodeChildren<T>[any]]>;
+};
+
+export const getChildrenCount = (
+    node: TwingBaseNode
+): number => {
+    return Object.keys(node.children).length;
+};
+
+export const createBaseNode = <
+    Type extends string | null,
+    Attributes extends TwingBaseNodeAttributes,
+    Children extends TwingBaseNodeChildren
+>(
+    type: Type,
+    attributes: Attributes = {} as Attributes,
+    children: Children = {} as Children,
+    line: number = 0,
+    column: number = 0,
+    tag: string | null = null
+): TwingBaseNode<Type, Attributes, Children> => {
+    const node: TwingBaseNode<Type, Attributes, Children> = {
+        attributes,
+        children,
+        column,
+        line,
+        tag,
+        isACaptureNode: false,
+        isAnOutputNode: false,
+        execute: async (executionContext) => {
+            const output: Array<any> = [];
+
+            for (const [, child] of getChildren(node)) {
+                output.push(await child.execute(executionContext));
+            }
+
+            return output;
+        },
+        is: (aType) => (aType as string) === node.type,
+        type
+    };
+
+    return node;
+};

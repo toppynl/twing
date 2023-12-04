@@ -1,21 +1,19 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('flush');
-
-export class TwingNodeFlush extends TwingNode {
-    constructor(lineno: number, columnno: number, tag: string) {
-        super(new Map(), new Map(), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write("outputBuffer.flush();\n")
-        ;
-    }
+export interface TwingFlushNode extends TwingBaseNode<"flush"> {
 }
+
+export const createFlushNode = (
+    line: number,
+    column: number,
+    tag?: string
+): TwingFlushNode => {
+    return {
+        ...createBaseNode("flush", {}, {}, line, column, tag),
+        execute: ({outputBuffer}) => {
+            outputBuffer.flush();
+
+            return Promise.resolve();
+        }
+    }
+};

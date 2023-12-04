@@ -1,12 +1,13 @@
-import {TwingMarkup} from "../../../markup";
+import {createMarkup, TwingMarkup} from "../../../markup";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Marks a variable as being safe.
  *
- * @param {string | TwingMarkup} string A variable
+ * @param {string | TwingMarkup} value A variable
  *
  * @return {Promise<string>}
  */
-export function raw(string: string | TwingMarkup | null): Promise<string> {
-    return Promise.resolve(string !== null ? string.toString() : '');
-}
+export const raw: TwingCallable = (_executionContext, value: string | TwingMarkup | null): Promise<TwingMarkup> => {
+    return Promise.resolve(createMarkup(value !== null ? value.toString() : ''));
+};

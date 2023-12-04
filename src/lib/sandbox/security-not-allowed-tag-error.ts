@@ -1,16 +1,23 @@
-import {TwingSandboxSecurityError} from "./security-error";
-import {TwingSource} from "../source";
+import {BaseSandboxSecurityError, createBaseSandboxSecurityError, TwingSandboxSecurityError} from "./security-error";
+import {TwingSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
+import {ErrorLocation} from "../error/base";
 
-export class TwingSandboxSecurityNotAllowedTagError extends TwingSandboxSecurityError {
-    private readonly tagName: string;
-
-    constructor(message: string, tagName: string, lineno: number = -1, source: TwingSource = null) {
-        super(message, lineno, source);
-        this.tagName = tagName;
-        this.name = 'TwingSandboxSecurityNotAllowedTagError';
-    }
-
-    getTagName() {
-        return this.tagName;
-    }
+export interface TwingSandboxSecurityNotAllowedTagError extends BaseSandboxSecurityError {
+    readonly tagName: string;
 }
+
+export const createSandboxSecurityNotAllowedTagError = (message: string, tagName: string, location?: ErrorLocation, source?: string): TwingSandboxSecurityNotAllowedPropertyError => {
+    const error = createBaseSandboxSecurityError(message, location, source);
+
+    Error.captureStackTrace(error, createSandboxSecurityNotAllowedTagError);
+
+    return Object.assign(error, {
+        get tagName() {
+            return tagName;
+        }
+    });
+};
+
+export const isASandboxSecurityNotAllowedTagError = (candidate: TwingSandboxSecurityError): candidate is TwingSandboxSecurityNotAllowedTagError => {
+    return (candidate as TwingSandboxSecurityNotAllowedTagError).tagName !== undefined;
+};

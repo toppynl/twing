@@ -1,17 +1,34 @@
-import {isMap} from "../../../helpers/is-map";
+import {isAMapLike} from "../../../helpers/map-like";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Cycles over a value.
  *
- * @param {Map<any, any> | any} value
- * @param {number} position The cycle position
+ * @param _executionContext
+ * @param value
+ * @param position The cycle position
  *
- * @returns {Promise<any>} The value at position
+ * @returns The value at position
  */
-export function cycle(value: Map<any, any> | any, position: number): Promise<any> {
-    if (!isMap(value)) {
+export const cycle: TwingCallable<[
+    value: Map<any, any> | Array<any> | string | boolean | null,
+    position: number
+]> = (_executionContext, value, position) => {
+    if (!isAMapLike(value) && !Array.isArray(value)) {
         return Promise.resolve(value);
     }
 
-    return Promise.resolve([...(value as Map<any, any>).values()][position % (value as Map<any, any>).size]);
+    let values: Array<any>;
+    let size: number;
+
+    if (Array.isArray(value)) {
+        values = value;
+        size = value.length;
+    }
+    else {
+        values = [...value.values()];
+        size = value.size;
+    }
+    
+    return Promise.resolve(values[position % size]);
 }

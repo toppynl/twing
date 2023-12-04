@@ -1,66 +1,63 @@
-import {iteratorToMap} from "./helpers/iterator-to-map";
+export interface TwingContext<K, V> {
+    readonly size: number;
 
-export class TwingContext<K, V> {
-    private readonly _container: Map<any, any>;
-    private readonly _proxy: any;
+    [Symbol.iterator](): IterableIterator<[K, V]>;
 
-    constructor(container: Map<K, V> = new Map()) {
-        this._container = container;
-        this._proxy = new Proxy(this._container, {
-            set: (target: Map<any, any>, key: string | number | symbol, value: any, receiver: any): boolean => {
-                target.set(key, value);
+    clone(): TwingContext<K, V>;
 
-                return true;
-            },
-            get(target: Map<any, any>, key: string | number | symbol, receiver: any): any {
-                return target.get(key);
-            }
-        });
-    }
+    delete(key: K): boolean;
 
-    get proxy() {
-        return this._proxy;
-    }
+    entries(): IterableIterator<[K, V]>;
 
-    [Symbol.iterator](): IterableIterator<[K, V]> {
-        return this._container[Symbol.iterator]();
-    }
+    get(key: K): V | undefined;
 
-    entries(): IterableIterator<[K, V]> {
-        return this._container.entries();
-    }
+    has(key: K): boolean;
 
-    has(key: K): boolean {
-        return this._container.has(key);
-    }
-
-    set(key: K, value: V): this {
-        this._container.set(key, value);
-
-        return this;
-    }
-
-    get(key: K): V {
-        let value: any = this._container.get(key);
-
-        if (Array.isArray(value)) {
-            value = iteratorToMap(value);
-        }
-
-        return value;
-    }
-
-    delete(key: K): boolean {
-        return this._container.delete(key);
-    }
-
-    clone(): TwingContext<K, V> {
-        let clonedContainer: Map<K, V> = new Map();
-
-        for (let [key, value] of this._container) {
-            clonedContainer.set(key, value);
-        }
-
-        return new TwingContext<K, V>(clonedContainer);
-    }
+    set(key: K, value: V): TwingContext<K, V>;
+    
+    values(): IterableIterator<V>;
 }
+
+export const createContext = <K extends string, V>(
+    container: Map<K, V> = new Map()
+): TwingContext<K, V> => {
+    const context: TwingContext<K, V> = {
+        get size() {
+            return container.size;
+        },
+        [Symbol.iterator]: () => {
+            return container[Symbol.iterator]();
+        },
+        clone: () => {
+            const clonedContainer: Map<K, V> = new Map();
+
+            for (const [key, value] of container) {
+                clonedContainer.set(key, value);
+            }
+
+            return createContext(clonedContainer);
+        },
+        delete: (key) => {
+            return container.delete(key);
+        },
+        entries: () => {
+            return container.entries();
+        },
+        get: (key) => {
+            return container.get(key);
+        },
+        has: (key) => {
+            return container.has(key);
+        },
+        set: (key, value) => {
+            container.set(key, value);
+
+            return context;
+        },
+        values: () => {
+            return container.values();
+        }
+    };
+
+    return context;
+};

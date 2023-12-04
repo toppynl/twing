@@ -1,0 +1,9 @@
+import "./batch";
+import "./batch_float";
+import "./batch_on_undefined";
+import "./batch_with_empty_fill";
+import "./batch_with_exact_elements";
+import "./batch_with_fill";
+import "./batch_with_keys";
+import "./batch_with_more_elements";
+import "./batch_with_zero_elements";

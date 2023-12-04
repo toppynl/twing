@@ -1,8 +1,9 @@
-import {TwingErrorRuntime} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
+import {TwingCallable} from "../../../callable-wrapper";
 
-const locutusRound = require('locutus/php/math/round');
-const ceil = require('locutus/php/math/ceil');
-const floor = require('locutus/php/math/floor');
+const phpRound = require('locutus/php/math/round');
+const phpCeil = require('locutus/php/math/ceil');
+const phpFloor = require('locutus/php/math/floor');
 
 /**
  * Rounds a number.
@@ -13,25 +14,31 @@ const floor = require('locutus/php/math/floor');
  *
  * @returns {Promise<number>} The rounded number
  */
-export function round(value: any, precision = 0, method = 'common'): Promise<number> {
-    let _do = (): number => {
+export const round: TwingCallable = (_executionContext, value: any, precision: number, method: string): Promise<number> => {
+    const _do = (): number => {
         if (method === 'common') {
-            return locutusRound(value, precision);
+            return phpRound(value, precision);
         }
 
         if (method !== 'ceil' && method !== 'floor') {
-            throw new TwingErrorRuntime('The round filter only supports the "common", "ceil", and "floor" methods.');
+            throw createRuntimeError('The round filter only supports the "common", "ceil", and "floor" methods.');
         }
 
-        let intermediateValue = value * Math.pow(10, precision);
-        let intermediateDivider = Math.pow(10, precision);
+        const intermediateValue = value * Math.pow(10, precision);
+        const intermediateDivider = Math.pow(10, precision);
 
         if (method === 'ceil') {
-            return ceil(intermediateValue) / intermediateDivider;
+            return phpCeil(intermediateValue) / intermediateDivider;
         } else {
-            return floor(intermediateValue) / intermediateDivider;
+            return phpFloor(intermediateValue) / intermediateDivider;
         }
     };
 
-    return Promise.resolve(_do());
-}
+    try {
+        const result = _do();
+
+        return Promise.resolve(result);
+    } catch (error: any) {
+        return Promise.reject(error);
+    }
+};

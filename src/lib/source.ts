@@ -1,23 +1,18 @@
-export class TwingSource {
-    private readonly code: string;
-    private readonly name: string;
-    private readonly resolvedName: string;
-
-    constructor(code: string, name: string, resolvedName?: string) {
-        this.code = code;
-        this.name = name;
-        this.resolvedName = resolvedName || name;
-    }
-
-    getCode() {
-        return this.code;
-    }
-
-    getName() {
-        return this.name;
-    }
-
-    getResolvedName() {
-        return this.resolvedName;
-    }
+export interface TwingSource {
+    readonly code: string;
+    readonly name: string;
 }
+
+export const createSource = (
+    name: string,
+    code: string
+): TwingSource => {
+    return {
+        get code() {
+            return code;
+        },
+        get name() {
+            return name;
+        }
+    };
+};

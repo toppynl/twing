@@ -1,61 +1,46 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingCompiler} from "../../compiler";
-import {TwingNode} from "../../node";
-import {TwingNodeType} from "../../node-type";
+import type {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes} from "../expression";
+import type {TwingBaseNode} from "../../node";
+import type {TwingAssignmentNode} from "./assignment";
+import {createBaseExpressionNode} from "../expression";
 
-export const type = new TwingNodeType('expression_arrow_function');
+export interface TwingArrowFunctionNode extends TwingBaseExpressionNode<"arrow_function", TwingBaseExpressionNodeAttributes, {
+    expr: TwingBaseExpressionNode;
+    names: TwingBaseNode<any, any, Record<string, TwingAssignmentNode>>;
+}> {
 
-/**
- * Represents an arrow function.
- */
-export class TwingNodeExpressionArrowFunction extends TwingNodeExpression {
-    constructor(expr: TwingNodeExpression, names: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map([
-            ['expr', expr],
-            ['names', names]
-        ]);
-
-        super(nodes, new Map(), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler.raw('async (');
-
-        let i: number = 0;
-
-        for (let [k, name] of this.getNode('names').getNodes()) {
-            if (i > 0) {
-                compiler.raw(', ');
-            }
-
-            compiler
-                .raw('$__')
-                .raw(name.getAttribute('name'))
-                .raw('__');
-
-            i++;
-        }
-
-        compiler
-            .raw(') => {')
-        ;
-
-        for (let [k, name] of this.getNode('names').getNodes()) {
-            compiler
-                .raw('context.proxy[\'')
-                .raw(name.getAttribute('name'))
-                .raw('\'] = $__')
-                .raw(name.getAttribute('name'))
-                .raw('__; ');
-        }
-
-        compiler
-            .raw('return ')
-            .subcompile(this.getNode('expr'))
-            .raw(';}');
-    }
 }
+
+export const createArrowFunctionNode = (
+    expr: TwingBaseExpressionNode,
+    names: TwingBaseNode<any, any, Record<any, TwingAssignmentNode>>,
+    line: number,
+    column: number
+): TwingArrowFunctionNode => {
+    const baseNode = createBaseExpressionNode("arrow_function", {}, {
+        expr,
+        names
+    }, line, column);
+
+    return {
+        ...baseNode,
+        execute: (executionContext) => {
+            const {context} = executionContext;
+            const {expr} = baseNode.children;
+            const assignmentNodes = Object.values(baseNode.children.names.children);
+            
+            return Promise.resolve((...functionArgs: Array<any>): Promise<any> => {
+                let index = 0;
+
+                for (const assignmentNode of assignmentNodes) {
+                    const {name} = assignmentNode.attributes;
+
+                    context.set(name, functionArgs[index]);
+
+                    index++;
+                }
+                
+                return expr.execute(executionContext);
+            });
+        }
+    };
+};

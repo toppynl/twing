@@ -1,15 +1,13 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import type {TwingBaseBinaryNode} from "../binary";
+import {createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_add');
+export const addNodeType = "add";
 
-export class TwingNodeExpressionBinaryAdd extends TwingNodeExpressionBinary {
-    operator(compiler: TwingCompiler): TwingCompiler {
-        return compiler.raw('+');
-    }
-
-    get type() {
-        return type;
-    }
+export interface TwingAddNode extends TwingBaseBinaryNode<typeof addNodeType> {
 }
+
+export const createAddNode = createBinaryNodeFactory<TwingAddNode>(addNodeType, {
+    execute: async (left, right, executionContext) => {
+        return await left.execute(executionContext) + await right.execute(executionContext);
+    }
+});

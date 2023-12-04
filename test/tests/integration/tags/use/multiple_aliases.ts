@@ -1,0 +1,39 @@
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"use" tag';
+    }
+
+    getTemplates() {
+        return {
+            'bar.twig': `
+{% block content 'bar' %}
+{% block bar 'bar' %}`,
+            'foo.twig': `
+{% block content 'foo' %}
+{% block foo 'foo' %}`,
+            'index.twig': `
+{% use "foo.twig" with content as foo_content, foo as foo_foo %}
+{% use "bar.twig" %}
+
+{{ block('content') }}
+{{ block('foo_foo') }}
+{{ block('bar') }}
+{{ block('foo_content') }}`
+        };
+    }
+
+    getExpected() {
+        return `
+bar
+foo
+bar
+foo
+`;
+    }
+
+}
+
+runTest(createIntegrationTest(new Test));

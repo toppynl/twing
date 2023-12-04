@@ -1,27 +1,33 @@
-import {TwingEnvironment} from "../../../environment";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
-import {slice as sliceHelper} from "../../../helpers/slice";
+import {sliceMap} from "../../../helpers/slice-map";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Slices a variable.
  *
+ * @param _executionContext
  * @param item A variable
- * @param {number} start Start of the slice
- * @param {number} length Size of the slice
- * @param {boolean} preserveKeys Whether to preserve key or not (when the input is an object)
+ * @param start Start of the slice
+ * @param length Size of the slice
+ * @param preserveKeys Whether to preserve key or not (when the input is an object)
  *
  * @returns {Promise<string | Map<any, any>>} The sliced variable
  */
-export function slice(item: any, start: number, length: number = null, preserveKeys: boolean = false): Promise<string | Map<any, any>> {
+export const slice: TwingCallable<[
+    item: any,
+    start: number,
+    length: number | null,
+    preserveKeys: boolean
+], string | Map<any, any>> = (_executionContext, item, start, length, preserveKeys) => {
     if (isTraversable(item)) {
-        let iterableItem = iteratorToMap(item);
+        const iterableItem = iteratorToMap(item);
 
         if (length === null) {
             length = iterableItem.size - start;
         }
 
-        return Promise.resolve(sliceHelper(iterableItem, start, length, preserveKeys));
+        return Promise.resolve(sliceMap(iterableItem, start, length, preserveKeys));
     }
 
     item = '' + (item ? item : '');
@@ -31,4 +37,4 @@ export function slice(item: any, start: number, length: number = null, preserveK
     }
 
     return Promise.resolve(item.substr(start, length));
-}
+};

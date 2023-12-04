@@ -1,36 +1,31 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
 
-export const type = new TwingNodeType('sandbox');
+export const sandboxNodeType = "sandbox";
 
-export class TwingNodeSandbox extends TwingNode {
-    constructor(body: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        super(new Map([['body', body]]), new Map(), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write('await (async () => {\n')
-            .indent()
-            .write('let alreadySandboxed = this.environment.isSandboxed();\n')
-            .write("if (!alreadySandboxed) {\n")
-            .indent()
-            .write("this.environment.enableSandbox();\n")
-            .outdent()
-            .write("}\n")
-            .subcompile(this.getNode('body'))
-            .write("if (!alreadySandboxed) {\n")
-            .indent()
-            .write("this.environment.disableSandbox();\n")
-            .outdent()
-            .write("}\n")
-            .outdent()
-            .write("})();\n")
-        ;
-    }
+export interface TwingSandboxNode extends TwingBaseNode<typeof sandboxNodeType, TwingBaseNodeAttributes, {
+    body: TwingNode;
+}> {
 }
+
+export const createSandboxNode = (
+    body: TwingNode,
+    line: number,
+    column: number,
+    tag: string
+): TwingSandboxNode => {
+    const baseNode = createBaseNode(sandboxNodeType, {}, {
+        body
+    }, line, column, tag);
+
+    return {
+        ...baseNode,
+        execute: (executionContext) => {
+            const {body} = baseNode.children;
+
+            return body.execute({
+                ...executionContext,
+                sandboxed: true
+            });
+        }
+    };
+};

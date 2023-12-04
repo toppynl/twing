@@ -1,8 +1,9 @@
-import {TwingErrorRuntime} from "../../../error/runtime";
+import {createRuntimeError} from "../../../error/runtime";
+import {TwingCallable} from "../../../callable-wrapper";
 
-const locutusTrim = require('locutus/php/strings/trim');
-const ltrim = require('locutus/php/strings/ltrim');
-const rtrim = require('locutus/php/strings/rtrim');
+const phpTrim = require('locutus/php/strings/trim');
+const phpLeftTrim = require('locutus/php/strings/ltrim');
+const phpRightTrim = require('locutus/php/strings/rtrim');
 
 /**
  * Returns a trimmed string.
@@ -11,23 +12,27 @@ const rtrim = require('locutus/php/strings/rtrim');
  *
  * @throws TwingErrorRuntime When an invalid trimming side is used (not a string or not 'left', 'right', or 'both')
  */
-export function trim(string: string, characterMask: string = null, side: string = 'both'): Promise<string> {
-    let _do = (): string => {
+export const trim: TwingCallable = (_executionContext, string: string, characterMask: string | null, side: string): Promise<string> => {
+    const _do = (): string => {
         if (characterMask === null) {
             characterMask = " \t\n\r\0\x0B";
         }
 
         switch (side) {
             case 'both':
-                return locutusTrim(string, characterMask);
+                return phpTrim(string, characterMask);
             case 'left':
-                return ltrim(string, characterMask);
+                return phpLeftTrim(string, characterMask);
             case 'right':
-                return rtrim(string, characterMask);
+                return phpRightTrim(string, characterMask);
             default:
-                throw new TwingErrorRuntime('Trimming side must be "left", "right" or "both".');
+                throw createRuntimeError('Trimming side must be "left", "right" or "both".');
         }
     };
 
-    return Promise.resolve(_do());
-}
+    try {
+        return Promise.resolve(_do());
+    } catch (error: any) {
+        return Promise.reject(error);
+    }
+};

@@ -1,25 +1,28 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_ends_with');
+export const endsWithNodeType = "ends_with";
 
-export class TwingNodeExpressionBinaryEndsWith extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
+export interface TwingEndsWithNode extends TwingBaseBinaryNode<typeof endsWithNodeType> {
 
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('await (async () => {')
-            .raw(`let left = `)
-            .subcompile(this.getNode('left'))
-            .raw('; ')
-            .raw(`let right = `)
-            .subcompile(this.getNode('right'))
-            .raw('; ')
-            .raw(`return typeof left === 'string' && typeof right === 'string' && (right.length < 1 || left.endsWith(right));`)
-            .raw('})()')
-        ;
-    }
 }
+
+export const createEndsWithNode = createBinaryNodeFactory<TwingEndsWithNode>(
+    endsWithNodeType,
+    {
+        execute: async (left, right, executionContext) => {
+            const leftValue = await left.execute(executionContext);
+
+            if (typeof leftValue !== "string") {
+                return false;
+            }
+
+            const rightValue = await right.execute(executionContext);
+
+            if (typeof rightValue !== "string") {
+                return false;
+            }
+
+            return rightValue.length < 1 || leftValue.endsWith(rightValue);
+        }
+    }
+);

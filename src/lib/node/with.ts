@@ -1,62 +1,79 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
+import {createRuntimeError} from "../error/runtime";
+import {createContext, TwingContext} from "../context";
+import {mergeIterables} from "../helpers/merge-iterables";
+import {iteratorToMap} from "../helpers/iterator-to-map";
 
-export const type = new TwingNodeType('with');
+export type TwingWithNodeAttributes = TwingBaseNodeAttributes & {
+    only: boolean;
+};
 
-export class TwingNodeWith extends TwingNode {
-    constructor(body: TwingNode, variables: TwingNode, only: boolean, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
+export type TwingWithNodeChildren = {
+    body: TwingNode;
+    variables?: TwingNode;
+};
 
-        nodes.set('body', body);
-
-        if (variables) {
-            nodes.set('variables', variables);
-        }
-
-        super(nodes, new Map([['only', only]]), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        if (this.hasNode('variables')) {
-            compiler
-                .write('{\n')
-                .indent()
-                .write(`let tmp = `)
-                .subcompile(this.getNode('variables'))
-                .raw(";\n")
-                .write(`if (typeof (tmp) !== 'object') {\n`)
-                .indent()
-                .write('throw new this.RuntimeError(\'Variables passed to the "with" tag must be a hash.\', ')
-                .repr(this.getTemplateLine())
-                .raw(", this.source);\n")
-                .outdent()
-                .write("}\n")
-            ;
-
-            if (this.getAttribute('only')) {
-                compiler.write("context = new Map([['_parent', context]]);\n");
-            }
-            else {
-                compiler.write("context.set('_parent', context.clone());\n");
-            }
-
-            compiler
-                .write(`context = new this.Context(this.environment.mergeGlobals(this.merge(context, this.convertToMap(tmp))));\n`)
-                .outdent()
-                .write('}\n\n')
-        }
-        else {
-            compiler.write("context.set('_parent', context.clone());\n");
-        }
-
-        compiler
-            .subcompile(this.getNode('body'))
-            .write("context = context.get('_parent');\n")
-        ;
-    }
+export interface TwingWithNode extends TwingBaseNode<"with", TwingWithNodeAttributes, TwingWithNodeChildren> {
 }
+
+export const createWithNode = (
+    body: TwingNode,
+    variables: TwingNode | null,
+    only: boolean,
+    line: number,
+    column: number,
+    tag: string
+): TwingWithNode => {
+    const children: TwingWithNodeChildren = {
+        body
+    };
+
+    if (variables) {
+        children.variables = variables;
+    }
+
+    const baseNode = createBaseNode("with", {
+        only
+    }, children, line, column, tag);
+
+    const node: TwingWithNode = {
+        ...baseNode,
+        execute: async (executionContext) => {
+            const {template, context} = executionContext;
+            const {variables: variablesNode, body} = baseNode.children;
+            const {only} = baseNode.attributes;
+
+            let scopedContext: TwingContext<any, any>;
+
+            if (variablesNode) {
+                const variables = await variablesNode.execute(executionContext);
+
+                if (typeof variables !== "object") {
+                    throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, node, template.name);
+                }
+
+                if (only) {
+                    scopedContext = createContext();
+                } else {
+                    scopedContext = context.clone();
+                }
+
+                scopedContext = createContext(mergeIterables(
+                    scopedContext,
+                    iteratorToMap(variables)
+                ))
+            } else {
+                scopedContext = context.clone();
+            }
+
+            scopedContext.set('_parent', context.clone());
+
+            await body.execute({
+                ...executionContext,
+                context: scopedContext
+            });
+        }
+    };
+
+    return node;
+};

@@ -1,21 +1,29 @@
-import {TwingSandboxSecurityError} from "./security-error";
-import {TwingSource} from "../source";
+import {
+    BaseSandboxSecurityError,
+    createBaseSandboxSecurityError,
+    TwingSandboxSecurityError
+} from "./security-error";
+import {ErrorLocation} from "../error/base";
 
 /**
  * Exception thrown when a not allowed filter is used in a template.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
  */
-export class TwingSandboxSecurityNotAllowedFilterError extends TwingSandboxSecurityError {
-    private readonly filterName: string;
-
-    constructor(message: string, filterName: string, lineno: number = -1, source: TwingSource = null) {
-        super(message, lineno, source);
-        this.filterName = filterName;
-        this.name = 'TwingSandboxSecurityNotAllowedFilterError';
-    }
-
-    getFilterName() {
-        return this.filterName;
-    }
+export interface TwingSandboxSecurityNotAllowedFilterError extends BaseSandboxSecurityError {
+    readonly filterName: string;
 }
+
+export const createSandboxSecurityNotAllowedFilterError = (message: string, filterName: string, location?: ErrorLocation, source?: string): TwingSandboxSecurityNotAllowedFilterError => {
+    const error = createBaseSandboxSecurityError(message, location, source);
+
+    Error.captureStackTrace(error, createSandboxSecurityNotAllowedFilterError);
+
+    return Object.assign(error, {
+        get filterName() {
+            return filterName;
+        }
+    });
+};
+
+export const isASandboxSecurityNotAllowedFilterError = (candidate: TwingSandboxSecurityError): candidate is TwingSandboxSecurityNotAllowedFilterError => {
+    return (candidate as TwingSandboxSecurityNotAllowedFilterError).filterName !== undefined;
+};

@@ -1,38 +1,26 @@
-import {TwingNodeExpressionFilter} from "./node/expression/filter";
-import {TwingNode} from "./node";
-import {TwingNodeExpressionConstant} from "./node/expression/constant";
 import {
     TwingCallableWrapperOptions,
-    TwingCallableWrapper,
     TwingCallableArgument,
-    TwingCallable
+    TwingCallable, TwingCallableWrapper, createCallableWrapper
 } from "./callable-wrapper";
 
-export type TwingFilterOptions = TwingCallableWrapperOptions & {
-    pre_escape?: string,
-    preserves_safety?: Array<string>
+export type TwingFilterOptions = TwingCallableWrapperOptions;
+
+export interface TwingFilter extends TwingCallableWrapper {
+    
 }
 
-export class TwingFilter extends TwingCallableWrapper<any> {
-    readonly options: TwingFilterOptions;
+export const createFilter = <Callable extends TwingCallable>(
+    name: string,
+    callable: Callable,
+    acceptedArguments: TwingCallableArgument[],
+    options: TwingFilterOptions = {}
+): TwingFilter => {
+    const callableWrapper = createCallableWrapper(name, callable, acceptedArguments, options);
 
-    constructor(name: string, callable: TwingCallable<any>, acceptedArguments: TwingCallableArgument[], options: TwingFilterOptions = {}) {
-        super(name, callable, acceptedArguments);
+    const filter: TwingFilter = {
+        ...callableWrapper
+    };
 
-        this.options.pre_escape = null;
-        this.options.preserves_safety = null;
-        this.options.expression_factory = function (node: TwingNode, filterName: TwingNodeExpressionConstant, methodArguments: TwingNode, lineno: number, columnno: number, tag: string = null) {
-            return new TwingNodeExpressionFilter(node, filterName, methodArguments, lineno, columnno, tag);
-        };
-
-        this.options = Object.assign({}, this.options, options);
-    }
-
-    getPreservesSafety() {
-        return this.options.preserves_safety;
-    }
-
-    getPreEscape() {
-        return this.options.pre_escape;
-    }
-}
+    return filter;
+};

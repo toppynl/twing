@@ -1,0 +1,26 @@
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"include" function with ignore_missing and missing template in included template';
+    }
+
+    getTemplates() {
+        return {
+            'index.twig': `
+{{ include("included.twig", ignore_missing = true) }}
+NOT DISPLAYED
+`,
+            'included.twig': `
+{{ include("DOES NOT EXIST") }}
+`
+        };
+    }
+
+    getExpectedErrorMessage() {
+        return 'TwingRuntimeError: Unable to find template "DOES NOT EXIST" in "included.twig" at line 2, column 4.';
+    }
+}
+
+runTest(createIntegrationTest(new Test()));

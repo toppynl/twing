@@ -1,16 +1,20 @@
-import {TwingMarkup} from "../../../markup";
+import type {TwingMarkup} from "../../../markup";
+import {TwingCallable} from "../../../callable-wrapper";
 
-const ucwords = require('locutus/php/strings/ucwords');
+const phpUcwords = require('locutus/php/strings/ucwords');
 
 /**
  * Returns a title-cased string.
  *
- * @param {string | TwingMarkup} string A string
+ * @param _executionContext
+ * @param string A string
  *
- * @returns {Promise<string>} The title-cased string
+ * @returns The title-cased string
  */
-export function title(string: string | TwingMarkup): Promise<string> {
-    let result: string = ucwords(string.toString().toLowerCase());
+export const title: TwingCallable<[
+    string: string | TwingMarkup
+], string> = (_executionContext, string) => {
+    const result: string = phpUcwords(string.toString().toLowerCase());
 
     return Promise.resolve(result);
-}
+};

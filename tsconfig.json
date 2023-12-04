@@ -3,12 +3,14 @@
     "target": "es2017",
     "module": "commonjs",
     "moduleResolution": "node",
-    "noImplicitAny": true,
     "outDir": "dist",
-    "removeComments": false
+    "removeComments": false,
+    "strict": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true
   },
   "include": [
-    "src/**/*"
+    "src/lib.ts"
   ],
   "exclude": []
 }

@@ -1,79 +1,94 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingNodeExpressionConstant, type as constantType} from "./constant";
-import {TwingCompiler} from "../../compiler";
-import {push} from "../../helpers/push";
-import {ctypeDigit} from "../../helpers/ctype-digit";
-import {TwingNodeType} from "../../node-type";
+import {
+    TwingBaseExpressionNode,
+    TwingBaseExpressionNodeAttributes,
+    createBaseExpressionNode
+} from "../expression";
+import {TwingConstantNode, createConstantNode} from "./constant";
+import {pushToRecord} from "../../helpers/record";
+import {spreadNodeType} from "./spread";
 
-let array_chunk = require('locutus/php/array/array_chunk');
+const array_chunk = require('locutus/php/array/array_chunk');
 
-export const type = new TwingNodeType('expression_array');
-
-export class TwingNodeExpressionArray extends TwingNodeExpression {
-    private index: number;
-
-    constructor(elements: Map<string | number, TwingNodeExpression>, lineno: number, columno: number) {
-        super(elements, new Map(), lineno, columno);
-
-        this.index = -1;
-
-        for (let pair of this.getKeyValuePairs()) {
-            let expression = pair.key;
-
-            if ((expression.is(constantType)) && (ctypeDigit('' + expression.getAttribute('value'))) && (expression.getAttribute('value') > this.index)) {
-                this.index = expression.getAttribute('value');
-            }
-        }
-    }
-
-    get type() {
-        return type;
-    }
-
-    getKeyValuePairs(): Array<{ key: TwingNodeExpression, value: TwingNodeExpression }> {
-        let pairs: Array<{ key: TwingNodeExpression, value: TwingNodeExpression }> = [];
-
-        array_chunk(Array.from(this.nodes.values()), 2).forEach(function (pair: Array<TwingNodeExpression>) {
-            pairs.push({
-                key: pair[0],
-                value: pair[1]
-            });
-        });
-
-        return pairs;
-    }
-
-    addElement(value: TwingNodeExpression, key: TwingNodeExpression = null) {
-        if (key === null) {
-            this.index++;
-
-            key = new TwingNodeExpressionConstant(this.index, value.getTemplateLine(), value.getTemplateColumn());
-        }
-
-        push(this.nodes, key);
-        push(this.nodes, value);
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler.raw('new Map([');
-
-        let first = true;
-
-        for (let pair of this.getKeyValuePairs()) {
-            if (!first) {
-                compiler.raw(', ');
-            }
-
-            first = false;
-
-            compiler
-                .raw('[')
-                .subcompile(pair.key)
-                .raw(', ')
-                .subcompile(pair.value)
-                .raw(']')
-        }
-
-        compiler.raw('])');
-    }
+export interface TwingBaseArrayNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, Record<number, TwingBaseExpressionNode>> {
 }
+
+// todo: find an elegant way to type the items of the array
+export interface TwingArrayNode extends TwingBaseArrayNode<"array"> {
+}
+
+export const getKeyValuePairs = (
+    node: TwingBaseArrayNode<any>
+): Array<{
+    key: TwingConstantNode,
+    value: TwingBaseExpressionNode
+}> => {
+    const chunks: Array<[key: TwingConstantNode, value: TwingBaseExpressionNode]> = array_chunk(Object.values(node.children), 2);
+
+    return chunks.map(([key, value]) => {
+        return {key, value};
+    });
+};
+
+export const createBaseArrayNode = <Type extends string>(
+    type: Type,
+    elements: Array<{
+        key: TwingBaseExpressionNode;
+        value: TwingBaseExpressionNode;
+    }>,
+    line: number,
+    column: number
+): TwingBaseArrayNode<Type> => {
+    const children: TwingBaseArrayNode<any>["children"] = {};
+
+    for (const {key, value} of elements) {
+        pushToRecord(children, key);
+        pushToRecord(children, value);
+    }
+
+    const baseNode = createBaseExpressionNode(type, {}, children, line, column);
+
+    const node: TwingBaseArrayNode<Type> = {
+        ...baseNode
+    };
+
+    return node;
+};
+
+export const createArrayNode = (
+    elements: Array<{
+        key?: TwingBaseExpressionNode;
+        value: TwingBaseExpressionNode;
+    }>,
+    line: number,
+    column: number
+): TwingArrayNode => {
+    let index = 0;
+
+    const baseNode = createBaseArrayNode("array", elements.map(({key, value}) => {
+        return {
+            key: key || createConstantNode(index++, line, column),
+            value
+        };
+    }), line, column);
+
+    return {
+        ...baseNode,
+        execute: async (executionContext) => {
+            const keyValuePairs = getKeyValuePairs(baseNode);
+            const array: Array<any> = [];
+            
+            for (const {value: valueNode} of keyValuePairs) {
+                const value = await valueNode.execute(executionContext);
+                
+                if (valueNode.is(spreadNodeType)) {
+                    array.push(...value);
+                }
+                else {
+                    array.push(value);
+                }
+            }
+            
+            return array;
+        }
+    };
+};

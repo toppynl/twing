@@ -1,19 +1,15 @@
-import {TwingNode} from "../node";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('body');
-
-/**
- * Represents a body node.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-export class TwingNodeBody extends TwingNode {
-    constructor(nodes: Map<any, any> = new Map(), attributes: Map<string, any> = new Map(), lineno: number = 0, columnno: number = 0, tag: string = null) {
-        super(nodes, attributes, lineno, columnno, tag);
-    }
-
-    get type() {
-        return type as any;
-    }
+export interface TwingBodyNode extends TwingBaseNode<"body", TwingBaseNodeAttributes, {
+    content: TwingBaseNode;
+}> {
 }
+
+export const createBodyNode = (
+    content: TwingBaseNode,
+    line: number,
+    column: number,
+    tag?: string
+): TwingBodyNode => createBaseNode("body", {}, {
+    content
+}, line, column, tag);

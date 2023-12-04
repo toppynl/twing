@@ -1,590 +1,920 @@
-import {TwingEnvironment} from "./environment";
-import {TwingTokenStream} from "./token-stream";
-import {TwingNodeBlock} from "./node/block";
-import {TwingTokenParserInterface} from "./token-parser-interface";
-import {TwingNodeVisitorInterface} from "./node-visitor-interface";
-import {TwingErrorSyntax} from "./error/syntax";
-import {TwingNode} from "./node";
-import {TwingNodeText, type as textType} from "./node/text";
-import {TwingNodePrint} from "./node/print";
-import {TwingNodeExpression} from "./node/expression";
-import {TwingNodeBody} from "./node/body";
-import {TwingNodeModule} from "./node/module";
-import {TwingNodeTraverser} from "./node-traverser";
-import {TwingNodeMacro} from "./node/macro";
-import {TwingTokenParser} from "./token-parser";
-import {first} from "./helpers/first";
-import {push} from "./helpers/push";
-import {TwingNodeComment} from "./node/comment";
-import {ctypeSpace} from "./helpers/ctype-space";
-import {TwingNodeExpressionConstant, type as constantType} from "./node/expression/constant";
-import {TwingNodeExpressionBinaryConcat} from "./node/expression/binary/concat";
-import {TwingNodeExpressionAssignName} from "./node/expression/assign-name";
-import {TwingNodeExpressionArrowFunction} from "./node/expression/arrow-function";
-import {TwingNodeExpressionName, type as nameType} from "./node/expression/name";
-import {TwingNodeExpressionParent} from "./node/expression/parent";
-import {TwingNodeExpressionBlockReference} from "./node/expression/block-reference";
-import {TwingNodeExpressionGetAttribute} from "./node/expression/get-attribute";
-import {TwingTemplate} from "./template";
-import {TwingNodeExpressionArray, type as arrayType} from "./node/expression/array";
-import {TwingNodeExpressionMethodCall} from "./node/expression/method-call";
-import {TwingNodeExpressionHash} from "./node/expression/hash";
+import type {TwingTokenStream} from "./token-stream";
+import {TwingTagHandler, TwingTokenParser} from "./tag-handler";
+import {TwingNodeVisitor} from "./node-visitor";
+import {createParsingError, TwingParsingError} from "./error/parsing";
+import {TwingBaseNode, createBaseNode, getChildren} from "./node";
+import {createTextNode, textNodeType} from "./node/output/text";
+import {createPrintNode} from "./node/output/print";
+import {TwingBaseExpressionNode} from "./node/expression";
+import {createBodyNode} from "./node/body";
+import {createTemplateNode, TwingTemplateNode} from "./node/template";
+import {createNodeTraverser} from "./node-traverser";
+import {TwingMacroNode} from "./node/macro";
+import {createCommentNode} from "./node/comment";
+import {isMadeOfWhitespaceOnly} from "./helpers/is-made-of-whitespace-only";
+import {TwingConstantNode, createConstantNode} from "./node/expression/constant";
+import {createConcatenateNode} from "./node/expression/binary/concatenate";
+import {TwingAssignmentNode, createAssignmentNode} from "./node/expression/assignment";
+import {TwingArrowFunctionNode, createArrowFunctionNode} from "./node/expression/arrow-function";
+import {createNameNode, TwingNameNode} from "./node/expression/name";
+import {createParentFunctionNode} from "./node/expression/parent-function";
+import {createBlockFunctionNode} from "./node/expression/block-function";
+import {
+    createAttributeAccessorNode,
+    TwingGetAttributeCallType
+} from "./node/expression/attribute-accessor";
+import {TwingArrayNode, createArrayNode, getKeyValuePairs} from "./node/expression/array";
+import {createMethodCallNode} from "./node/expression/method-call";
+import {createHashNode, hashNodeType, TwingHashNode} from "./node/expression/hash";
 import {TwingTest} from "./test";
-import {TwingNodeExpressionUnaryNot} from "./node/expression/unary/not";
-import {type as negType} from "./node/expression/unary/neg";
-import {type as posType} from "./node/expression/unary/pos";
-import {type as spacelessType} from "./node/spaceless";
-import {type as blockReferenceType} from "./node/block-reference";
-import {TwingNodeExpressionConditional} from "./node/expression/conditional";
-import {TwingOperator, TwingOperatorAssociativity} from "./operator";
-import {namePattern, Token, TokenType} from "twig-lexer";
+import {createNotNode} from "./node/expression/unary/not";
+import {createConditionalNode} from "./node/expression/conditional";
+import {TwingOperator} from "./operator";
+import {namePattern, Token} from "twig-lexer";
 import {typeToEnglish} from "./lexer";
-import {TwingNodeExpressionFunction} from "./node/expression/function";
-import {TwingNodeExpressionFilter} from "./node/expression/filter";
-import * as createHash from "create-hash";
-
-class TwingParserStackEntry {
-    stream: TwingTokenStream;
-    parent: TwingNode;
-    blocks: Map<string, TwingNodeBlock>;
-    blockStack: Array<string>;
-    macros: Map<string, TwingNode>;
-    importedSymbols: Array<Map<string, Map<string, { node: TwingNodeExpression, name: string }>>>;
-    traits: Map<string, TwingNode>;
-    embeddedTemplates: Array<TwingNodeModule>;
-
-    constructor(stream: TwingTokenStream, parent: TwingNode = null, blocks: Map<string, TwingNodeBlock>, blockStack: Array<string>, macros: Map<string, TwingNode>, importedSymbols: Array<Map<string, Map<string, { name: string, node: TwingNodeExpression }>>>, traits: Map<string, TwingNode>, embeddedTemplates: Array<TwingNodeModule>) {
-        this.stream = stream;
-        this.parent = parent;
-        this.blocks = blocks;
-        this.blockStack = blockStack;
-        this.macros = macros;
-        this.importedSymbols = importedSymbols;
-        this.traits = traits;
-        this.embeddedTemplates = embeddedTemplates;
-    }
-}
+import {createFunctionNode} from "./node/expression/call/function";
+import {createFilterNode, TwingFilterNode} from "./node/expression/call/filter";
+import type {TwingTraitNode} from "./node/trait";
+import {pushToRecord} from "./helpers/record";
+import {ArgumentsNode, createArgumentsNode} from "./node/expression/arguments";
+import {TwingFilter} from "./filter";
+import {TwingFunction} from "./function";
+import {TwingCallableWrapper} from "./callable-wrapper";
+import {TwingBlockNode} from "./node/block";
+import {getFunction} from "./helpers/get-function";
+import {getFilter} from "./helpers/get-filter";
+import {getTest as getTestByName} from "./helpers/get-test";
+import {createCoreNodeVisitor} from "./node-visitor/core";
+import {createSandboxNodeVisitor} from "./node-visitor/sandbox";
+import {createTestNode} from "./node/expression/call/test";
+import {positiveNodeType} from "./node/expression/unary/pos";
+import {negativeNodeType} from "./node/expression/unary/neg";
+import {createEscaperNodeVisitor} from "./node-visitor/escaper";
+import {createApplyTagHandler} from "./tag-handler/apply";
+import {createAutoEscapeTagHandler} from "./tag-handler/auto-escape";
+import {createBlockTagHandler} from "./tag-handler/block";
+import {createDeprecatedTagHandler} from "./tag-handler/deprecated";
+import {createDoTagHandler} from "./tag-handler/do";
+import {createEmbedTagHandler} from "./tag-handler/embed";
+import {createExtendsTagHandler} from "./tag-handler/extends";
+import {createFilterTagHandler} from "./tag-handler/filter";
+import {createFlushTagHandler} from "./tag-handler/flush";
+import {createForTagHandler} from "./tag-handler/for";
+import {createFromTagHandler} from "./tag-handler/from";
+import {createIfTagHandler} from "./tag-handler/if";
+import {createImportTagHandler} from "./tag-handler/import";
+import {createIncludeTagHandler} from "./tag-handler/include";
+import {createLineTagHandler} from "./tag-handler/line";
+import {createMacroTagHandler} from "./tag-handler/macro";
+import {createSandboxTagHandler} from "./tag-handler/sandbox";
+import {createSetTagHandler} from "./tag-handler/set";
+import {createSpacelessTagHandler} from "./tag-handler/spaceless";
+import {createUseTagHandler} from "./tag-handler/use";
+import {createVerbatimTagHandler} from "./tag-handler/verbatim";
+import {createWithTagHandler} from "./tag-handler/with";
+import {createSpreadNode} from "./node/expression/spread";
 
 const nameRegExp = new RegExp(namePattern);
 
+type NodeWithName = TwingBaseNode<any, {
+    name: string;
+}>;
+
 type TwingParserImportedSymbolAlias = {
     name: string,
-    node: TwingNodeExpression
+    node: NodeWithName
 };
 type TwingParserImportedSymbolType = Map<string, TwingParserImportedSymbolAlias>;
-type TwingParserImportedSymbol = Map<string, TwingParserImportedSymbolType>;
-
-export type TwingParserOptions = {
-    strict: boolean;
+type TwingParserImportedSymbol = {
+    method: TwingParserImportedSymbolType;
+    template: Array<string>;
 };
 
-export class TwingParser {
-    private stack: Array<TwingParserStackEntry> = [];
-    private stream: TwingTokenStream;
-    private parent: TwingNode;
-    private handlers: Map<string, TwingTokenParserInterface> = null;
-    private visitors: Array<TwingNodeVisitorInterface>;
-    private blocks: Map<string, TwingNodeBody>;
-    private blockStack: Array<string>;
-    private macros: Map<string, TwingNode>;
-    private readonly env: TwingEnvironment;
-    private importedSymbols: Array<TwingParserImportedSymbol>;
-    private traits: Map<string, TwingNode>;
-    private embeddedTemplates: Array<TwingNodeModule> = [];
-    private varNameSalt: number = 0;
-    private embeddedTemplateIndex: number = 1;
-    private unaryOperators: Map<string, TwingOperator>;
-    private binaryOperators: Map<string, TwingOperator>;
+export type TwingParserOptions = {
+    strict?: boolean;
+    level?: 2 | 3
+};
 
-    protected readonly options: TwingParserOptions;
+type ParseTest = [tag: string, test: (token: Token) => boolean];
 
-    constructor(env: TwingEnvironment, options?: TwingParserOptions) {
-        this.env = env;
-        this.unaryOperators = env.getUnaryOperators();
-        this.binaryOperators = env.getBinaryOperators();
-        this.options = Object.assign({}, {
-            strict: true
-        }, options);
+export interface TwingParser {
+    parent: TwingBaseNode | null;
+
+    addImportedSymbol(type: 'template', alias: string): void;
+
+    addImportedSymbol(type: 'method', alias: string, name: string, node: NodeWithName): void;
+
+    addTrait(trait: TwingTraitNode): void;
+
+    embedTemplate(template: TwingTemplateNode): void;
+
+    getBlock(name: string): TwingBlockNode | null;
+
+    getVarName(prefix?: string): string;
+
+    isMainScope(): boolean;
+
+    parse(stream: TwingTokenStream, tag?: string | null, test?: ParseTest[1] | null): TwingTemplateNode;
+
+    parseArguments(stream: TwingTokenStream, namedArguments?: boolean, definition?: boolean, allowArrow?: true): TwingArrayNode;
+
+    parseAssignmentExpression(stream: TwingTokenStream): ArgumentsNode<TwingAssignmentNode>;
+
+    parseExpression(stream: TwingTokenStream, precedence?: number, allowArrow?: true): TwingBaseExpressionNode;
+
+    parseFilterDefinitions(stream: TwingTokenStream): Array<{
+        name: string;
+        arguments: TwingArrayNode;
+    }>;
+
+    parseFilterExpressionRaw(stream: TwingTokenStream, node: TwingBaseExpressionNode, tag?: string | null): TwingFilterNode;
+
+    parseMultiTargetExpression(stream: TwingTokenStream): TwingBaseExpressionNode;
+
+    peekBlockStack(): string;
+
+    popBlockStack(): void;
+
+    popLocalScope(): void;
+
+    pushBlockStack(name: string): void;
+
+    pushLocalScope(): void;
+
+    setBlock(name: string, node: TwingBlockNode): void;
+
+    setMacro(name: string, node: TwingMacroNode): void;
+
+    subparse(stream: TwingTokenStream, tag: string | null, test: ParseTest[1] | null): TwingBaseNode;
+}
+
+export type StackEntry = {
+    stream: TwingTokenStream;
+    parent: TwingBaseExpressionNode | null;
+    blocks: Record<string, TwingBlockNode>;
+    blockStack: Array<string>;
+    macros: Record<string, TwingMacroNode>;
+    importedSymbols: Array<TwingParserImportedSymbol>;
+    traits: Record<string, TwingTraitNode>;
+    embeddedTemplates: Array<TwingTemplateNode>;
+};
+
+const getNames = (
+    map: Map<string, TwingCallableWrapper>
+): Array<string> => {
+    return [...map.values()].map(({name}) => name);
+};
+
+export const createParser = (
+    unaryOperators: Array<TwingOperator>,
+    binaryOperators: Array<TwingOperator>,
+    additionalTagHandlers: Array<TwingTagHandler>,
+    visitors: Array<TwingNodeVisitor>,
+    filters: Map<string, TwingFilter>,
+    functions: Map<string, TwingFunction>,
+    tests: Map<string, TwingTest>,
+    options?: TwingParserOptions
+): TwingParser => {
+    const strict = options?.strict !== undefined ? options.strict : true;
+    const level = options?.level || 3;
+
+    // operators
+    const binaryOperatorsRegister: Map<string, TwingOperator> = new Map(binaryOperators
+        .filter((operator) => operator.specificationLevel <= level)
+        .map((operator) => [operator.name, operator])
+    );
+
+    const unaryOperatorsRegister: Map<string, TwingOperator> = new Map(unaryOperators
+        .map((operator) => [operator.name, operator])
+    );
+
+    // tag handlers
+    const tagHandlers: Array<TwingTagHandler> = [
+        createApplyTagHandler(),
+        createAutoEscapeTagHandler(),
+        createBlockTagHandler(),
+        createDeprecatedTagHandler(),
+        createDoTagHandler(),
+        createEmbedTagHandler(),
+        createExtendsTagHandler(),
+        createFlushTagHandler(),
+        createForTagHandler(),
+        createFromTagHandler(),
+        createIfTagHandler(),
+        createImportTagHandler(),
+        createIncludeTagHandler(),
+        createLineTagHandler(),
+        createMacroTagHandler(),
+        createSandboxTagHandler(),
+        createSetTagHandler(),
+        createUseTagHandler(),
+        createVerbatimTagHandler(),
+        createWithTagHandler()
+    ];
+
+    if (level === 2) {
+        tagHandlers.push(...[
+            createFilterTagHandler(),
+            createSpacelessTagHandler(),
+        ]);
     }
 
-    getVarName(prefix: string = '__internal_'): string {
-        const hex = createHash("sha256").update(
-            'TwingParser::getVarName' + this.stream.getSourceContext().getCode() + this.varNameSalt++
-        ).digest('hex')
+    tagHandlers.push(...additionalTagHandlers);
 
-        return `${prefix}${hex}`;
-    }
+    const tokenParsers: Map<string, TwingTokenParser> = new Map();
 
-    parse(stream: TwingTokenStream, test: Array<any> = null, dropNeedle: boolean = false): TwingNodeModule {
-        this.stack.push(new TwingParserStackEntry(
-            this.stream,
-            this.parent,
-            this.blocks,
-            this.blockStack,
-            this.macros,
-            this.importedSymbols,
-            this.traits,
-            this.embeddedTemplates
-        ));
+    let varNameSalt = 0;
 
-        // tag handlers
-        if (this.handlers === null) {
-            this.handlers = new Map();
+    let parent: TwingBaseExpressionNode | null = null;
+    let blocks: Record<string, TwingBlockNode> = {};
+    let blockStack: Array<string> = [];
+    let macros: Record<string, TwingMacroNode> = {};
+    let importedSymbols: Array<TwingParserImportedSymbol> = [{
+        method: new Map(),
+        template: []
+    }];
+    let traits: Record<string, TwingTraitNode> = {};
+    let embeddedTemplates: Array<TwingTemplateNode> = [];
+    let embeddedTemplateIndex: number = 1;
 
-            for (let handler of this.env.getTokenParsers()) {
-                handler.setParser(this);
+    const filterNames = getNames(filters);
+    const functionNames = getNames(functions);
+    const testNames = getNames(tests);
+    const tags = tagHandlers.map(({tag}) => tag);
 
-                this.handlers.set(handler.getTag(), handler);
+    const stack: Array<StackEntry> = [];
+
+    const addImportedSymbol: TwingParser["addImportedSymbol"] = (type, alias, name?: string, node?: NodeWithName) => {
+        const localScope = importedSymbols[0];
+
+        if (type === "method") {
+            localScope[type].set(alias, {
+                name: name!,
+                node: node!
+            });
+        }
+        else {
+            localScope[type].push(alias);
+        }
+    };
+
+    const addTrait: TwingParser["addTrait"] = (trait) => {
+        pushToRecord(traits, trait);
+    };
+
+    // checks that the node only contains "constant" elements
+    const checkConstantExpression = (stackEntry: TwingTokenStream, node: TwingBaseNode): TwingBaseNode | null => {
+        if (!(node.is("constant") || node.is("array") || node.is(hashNodeType) || node.is(negativeNodeType) || node.is(positiveNodeType))) {
+            return node;
+        }
+
+        for (const [, child] of getChildren(node)) {
+            if (checkConstantExpression(stackEntry, child) !== null) {
+                return child;
             }
         }
 
-        // node visitors
-        if (!this.visitors) {
-            this.visitors = this.env.getNodeVisitors();
-        }
+        return null;
+    };
 
-        this.stream = stream;
-        this.parent = null;
-        this.blocks = new Map();
-        this.macros = new Map();
-        this.traits = new Map();
-        this.blockStack = [];
-        this.importedSymbols = [new Map()];
-        this.embeddedTemplates = [];
-        this.varNameSalt = 0;
+    const embedTemplate: TwingParser["embedTemplate"] = (template) => {
+        template.attributes.index = embeddedTemplateIndex++;
 
-        let body: TwingNode;
+        embeddedTemplates.push(template);
+    };
 
-        try {
-            body = this.subparse(test, dropNeedle);
+    const filterChildBodyNode = (stream: TwingTokenStream, node: TwingBaseNode, nested: boolean = false): TwingBaseNode | null => {
+        // non-empty text nodes are not allowed as direct child of a 
+        if (node.is(textNodeType) && !isMadeOfWhitespaceOnly(node.attributes.data)) {
+            const {data} = node.attributes;
 
-            if (this.parent !== null && (body = this.filterBodyNodes(body)) === null) {
-                body = new TwingNode();
-            }
-        } catch (e) {
-            if (e instanceof TwingErrorSyntax) {
-                if (!e.getSourceContext()) {
-                    e.setSourceContext(this.stream.getSourceContext());
-                }
-            }
+            if (data.indexOf(String.fromCharCode(0xEF, 0xBB, 0xBF)) > -1) {
+                const trailingData = data.substring(3);
 
-            throw e;
-        }
-
-        let nodes = new Map();
-
-        nodes.set(0, body);
-
-        let node = new TwingNodeModule(new TwingNodeBody(nodes), this.parent, new TwingNode(this.blocks), new TwingNode(this.macros), new TwingNode(this.traits), this.embeddedTemplates, stream.getSourceContext());
-
-        let traverser = new TwingNodeTraverser(this.env, this.visitors);
-
-        node = traverser.traverse(node) as TwingNodeModule;
-
-        // restore previous stack so previous parse() call can resume working
-        let key: string;
-        let stack = this.stack.pop();
-
-        this.stream = stack.stream;
-        this.parent = stack.parent;
-        this.blocks = stack.blocks;
-        this.blockStack = stack.blockStack;
-        this.macros = stack.macros;
-        this.importedSymbols = stack.importedSymbols;
-        this.traits = stack.traits;
-        this.embeddedTemplates = stack.embeddedTemplates;
-
-        return node;
-    }
-
-    getParent(): TwingNode {
-        return this.parent;
-    }
-
-    setParent(parent: TwingNode) {
-        this.parent = parent;
-    }
-
-    subparse(test: Array<any>, dropNeedle: boolean = false): TwingNode {
-        let lineno = this.getCurrentToken().line;
-        let rv = new Map();
-        let i: number = 0;
-        let token;
-
-        while (!this.stream.isEOF()) {
-            switch (this.getCurrentToken().type) {
-                case TokenType.TEXT:
-                    token = this.stream.next();
-                    rv.set(i++, new TwingNodeText(token.value, token.line, token.column, null));
-
-                    break;
-                case TokenType.VARIABLE_START:
-                    token = this.stream.next();
-                    let expression = this.parseExpression();
-
-                    this.stream.expect(TokenType.VARIABLE_END);
-                    rv.set(i++, new TwingNodePrint(expression, token.line, token.column));
-
-                    break;
-                case TokenType.TAG_START:
-                    this.stream.next();
-                    token = this.getCurrentToken();
-
-                    if (token.type !== TokenType.NAME) {
-                        throw new TwingErrorSyntax('A block must start with a tag name.', token.line, this.stream.getSourceContext());
-                    }
-
-                    if (test !== null && test[1](token)) {
-                        if (dropNeedle) {
-                            this.stream.next();
-                        }
-
-                        if (rv.size === 1) {
-                            return first(rv);
-                        }
-
-                        return new TwingNode(rv, new Map(), lineno);
-                    }
-
-                    if (!this.handlers.has(token.value)) {
-                        let e;
-
-                        if (test !== null) {
-                            e = new TwingErrorSyntax(
-                                `Unexpected "${token.value}" tag`,
-                                token.line,
-                                this.stream.getSourceContext()
-                            );
-
-                            if (Array.isArray(test) && (test.length > 1) && (test[0] instanceof TwingTokenParser)) {
-                                e.appendMessage(` (expecting closing tag for the "${test[0].getTag()}" tag defined near line ${lineno}).`);
-                            }
-                        } else {
-                            e = new TwingErrorSyntax(
-                                `Unknown "${token.value}" tag.`,
-                                token.line,
-                                this.stream.getSourceContext()
-                            );
-
-                            e.addSuggestions(token.value, Array.from(this.env.getTags().keys()));
-                        }
-
-                        throw e;
-                    }
-
-                    this.stream.next();
-
-                    let subparser = this.handlers.get(token.value);
-
-                    let node = subparser.parse(token);
-
-                    if (node !== null) {
-                        rv.set(i++, node);
-                    }
-
-                    break;
-                case TokenType.COMMENT_START:
-                    this.stream.next();
-                    token = this.stream.expect(TokenType.TEXT);
-                    this.stream.expect(TokenType.COMMENT_END);
-                    rv.set(i++, new TwingNodeComment(token.value, token.line, token.column));
-
-                    break;
-                default:
-                    throw new TwingErrorSyntax(
-                        'Lexer or parser ended up in unsupported state.',
-                        this.getCurrentToken().line,
-                        this.stream.getSourceContext()
-                    );
-            }
-        }
-
-        if (rv.size === 1) {
-            return first(rv);
-        }
-
-        return new TwingNode(rv, new Map(), lineno);
-    }
-
-    getBlockStack() {
-        return this.blockStack;
-    }
-
-    peekBlockStack() {
-        return this.blockStack[this.blockStack.length - 1];
-    }
-
-    popBlockStack() {
-        this.blockStack.pop();
-    }
-
-    pushBlockStack(name: string) {
-        this.blockStack.push(name);
-    }
-
-    hasBlock(name: string) {
-        return this.blocks.has(name);
-    }
-
-    getBlock(name: string) {
-        return this.blocks.get(name);
-    }
-
-    setBlock(name: string, value: TwingNodeBlock) {
-        let bodyNodes = new Map();
-
-        bodyNodes.set(0, value);
-
-        this.blocks.set(name, new TwingNodeBody(bodyNodes, new Map(), value.getTemplateLine()));
-    }
-
-    addTrait(trait: TwingNode) {
-        push(this.traits, trait);
-    }
-
-    hasTraits() {
-        return this.traits.size > 0;
-    }
-
-    embedTemplate(template: TwingNodeModule) {
-        template.setIndex(this.embeddedTemplateIndex++);
-
-        this.embeddedTemplates.push(template);
-    }
-
-    /**
-     * @return {Token}
-     */
-    getCurrentToken(): Token {
-        return this.stream.getCurrent();
-    }
-
-    /**
-     *
-     * @return {TwingTokenStream}
-     */
-    getStream(): TwingTokenStream {
-        return this.stream;
-    }
-
-    addImportedSymbol(type: string, alias: string, name: string = null, node: TwingNodeExpression = null) {
-        let localScope = this.importedSymbols[0];
-
-        if (!localScope.has(type)) {
-            localScope.set(type, new Map());
-        }
-
-        let localScopeType = localScope.get(type);
-
-        localScopeType.set(alias, {name: name, node: node});
-    }
-
-    getImportedSymbol(type: string, alias: string): TwingParserImportedSymbolAlias {
-        let result: TwingParserImportedSymbolAlias = null;
-
-        let testImportedSymbol = (importedSymbol: TwingParserImportedSymbol) => {
-            if (importedSymbol.has(type)) {
-                let importedSymbolType = importedSymbol.get(type);
-
-                if (importedSymbolType.has(alias)) {
-                    return importedSymbolType.get(alias);
-                }
-            }
-
-            return null;
-        };
-
-        result = testImportedSymbol(this.importedSymbols[0]);
-
-        // if the symbol does not exist in the current scope (0), try in the main/global scope (last index)
-        let length = this.importedSymbols.length;
-
-        if (!result && (length > 1)) {
-            result = testImportedSymbol(this.importedSymbols[length - 1]);
-        }
-
-        return result;
-    }
-
-    hasMacro(name: string) {
-        return this.macros.has(name);
-    }
-
-    setMacro(name: string, node: TwingNodeMacro) {
-        this.macros.set(name, node);
-    }
-
-    isMainScope() {
-        return this.importedSymbols.length === 1;
-    }
-
-    pushLocalScope() {
-        this.importedSymbols.unshift(new Map());
-    }
-
-    popLocalScope() {
-        this.importedSymbols.shift();
-    }
-
-    /**
-     *
-     * @param node
-     * @param nested {boolean}
-     * @returns {TwingNode}
-     */
-    filterBodyNodes(node: TwingNode, nested: boolean = false): TwingNode {
-        // check that the body does not contain non-empty output nodes
-        if ((node.is(textType) && !ctypeSpace(node.getAttribute('data'))) ||
-            (!node.is(textType) && !node.is(blockReferenceType) && ((node as any).TwingNodeOutputInterfaceImpl) && !node.is(spacelessType))) {
-            if (node.toString().indexOf(String.fromCharCode(0xEF, 0xBB, 0xBF)) > -1) {
-                let nodeData: string = node.getAttribute('data') as string;
-
-                let trailingData = nodeData.substring(3);
-
-                if (trailingData === '' || ctypeSpace(trailingData)) {
+                if (trailingData === '' || isMadeOfWhitespaceOnly(trailingData)) {
                     // bypass empty nodes starting with a BOM
                     return null;
                 }
             }
 
-            throw new TwingErrorSyntax(
+            throw createParsingError(
                 `A template that extends another one cannot include content outside Twig blocks. Did you forget to put the content inside a {% block %} tag?`,
-                node.getTemplateLine(),
-                this.stream.getSourceContext());
+                node,
+                stream.source.name
+            );
         }
 
         // bypass nodes that "capture" the output
-        if ((node as any).TwingNodeCaptureInterfaceImpl) {
+        if (node.isACaptureNode) {
             // a "block" tag in such a node will serve as a block definition AND be displayed in place as well
             return node;
         }
 
         // to be removed completely in Twig 3.0
-        if (!nested && (node.is(spacelessType))) {
-            console.warn(`Using the spaceless tag at the root level of a child template in "${this.stream.getSourceContext().getName()}" at line ${node.getTemplateLine()} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
+        if (!nested && (node.type === "spaceless")) {
+            console.warn(`Using the spaceless tag at the root level of a child template in "${stream.source.name}" at line ${node.line} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
         }
 
-        // "block" tags that are not captured (see above) are only used for defining
+        // "block" tags that are not capturing (see above) are only used for defining
         // the content of the block. In such a case, nesting it does not work as
         // expected as the definition is not part of the default template code flow.
-        if (nested && (node.is(blockReferenceType))) {
-            console.warn(`Nesting a block definition under a non-capturing node in "${this.stream.getSourceContext().getName()}" at line ${node.getTemplateLine()} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
+        if (nested && (node.type === "block_reference")) {
+            if (level >= 3) {
+                throw createParsingError(`A block definition cannot be nested under non-capturing nodes.`, node, stream.source.name);
+            }
+            else {
+                console.warn(`Nesting a block definition under a non-capturing node in "${stream.source.name}" at line ${node.line} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
 
-            return null;
+                return null;
+            }
         }
 
-        if ((node as any).TwingNodeOutputInterfaceImpl && (node.type !== spacelessType)) {
+        if (node.isAnOutputNode && (node.type !== "spaceless")) {
             return null;
         }
 
         // here, nested means "being at the root level of a child template"
-        // we need to discard the wrapping "TwingNode" for the "body" node
+        // we need to discard the wrapping node for the "body" node
         nested = nested || (node.type !== null);
 
-        for (let [k, n] of node.getNodes()) {
-            if (n !== null && (this.filterBodyNodes(n, nested) === null)) {
-                node.removeNode(k);
+        for (let [key, child] of getChildren(node)) {
+            if (child !== null && (filterChildBodyNode(stream, child, nested) === null)) {
+                delete node.children[key];
             }
         }
 
         return node;
+    };
+
+    const getBlock: TwingParser["getBlock"] = (name) => {
+        return blocks[name] || null;
+    };
+
+    const getBlockStack = (): StackEntry["blockStack"] => {
+        return blockStack;
+    };
+
+    const getFilterExpressionFactory = (stream: TwingTokenStream, name: string, line: number, column: number) => {
+        const filter = getFilter(filters, name);
+
+        if (filter) {
+            if (filter.isDeprecated) {
+                let message = `Filter "${filter.name}" is deprecated`;
+
+                if (filter.deprecatedVersion !== true) {
+                    message += ` since version ${filter.deprecatedVersion}`;
+                }
+
+                if (filter.alternative) {
+                    message += `. Use "${filter.alternative}" instead`;
+                }
+
+                let src = stream.source;
+
+                message += ` in "${src.name}" at line ${line}.`;
+
+                console.warn(message);
+            }
+        }
+        else if (strict) {
+            const error = createParsingError(`Unknown filter "${name}".`, {line, column}, stream.source.name);
+
+            error.addSuggestions(name, filterNames);
+
+            throw error;
+        }
+
+        return createFilterNode;
+    };
+
+    const getFunctionExpressionFactory = (stream: TwingTokenStream, name: string, line: number, column: number) => {
+        const twingFunction = getFunction(functions, name);
+
+        if (twingFunction) {
+            if (twingFunction.isDeprecated) {
+                let message = `Function "${twingFunction.name}" is deprecated`;
+
+                if (twingFunction.deprecatedVersion !== true) {
+                    message += ` since version ${twingFunction.deprecatedVersion}`;
+                }
+
+                if (twingFunction.alternative) {
+                    message += `. Use "${twingFunction.alternative}" instead`;
+                }
+
+                const source = stream.source;
+
+                message += ` in "${source.name}" at line ${line}.`;
+
+                console.warn(message);
+            }
+        }
+        else if (strict) {
+            const error = createParsingError(`Unknown function "${name}".`, {line, column}, stream.source.name);
+
+            error.addSuggestions(name, functionNames);
+
+            throw error;
+        }
+
+        return createFunctionNode;
+    };
+
+    const getFunctionNode = (stream: TwingTokenStream, name: string, line: number, column: number): TwingBaseExpressionNode => {
+        switch (name) {
+            case 'parent':
+                parseArguments(stream);
+
+                if (!getBlockStack().length) {
+                    throw createParsingError('Calling "parent" outside a block is forbidden.', {
+                        line,
+                        column
+                    }, stream.source.name);
+                }
+
+                if (!parent && !hasTraits()) {
+                    throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', {
+                        line,
+                        column
+                    }, stream.source.name);
+                }
+
+                return createParentFunctionNode(peekBlockStack(), line, column);
+            case 'block':
+                const blockArgs = parseArguments(stream);
+                const keyValuePairs = getKeyValuePairs(blockArgs);
+
+                if (keyValuePairs.length < 1) {
+                    throw createParsingError('The "block" function takes one argument (the block name).', {
+                        line,
+                        column
+                    }, stream.source.name);
+                }
+
+                return createBlockFunctionNode(keyValuePairs[0].value, keyValuePairs.length > 1 ? keyValuePairs[1].value : null, line, column);
+            case 'attribute':
+                const attributeArgs = parseArguments(stream);
+                const attributeKeyValuePairs = getKeyValuePairs(attributeArgs);
+
+                if (attributeKeyValuePairs.length < 2) {
+                    throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', {
+                        line,
+                        column
+                    }, stream.source.name);
+                }
+
+                return createAttributeAccessorNode(
+                    attributeKeyValuePairs[0].value,
+                    attributeKeyValuePairs[1].value,
+                    attributeKeyValuePairs.length > 2 ? attributeKeyValuePairs[2].value : createArrayNode([], line, column),
+                    "any",
+                    line, column
+                );
+            default:
+                const alias = getImportedMethod(name);
+
+                if (alias) {
+                    const argumentsNode = parseArguments(stream);
+
+                    const node = createMethodCallNode(alias.node, alias.name, argumentsNode, line, column);
+
+                    return node;
+                }
+
+                const aliasArguments = parseArguments(stream, true);
+                const aliasFactory = getFunctionExpressionFactory(stream, name, line, column);
+
+                return aliasFactory(name, aliasArguments, line, column);
+        }
+    };
+
+    const getImportedMethod = (alias: string): TwingParserImportedSymbolAlias | null => {
+        let result: TwingParserImportedSymbolAlias | null;
+
+        const testImportedSymbol = (importedSymbol: TwingParserImportedSymbol) => {
+            const importedSymbolType = importedSymbol["method"];
+
+            if (importedSymbolType && importedSymbolType.has(alias)) {
+                return importedSymbolType.get(alias);
+            }
+
+            return null;
+        };
+
+        result = testImportedSymbol(importedSymbols[0]) || null;
+
+        // if the symbol does not exist in the current scope (0), try in the main/global scope (last index)
+        let length = importedSymbols.length;
+
+        if (!result && (length > 1)) {
+            result = testImportedSymbol(importedSymbols[length - 1]) || null;
+        }
+
+        return result;
+    };
+
+    const getImportedTemplate = (alias: string): string | null => {
+        let result: string | null;
+
+        const testImportedSymbol = (importedSymbol: TwingParserImportedSymbol) => {
+            const importedSymbolType = importedSymbol["template"];
+
+            if (importedSymbolType && importedSymbolType.includes(alias)) {
+                return alias;
+            }
+
+            return null;
+        };
+
+        result = testImportedSymbol(importedSymbols[0]) || null;
+
+        // if the symbol does not exist in the current scope (0), try in the main/global scope (last index)
+        let length = importedSymbols.length;
+
+        if (!result && (length > 1)) {
+            result = testImportedSymbol(importedSymbols[length - 1]) || null;
+        }
+
+        return result;
+    };
+
+    const getPrimary = (stream: TwingTokenStream): TwingBaseExpressionNode => {
+        let token = stream.current;
+        let operator: TwingOperator | null;
+
+        if ((operator = isUnary(token)) !== null) {
+            stream.next();
+
+            const expression = parseExpression(stream, operator.precedence);
+            const expressionFactory = operator.expressionFactory;
+
+            return parsePostfixExpression(stream, expressionFactory([expression, createBaseNode(null)], token.line, token.column), token);
+        }
+        else if (token.test("PUNCTUATION", '(')) {
+            stream.next();
+
+            const expression = parseExpression(stream);
+            
+            stream.expect("PUNCTUATION", ')', 'An opened parenthesis is not properly closed');
+
+            return parsePostfixExpression(stream, expression, token);
+        }
+
+        return parsePrimaryExpression(stream);
+    };
+
+    const getTestName = (stream: TwingTokenStream): string => {
+        const {line, column} = stream.current;
+
+        let name = stream.expect("NAME").value;
+        let test: Pick<TwingTest, "alternative" | "deprecatedVersion" | "isDeprecated" | "name"> | null = getTestByName(tests, name);
+
+        if (!test) {
+            if (stream.test("NAME")) {
+                // try 2-words tests
+                name = name + ' ' + stream.current.value;
+
+                test = getTestByName(tests, name);
+
+                if (test) {
+                    stream.next();
+                }
+                else {
+                    // non-existing two-words test
+                    if (!strict) {
+                        stream.next();
+
+                        test = {
+                            name,
+                            isDeprecated: false,
+                            alternative: undefined,
+                            deprecatedVersion: undefined
+                        };
+                    }
+                }
+            }
+            else {
+                // non-existing one-word test
+                if (!strict) {
+                    test = {
+                        name,
+                        isDeprecated: false,
+                        alternative: undefined,
+                        deprecatedVersion: undefined
+                    };
+                }
+            }
+        }
+
+        if (test) {
+            if (test.isDeprecated) {
+                let message = `Test "${test.name}" is deprecated`;
+
+                if (test.deprecatedVersion !== true) {
+                    message += ` since version ${test.deprecatedVersion}`;
+                }
+
+                if (test.alternative) {
+                    message += `. Use "${test.alternative}" instead`;
+                }
+
+                const source = stream.source;
+
+                message += ` in "${source.name}" at line ${line}.`;
+
+                console.warn(message);
+            }
+
+            return name;
+        }
+
+        const error = createParsingError(`Unknown test "${name}".`, {line, column}, stream.source.name);
+
+        error.addSuggestions(name, testNames);
+
+        throw error;
+    };
+
+    const getVarName: TwingParser["getVarName"] = (prefix = '__internal_') => {
+        return `${prefix}${varNameSalt++}`;
+    };
+
+    const hasTraits = () => {
+        return Object.keys(traits).length > 0
+    };
+
+    const isBinary = (token: Token): TwingOperator | null => {
+        return (token.test("OPERATOR") && binaryOperatorsRegister.get(token.value)) || null;
+    };
+
+    const isUnary = (token: Token): TwingOperator | null => {
+        return (token.test("OPERATOR") && unaryOperatorsRegister.get(token.value)) || null;
+    };
+
+    const parse: TwingParser["parse"] = (stream, tag = null, test = null) => {
+        stack.push({
+            stream,
+            parent,
+            blocks,
+            blockStack,
+            macros,
+            importedSymbols,
+            traits,
+            embeddedTemplates
+        });
+
+        parent = null;
+        blocks = {};
+        macros = {};
+        traits = {};
+        blockStack = [];
+        importedSymbols = [{
+            method: new Map(),
+            template: []
+        }];
+        embeddedTemplates = [];
+
+        let body: TwingBaseNode | null;
+
+        try {
+            body = subparse(stream, tag, test);
+
+            if (parent !== null && (body = filterChildBodyNode(stream, body)) === null) {
+                body = createBaseNode(null);
+            }
+        } catch (error: any) {
+            if (!(error as TwingParsingError).source) {
+                (error as TwingParsingError).source = stream.source.name;
+            }
+
+            throw error;
+        }
+
+        let node = createTemplateNode(
+            createBodyNode(body, 1, 1),
+            parent,
+            createBaseNode(null, {}, blocks),
+            createBaseNode(null, {}, macros),
+            createBaseNode(null, {}, traits),
+            embeddedTemplates,
+            stream.source,
+            1, 1
+        );
+
+        // passed visitors
+        let traverse = createNodeTraverser(visitors);
+
+        node = traverse(node) as TwingTemplateNode;
+
+        // core visitors
+        traverse = createNodeTraverser([
+            createCoreNodeVisitor(),
+            createEscaperNodeVisitor(),
+            createSandboxNodeVisitor()
+        ]);
+
+        node = traverse(node) as TwingTemplateNode;
+
+        // restore previous stack so previous parse() call can resume working
+        const previousStackEntry = stack.pop()!;
+
+        parent = previousStackEntry.parent;
+        blocks = previousStackEntry.blocks;
+        macros = previousStackEntry.macros;
+        traits = previousStackEntry.traits;
+        blockStack = previousStackEntry.blockStack;
+        importedSymbols = previousStackEntry.importedSymbols;
+        embeddedTemplates = previousStackEntry.embeddedTemplates;
+
+        return node;
     }
 
-    parseStringExpression(): TwingNodeExpression {
-        let stream = this.getStream();
+    /**
+     * Parses arguments.
+     *
+     * @param stream
+     * @param namedArguments {boolean} Whether to allow named arguments or not
+     * @param definition {boolean} Whether we are parsing arguments for a macro definition
+     * @param allowArrow {boolean}
+     *
+     * @throws TwingErrorSyntax
+     */
+    const parseArguments: TwingParser["parseArguments"] = (
+        stream,
+        namedArguments = false,
+        definition = false,
+        allowArrow?: true
+    ) => {
+        const {line, column} = stream.current;
+        const elements: Array<{
+            key?: TwingConstantNode;
+            value: TwingBaseExpressionNode;
+        }> = [];
 
-        let nodes = [];
-        // a string cannot be followed by another string in a single expression
-        let nextCanBeString = true;
-        let token;
+        let value: TwingBaseExpressionNode;
+        let token: Token;
+
+        stream.expect("PUNCTUATION", '(');
+
+        while (!stream.test("PUNCTUATION", ')')) {
+            if (elements.length > 0) {
+                stream.expect("PUNCTUATION", ',');
+            }
+
+            if (definition) {
+                token = stream.expect("NAME", null);
+
+                const {line, column} = stream.current;
+
+                value = createNameNode(token.value, line, column);
+            }
+            else {
+                value = parseExpression(stream, 0, allowArrow);
+            }
+
+            let key: TwingConstantNode | undefined = undefined;
+
+            if (namedArguments && (token = stream.nextIf("OPERATOR", '='))) {
+                if (!value.is("name")) {
+                    throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source.name);
+                }
+
+                key = createConstantNode(value.attributes.name, value.line, value.column);
+
+                if (definition) {
+                    value = parsePrimaryExpression(stream);
+
+                    const notConstantNode = checkConstantExpression(stream, value);
+
+                    if (notConstantNode !== null) {
+                        throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode, stream.source.name);
+                    }
+                }
+                else {
+                    value = parseExpression(stream, 0, allowArrow);
+                }
+            }
+
+            if (definition) {
+                if (key === undefined) {
+                    key = createConstantNode((value as TwingNameNode).attributes.name, line, column);
+                    value = createConstantNode(null, line, column);
+                }
+            }
+
+            elements.push({
+                key,
+                value
+            });
+        }
+
+        stream.expect("PUNCTUATION", ')');
+
+        const arrayNode = createArrayNode(elements, line, column);
+
+        return arrayNode;
+    };
+
+    const parseArrayExpression = (stream: TwingTokenStream): TwingArrayNode => {
+        const {line, column} = stream.current;
+
+        stream.expect("PUNCTUATION", '[', 'An array element was expected');
+
+        const elements: Array<TwingBaseExpressionNode> = [];
+
+        let first = true;
+
+        while (!stream.test("PUNCTUATION", ']')) {
+            if (!first) {
+                stream.expect("PUNCTUATION", ',', 'An array element must be followed by a comma');
+
+                // trailing ,?
+                if (stream.test("PUNCTUATION", ']')) {
+                    break;
+                }
+            }
+
+            first = false;
+
+            if (stream.test("SPREAD_OPERATOR")) {
+                const {current} = stream;
+                
+                stream.next();
+                
+                const expression = parseExpression(stream);
+                const spreadNode = createSpreadNode(expression, current.line, current.column);
+                
+                elements.push(spreadNode);
+            }
+            else {
+                elements.push(parseExpression(stream));
+            }
+        }
+
+        stream.expect("PUNCTUATION", ']', 'An opened array is not properly closed');
+
+        return createArrayNode(elements.map((element) => {
+            return {
+                value: element
+            };
+        }), line, column);
+    };
+
+    const parseAssignmentExpression: TwingParser["parseAssignmentExpression"] = (stream) => {
+        const targets: Record<string, TwingAssignmentNode> = {};
+        const {line, column} = stream.current;
 
         while (true) {
-            if (nextCanBeString && (token = stream.nextIf(TokenType.STRING))) {
-                nodes.push(new TwingNodeExpressionConstant(token.value, token.line, token.column));
-                nextCanBeString = false;
-            } else if (stream.nextIf(TokenType.INTERPOLATION_START)) {
-                nodes.push(this.parseExpression());
-                stream.expect(TokenType.INTERPOLATION_END);
-                nextCanBeString = true;
-            } else {
+            let token = stream.current;
+
+            if (stream.test("OPERATOR") && nameRegExp.exec(token.value)) {
+                // in this context, string operators are variable names
+                stream.next();
+            }
+            else {
+                stream.expect("NAME", null, 'Only variables can be assigned to');
+            }
+
+            let value = token.value;
+
+            if (['true', 'false', 'none', 'null'].indexOf(value.toLowerCase()) > -1) {
+                throw createParsingError(`You cannot assign a value to "${value}".`, token, stream.source.name);
+            }
+
+            pushToRecord(targets, createAssignmentNode(value, token.line, token.column));
+
+            if (!stream.nextIf("PUNCTUATION", ',')) {
                 break;
             }
         }
 
-        let expr = nodes.shift();
+        return createArgumentsNode(targets, line, column);
+    };
 
-        for (let node of nodes) {
-            expr = new TwingNodeExpressionBinaryConcat([expr, node], node.getTemplateLine(), node.getTemplateColumn());
-        }
-
-        return expr;
-    }
-
-    // expressions
-    parseExpression(precedence: number = 0, allowArrow: boolean = false): TwingNodeExpression {
-        if (allowArrow) {
-            let arrow = this.parseArrow();
-
-            if (arrow) {
-                return arrow;
-            }
-        }
-
-        let expr = this.getPrimary();
-        let token = this.getCurrentToken();
-
-        while (this.isBinary(token) && this.binaryOperators.get(token.value).getPrecedence() >= precedence) {
-            let operator = this.binaryOperators.get(token.value);
-
-            this.getStream().next();
-
-            if (token.value === 'is not') {
-                expr = this.parseNotTestExpression(expr);
-            } else if (token.value === 'is') {
-                expr = this.parseTestExpression(expr);
-            } else {
-                let expr1 = this.parseExpression(operator.getAssociativity() === TwingOperatorAssociativity.LEFT ? operator.getPrecedence() + 1 : operator.getPrecedence());
-                let expressionFactory = operator.getExpressionFactory();
-
-                expr = expressionFactory([expr, expr1], token.line, token.column);
-            }
-
-            token = this.getCurrentToken();
-        }
-
-        if (precedence === 0) {
-            return this.parseConditionalExpression(expr);
-        }
-
-        return expr;
-    }
-
-    /**
-     * @return TwingNodeExpressionArrowFunction|null
-     */
-    protected parseArrow() {
-        let stream = this.getStream();
+    const parseArrow = (stream: TwingTokenStream): TwingArrowFunctionNode | null => {
         let token: Token;
         let line: number;
         let column: number;
-        let names: Map<number, TwingNodeExpressionAssignName>;
+        let names: Record<number, TwingAssignmentNode>;
 
         // short array syntax (one argument, no parentheses)?
-        if (stream.look(1).test(TokenType.ARROW)) {
-            line = stream.getCurrent().line;
-            column = stream.getCurrent().column;
-            token = stream.expect(TokenType.NAME);
-            names = new Map([[0, new TwingNodeExpressionAssignName(token.value, token.line, token.column)]]);
+        if (stream.look(1).test("ARROW")) {
+            line = stream.current.line;
+            column = stream.current.column;
+            token = stream.expect("NAME");
+            names = {
+                0: createAssignmentNode(token.value, token.line, token.column)
+            };
 
-            stream.expect(TokenType.ARROW);
+            stream.expect("ARROW");
 
-            return new TwingNodeExpressionArrowFunction(this.parseExpression(0), new TwingNode(names), line, column);
+            return createArrowFunctionNode(parseExpression(stream, 0), createBaseNode(null, {}, names), line, column);
         }
 
         // first, determine if we are parsing an arrow function by finding => (long form)
         let i: number = 0;
 
-        if (!stream.look(i).test(TokenType.PUNCTUATION, '(')) {
+        if (!stream.look(i).test("PUNCTUATION", '(')) {
             return null;
         }
 
@@ -594,253 +924,236 @@ export class TwingParser {
             // variable name
             ++i;
 
-            if (!stream.look(i).test(TokenType.PUNCTUATION, ',')) {
+            if (!stream.look(i).test("PUNCTUATION", ',')) {
                 break;
             }
 
             ++i;
         }
 
-        if (!stream.look(i).test(TokenType.PUNCTUATION, ')')) {
-            return null;
-        }
+        stream.look(i).test("PUNCTUATION", ')');
 
         ++i;
 
-        if (!stream.look(i).test(TokenType.ARROW)) {
+        if (!stream.look(i).test("ARROW")) {
             return null;
         }
 
         // yes, let's parse it properly
-        token = stream.expect(TokenType.PUNCTUATION, '(');
+        token = stream.expect("PUNCTUATION", '(');
         line = token.line;
         column = token.column;
-        names = new Map();
+        names = {};
+
         i = 0;
 
         while (true) {
-            token = this.getCurrentToken();
+            token = stream.current;
 
-            if (!token.test(TokenType.NAME)) {
-                throw new TwingErrorSyntax(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token.line, stream.getSourceContext());
+            if (!token.test("NAME")) {
+                throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.name);
             }
 
-            names.set(i++, new TwingNodeExpressionAssignName(token.value, token.line, token.column));
+            names[i++] = createAssignmentNode(token.value, token.line, token.column);
 
             stream.next();
 
-            if (!stream.nextIf(TokenType.PUNCTUATION, ',')) {
+            if (!stream.nextIf("PUNCTUATION", ',')) {
                 break;
             }
         }
 
-        stream.expect(TokenType.PUNCTUATION, ')');
-        stream.expect(TokenType.ARROW);
+        stream.expect("PUNCTUATION", ')');
+        stream.expect("ARROW");
 
-        return new TwingNodeExpressionArrowFunction(this.parseExpression(0), new TwingNode(names), line, column);
-    }
+        return createArrowFunctionNode(parseExpression(stream, 0), createBaseNode(null, {}, names), line, column);
+    };
 
-    getPrimary(): TwingNodeExpression {
-        let token = this.getCurrentToken();
+    const parseConditionalExpression = (stream: TwingTokenStream, expression: TwingBaseExpressionNode): TwingBaseExpressionNode => {
+        let expr2: TwingBaseExpressionNode;
+        let expr3: TwingBaseExpressionNode;
 
-        if (this.isUnary(token)) {
-            let operator = this.unaryOperators.get(token.value);
-            this.getStream().next();
-            let expr = this.parseExpression(operator.getPrecedence());
+        while (stream.nextIf("PUNCTUATION", '?')) {
+            if (!stream.nextIf("PUNCTUATION", ':')) {
+                expr2 = parseExpression(stream);
 
-            return this.parsePostfixExpression(operator.getExpressionFactory()([expr, null], token.line, token.column));
-        } else if (token.test(TokenType.PUNCTUATION, '(')) {
-            this.getStream().next();
-            let expr = this.parseExpression();
-            this.getStream().expect(TokenType.PUNCTUATION, ')', 'An opened parenthesis is not properly closed');
+                if (stream.nextIf("PUNCTUATION", ':')) {
+                    expr3 = parseExpression(stream);
+                }
+                else {
+                    const {line, column} = stream.current;
 
-            return this.parsePostfixExpression(expr);
+                    expr3 = createConstantNode('', line, column);
+                }
+            }
+            else {
+                expr2 = expression;
+                expr3 = parseExpression(stream);
+            }
+
+            const {line, column} = stream.current;
+
+            expression = createConditionalNode(expression, expr2, expr3, line, column);
         }
 
-        return this.parsePrimaryExpression();
-    }
+        return expression;
+    };
 
-    parsePrimaryExpression() {
-        let token: Token = this.getCurrentToken();
-        let node: TwingNodeExpression;
+    const parseExpression: TwingParser["parseExpression"] = (stream, precedence = 0, allowArrow = undefined) => {
+        if (allowArrow) {
+            const arrow = parseArrow(stream);
 
-        switch (token.type) {
-            case TokenType.NAME:
-                this.getStream().next();
-
-                switch (token.value) {
-                    case 'true':
-                    case 'TRUE':
-                        node = new TwingNodeExpressionConstant(true, token.line, token.column);
-                        break;
-
-                    case 'false':
-                    case 'FALSE':
-                        node = new TwingNodeExpressionConstant(false, token.line, token.column);
-                        break;
-
-                    case 'none':
-                    case 'NONE':
-                    case 'null':
-                    case 'NULL':
-                        node = new TwingNodeExpressionConstant(null, token.line, token.column);
-                        break;
-
-                    default:
-                        if ('(' === this.getCurrentToken().value) {
-                            node = this.getFunctionNode(token.value, token.line, token.column);
-                        } else {
-                            node = new TwingNodeExpressionName(token.value, token.line, token.column);
-                        }
-                }
-                break;
-
-            case TokenType.NUMBER:
-                this.getStream().next();
-                node = new TwingNodeExpressionConstant(token.value, token.line, token.column);
-                break;
-
-            case TokenType.STRING:
-            case TokenType.INTERPOLATION_START:
-                node = this.parseStringExpression();
-                break;
-
-            case TokenType.OPERATOR:
-                let match = nameRegExp.exec(token.value);
-
-                if (match !== null && match[0] === token.value) {
-                    // in this context, string operators are variable names
-                    this.getStream().next();
-                    node = new TwingNodeExpressionName(token.value, token.line, token.column);
-
-                    break;
-                } else if (this.unaryOperators.has(token.value)) {
-                    let operator = this.unaryOperators.get(token.value);
-
-                    this.getStream().next();
-
-                    let expr = this.parsePrimaryExpression();
-
-                    node = operator.getExpressionFactory()([expr, null], token.line, token.column);
-                    break;
-                }
-
-            default:
-                if (token.test(TokenType.PUNCTUATION, '[')) {
-                    node = this.parseArrayExpression();
-                } else if (token.test(TokenType.PUNCTUATION, '{')) {
-                    node = this.parseHashExpression();
-                } else if (token.test(TokenType.OPERATOR, '=') && (this.getStream().look(-1).value === '==' || this.getStream().look(-1).value === '!=')) {
-                    throw new TwingErrorSyntax(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token.line, this.getStream().getSourceContext());
-                } else {
-                    throw new TwingErrorSyntax(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token.line, this.getStream().getSourceContext());
-                }
+            if (arrow) {
+                return arrow;
+            }
         }
 
-        return this.parsePostfixExpression(node);
-    }
+        let expression = getPrimary(stream);
+        let token = stream.current;
+        let operator: TwingOperator | null = null;
 
-    getFunctionNode(name: string, line: number, column: number): TwingNodeExpression {
-        switch (name) {
-            case 'parent':
-                this.parseArguments();
+        if ((token.value === "is not") || (token.value === "is")) {
+            stream.next();
 
-                if (!this.getBlockStack().length) {
-                    throw new TwingErrorSyntax('Calling "parent" outside a block is forbidden.', line, this.getStream().getSourceContext());
-                }
-
-                if (!this.getParent() && !this.hasTraits()) {
-                    throw new TwingErrorSyntax('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', line, this.getStream().getSourceContext());
-                }
-
-                return new TwingNodeExpressionParent(this.peekBlockStack(), line);
-            case 'block':
-                let blockArgs = this.parseArguments();
-
-                if (blockArgs.getNodes().size < 1) {
-                    throw new TwingErrorSyntax('The "block" function takes one argument (the block name).', line, this.getStream().getSourceContext());
-                }
-
-                return new TwingNodeExpressionBlockReference(blockArgs.getNode(0), blockArgs.getNodes().size > 1 ? blockArgs.getNode(1) : null, line, column);
-            case 'attribute':
-                let attributeArgs = this.parseArguments();
-
-                if (attributeArgs.getNodes().size < 2) {
-                    throw new TwingErrorSyntax('The "attribute" function takes at least two arguments (the variable and the attributes).', line, this.getStream().getSourceContext());
-                }
-
-                return new TwingNodeExpressionGetAttribute(<TwingNodeExpression>attributeArgs.getNode(0), <TwingNodeExpression>attributeArgs.getNode(1), attributeArgs.getNodes().size > 2 ? <TwingNodeExpression>attributeArgs.getNode(2) : null, TwingTemplate.ANY_CALL, line, column);
-            default:
-                let alias = this.getImportedSymbol('function', name);
-
-                if (alias) {
-                    let functionArguments = new TwingNodeExpressionArray(new Map(), line, column);
-
-                    this.parseArguments().getNodes().forEach(function (n, name) {
-                        functionArguments.addElement(n);
-                    });
-
-                    let node = new TwingNodeExpressionMethodCall(alias.node, alias.name, functionArguments, line, column);
-
-                    node.setAttribute('safe', true);
-
-                    return node;
-                }
-
-                let aliasArguments = this.parseArguments(true);
-                let aliasFactory = this.getFunctionExpressionFactory(name, line, column);
-
-                return aliasFactory(name, aliasArguments, line, column);
+            if (token.value === "is not") {
+                expression = parseNotTestExpression(stream, expression);
+            }
+            else {
+                expression = parseTestExpression(stream, expression);
+            }
         }
-    }
+        else {
+            while (((operator = isBinary(token)) !== null) && operator.precedence >= precedence) {
+                stream.next();
 
-    parseArrayExpression(): TwingNodeExpression {
-        let stream = this.getStream();
+                const {expressionFactory} = operator;
 
-        stream.expect(TokenType.PUNCTUATION, '[', 'An array element was expected');
+                const operand = parseExpression(stream, operator.associativity === "LEFT" ? operator.precedence + 1 : operator.precedence, true);
 
-        let node = new TwingNodeExpressionArray(new Map(), stream.getCurrent().line, stream.getCurrent().column);
+                expression = expressionFactory([expression, operand], token.line, token.column);
+
+                token = stream.current;
+            }
+        }
+
+        if (precedence === 0) {
+            return parseConditionalExpression(stream, expression);
+        }
+
+        return expression;
+    };
+
+    const parseFilterExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingFilterNode => {
+        stream.next();
+
+        return parseFilterExpressionRaw(stream, node);
+    };
+
+    const parseFilterDefinitions: TwingParser["parseFilterDefinitions"] = (stream) => {
+        const definitions: ReturnType<TwingParser["parseFilterDefinitions"]> = [];
+
+        while (true) {
+            const token = stream.expect("NAME");
+            const {value, line, column} = token;
+
+            getFilterExpressionFactory(stream, value, token.line, token.column);
+
+            let methodArguments;
+
+            if (!stream.test("PUNCTUATION", '(')) {
+                methodArguments = createArrayNode([], line, column);
+            }
+            else {
+                methodArguments = parseArguments(stream, true, false, true);
+            }
+
+            definitions.unshift({
+                name: value,
+                arguments: methodArguments
+            })
+
+            if (!stream.test("PUNCTUATION", '|')) {
+                break;
+            }
+
+            stream.next();
+        }
+
+        return definitions;
+    };
+
+    const parseFilterExpressionRaw: TwingParser["parseFilterExpressionRaw"] = (stream, operand) => {
+        let filterNode: TwingFilterNode | null = null;
+
+        while (true) {
+            const token = stream.expect("NAME");
+            const {value, line, column} = token;
+
+            let methodArguments;
+
+            if (!stream.test("PUNCTUATION", '(')) {
+                methodArguments = createArrayNode([], line, column);
+            }
+            else {
+                methodArguments = parseArguments(stream, true, false, true);
+            }
+
+            const factory = getFilterExpressionFactory(stream, value, line, column);
+
+            if (filterNode === null) {
+                filterNode = factory(operand, value, methodArguments, token.line, token.column);
+            }
+            else {
+                filterNode = factory(filterNode, value, methodArguments, token.line, token.column);
+            }
+
+            if (!stream.test("PUNCTUATION", '|')) {
+                break;
+            }
+
+            stream.next();
+        }
+
+        return filterNode;
+    };
+
+    const parseHashExpression = (stream: TwingTokenStream): TwingHashNode => {
+        stream.expect("PUNCTUATION", '{', 'A hash element was expected');
+
         let first = true;
 
-        while (!stream.test(TokenType.PUNCTUATION, ']')) {
+        const elements: Array<{
+            key: TwingBaseNode;
+            value: TwingBaseExpressionNode;
+        }> = [];
+
+        while (!stream.test("PUNCTUATION", '}')) {
             if (!first) {
-                stream.expect(TokenType.PUNCTUATION, ',', 'An array element must be followed by a comma');
+                stream.expect("PUNCTUATION", ',', 'A hash value must be followed by a comma');
 
                 // trailing ,?
-                if (stream.test(TokenType.PUNCTUATION, ']')) {
+                if (stream.test("PUNCTUATION", '}')) {
                     break;
                 }
             }
 
             first = false;
 
-            node.addElement(this.parseExpression());
-        }
+            if (stream.test("SPREAD_OPERATOR")) {
+                const {current} = stream;
 
-        stream.expect(TokenType.PUNCTUATION, ']', 'An opened array is not properly closed');
+                stream.next();
 
-        return node;
-    }
+                const expression = parseExpression(stream);
+                const spreadNode = createSpreadNode(expression, current.line, current.column);
 
-    parseHashExpression(): TwingNodeExpression {
-        let stream = this.getStream();
-
-        stream.expect(TokenType.PUNCTUATION, '{', 'A hash element was expected');
-
-        let node = new TwingNodeExpressionHash(new Map(), stream.getCurrent().line, stream.getCurrent().column);
-        let first = true;
-
-        while (!stream.test(TokenType.PUNCTUATION, '}')) {
-            if (!first) {
-                stream.expect(TokenType.PUNCTUATION, ',', 'A hash value must be followed by a comma');
-
-                // trailing ,?
-                if (stream.test(TokenType.PUNCTUATION, '}')) {
-                    break;
-                }
+                elements.push({
+                    key: createBaseNode(null),
+                    value: spreadNode
+                });
+                
+                continue;
             }
-
-            first = false;
 
             // a hash key can be:
             //
@@ -849,492 +1162,502 @@ export class TwingParser {
             //  * a name, which is equivalent to a string -- a
             //  * an expression, which must be enclosed in parentheses -- (1 + 2)
             let token;
-            let key;
+            let key: TwingBaseExpressionNode;
 
-            if (token = stream.nextIf(TokenType.NAME)) {
-                key = new TwingNodeExpressionConstant(token.value, token.line, token.column);
+            if (token = stream.nextIf("NAME")) {
+                key = createConstantNode(token.value, token.line, token.column);
 
                 // {a} is a shortcut for {a:a}
-                if (stream.test(TokenType.PUNCTUATION, [',', '}'])) {
-                    node.addElement(new TwingNodeExpressionName(token.value, token.line, token.column), key);
+                if (stream.test("PUNCTUATION", [',', '}'])) {
+                    elements.push({
+                        key,
+                        value: createNameNode(token.value, token.line, token.column)
+                    });
                     
                     continue;
                 }
             }
-            else if ((token = stream.nextIf(TokenType.STRING)) || (token = stream.nextIf(TokenType.NUMBER))) {
-                key = new TwingNodeExpressionConstant(token.value, token.line, token.column);
-            } else if (stream.test(TokenType.PUNCTUATION, '(')) {
-                key = this.parseExpression();
-            } else {
-                let current = stream.getCurrent();
+            else if ((token = stream.nextIf("STRING")) || (token = stream.nextIf("NUMBER"))) {
+                key = createConstantNode(token.value, token.line, token.column);
+            }
+            else if (stream.test("PUNCTUATION", '(')) {
+                key = parseExpression(stream);
+            }
+            else {
+                const {type, line, value, column} = stream.current;
 
-                throw new TwingErrorSyntax(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(current.type)}" of value "${current.value}".`, current.line, stream.getSourceContext());
+                throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, {
+                    line,
+                    column
+                }, stream.source.name);
             }
 
-            stream.expect(TokenType.PUNCTUATION, ':', 'A hash key must be followed by a colon (:)');
+            stream.expect("PUNCTUATION", ':', 'A hash key must be followed by a colon (:)');
 
-            let value = this.parseExpression();
+            const value = parseExpression(stream);
 
-            node.addElement(value, key);
+            elements.push({
+                key,
+                value
+            });
         }
 
-        stream.expect(TokenType.PUNCTUATION, '}', 'An opened hash is not properly closed');
+        stream.expect("PUNCTUATION", '}', 'An opened hash is not properly closed');
+
+        return createHashNode(elements, stream.current.line, stream.current.column);
+    };
+
+    const parseMultiTargetExpression: TwingParser["parseMultiTargetExpression"] = (stream) => {
+        const {line, column} = stream.current;
+
+        const targets: Record<number, TwingBaseExpressionNode> = {};
+
+        while (true) {
+            pushToRecord(targets, parseExpression(stream));
+
+            if (!stream.nextIf("PUNCTUATION", ',')) {
+                break;
+            }
+        }
+
+        return createArgumentsNode(targets, line, column);
+    };
+
+    const parseNotTestExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingBaseExpressionNode => {
+        const {line, column} = stream.current;
+
+        return createNotNode(parseTestExpression(stream, node), line, column);
+    };
+
+    const parsePostfixExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode, prefixToken: Token): TwingBaseExpressionNode => {
+        while (true) {
+            let token = stream.current;
+
+            if (token.type === "PUNCTUATION") {
+                if (token.value === '.' || token.value === '[') {
+                    node = parseSubscriptExpression(stream, node, prefixToken);
+                }
+                else if (token.value === '|') {
+                    node = parseFilterExpression(stream, node);
+                }
+                else {
+                    break;
+                }
+            }
+            else {
+                break;
+            }
+        }
 
         return node;
-    }
+    };
 
-    parseSubscriptExpression(node: TwingNodeExpression) {
-        let stream = this.getStream();
+    const parsePrimaryExpression = (stream: TwingTokenStream): TwingBaseExpressionNode => {
+        const token = stream.current;
+
+        let node: TwingBaseExpressionNode;
+
+        switch (token.type) {
+            case "NAME":
+                stream.next();
+
+                switch (token.value) {
+                    case 'true':
+                    case 'TRUE':
+                        node = createConstantNode(true, token.line, token.column);
+                        break;
+
+                    case 'false':
+                    case 'FALSE':
+                        node = createConstantNode(false, token.line, token.column);
+                        break;
+
+                    case 'none':
+                    case 'NONE':
+                    case 'null':
+                    case 'NULL':
+                        node = createConstantNode(null, token.line, token.column);
+                        break;
+
+                    default:
+                        if ('(' === stream.current.value) {
+                            node = getFunctionNode(stream, token.value, token.line, token.column);
+                        }
+                        else {
+                            node = createNameNode(token.value, token.line, token.column);
+                        }
+                }
+                break;
+
+            case "NUMBER":
+                stream.next();
+                node = createConstantNode(token.value, token.line, token.column);
+                break;
+
+            case "STRING":
+            case "INTERPOLATION_START":
+                node = parseStringExpression(stream);
+                break;
+
+            case "OPERATOR":
+                let match = nameRegExp.exec(token.value);
+
+                if (match !== null && match[0] === token.value) {
+                    // in this context, string operators are variable names
+                    stream.next();
+                    node = createNameNode(token.value, token.line, token.column);
+
+                    break;
+                }
+                else if (unaryOperatorsRegister.has(token.value)) {
+                    const operator = unaryOperatorsRegister.get(token.value)!;
+
+                    stream.next();
+
+                    const expression = parsePrimaryExpression(stream);
+                    const {expressionFactory} = operator;
+
+                    node = expressionFactory([expression, createBaseNode(null)], token.line, token.column);
+
+                    break;
+                }
+
+            default:
+                if (token.test("PUNCTUATION", '[')) {
+                    node = parseArrayExpression(stream);
+                }
+                else if (token.test("PUNCTUATION", '{')) {
+                    node = parseHashExpression(stream);
+                }
+                else if (token.test("OPERATOR", '=') && (stream.look(-1).value === '==' || stream.look(-1).value === '!=')) {
+                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source.name);
+                }
+                else {
+                    throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.name);
+                }
+        }
+
+        return parsePostfixExpression(stream, node, token);
+    };
+
+    const parseStringExpression = (stream: TwingTokenStream): TwingBaseExpressionNode => {
+        const nodes: Array<TwingBaseExpressionNode> = [];
+
+        // a string cannot be followed by another string in a single expression
+        let nextCanBeString = true;
+        let token;
+
+        while (true) {
+            if (nextCanBeString && (token = stream.nextIf("STRING"))) {
+                nodes.push(createConstantNode(token.value, token.line, token.column));
+                nextCanBeString = false;
+            }
+            else if (stream.nextIf("INTERPOLATION_START")) {
+                nodes.push(parseExpression(stream));
+                stream.expect("INTERPOLATION_END");
+                nextCanBeString = true;
+            }
+            else {
+                break;
+            }
+        }
+
+        let expression = nodes.shift()!;
+
+        for (const node of nodes) {
+            expression = createConcatenateNode([expression, node], node.line, node.column);
+        }
+
+        return expression;
+    };
+
+    const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode, prefixToken: Token) => {
         let token = stream.next();
-        let lineno = token.line;
-        let columnno = token.column;
-        let arguments_ = new TwingNodeExpressionArray(new Map(), lineno, columnno);
-        let arg: TwingNodeExpression;
+        let attribute: TwingBaseExpressionNode;
+        let type: TwingGetAttributeCallType = "any";
 
-        let type = TwingTemplate.ANY_CALL;
+        const {line, column} = token;
+        const {line: prefixTokenLine, column: prefixTokenColumn} = prefixToken;
+        const elements: Array<TwingBaseExpressionNode> = [];
+
+        const createArrayNodeFromElements = () => {
+            return createArrayNode(elements.map((element) => {
+                return {
+                    value: element
+                };
+            }), line, column);
+        };
 
         if (token.value === '.') {
             token = stream.next();
 
             let match = nameRegExp.exec(token.value);
 
-            if ((token.type === TokenType.NAME) || (token.type === TokenType.NUMBER) || (token.type === TokenType.OPERATOR && (match !== null))) {
-                arg = new TwingNodeExpressionConstant(token.value, lineno, columnno);
+            if ((token.type === "NAME") || (token.type === "NUMBER") || (token.type === "OPERATOR" && (match !== null))) {
+                attribute = createConstantNode(token.value, line, column);
 
-                if (stream.test(TokenType.PUNCTUATION, '(')) {
-                    type = TwingTemplate.METHOD_CALL;
+                if (stream.test("PUNCTUATION", '(')) {
+                    type = "method";
 
-                    let node = this.parseArguments();
+                    const argumentsNode = parseArguments(stream);
 
-                    node.getNodes().forEach(function (n, k) {
-                        arguments_.addElement(n);
-                    });
+                    for (const {value} of getKeyValuePairs(argumentsNode)) {
+                        elements.push(value);
+                    }
                 }
-            } else {
-                throw new TwingErrorSyntax('Expected name or number.', lineno, stream.getSourceContext());
+            }
+            else {
+                throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.name);
             }
 
-            if ((node.is(nameType)) && this.getImportedSymbol('template', node.getAttribute('name'))) {
-                let name = arg.getAttribute('value');
+            if ((node.is("name")) && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
+                const name = (attribute as TwingConstantNode<string>).attributes.value;
+                const methodCallNode = createMethodCallNode(node, name, createArrayNodeFromElements(), line, column);
 
-                node = new TwingNodeExpressionMethodCall(node, name, arguments_, lineno, columnno);
-                node.setAttribute('safe', true);
-
-                return node;
+                return methodCallNode;
             }
-        } else {
-            type = TwingTemplate.ARRAY_CALL;
+        }
+        else {
+            type = "array";
 
             // slice?
             let slice = false;
 
-            if (stream.test(TokenType.PUNCTUATION, ':')) {
+            if (stream.test("PUNCTUATION", ':')) {
                 slice = true;
-                arg = new TwingNodeExpressionConstant(0, token.line, token.column);
-            } else {
-                arg = this.parseExpression();
+                attribute = createConstantNode(0, token.line, token.column);
+            }
+            else {
+                attribute = parseExpression(stream);
             }
 
-            if (stream.nextIf(TokenType.PUNCTUATION, ':')) {
+            if (stream.nextIf("PUNCTUATION", ':')) {
                 slice = true;
             }
 
             if (slice) {
-                let length: TwingNodeExpression;
+                let length: TwingConstantNode;
 
-                if (stream.test(TokenType.PUNCTUATION, ']')) {
-                    length = new TwingNodeExpressionConstant(null, token.line, token.column);
-                } else {
-                    length = this.parseExpression();
+                if (stream.test("PUNCTUATION", ']')) {
+                    length = createConstantNode(null, token.line, token.column);
+                }
+                else {
+                    length = parseExpression(stream) as TwingConstantNode;
                 }
 
-                let factory = this.getFilterExpressionFactory('slice', token.line, token.column);
-                let filterArguments = new TwingNode(new Map([[0, arg], [1, length]]));
-                let filter = factory.call(this, node, new TwingNodeExpressionConstant('slice', token.line, token.column), filterArguments, token.line, token.column);
+                const factory = getFilterExpressionFactory(stream, 'slice', token.line, token.column);
+                const filterArguments = createArrayNode([
+                    {
+                        key: createConstantNode(0, line, column),
+                        value: attribute
+                    },
+                    {
+                        key: createConstantNode(1, line, column),
+                        value: length
+                    }
+                ], 1, 1);
+                const filter = factory(node, 'slice', filterArguments, token.line, token.column);
 
-                stream.expect(TokenType.PUNCTUATION, ']');
+                stream.expect("PUNCTUATION", ']');
 
                 return filter;
             }
 
-            stream.expect(TokenType.PUNCTUATION, ']');
+            stream.expect("PUNCTUATION", ']');
         }
 
-        return new TwingNodeExpressionGetAttribute(node, arg, arguments_, type, lineno, columnno);
-    }
+        return createAttributeAccessorNode(node, attribute, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn);
+    };
 
-    parsePostfixExpression(node: TwingNodeExpression): TwingNodeExpression {
-        while (true) {
-            let token = this.getCurrentToken();
+    const parseTestExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingBaseExpressionNode => {
+        const {line, column} = stream.current;
+        const name = getTestName(stream);
 
-            if (token.type === TokenType.PUNCTUATION) {
-                if ('.' == token.value || '[' == token.value) {
-                    node = this.parseSubscriptExpression(node);
-                } else if ('|' == token.value) {
-                    node = this.parseFilterExpression(node);
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
+        let testArguments = createArrayNode([], line, column);
+
+        if (stream.test("PUNCTUATION", '(')) {
+            testArguments = parseArguments(stream, true);
         }
 
-        return node;
-    }
-
-    parseTestExpression(node: TwingNodeExpression): TwingNodeExpression {
-        let stream = this.getStream();
-        let name: string;
-        let test: TwingTest;
-
-        [name, test] = this.getTest(node.getTemplateLine());
-
-        let expressionFactory = test.getExpressionFactory();
-
-        let testArguments = null;
-
-        if (stream.test(TokenType.PUNCTUATION, '(')) {
-            testArguments = this.parseArguments(true);
-        }
-
-        if ((name === 'defined') && node.is(nameType)) {
-            let alias = this.getImportedSymbol('function', node.getAttribute('name'));
+        if ((name === 'defined') && (node.is("name"))) {
+            const alias = getImportedMethod(node.attributes.name);
 
             if (alias !== null) {
-                node = new TwingNodeExpressionMethodCall(alias.node, alias.name, new TwingNodeExpressionArray(new Map(), node.getTemplateLine(), node.getTemplateColumn()), node.getTemplateLine(), node.getTemplateColumn());
-                node.setAttribute('safe', true);
+                node = createMethodCallNode(alias.node, alias.name, createArrayNode([], node.line, node.column), node.line, node.column);
             }
         }
 
-        return expressionFactory.call(this, node, name, testArguments, this.getCurrentToken().line);
+        return createTestNode(node, name, testArguments, line, column);
+    };
+
+    const peekBlockStack: TwingParser["peekBlockStack"] = () => {
+        return blockStack[blockStack.length - 1];
+    };
+
+    const popBlockStack: TwingParser["popBlockStack"] = () => {
+        blockStack.pop();
+    };
+
+    const popLocalScope: TwingParser["popLocalScope"] = () => {
+        importedSymbols.shift();
+    };
+
+    const pushBlockStack: TwingParser["pushBlockStack"] = (name) => {
+        blockStack.push(name);
+    };
+
+    const pushLocalScope: TwingParser["pushLocalScope"] = () => {
+        importedSymbols.unshift({
+            method: new Map(),
+            template: []
+        });
+    };
+
+    const isMainScope = () => {
+        return importedSymbols.length === 1;
+    };
+
+    const setBlock: TwingParser["setBlock"] = (name, node) => {
+        blocks[name] = node;
     }
 
-    parseNotTestExpression(node: TwingNodeExpression): TwingNodeExpression {
-        return new TwingNodeExpressionUnaryNot(this.parseTestExpression(node), this.getCurrentToken().line, this.getCurrentToken().column);
-    }
+    const setMacro: TwingParser["setMacro"] = (name, node) => {
+        macros[name] = node
+    };
 
-    parseConditionalExpression(expr: TwingNodeExpression): TwingNodeExpression {
-        let expr2;
-        let expr3;
-
-        while (this.getStream().nextIf(TokenType.PUNCTUATION, '?')) {
-            if (!this.getStream().nextIf(TokenType.PUNCTUATION, ':')) {
-                expr2 = this.parseExpression();
-
-                if (this.getStream().nextIf(TokenType.PUNCTUATION, ':')) {
-                    expr3 = this.parseExpression();
-                } else {
-                    expr3 = new TwingNodeExpressionConstant('', this.getCurrentToken().line, this.getCurrentToken().column);
-                }
-            } else {
-                expr2 = expr;
-                expr3 = this.parseExpression();
-            }
-
-            expr = new TwingNodeExpressionConditional(expr, expr2, expr3, this.getCurrentToken().line, this.getCurrentToken().column);
-        }
-
-        return expr;
-    }
-
-    parseFilterExpression(node: TwingNodeExpression): TwingNodeExpression {
-        this.getStream().next();
-
-        return this.parseFilterExpressionRaw(node);
-    }
-
-    parseFilterExpressionRaw(node: TwingNodeExpression, tag: string = null): TwingNodeExpression {
-        while (true) {
-            let token = this.getStream().expect(TokenType.NAME);
-
-            let name = new TwingNodeExpressionConstant(token.value, token.line, token.column);
-            let methodArguments;
-
-            if (!this.getStream().test(TokenType.PUNCTUATION, '(')) {
-                methodArguments = new TwingNode();
-            } else {
-                methodArguments = this.parseArguments(true, false, true);
-            }
-
-            let factory = this.getFilterExpressionFactory('' + name.getAttribute('value'), token.line, token.column);
-
-            node = factory.call(this, node, name, methodArguments, token.line, tag);
-
-            if (!this.getStream().test(TokenType.PUNCTUATION, '|')) {
-                break;
-            }
-
-            this.getStream().next();
-        }
-
-        return node;
-    }
-
-    /**
-     * Parses arguments.
-     *
-     * @param namedArguments {boolean} Whether to allow named arguments or not
-     * @param definition {boolean} Whether we are parsing arguments for a function definition
-     * @param allowArrow {boolean}
-     *
-     * @return TwingNode
-     *
-     * @throws TwingErrorSyntax
-     */
-    parseArguments(namedArguments: boolean = false, definition: boolean = false, allowArrow: boolean = false): TwingNode {
-        let parsedArguments = new Map();
-        let stream = this.getStream();
-        let value: TwingNodeExpression;
-        let token;
-
-        stream.expect(TokenType.PUNCTUATION, '(', 'A list of arguments must begin with an opening parenthesis');
-
-        while (!stream.test(TokenType.PUNCTUATION, ')')) {
-            if (parsedArguments.size > 0) {
-                stream.expect(TokenType.PUNCTUATION, ',', 'Arguments must be separated by a comma');
-            }
-
-            if (definition) {
-                token = stream.expect(TokenType.NAME, null, 'An argument must be a name');
-
-                value = new TwingNodeExpressionName(token.value, this.getCurrentToken().line, this.getCurrentToken().column);
-            } else {
-                value = this.parseExpression(0, allowArrow);
-            }
-
-            let name = null;
-
-            if (namedArguments && (token = stream.nextIf(TokenType.OPERATOR, '='))) {
-                if (value.type !== nameType) {
-                    throw new TwingErrorSyntax(`A parameter name must be a string, "${value.constructor.name}" given.`, token.line, stream.getSourceContext());
-                }
-                name = value.getAttribute('name');
-
-                if (definition) {
-                    value = this.parsePrimaryExpression();
-
-                    if (!this.checkConstantExpression(value)) {
-                        throw new TwingErrorSyntax(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, token.line, stream.getSourceContext());
-                    }
-                } else {
-                    value = this.parseExpression(0, allowArrow);
-                }
-            }
-
-            if (definition) {
-                if (null === name) {
-                    name = value.getAttribute('name');
-                    value = new TwingNodeExpressionConstant(null, this.getCurrentToken().line, this.getCurrentToken().column);
-                }
-
-                parsedArguments.set(name, value);
-            } else {
-                if (null === name) {
-                    push(parsedArguments, value);
-                } else {
-                    parsedArguments.set(name, value);
-                }
+    const subparse: TwingParser["subparse"] = (stream, tag, test) => {
+        // token parsers
+        if (tokenParsers.size === 0) {
+            for (const handler of tagHandlers) {
+                tokenParsers.set(handler.tag, handler.initialize(parser, level));
             }
         }
 
-        stream.expect(TokenType.PUNCTUATION, ')', 'A list of arguments must be closed by a parenthesis');
+        let {line, column} = stream.current;
+        let children: Record<number, TwingBaseNode> = {};
+        let i: number = 0;
+        let token: Token;
 
-        return new TwingNode(parsedArguments);
-    }
+        while (!stream.isEOF()) {
+            switch (stream.current.type) {
+                case "TEXT":
+                    token = stream.next();
 
-    parseAssignmentExpression() {
-        let stream = this.getStream();
-        let targets = new Map();
+                    children[i++] = createTextNode(token.value, token.line, token.column);
 
-        while (true) {
-            let token = this.getCurrentToken();
+                    break;
+                case "VARIABLE_START":
+                    token = stream.next();
 
-            if (stream.test(TokenType.OPERATOR) && nameRegExp.exec(token.value)) {
-                // in this context, string operators are variable names
-                this.getStream().next();
-            } else {
-                stream.expect(TokenType.NAME, null, 'Only variables can be assigned to');
-            }
+                    const expression = parseExpression(stream);
 
-            let value = token.value;
+                    stream.expect("VARIABLE_END");
+                    children[i++] = createPrintNode(expression, token.line, token.column);
 
-            if (['true', 'false', 'none', 'null'].indexOf(value.toLowerCase()) > -1) {
-                throw new TwingErrorSyntax(`You cannot assign a value to "${value}".`, token.line, stream.getSourceContext());
-            }
-
-            push(targets, new TwingNodeExpressionAssignName(value, token.line, token.column));
-
-            if (!stream.nextIf(TokenType.PUNCTUATION, ',')) {
-                break;
-            }
-        }
-
-        return new TwingNode(targets);
-    }
-
-    parseMultitargetExpression() {
-        let targets = new Map();
-
-        while (true) {
-            push(targets, this.parseExpression());
-
-            if (!this.getStream().nextIf(TokenType.PUNCTUATION, ',')) {
-                break;
-            }
-        }
-
-        return new TwingNode(targets);
-    }
-
-    // checks that the node only contains "constant" elements
-    checkConstantExpression(node: TwingNode) {
-        if (!(node.is(constantType) || node.is(arrayType) || node.is(negType) || node.is(posType))) {
-            return false;
-        }
-
-        for (let [k, n] of node.getNodes()) {
-            if (!this.checkConstantExpression(n)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private isUnary(token: Token) {
-        return token.test(TokenType.OPERATOR) && this.unaryOperators.has(token.value);
-    }
-
-    private isBinary(token: Token) {
-        return token.test(TokenType.OPERATOR) && this.binaryOperators.has(token.value);
-    }
-
-    private getTest(line: number): Array<any> {
-        const {strict} = this.options;
-
-        let stream = this.getStream();
-        let name = stream.expect(TokenType.NAME).value;
-
-        let test = this.env.getTest(name);
-
-        if (test) {
-            return [name, test];
-        }
-
-        if (stream.test(TokenType.NAME)) {
-            // try 2-words tests
-            name = name + ' ' + this.getCurrentToken().value;
-
-            let test = this.env.getTest(name);
-
-            if (test) {
-                stream.next();
-
-                return [name, test];
-            }
-            else {
-                // non-existing two-words test
-                if (!strict) {
+                    break;
+                case "TAG_START":
                     stream.next();
 
-                    return [name, new TwingTest(name, null, [])];
-                }
+                    token = stream.current;
+
+                    if (token.type !== "NAME") {
+                        throw createParsingError('A block must start with a tag name.', token, stream.source.name);
+                    }
+
+                    if ((test !== null) && test(token)) {
+                        if (Object.keys(children).length === 1) {
+                            return children[0];
+                        }
+
+                        return createBaseNode(null, {}, children, line, column);
+                    }
+
+                    if (!tokenParsers.has(token.value)) {
+                        let error;
+
+                        if (test !== null) {
+                            error = createParsingError(
+                                `Unexpected "${token.value}" tag`,
+                                token,
+                                stream.source.name
+                            );
+
+                            error.appendMessage(` (expecting closing tag for the "${tag}" tag defined line ${line}).`);
+                        }
+                        else {
+                            error = createParsingError(
+                                `Unknown "${token.value}" tag.`,
+                                token,
+                                stream.source.name
+                            );
+
+                            error.addSuggestions(token.value, tags);
+                        }
+
+                        throw error;
+                    }
+
+                    stream.next();
+
+                    const parseToken = tokenParsers.get(token.value)!;
+                    const node = parseToken(token, stream);
+
+                    if (node !== null) {
+                        children[i++] = node;
+                    }
+
+                    break;
+                case "COMMENT_START":
+                    token = stream.next();
+
+                    if (stream.test("TEXT")) {
+                        // non-empty comment
+                        token = stream.expect("TEXT");
+                    }
+
+                    stream.expect("COMMENT_END");
+                    children[i++] = createCommentNode(token.value, token.line, token.column);
+
+                    break;
             }
         }
-        else {
-            // non-existing one-word test
-            if (!strict) {
-                return [name, new TwingTest(name, null, [])];
-            }
+
+        if (Object.keys(children).length === 1) {
+            return children[0];
         }
 
-        let e = new TwingErrorSyntax(`Unknown "${name}" test.`, line, stream.getSourceContext());
+        return createBaseNode(null, {}, children, line, column);
+    };
 
-        e.addSuggestions(name, [...this.env.getTests().keys()]);
-
-        throw e;
-    }
-
-    private getFunctionExpressionFactory(name: string, line: number, column: number) {
-        const {strict} = this.options;
-
-        let function_ = this.env.getFunction(name);
-
-        if (function_) {
-            if (function_.isDeprecated()) {
-                let message = `Twing Function "${function_.getName()}" is deprecated`;
-
-                if (function_.getDeprecatedVersion() !== true) {
-                    message += ` since version ${function_.getDeprecatedVersion()}`;
-                }
-
-                if (function_.getAlternative()) {
-                    message += `. Use "${function_.getAlternative()}" instead`;
-                }
-
-                let src = this.getStream().getSourceContext();
-
-                message += ` in "${src.getName()}" at line ${line}.`;
-
-                process.stdout.write(message);
-            }
-
-            return function_.getExpressionFactory();
+    const parser = {
+        addImportedSymbol,
+        addTrait,
+        embedTemplate,
+        getBlock,
+        getVarName,
+        isMainScope,
+        parse,
+        parseArguments,
+        parseAssignmentExpression,
+        parseExpression,
+        parseFilterExpressionRaw,
+        parseFilterDefinitions,
+        parseMultiTargetExpression,
+        peekBlockStack,
+        popBlockStack,
+        popLocalScope,
+        pushBlockStack,
+        pushLocalScope,
+        setBlock,
+        setMacro,
+        subparse,
+        get parent() {
+            return parent;
+        },
+        set parent(aParent) {
+            parent = aParent;
         }
-        else {
-            if (strict) {
-                let e = new TwingErrorSyntax(`Unknown "${name}" function.`, line, this.getStream().getSourceContext());
+    };
 
-                e.addSuggestions(name, Array.from(this.env.getFunctions().keys()));
-
-                throw e;
-            }
-
-            return (name: string, functionArguments: TwingNode, line: number, columnno: number) => {
-                return new TwingNodeExpressionFunction(name, functionArguments, line, columnno);
-            };
-        }
-    }
-
-    private getFilterExpressionFactory(name: string, line: number, column: number) {
-        const {strict} = this.options;
-
-        let filter = this.env.getFilter(name);
-
-        if (filter) {
-            if (filter.isDeprecated()) {
-                let message = `Twing Filter "${filter.getName()}" is deprecated`;
-
-                if (filter.getDeprecatedVersion() !== true) {
-                    message += ` since version ${filter.getDeprecatedVersion()}`;
-                }
-
-                if (filter.getAlternative()) {
-                    message += `. Use "${filter.getAlternative()}" instead`;
-                }
-
-                let src = this.getStream().getSourceContext();
-
-                message += ` in "${src.getName()}" at line ${line}.`;
-
-                process.stdout.write(message);
-            }
-
-            return filter.getExpressionFactory();
-        }
-        else {
-            if (strict) {
-                let e = new TwingErrorSyntax(`Unknown "${name}" filter.`, line, this.getStream().getSourceContext());
-
-                e.addSuggestions(name, Array.from(this.env.getFilters().keys()));
-
-                throw e;
-            }
-
-            return (node: TwingNode, filterName: TwingNodeExpressionConstant, filterArguments: TwingNode, line: number, column: number, tag: string = null) => {
-                return new TwingNodeExpressionFilter(node, filterName, filterArguments, line, column, tag);
-            }
-        }
-    }
-}
+    return parser;
+};

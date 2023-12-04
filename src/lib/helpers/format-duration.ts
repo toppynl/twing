@@ -1,4 +1,4 @@
-import {Duration} from "luxon";
+import type {Duration} from "luxon";
 
 const pad = require('pad');
 
@@ -16,18 +16,18 @@ const padStart = function (value: number, length: number, padString: string): st
  *
  * @returns {string} The formatted interval.
  */
-export function formatDuration(duration: Duration, format: string): string {
+export const formatDuration = (duration: Duration, format: string): string => {
     let result: string;
-
-    result = format.replace(/%([YyMmDdaHhIiSsFfRr])/g, function (match, token) {
+    
+    result = format.replace(/%([YyMmDdaHhIiSsFfRr])/g, function (_match, token) {
         let result: any;
         let isNegative: boolean = false;
-
+        
         if (duration.as('milliseconds') < 0) {
             isNegative = true;
             duration = duration.negate();
         }
-
+        
         switch (token) {
             case 'Y': {
                 // 	Years, numeric, at least 2 digits with leading 0

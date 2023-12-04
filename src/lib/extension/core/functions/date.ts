@@ -1,8 +1,7 @@
 import {DateTime, Duration} from "luxon";
 import {modifyDate} from "../../../helpers/modify-date";
-import {TwingErrorRuntime} from "../../../error/runtime";
-import {formatDateTime} from "../../../helpers/format-date-time";
-import {TwingTemplate} from "../../../template";
+import {createRuntimeError} from "../../../error/runtime";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Converts an input to a DateTime instance.
@@ -14,87 +13,77 @@ import {TwingTemplate} from "../../../template";
  * </pre>
  *
  * @param {TwingTemplate} template
- * @param {Date | DateTime | Duration | number | string} date A date or null to use the current time
+ * @param {Date | DateTime | Duration | number | string} input A date or null to use the current time
  * @param {string | null | boolean} timezone The target timezone, null to use the default, false to leave unchanged
  *
  * @returns {Promise<DateTime | Duration>}
  */
-export function date(template: TwingTemplate, date: Date | DateTime | Duration | number | string, timezone: string | null | false = null): Promise<DateTime | Duration> {
-    let _do = (): DateTime | Duration => {
+export const createDate = (
+    defaultTimezone: string,
+    input: Date | DateTime | number | string | null,
+    timezone: string | null | false
+): Promise<DateTime> => {
+    const _do = (): DateTime => {
         let result: DateTime;
-        let core = template.environment.getCoreExtension();
 
-        // determine the timezone
-        if (timezone !== false) {
-            if (timezone === null) {
-                timezone = core.getTimezone();
-            }
-        }
-
-        if (date instanceof DateTime) {
-            if (timezone !== false) {
-                date = date.setZone(timezone);
-            }
-
-            return date;
-        }
-
-        if (date instanceof Duration) {
-            return date;
-        }
-
-        let parsedUtcOffset = 0;
-
-        if (!date) {
+        if (input === null) {
             result = DateTime.local();
-        } else if (date instanceof Date) {
-            result = DateTime.fromJSDate(date);
-        } else if (typeof date === 'string') {
-            if (date === 'now') {
+        }
+        else if (typeof input === 'number') {
+            result = DateTime.fromMillis(input * 1000);
+        }
+        else if (typeof input === 'string') {
+            if (input === 'now') {
                 result = DateTime.local();
-            } else {
-                result = DateTime.fromISO(date, {setZone: true});
+            }
+            else {
+                result = DateTime.fromISO(input, {
+                    setZone: true
+                });
 
                 if (!result.isValid) {
-                    result = DateTime.fromRFC2822(date, {setZone: true});
+                    result = DateTime.fromRFC2822(input, {
+                        setZone: true
+                    });
                 }
 
                 if (!result.isValid) {
-                    result = DateTime.fromSQL(date, {setZone: true});
+                    result = DateTime.fromSQL(input, {
+                        setZone: true
+                    });
                 }
 
-                if (result.isValid) {
-                    parsedUtcOffset = result.offset;
-                } else {
-                    result = modifyDate(date);
+                if (!result.isValid && /^-{0,1}\d+$/.test(input)) {
+                    result = DateTime.fromMillis(Number.parseInt(input) * 1000, {
+                        setZone: true
+                    });
+                }
+
+                if (!result.isValid) {
+                    result = modifyDate(input);
                 }
             }
-        } else if (typeof date === 'number') {
-            // date is PHP timestamp - i.e. in seconds
-            let ts = date as number * 1000;
-
-            // timestamp are UTC by definition
-            result = DateTime.fromMillis(ts, {
-                setZone: false
-            });
+        }
+        else if (input instanceof DateTime) {
+            result = input;
+        }
+        else {
+            result = DateTime.fromJSDate(input);
         }
 
         if (!result || !result.isValid) {
-            throw new TwingErrorRuntime(`Failed to parse date "${date}".`);
+            throw createRuntimeError(`Failed to parse date "${input}".`);
         }
 
+        // now let's apply timezone
+        // determine the timezone
         if (timezone !== false) {
-            result = result.setZone(timezone);
-        } else {
-            if (parsedUtcOffset) {
-                // explicit UTC offset
-                result = result.setZone(`UTC+${parsedUtcOffset / 60}`);
+            if (timezone === null) {
+                timezone = defaultTimezone;
             }
-        }
 
-        Reflect.set(result, 'format', function (format: string) {
-            return formatDateTime(this, format);
-        });
+            result = result.setZone(timezone);
+        }
 
         return result;
     };
@@ -104,4 +93,16 @@ export function date(template: TwingTemplate, date: Date | DateTime | Duration |
     } catch (e) {
         return Promise.reject(e);
     }
+}
+
+export const date: TwingCallable = (
+    executionContext,
+    date: Date | DateTime | Duration | number | string | null,
+    timezone: string | null | false
+): Promise<DateTime | Duration> => {
+    if (date instanceof Duration) {
+        return Promise.resolve(date);
+    }
+
+    return createDate(executionContext.timezone, date, timezone);
 }

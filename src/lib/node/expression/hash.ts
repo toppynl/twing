@@ -1,46 +1,52 @@
-import {TwingNodeExpressionArray} from "./array";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {TwingBaseArrayNode, createBaseArrayNode, getKeyValuePairs} from "./array";
+import type {TwingBaseExpressionNode} from "../expression";
+import {spreadNodeType} from "./spread";
 
-export const type = new TwingNodeType('expression_hash');
+export const hashNodeType = 'hash'
 
-export class TwingNodeExpressionHash extends TwingNodeExpressionArray {
-    get type() {
-        return type;
-    }
-
-    /**
-     * hash node is also an array node.
-     *
-     * @param type
-     */
-    is(type: TwingNodeType): boolean {
-        return (type === super.type) || super.is(type);
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('new Map([')
-        ;
-
-        let first = true;
-
-        for (let pair of this.getKeyValuePairs()) {
-            if (!first) {
-                compiler.raw(', ');
-            }
-
-            first = false;
-
-            compiler
-                .raw('[')
-                .subcompile(pair.key)
-                .raw(', ')
-                .subcompile(pair.value)
-                .raw(']')
-            ;
-        }
-
-        compiler.raw('])');
-    }
+export interface TwingHashNode extends TwingBaseArrayNode<typeof hashNodeType> {
 }
+
+export const createHashNode = (
+    elements: Array<{
+        key: TwingBaseExpressionNode;
+        value: TwingBaseExpressionNode;
+    }>,
+    line: number,
+    column: number
+): TwingHashNode => {
+    const baseNode = createBaseArrayNode(hashNodeType, elements, line, column);
+
+    const hashNode: TwingHashNode = {
+        ...baseNode,
+        execute: async (executionContext): Promise<Map<string, any>> => {
+            const keyValuePairs = getKeyValuePairs(hashNode);
+
+            const hash: Map<any, any> = new Map();
+            
+            for (const {key: keyNode, value: valueNode} of keyValuePairs) {
+                const [key, value] = await Promise.all([
+                    keyNode.execute(executionContext),
+                    valueNode.execute(executionContext)
+                ]);
+                
+                if (valueNode.is(spreadNodeType)) {
+                    for (const [valueKey, valueValue] of value as Map<any, any>) {
+                        hash.set(valueKey, valueValue);
+                    }
+                }
+                else {
+                    hash.set(key, value);
+                }
+            }
+            
+            return hash;
+        },
+        // todo: remove once confirmed that it is not needed
+        // is: (type) => {
+        //     return type === "hash" || type === "array";
+        // }
+    };
+
+    return hashNode;
+};

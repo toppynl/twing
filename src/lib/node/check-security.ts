@@ -1,100 +1,67 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
+import {
+    isASandboxSecurityNotAllowedFilterError,
+    TwingSandboxSecurityNotAllowedFilterError
+} from "../sandbox/security-not-allowed-filter-error";
+import {
+    isASandboxSecurityNotAllowedTagError,
+    TwingSandboxSecurityNotAllowedTagError
+} from "../sandbox/security-not-allowed-tag-error";
+import {TwingSandboxSecurityNotAllowedFunctionError} from "../sandbox/security-not-allowed-function-error";
 
-export const type = new TwingNodeType('check_security');
+export type CheckSecurityNodeAttributes = TwingBaseNodeAttributes & {
+    usedFilters: Map<string, TwingNode | string>;
+    usedTags: Map<string, TwingNode | string>;
+    usedFunctions: Map<string, TwingNode | string>;
+};
 
-export class TwingNodeCheckSecurity extends TwingNode {
-    private usedFilters: Map<string, TwingNode | string>;
-    private usedTags: Map<string, TwingNode | string>;
-    private usedFunctions: Map<string, TwingNode | string>;
-
-    constructor(usedFilters: Map<string, TwingNode | string>, usedTags: Map<string, TwingNode | string>, usedFunctions: Map<string, TwingNode | string>) {
-        super();
-
-        this.usedFilters = usedFilters;
-        this.usedTags = usedTags;
-        this.usedFunctions = usedFunctions;
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        let tags = new Map();
-
-        for (let [name, node] of this.usedTags) {
-            if (typeof node === 'string') {
-                tags.set(node, null);
-            }
-            else {
-                tags.set(name, node.getTemplateLine());
-            }
-        }
-
-        let filters = new Map();
-
-        for (let [name, node] of this.usedFilters) {
-            if (typeof node === 'string') {
-                filters.set(node, null);
-            }
-            else {
-                filters.set(name, node.getTemplateLine());
-            }
-        }
-
-        let functions = new Map();
-
-        for (let [name, node] of this.usedFunctions) {
-            if (typeof node === 'string') {
-                functions.set(node, null);
-            }
-            else {
-                functions.set(name, node.getTemplateLine());
-            }
-        }
-
-        compiler
-            .write('let tags = ').repr(tags).raw(";\n")
-            .write('let filters = ').repr(filters).raw(";\n")
-            .write('let functions = ').repr(functions).raw(";\n\n")
-            .write("try {\n")
-            .indent()
-            .write("this.environment.checkSecurity(\n")
-            .indent()
-            .write(!tags.size ? "[],\n" : "['" + [...tags.keys()].join('\', \'') + "'],\n")
-            .write(!filters.size ? "[],\n" : "['" + [...filters.keys()].join('\', \'') + "'],\n")
-            .write(!functions.size ? "[]\n" : "['" + [...functions.keys()].join('\', \'') + "']\n")
-            .outdent()
-            .write(");\n")
-            .outdent()
-            .write("}\n")
-            .write("catch (e) {\n")
-            .indent()
-            .write("if (e instanceof this.SandboxSecurityError) {\n")
-            .indent()
-            .write("e.setSourceContext(this.source);\n\n")
-            .write("if (e instanceof this.SandboxSecurityNotAllowedTagError && tags.has(e.getTagName())) {\n")
-            .indent()
-            .write("e.setTemplateLine(tags.get(e.getTagName()));\n")
-            .outdent()
-            .write("}\n")
-            .write("else if (e instanceof this.SandboxSecurityNotAllowedFilterError && filters.has(e.getFilterName())) {\n")
-            .indent()
-            .write("e.setTemplateLine(filters.get(e.getFilterName()));\n")
-            .outdent()
-            .write("}\n")
-            .write("else if (e instanceof this.SandboxSecurityNotAllowedFunctionError && functions.has(e.getFunctionName())) {\n")
-            .indent()
-            .write("e.setTemplateLine(functions.get(e.getFunctionName()));\n")
-            .outdent()
-            .write("}\n")
-            .outdent()
-            .write('}\n\n')
-            .write("throw e;\n")
-            .outdent()
-            .write("}\n\n")
-        ;
-    }
+export interface TwingCheckSecurityNode extends TwingBaseNode<"check_security", CheckSecurityNodeAttributes> {
 }
+
+export const createCheckSecurityNode = (
+    usedFilters: Map<string, TwingNode>,
+    usedTags: Map<string, TwingNode>,
+    usedFunctions: Map<string, TwingNode>,
+    line: number,
+    column: number
+): TwingCheckSecurityNode => {
+    const baseNode = createBaseNode("check_security", {
+        usedFilters,
+        usedTags,
+        usedFunctions
+    }, {}, line, column);
+
+    return {
+        ...baseNode,
+        execute: (executionContext) => {
+            const {template, sandboxed} = executionContext;
+            const {usedTags, usedFunctions, usedFilters} = baseNode.attributes;
+
+            try {
+                sandboxed && template.checkSecurity(
+                    [...usedTags.keys()],
+                    [...usedFilters.keys()],
+                    [...usedFunctions.keys()]
+                );
+            } catch (error: any) {
+                const supplementError = (error: TwingSandboxSecurityNotAllowedFilterError | TwingSandboxSecurityNotAllowedFunctionError | TwingSandboxSecurityNotAllowedTagError) => {
+                    error.source = template.name;
+
+                    if (isASandboxSecurityNotAllowedTagError(error)) {
+                        error.location = usedTags.get(error.tagName);
+                    } else if (isASandboxSecurityNotAllowedFilterError(error)) {
+                        error.location = usedFilters.get(error.filterName)
+                    } else {
+                        error.location = usedFunctions.get(error.functionName);
+                    }
+                }
+
+                supplementError(error);
+
+                throw error;
+            }
+
+            return Promise.resolve();
+        }
+    }
+};

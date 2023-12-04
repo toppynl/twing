@@ -1,66 +1,105 @@
-import {TwingNodeExpression} from "../expression";
-import {TwingNodeExpressionArray} from "./array";
-import {TwingCompiler} from "../../compiler";
-import {TwingNodeType} from "../../node-type";
+import {TwingBaseExpressionNode, TwingBaseExpressionNodeAttributes, createBaseExpressionNode} from "../expression";
+import type {TwingArrayNode} from "./array";
+import {getKeyValuePairs} from "./array";
+import {TwingBaseNode} from "../../node";
+import {MacroHandler, TwingTemplate} from "../../template";
+import {createRuntimeError} from "../../error/runtime";
 
-export const type = new TwingNodeType('expression_method_call');
+export const methodCallNodeType = "method_call";
 
-export class TwingNodeExpressionMethodCall extends TwingNodeExpression {
-    constructor(node: TwingNodeExpression, method: string, methodArguments: TwingNodeExpressionArray, lineno: number, columnno: number) {
-        let nodes = new Map();
+export type TwingMethodCallNodeAttributes = TwingBaseExpressionNodeAttributes & {
+    methodName: string;
+    shouldTestExistence: boolean;
+};
 
-        nodes.set('node', node);
-        nodes.set('arguments', methodArguments);
+type NodeWithName = TwingBaseNode<any, {
+    name: string;
+}>;
 
-        let attributes = new Map();
-
-        attributes.set('method', method);
-        attributes.set('safe', false);
-        attributes.set('is_defined_test', false);
-
-        super(nodes, attributes, lineno, columnno);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        if (this.getAttribute('is_defined_test')) {
-            compiler
-                .raw('(await aliases.proxy[')
-                .repr(this.getNode('node').getAttribute('name'))
-                .raw('].hasMacro(')
-                .repr(this.getAttribute('method'))
-                .raw('))')
-            ;
-        }
-        else {
-            compiler
-                .raw('await this.callMacro(aliases.proxy[')
-                .repr(this.getNode('node').getAttribute('name'))
-                .raw('], ')
-                .repr(this.getAttribute('method'))
-                .raw(', outputBuffer')
-                .raw(', [')
-            ;
-            let first = true;
-
-            let argumentsNode = this.getNode('arguments') as TwingNodeExpressionArray;
-
-            for (let pair of argumentsNode.getKeyValuePairs()) {
-                if (!first) {
-                    compiler.raw(', ');
-                }
-                first = false;
-
-                compiler.subcompile(pair['value']);
-            }
-
-            compiler
-                .raw('], ')
-                .repr(this.getTemplateLine())
-                .raw(', context, this.source)');
-        }
-    }
+export interface TwingMethodCallNode extends TwingBaseExpressionNode<typeof methodCallNodeType, TwingMethodCallNodeAttributes, {
+    operand: NodeWithName;
+    arguments: TwingArrayNode;
+}> {
 }
+
+export const createMethodCallNode = (
+    operand: NodeWithName,
+    methodName: string,
+    methodArguments: TwingArrayNode,
+    line: number,
+    column: number
+): TwingMethodCallNode => {
+    const baseNode = createBaseExpressionNode(methodCallNodeType, {
+        methodName,
+        shouldTestExistence: false
+    }, {
+        operand,
+        arguments: methodArguments
+    }, line, column);
+
+    const node: TwingMethodCallNode = {
+        ...baseNode,
+        execute: async (executionContext) => {
+            const {template, context, outputBuffer, aliases, sandboxed, sourceMapRuntime} = executionContext;
+            const {methodName, shouldTestExistence} = baseNode.attributes;
+            const {operand, arguments: methodArguments} = baseNode.children;
+            
+            if (shouldTestExistence) {
+                return (aliases.get(operand.attributes.name) as TwingTemplate).hasMacro(methodName);
+            } else {
+                const keyValuePairs = getKeyValuePairs(methodArguments);
+
+                const macroArguments: Array<any> = [];
+
+                for (const {value: valueNode} of keyValuePairs) {
+                    const value = await valueNode.execute(executionContext);
+
+                    macroArguments.push(value);
+                }
+                
+                // by nature, the alias exists - the parser only creates a method call node when the name _is_ an alias.
+                const macroTemplate = aliases.get(operand.attributes.name)!;
+
+                const getHandler = (template: TwingTemplate): Promise<MacroHandler | null> => {
+                    const macroHandler = template.macroHandlers.get(methodName);
+
+                    if (macroHandler) {
+                        return Promise.resolve(macroHandler);
+                    } else {
+                        return template.getParent(context, outputBuffer, sandboxed)
+                            .then((parent) => {
+                                if (parent) {
+                                    return getHandler(parent);
+                                } else {
+                                    return null;
+                                }
+                            });
+                    }
+                };
+
+                return getHandler(macroTemplate)
+                    .then((handler) => {
+                        if (handler) {
+                            return handler(outputBuffer, sandboxed, sourceMapRuntime, ...macroArguments);
+                        } else {
+                            throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, node, template.name);
+                        }
+                    });
+            }
+        }
+    };
+
+    return node;
+};
+
+export const cloneMethodCallNode = (
+    node: TwingMethodCallNode
+): TwingMethodCallNode => {
+    return createMethodCallNode(
+        node.children.operand,
+        node.attributes.methodName,
+        node.children.arguments,
+        node.line,
+        node.column
+    );
+};

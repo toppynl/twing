@@ -1,6 +1,6 @@
-import {DateTime, Duration} from "luxon";
-import {date as createDate} from "../functions/date";
-import {TwingTemplate} from "../../../template";
+import {DateTime} from "luxon";
+import {createDate} from "../functions/date";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Returns a new date object modified.
@@ -10,26 +10,33 @@ import {TwingTemplate} from "../../../template";
  * </pre>
  *
  * @param {TwingTemplate} template
- * @param {DateTime|Duration|string} date A date
+ * @param {DateTime|string} date A date
  * @param {string} modifier A modifier string
  *
  * @returns {Promise<DateTime>} A new date object
  */
-export function dateModify(template: TwingTemplate, date: Date | DateTime | Duration | string, modifier: string): Promise<DateTime> {
-    return createDate(template, date).then((dateTime: DateTime) => {
-        let regExp = new RegExp(/(\+|-)([0-9])(.*)/);
-        let parts = regExp.exec(modifier);
+export const dateModify: TwingCallable = (
+    executionContext,
+    date: Date | DateTime | string,
+    modifier: string
+): Promise<DateTime> => {
+    const {timezone: defaultTimezone} = executionContext;
 
-        let operator: string = parts[1];
-        let operand: number = Number.parseInt(parts[2]);
-        let unit: string = parts[3].trim();
+    return createDate(defaultTimezone, date, null)
+        .then((dateTime) => {
+            let regExp = new RegExp(/(\+|-)([0-9])(.*)/);
+            let parts = regExp.exec(modifier)!;
 
-        let duration: any = {};
+            let operator: string = parts[1];
+            let operand: number = Number.parseInt(parts[2]);
+            let unit: string = parts[3].trim();
 
-        duration[unit] = operator === '-' ? -operand : operand;
+            let duration: any = {};
 
-        dateTime = dateTime.plus(duration);
+            duration[unit] = operator === '-' ? -operand : operand;
 
-        return dateTime;
-    });
-}
+            dateTime = dateTime.plus(duration);
+
+            return dateTime;
+        });
+};

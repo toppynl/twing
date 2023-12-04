@@ -1,15 +1,16 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
+import {TwingCallable} from "../../../callable-wrapper";
 
-export async function filter(map: any, callback: (...args: Array<any>) => Promise<boolean>): Promise<Map<any, any>> {
-    let result: Map<any, any> = new Map();
+export const filter: TwingCallable = async (_executionContext, map: any, callback: (...args: Array<any>) => Promise<boolean>): Promise<Map<any, any>> => {
+    const result: Map<any, any> = new Map();
 
     map = iteratorToMap(map);
 
-    for (let [k, v] of map) {
-        if (await callback(v)) {
-            result.set(k, v);
+    for (const [key, value] of map) {
+        if (await callback(value)) {
+            result.set(key, value);
         }
     }
 
     return Promise.resolve(result);
-}
+};

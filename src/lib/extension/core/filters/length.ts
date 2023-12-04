@@ -1,18 +1,16 @@
-import {TwingEnvironment} from "../../../environment";
-import {isNullOrUndefined} from "util";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Returns the length of a thing.
  *
- * @param {TwingEnvironment} env A TwingEnvironment instance
  * @param {any} thing A thing
  *
  * @returns {Promise<number>} The length of the thing
  */
-export function length(env: TwingEnvironment, thing: any): Promise<number> {
+export const length: TwingCallable = (_executionContext,thing: any): Promise<number> => {
     let length: number;
 
-    if (isNullOrUndefined(thing)) {
+    if ((thing === null) || (thing === undefined)) {
         length = 0;
     } else if (thing.length !== undefined) {
         length = thing.length;
@@ -25,4 +23,4 @@ export function length(env: TwingEnvironment, thing: any): Promise<number> {
     }
 
     return Promise.resolve(length);
-}
+};

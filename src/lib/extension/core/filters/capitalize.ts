@@ -1,21 +1,21 @@
-import {TwingEnvironment} from "../../../environment";
-import {TwingMarkup} from "../../../markup";
-import {isNullOrUndefined} from "util";
+import type {TwingMarkup} from "../../../markup";
+import type {TwingCallable} from "../../../callable-wrapper";
 
-const words = require('capitalize');
+const words: (value: string) => string = require('capitalize');
 
 /**
  * Returns a capitalized string.
  *
- * @param {TwingEnvironment} env
  * @param {string | TwingMarkup} string A string
  *
  * @returns {Promise<string>} The capitalized string
  */
-export function capitalize(env: TwingEnvironment, string: string | TwingMarkup): Promise<string> {
-    if (isNullOrUndefined(string) || string === '') {
+export const capitalize: TwingCallable<[
+    string: string | TwingMarkup
+], string> = (_executionContext, string) => {
+    if ((string === null) || (string === undefined) || string === '') {
         return Promise.resolve(string);
     }
 
     return Promise.resolve(words(string.toString()));
-}
+};

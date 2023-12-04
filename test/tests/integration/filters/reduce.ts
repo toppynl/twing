@@ -1,0 +1,28 @@
+import TestBase, {runTest} from "../TestBase";
+import {createIntegrationTest} from "../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"reduce" filter';
+    }
+
+    getTemplates() {
+        return {
+            'index.twig': `
+{% set offset = 3 %}
+
+{{ [1, -1, 4]|reduce((carry, item) => carry + item + offset) }}
+{{ [1, -1, 4]|reduce((carry, item) => carry + item + offset, 10) }}
+`
+        };
+    }
+
+    getExpected() {
+        return `
+13
+23
+`;
+    }
+}
+
+runTest(createIntegrationTest(new Test()));

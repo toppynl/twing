@@ -1,15 +1,13 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import type {TwingBaseBinaryNode} from "../binary";
+import {createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_bitwise_or');
+export const bitwiseOrNodeType = "bitwise_or";
 
-export class TwingNodeExpressionBinaryBitwiseOr extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    operator(compiler: TwingCompiler) {
-        return compiler.raw('|');
-    }
+export interface TwingBitwiseOrNode extends TwingBaseBinaryNode<typeof bitwiseOrNodeType> {
 }
+
+export const createBitwiseOrNode = createBinaryNodeFactory<TwingBitwiseOrNode>(bitwiseOrNodeType, {
+    execute: async (left, right, executionContext) => {
+        return await left.execute(executionContext) | await right.execute(executionContext);
+    }
+});

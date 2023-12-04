@@ -1,9 +1,6 @@
-import {TwingNode} from "../node";
-import {TwingNodeExpression} from "./expression";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
-
-export const type = new TwingNodeType('check_to_string');
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {TwingBaseExpressionNode} from "./expression";
+import {getTraceableMethod} from "../helpers/traceable-method";
 
 /**
  * Checks if casting an expression to toString() is allowed by the sandbox.
@@ -13,21 +10,46 @@ export const type = new TwingNodeType('check_to_string');
  * method is allowed if 'article' is an object. The same goes for {{ article|upper }}
  * or {{ random(article) }}.
  */
-export class TwingNodeCheckToString extends TwingNode {
-    constructor(expression: TwingNodeExpression) {
-        super(new Map([['expr', expression]]), new Map(), expression.getTemplateLine(), expression.getTemplateColumn());
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('this.environment.ensureToStringAllowed(')
-            .subcompile(this.getNode('expr'))
-            .raw(')')
-        ;
-    }
+export interface TwingCheckToStringNode extends TwingBaseNode<"check_to_string", TwingBaseNodeAttributes, {
+    expr: TwingBaseExpressionNode;
+}> {
 }
 
+export const createCheckToStringNode = (
+    expression: TwingBaseExpressionNode,
+    line: number,
+    column: number
+): TwingCheckToStringNode => {
+    const baseNode = createBaseNode("check_to_string", {}, {
+        expr: expression
+    }, line, column);
+
+    return {
+        ...baseNode,
+        execute: (executionContext) => {
+            const {template, sandboxed} = executionContext;
+            const {expr} = baseNode.children;
+
+            return expr.execute(executionContext)
+                .then((value) => {
+                    if (sandboxed) {
+                        const assertToStringAllowed = getTraceableMethod((value: any) => {
+                            if ((value !== null) && (typeof value === 'object')) {
+                                try {
+                                    template.checkMethodAllowed(value, 'toString');
+                                } catch (error) {
+                                    return Promise.reject(error);
+                                }
+                            }
+
+                            return Promise.resolve(value);
+                        }, expr.line, expr.column, template.name)
+
+                        return assertToStringAllowed(value);
+                    }
+
+                    return value;
+                });
+        }
+    }
+};

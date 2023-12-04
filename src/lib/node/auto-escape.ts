@@ -1,30 +1,31 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {EscapingStrategy} from "../escaping-strategy";
 
-export const type = new TwingNodeType('auto_escape');
+export const autoEscapeNodeType = "auto_escape";
 
-/**
- * Represents an autoescape node.
- *
- * The value is the escaping strategy (can be html, js, ...)
- *
- * The true value is equivalent to html.
- *
- * If autoescaping is disabled, then the value is false.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
- */
-export class TwingNodeAutoEscape extends TwingNode {
-    constructor(value: {}, body: TwingNode, lineno: number, columnno: number, tag = 'autoescape') {
-        super(new Map([['body', body]]), new Map([['value', value]]), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler.subcompile(this.getNode('body'));
-    }
+export type TwingAutoEscapeNodeAttributes = TwingBaseNodeAttributes & {
+    strategy: EscapingStrategy | string | false;
 }
+
+export interface TwingAutoEscapeNode extends TwingBaseNode<typeof autoEscapeNodeType, TwingAutoEscapeNodeAttributes, {
+    body: TwingBaseNode;
+}> {
+}
+
+export const createAutoEscapeNode = (
+    strategy: EscapingStrategy | string | false,
+    body: TwingBaseNode,
+    line: number,
+    column: number,
+    tag: string
+): TwingAutoEscapeNode => {
+    const baseNode = createBaseNode(autoEscapeNodeType, {
+        strategy
+    }, {
+        body
+    }, line, column, tag);
+
+    return {
+        ...baseNode
+    };
+};

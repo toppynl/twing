@@ -1,0 +1,35 @@
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"set" tag';
+    }
+
+    getTemplates() {
+        return {
+            'index.twig': `
+{% set foo = 'foo' %}
+{% set bar = 'foo<br />' %}
+
+{{ foo }}
+{{ bar }}
+
+{% set foo, bar = 'foo', 'bar' %}
+
+{{ foo }}{{ bar }}`
+        };
+    }
+
+    getExpected() {
+        return `
+foo
+foo<br />
+
+
+foobar
+`;
+    }
+}
+
+runTest(createIntegrationTest(new Test));

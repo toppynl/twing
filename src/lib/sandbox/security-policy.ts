@@ -1,111 +1,105 @@
-import {TwingSandboxSecurityPolicyInterface} from "./security-policy-interface";
-import {TwingSandboxSecurityNotAllowedFilterError} from "./security-not-allowed-filter-error";
-import {TwingSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag-error";
-import {TwingSandboxSecurityNotAllowedFunctionError} from "./security-not-allowed-function-error";
-import {TwingSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
-import {TwingSandboxSecurityNotAllowedMethodError} from "./security-not-allowed-method-error";
-import {TwingTemplate} from "../template";
-import {TwingMarkup} from "../markup";
+import {createSandboxSecurityNotAllowedFilterError} from "./security-not-allowed-filter-error";
+import {createSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag-error";
+import {createSandboxSecurityNotAllowedFunctionError} from "./security-not-allowed-function-error";
+import {createSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
+import {createSandboxSecurityNotAllowedMethodError} from "./security-not-allowed-method-error";
+import {isAMarkup, TwingMarkup} from "../markup";
 
-export class TwingSandboxSecurityPolicy implements TwingSandboxSecurityPolicyInterface {
-    TwingSandboxSecurityPolicyInterfaceImpl: TwingSandboxSecurityPolicyInterface;
+export interface TwingSandboxSecurityPolicy {
+    /**
+     * @param {any | TwingMarkup} candidate
+     * @param {string} method
+     *
+     * @throws {@link TwingSandboxSecurityNotAllowedMethodError} When the method is not allowed on the passed object
+     */
+    checkMethodAllowed(candidate: any | TwingMarkup, method: string): void;
 
-    private allowedTags: Array<string>;
-    private allowedFilters: Array<string>;
-    private allowedMethods: Map<ObjectConstructor, Array<string>>;
-    private allowedProperties: Map<ObjectConstructor, string>;
-    private allowedFunctions: Array<string>;
+    /**
+     * @param {any} candidate
+     * @param {string} property
+     *
+     * @throws TwingSandboxSecurityNotAllowedPropertyError When the property is not allowed on the passed object
+     */
+    checkPropertyAllowed(candidate: any | TwingMarkup, property: string): void;
 
-    constructor(allowedTags: Array<string> = [], allowedFilters: Array<string> = [], allowedMethods: Map<any, string> = new Map(), allowedProperties: Map<any, string> = new Map(), allowedFunctions: Array<string> = []) {
-        this.TwingSandboxSecurityPolicyInterfaceImpl = this;
-        this.allowedTags = allowedTags;
-        this.allowedFilters = allowedFilters;
-        this.setAllowedMethods(allowedMethods);
-        this.allowedProperties = allowedProperties;
-        this.allowedFunctions = allowedFunctions;
-    }
-
-    setAllowedTags(tags: Array<string>) {
-        this.allowedTags = tags;
-    }
-
-    setAllowedFilters(filters: Array<string>) {
-        this.allowedFilters = filters;
-    }
-
-    setAllowedMethods(methods: Map<any, string | Array<string>>) {
-        this.allowedMethods = new Map();
-        for (let [class_, m] of methods) {
-            this.allowedMethods.set(class_, (Array.isArray(m) ? m : [m]).map(function (item) {
-                return item.toLowerCase();
-            }));
-        }
-    }
-
-    setAllowedProperties(properties: Map<any, string>) {
-        this.allowedProperties = properties;
-    }
-
-    setAllowedFunctions(functions: Array<string>) {
-        this.allowedFunctions = functions;
-    }
-
-    checkSecurity(tags: string[], filters: string[], functions: string[]): void {
-        let self = this;
-
-        for (let tag of tags) {
-            if (!self.allowedTags.includes(tag)) {
-                throw new TwingSandboxSecurityNotAllowedTagError(`Tag "${tag}" is not allowed.`, tag);
-            }
-        }
-
-        for (let filter of filters) {
-            if (!self.allowedFilters.includes(filter)) {
-                throw new TwingSandboxSecurityNotAllowedFilterError(`Filter "${filter}" is not allowed.`, filter);
-            }
-        }
-
-        for (let function_ of functions) {
-            if (!self.allowedFunctions.includes(function_)) {
-                throw new TwingSandboxSecurityNotAllowedFunctionError(`Function "${function_}" is not allowed.`, function_);
-            }
-        }
-    }
-
-    checkMethodAllowed(obj: any, method: string): void {
-        if (obj instanceof TwingTemplate || obj instanceof TwingMarkup) {
-            return;
-        }
-
-        let allowed = false;
-        let candidate = method.toLowerCase();
-
-        for (let [constructorName, methods] of this.allowedMethods) {
-            if (obj instanceof constructorName) {
-                allowed = methods.includes(candidate);
-
-                break;
-            }
-        }
-
-        if (!allowed) {
-            throw new TwingSandboxSecurityNotAllowedMethodError(`Calling "${method}" method on a "${obj.constructor.name}" is not allowed.`);
-        }
-    }
-
-    checkPropertyAllowed(obj: any, property: string): void {
-        let allowed = false;
-
-        for (let [class_, properties] of this.allowedProperties) {
-            if (obj instanceof class_) {
-                allowed = (Array.isArray(properties) ? properties : [properties]).includes(property);
-
-                break;
-            }
-        }
-
-        if (!allowed) {
-            throw new TwingSandboxSecurityNotAllowedPropertyError(`Calling "${property}" property on a "${obj.constructor.name}" is not allowed.`);
-        }
-    }
+    checkSecurity(tags: Array<string>, filters: Array<string>, functions: Array<string>): void;
 }
+
+export const createSandboxSecurityPolicy = (
+    clearances?: {
+        allowedTags?: Array<string>;
+        allowedFilters?: Array<string>;
+        allowedMethods?: Map<any, Array<string>>;
+        allowedProperties?: Map<any, Array<string>>;
+        allowedFunctions?: Array<string>;
+    }
+): TwingSandboxSecurityPolicy => {
+    const allowedTags: Array<string> = clearances?.allowedTags || [];
+    const allowedFilters: Array<string> = clearances?.allowedFilters || [];
+    const allowedMethods: Map<any, Array<string>> = clearances?.allowedMethods || new Map();
+    const allowedProperties: Map<any, Array<string>> = clearances?.allowedProperties || new Map();
+    const allowedFunctions: Array<string> = clearances?.allowedFunctions || [];
+
+    const policy: TwingSandboxSecurityPolicy = {
+            checkMethodAllowed: (candidate, method) => {
+                if (isAMarkup(candidate)) {
+                    return;
+                }
+
+                let allowed = false;
+
+                for (const [constructorName, methods] of allowedMethods) {
+                    if (candidate instanceof constructorName) {
+                        allowed = methods.includes(method);
+                        
+                        break;
+                    }
+                }
+
+                if (!allowed) {
+                    const constructorName = candidate.constructor.name || '(anonymous)';
+                    
+                    throw createSandboxSecurityNotAllowedMethodError(`Calling "${method}" method on an instance of ${constructorName} is not allowed.`);
+                }
+            },
+            checkPropertyAllowed: (candidate, property) => {
+                let allowed = false;
+
+                for (let [objectConstructor, properties] of allowedProperties) {
+                    if (candidate instanceof objectConstructor) {
+                        allowed = properties.includes(property);
+
+                        break;
+                    }
+                }
+
+                if (!allowed) {
+                    const constructorName = candidate.constructor.name || '(anonymous)';
+
+                    throw createSandboxSecurityNotAllowedPropertyError(`Calling "${property}" property on an instance of ${constructorName} is not allowed.`);
+                }
+            },
+            checkSecurity: (tags, filters, functions) => {
+                for (const tag of tags) {
+                    if (!allowedTags.includes(tag)) {
+                        throw createSandboxSecurityNotAllowedTagError(`Tag "${tag}" is not allowed.`, tag);
+                    }
+                }
+
+                for (const filterName of filters) {
+                    if (!allowedFilters.includes(filterName)) {
+                        throw createSandboxSecurityNotAllowedFilterError(`Filter "${filterName}" is not allowed.`, filterName);
+                    }
+                }
+
+                for (const function_ of functions) {
+                    if (!allowedFunctions.includes(function_)) {
+                        throw createSandboxSecurityNotAllowedFunctionError(`Function "${function_}" is not allowed.`, function_);
+                    }
+                }
+            }
+        }
+    ;
+
+    return policy;
+};

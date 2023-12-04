@@ -1,89 +1,67 @@
 /**
  * Lexes a template string.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
  */
-import {Lexer, SyntaxError, TokenType} from "twig-lexer";
-import {TwingEnvironment} from "./environment";
-import {TwingSource} from "./source";
-import {TwingTokenStream} from "./token-stream";
-import {TwingErrorSyntax} from "./error/syntax";
+import {Lexer, TokenType} from "twig-lexer";
+import {TwingTokenStream, createTokenStream} from "./token-stream";
+import {createParsingError} from "./error/parsing";
+import type {TwingOperator} from "./operator";
+import type {TwingSource} from "./source";
+import {SyntaxError} from "twig-lexer/dist/types/lib/SyntaxError";
 
 export const typeToEnglish = (type: TokenType): string => {
     switch (type) {
-        case TokenType.EOF:
+        case "EOF":
             return 'end of template';
-        case TokenType.TEXT:
+        case "TEXT":
             return 'text';
-        case TokenType.TAG_START:
+        case "TAG_START":
             return 'begin of statement block';
-        case TokenType.VARIABLE_START:
+        case "VARIABLE_START":
             return 'begin of print statement';
-        case TokenType.TAG_END:
+        case "TAG_END":
             return 'end of statement block';
-        case TokenType.VARIABLE_END:
+        case "VARIABLE_END":
             return 'end of print statement';
-        case TokenType.NAME:
+        case "NAME":
             return 'name';
-        case TokenType.NUMBER:
+        case "NUMBER":
             return 'number';
-        case TokenType.STRING:
+        case "STRING":
             return 'string';
-        case TokenType.OPERATOR:
+        case "OPERATOR":
             return 'operator';
-        case TokenType.PUNCTUATION:
+        case "PUNCTUATION":
             return 'punctuation';
-        case TokenType.INTERPOLATION_START:
+        case "INTERPOLATION_START":
             return 'begin of string interpolation';
-        case TokenType.INTERPOLATION_END:
+        case "INTERPOLATION_END":
             return 'end of string interpolation';
-        case TokenType.COMMENT_START:
+        case "COMMENT_START":
             return 'begin of comment statement';
-        case TokenType.COMMENT_END:
+        case "COMMENT_END":
             return 'end of comment statement';
-        case TokenType.ARROW:
+        case "ARROW":
             return 'arrow function';
+        case "SPREAD_OPERATOR":
+            return 'spread operator';
         default:
             throw new Error(`Token of type "${type}" does not exist.`)
     }
 };
 
-type TwingLexerOptions = {
-    interpolation_pair?: [string, string],
-    comment_pair?: [string, string],
-    tag_pair?: [string, string],
-    variable_pair?: [string, string]
-};
-
 export class TwingLexer extends Lexer {
-    private env: TwingEnvironment;
-
-    constructor(env: TwingEnvironment, options: TwingLexerOptions = {}) {
-        super();
-
-        this.env = env;
-
-        if (options.interpolation_pair) {
-            this.interpolationPair = options.interpolation_pair;
-        }
-
-        if (options.comment_pair) {
-            this.commentPair = options.comment_pair;
-        }
-
-        if (options.tag_pair) {
-            this.tagPair = options.tag_pair;
-        }
-
-        if (options.variable_pair) {
-            this.variablePair = options.variable_pair;
-        }
+    constructor(
+        level: 2 | 3,
+        binaryOperators: Array<TwingOperator>,
+        unaryOperators: Array<TwingOperator>
+    ) {
+        super(level);
 
         // custom operators
-        for (let operators of [env.getBinaryOperators(), env.getUnaryOperators()]) {
-            for (let [key, operator] of operators) {
-                if (!this.operators.includes(key)) {
-                    this.operators.push(key);
+        for (const operators of [binaryOperators, unaryOperators]) {
+            for (const {name} of operators) {
+                if (!this.operators.includes(name)) {
+                    this.operators.push(name);
                 }
             }
         }
@@ -91,11 +69,27 @@ export class TwingLexer extends Lexer {
 
     tokenizeSource(source: TwingSource): TwingTokenStream {
         try {
-            let tokens = this.tokenize(source.getCode());
+            const tokens = this.tokenize(source.code);
 
-            return new TwingTokenStream(tokens, source);
-        } catch (e) {
-            throw new TwingErrorSyntax(e.message, e.line, source, e);
+            return createTokenStream(tokens, source);
+        } catch (error: any) {
+            const {message, line, column} = (error as SyntaxError);
+
+            throw createParsingError(message, {line, column}, source.name, error);
         }
     }
 }
+
+export const createLexer = (
+    level: 2 | 3,
+    binaryOperators: Array<TwingOperator>,
+    unaryOperators: Array<TwingOperator>
+): TwingLexer => {
+    const keepCompatibleOperators = (operator: TwingOperator) => operator.specificationLevel <= level;
+    
+    return new TwingLexer(
+        level, 
+        binaryOperators.filter(keepCompatibleOperators), 
+        unaryOperators.filter(keepCompatibleOperators)
+    );
+};

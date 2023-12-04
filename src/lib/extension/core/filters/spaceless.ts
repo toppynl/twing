@@ -1,10 +1,11 @@
-import {TwingMarkup} from "../../../markup";
+import {createMarkup, TwingMarkup} from "../../../markup";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Removes whitespaces between HTML tags.
  *
- * @return {Promise<string>}
+ * @return {Promise<TwingMarkup>}
  */
-export function spaceless(content: string | TwingMarkup): Promise<string> {
-    return Promise.resolve(content.toString().replace(/>\s+</g, '><').trim());
-}
+export const spaceless: TwingCallable = (_executionContext, content: string | TwingMarkup): Promise<TwingMarkup> => {
+    return Promise.resolve(createMarkup(content.toString().replace(/>\s+</g, '><').trim()));
+};

@@ -1,6 +1,13 @@
-import {constant as constantHelper} from "../../../helpers/constant";
-import {TwingTemplate} from "../../../template";
+import {getConstant as constantHelper} from "../../../helpers/get-constant";
+import type {TwingCallable} from "../../../callable-wrapper";
 
-export function constant(template: TwingTemplate, name: string, object: any = null): Promise<any> {
-    return Promise.resolve(constantHelper(template, name, object));
-}
+export const constant: TwingCallable<[
+    name: string,
+    object: any | null
+]> = (
+    executionContext,
+    name,
+    object
+): Promise<any> => {
+    return Promise.resolve(constantHelper(executionContext.context, name, object));
+};

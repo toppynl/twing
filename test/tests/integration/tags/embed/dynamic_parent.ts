@@ -1,0 +1,57 @@
+import TestBase, {runTest} from "../../TestBase";
+import {createIntegrationTest} from "../../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"embed" tag with dynamic parent';
+    }
+
+    getTemplates() {
+        return {
+            'foo.twig': `
+A
+{% block c1 %}
+    block1
+{% endblock %}
+B
+{% block c2 %}
+    block2
+{% endblock %}
+C`,
+            'index.twig': `
+FOO
+{% embed foo %}
+    {% block c1 %}
+        {{ parent() }}
+        block1extended
+    {% endblock %}
+{% endembed %}
+
+BAR`
+        };
+    }
+
+    getExpected() {
+        return `
+FOO
+
+A
+            block1
+
+        block1extended
+    B
+    block2
+C
+BAR
+`;
+    }
+
+
+    getContext() {
+        return {
+            foo: 'foo.twig'
+        }
+    }
+}
+
+runTest(createIntegrationTest(new Test));

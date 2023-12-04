@@ -1,25 +1,17 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import type {TwingBaseBinaryNode} from "../binary";
+import {createBinaryNodeFactory} from "../binary";
+import {compare} from "../../../helpers/compare";
 
-export const type = new TwingNodeType('expression_spaceship');
+export const spaceshipNodeType = "spaceship";
 
-export class TwingNodeExpressionBinarySpaceship extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('this.compare(')
-            .subcompile(this.getNode('left'))
-            .raw(', ')
-            .subcompile(this.getNode('right'))
-            .raw(') ? 0 : (')
-            .subcompile(this.getNode('left'))
-            .raw(' < ')
-            .subcompile(this.getNode('right'))
-            .raw(' ? -1 : 1)')
-        ;
-    }
+export interface TwingSpaceshipNode extends TwingBaseBinaryNode<typeof spaceshipNodeType> {
 }
+
+export const createSpaceshipNode = createBinaryNodeFactory<TwingSpaceshipNode>(spaceshipNodeType, {
+    execute: async (left, right, executionContext) => {
+        const leftValue = await left.execute(executionContext);
+        const rightValue = await right.execute(executionContext);
+        
+        return compare(leftValue, rightValue) ? 0 : (leftValue < rightValue ? -1 : 1);
+    }
+});

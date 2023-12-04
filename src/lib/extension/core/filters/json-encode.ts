@@ -1,18 +1,34 @@
 import {iteratorToHash} from "../../../helpers/iterator-to-hash";
-import {isMap} from "../../../helpers/is-map";
-import {isPureArray} from "../../../helpers/is-pure-array";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {isTraversable} from "../../../helpers/is-traversable";
+import {TwingCallable} from "../../../callable-wrapper";
 
-export function jsonEncode(value: any): Promise<string> {
-    const _sanitize = (value: any): any=> {
+function isPureArray(map: Map<any, any>): boolean {
+    let result: boolean = true;
+
+    let keys: any[] = Array.from(map.keys());
+    let i: number = 0;
+
+    while (result && (i < keys.length)) {
+        let key: any = keys[i];
+
+        result = (Number(key) === i);
+
+        i++;
+    }
+
+    return result;
+}
+
+export const jsonEncode: TwingCallable = (_executionContext, value: any): Promise<string> => {
+    const _sanitize = (value: any): any => {
         if (isTraversable(value) || isPlainObject(value)) {
             value = iteratorToMap(value);
         }
 
-        if (isMap(value)) {
+        if (value instanceof Map) {
             let sanitizedValue: any;
 
             if (isPureArray(value)) {
@@ -20,10 +36,11 @@ export function jsonEncode(value: any): Promise<string> {
 
                 sanitizedValue = [];
 
-                for (let key in value) {
+                for (const key in value) {
                     sanitizedValue.push(_sanitize(value[key]));
                 }
-            } else {
+            }
+            else {
                 value = iteratorToHash(value);
 
                 sanitizedValue = {};

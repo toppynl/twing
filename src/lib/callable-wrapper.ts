@@ -1,141 +1,71 @@
-import {TwingError} from "./error";
-import {TwingSource} from "./source";
-import {TwingNode} from "./node";
+import type {TwingExecutionContext} from "./execution-context";
 
-export type TwingCallable<T> = (...args: any[]) => Promise<T>;
+export type TwingCallable<A extends Array<any> = any, R = any> = (executionContext: TwingExecutionContext, ...args: A) => Promise<R>;
 
 export type TwingCallableArgument = {
-    name: string,
-    defaultValue?: any
+    name: string;
+    defaultValue?: any;
 };
 
 export type TwingCallableWrapperOptions = {
-    needs_template?: boolean;
-    needs_context?: boolean;
-    needs_output_buffer?: boolean;
     is_variadic?: boolean;
-    is_safe?: Array<any>;
-    is_safe_callback?: Function;
     deprecated?: boolean | string;
     alternative?: string;
-    expression_factory?: Function;
 }
 
-export abstract class TwingCallableWrapper<T> {
+export interface TwingCallableWrapper {
+    readonly acceptedArguments: Array<TwingCallableArgument>;
+    readonly alternative: string | undefined;
+    readonly callable: TwingCallable;
+    readonly deprecatedVersion: string | boolean | undefined;
+    readonly isDeprecated: boolean;
+    readonly isVariadic: boolean;
     readonly name: string;
-    readonly callable: TwingCallable<T>;
-    readonly acceptedArguments: TwingCallableArgument[];
-    readonly options: TwingCallableWrapperOptions;
-
-    private arguments: Array<any> = [];
-
-    protected constructor(name: string, callable: TwingCallable<any>, acceptedArguments: TwingCallableArgument[], options: TwingCallableWrapperOptions = {}) {
-        this.name = name;
-        this.callable = callable;
-        this.acceptedArguments = acceptedArguments;
-
-        this.options = Object.assign({}, {
-            needs_template: false,
-            needs_context: false,
-            needs_output_buffer: false,
-            is_variadic: false,
-            is_safe: null,
-            is_safe_callback: null,
-            deprecated: false,
-            alternative: null
-        }, options);
-    }
-
-    getName() {
-        return this.name;
-    }
-
     /**
-     * @returns {Function}
+     * native arguments are the arguments implicitly passed to the call, deduced from the operator name
+     * typically, a Callable Wrapper registered under the name "foo-*-*"
+     * would generate native arguments ["bar","oof"] when the operator name is "foo-bar-oof"
      */
-    getCallable() {
-        return this.callable;
-    }
-
-    /**
-     * @return TwingCallableArgument[]
-     */
-    getAcceptedArgments(): TwingCallableArgument[] {
-        return this.acceptedArguments;
-    }
-
-    /**
-     * Returns the traceable callable.
-     *
-     * @param {number} lineno
-     * @param {TwingSource} source
-     *
-     * @return {TwingCallable<T>}
-     */
-    traceableCallable(lineno: number, source: TwingSource): TwingCallable<T> {
-        let callable = this.callable;
-
-        return function () {
-            return (callable.apply(null, arguments) as Promise<T>).catch((e: TwingError) => {
-                if (e.getTemplateLine() === -1) {
-                    e.setTemplateLine(lineno);
-                    e.setSourceContext(source);
-                }
-
-                throw e;
-            });
-        }
-    }
-
-    isVariadic(): boolean {
-        return this.options.is_variadic;
-    }
-
-    isDeprecated(): boolean {
-        return this.options.deprecated ? true : false;
-    }
-
-    needsTemplate(): boolean {
-        return this.options.needs_template;
-    }
-
-    needsContext(): boolean {
-        return this.options.needs_context;
-    }
-
-    needsOutputBuffer(): boolean {
-        return this.options.needs_output_buffer;
-    }
-
-    getSafe(functionArgs: TwingNode): any[] {
-        if (this.options.is_safe !== null) {
-            return this.options.is_safe;
-        }
-
-        if (this.options.is_safe_callback) {
-            return this.options.is_safe_callback(functionArgs);
-        }
-
-        return [];
-    }
-
-    getDeprecatedVersion() {
-        return this.options.deprecated;
-    }
-
-    getAlternative() {
-        return this.options.alternative;
-    }
-
-    setArguments(arguments_: Array<any>) {
-        this.arguments = arguments_;
-    }
-
-    getArguments() {
-        return this.arguments;
-    }
-
-    getExpressionFactory(): Function {
-        return this.options.expression_factory;
-    }
+    nativeArguments: Array<string>;
 }
+
+export const createCallableWrapper = (
+    name: string,
+    callable: TwingCallable,
+    acceptedArguments: Array<TwingCallableArgument>,
+    options: TwingCallableWrapperOptions
+): TwingCallableWrapper => {
+    let nativeArguments: Array<string> = [];
+
+    const callableWrapper: TwingCallableWrapper = {
+        get callable() {
+            return callable;
+        },
+        get name() {
+            return name;
+        },
+        get acceptedArguments() {
+            return acceptedArguments;
+        },
+        get alternative() {
+            return options.alternative;
+        },
+        get deprecatedVersion() {
+            return options.deprecated;
+        },
+        get isDeprecated() {
+            return options.deprecated ? true : false;
+        },
+        get isVariadic() {
+            return options.is_variadic || false;
+        },
+        get nativeArguments() {
+            return nativeArguments;
+        },
+        set nativeArguments(values) {
+            nativeArguments = values;
+        }
+    };
+
+    return callableWrapper;
+};

@@ -6,22 +6,33 @@
  */
 
 import {DateTime} from "luxon";
-import {isMap} from "./is-map";
+import {isAMapLike, MapLike} from "./map-like";
+import {isAMarkup, TwingMarkup} from "../markup";
+import {TwingContext} from "../context";
+import {iteratorToMap} from "./iterator-to-map";
 
-export function compare(firstOperand: any, secondOperand: any): boolean {
-    // Map
-    if (isMap(firstOperand)) {
-        return compareToMap(firstOperand as Map<any, any>, secondOperand);
+type Operand = Buffer | TwingMarkup | DateTime | MapLike<any, any> | string | boolean | number | null | object | Array<any>;
+
+export function compare(
+    firstOperand: Operand, 
+    secondOperand: Operand
+): boolean {
+    // Array<any>
+    if (Array.isArray(firstOperand)) {
+        firstOperand = iteratorToMap(firstOperand);
     }
 
-    // string
-    if (typeof firstOperand === 'string') {
-        return compareToString(firstOperand, secondOperand);
+    if (Array.isArray(secondOperand)) {
+        secondOperand = iteratorToMap(secondOperand);
+    }
+    
+    // null
+    if (firstOperand === null) {
+        return compareToNull(secondOperand);
     }
 
-    // number
-    if (typeof firstOperand === 'number') {
-        return compareToNumber(firstOperand, secondOperand);
+    if (secondOperand === null) {
+        return compareToNull(firstOperand);
     }
 
     // boolean
@@ -29,14 +40,50 @@ export function compare(firstOperand: any, secondOperand: any): boolean {
         return compareToBoolean(firstOperand, secondOperand);
     }
 
+    if (typeof secondOperand === 'boolean') {
+        return compareToBoolean(secondOperand, firstOperand);
+    }
+    
+    // number
+    if (typeof firstOperand === 'number') {
+        return compareToNumber(firstOperand, secondOperand);
+    }
+
+    if (typeof secondOperand === 'number') {
+        return compareToNumber(secondOperand, firstOperand);
+    }
+    
+    // TwingMarkup
+    if (isAMarkup(firstOperand)) {
+        firstOperand = firstOperand.toString();
+    }
+
+    if (isAMarkup(secondOperand)) {
+        secondOperand = secondOperand.toString();
+    }
+
+    // Buffer
+    if (Buffer.isBuffer(firstOperand)) {
+        firstOperand = firstOperand.toString();
+    }
+
+    if (Buffer.isBuffer(secondOperand)) {
+        secondOperand = secondOperand.toString();
+    }
+    
+    // Map
+    if (isAMapLike(firstOperand)) {
+        return compareToMap(firstOperand, secondOperand);
+    }
+
+    // string
+    if (typeof firstOperand === 'string') {
+        return compareToString(firstOperand, secondOperand);
+    }
+
     // date
     if (firstOperand instanceof DateTime) {
         return compareToDateTime(firstOperand, secondOperand);
-    }
-
-    // null
-    if (firstOperand === null) {
-        return compareToNull(secondOperand);
     }
 
     // fallback to strict comparison
@@ -52,15 +99,15 @@ export function compare(firstOperand: any, secondOperand: any): boolean {
  * │ ["php"] │ TRUE  │ FALSE │ FALSE │ FALSE │ FALSE │ FALSE │ FALSE │ FALSE │ FALSE │ FALSE │ TRUE    │ FALSE │ FALSE |
  * └─────────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴─────────┴───────┴───────┘
  */
-function compareToMap(firstOperand: Map<any, any>, secondOperand: any): boolean {
-    if (firstOperand.size < 1) {
-        return (secondOperand === false || secondOperand === null || (isMap(secondOperand) && (secondOperand as Map<any, any>).size < 1));
+function compareToMap(
+    firstOperand: Map<any, any> | TwingContext<any, any>, 
+    secondOperand: string | object | DateTime | Map<any, any> | TwingContext<any, any>
+): boolean {
+    if (firstOperand.size === 0) {
+        return isAMapLike(secondOperand) && (secondOperand.size === 0);
     }
     else {
-        if (secondOperand === true) {
-            return true;
-        }
-        else if (!isMap(secondOperand)) {
+        if (!isAMapLike(secondOperand)) {
             return false;
         }
         else if (firstOperand.size !== (secondOperand as Map<any, any>).size) {
@@ -70,7 +117,7 @@ function compareToMap(firstOperand: Map<any, any>, secondOperand: any): boolean 
         let result = false;
 
         for (let [i, valueItem] of firstOperand) {
-            let compareItem = (secondOperand as Map<any, any>).get(i);
+            let compareItem = secondOperand.get(i);
 
             result = compare(valueItem, compareItem);
 
@@ -92,7 +139,14 @@ function compareToMap(firstOperand: Map<any, any>, secondOperand: any): boolean 
  * │ FALSE   │ FALSE │ TRUE  │ FALSE │ TRUE  │ FALSE │ FALSE │ TRUE  │ FALSE │ TRUE  │ TRUE    │ FALSE │ TRUE  │
  * └─────────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴─────────┴───────┴───────┘
  */
-function compareToBoolean(firstOperand: boolean, secondOperand: any): boolean {
+function compareToBoolean(
+    firstOperand: boolean, 
+    secondOperand: string | number | boolean | object | Buffer | TwingMarkup | DateTime | MapLike<any, any>
+): boolean {
+    if (secondOperand instanceof DateTime) {
+        return firstOperand === true;
+    }
+
     if (typeof secondOperand === 'boolean') {
         return firstOperand === secondOperand;
     }
@@ -116,16 +170,12 @@ function compareToBoolean(firstOperand: boolean, secondOperand: any): boolean {
             }
         }
     }
-
-    if (secondOperand === null) {
-        return !firstOperand;
-    }
-
-    if (isMap(secondOperand)) {
+    
+    if (isAMapLike(secondOperand)) {
         return firstOperand === (secondOperand as Map<any, any>).size > 0;
     }
-
-    return false;
+    
+    return firstOperand === true;
 }
 
 /**
@@ -138,11 +188,14 @@ function compareToBoolean(firstOperand: boolean, secondOperand: any): boolean {
  * └─────────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴─────────┴───────┴───────┴───────┴───────┘
  */
 
-function compareToDateTime(firstOperand: DateTime, secondOperand: any): boolean {
+function compareToDateTime(
+    firstOperand: DateTime, 
+    secondOperand: DateTime | string | object
+): boolean {
     if (secondOperand instanceof DateTime) {
         return firstOperand.valueOf() === secondOperand.valueOf();
     }
-
+    
     return false;
 }
 
@@ -154,7 +207,7 @@ function compareToDateTime(firstOperand: DateTime, secondOperand: any): boolean 
  * │ NULL    │ FALSE │ TRUE  │ FALSE │ TRUE  │ FALSE │ FALSE │ FALSE │ FALSE │ TRUE  │ TRUE  │ FALSE   │ FALSE │ TRUE  |
  * └─────────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴─────────┴───────┴───────┘
  */
-function compareToNull(value: any) {
+function compareToNull(value: Operand) {
     if (typeof value === 'boolean') {
         return (value === false);
     }
@@ -171,7 +224,7 @@ function compareToNull(value: any) {
         return true;
     }
 
-    if (isMap(value)) {
+    if (isAMapLike(value)) {
         return (value as Map<any, any>).size < 1;
     }
 
@@ -188,19 +241,14 @@ function compareToNull(value: any) {
  * │ -1      │ TRUE  │ FALSE │ FALSE │ FALSE │ TRUE  │ FALSE │ FALSE │ TRUE  │ FALSE │ FALSE   │ FALSE │ FALSE │
  * └─────────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴─────────┴───────┴───────┘
  */
-function compareToNumber(firstOperand: number, secondOperand: any): boolean {
+function compareToNumber(
+    firstOperand: number, 
+    secondOperand: string | number | object | Buffer | TwingMarkup | DateTime | MapLike<any, any>
+): boolean {
     if (typeof secondOperand === 'number') {
         return firstOperand === secondOperand;
     }
-
-    if (typeof secondOperand === 'boolean') {
-        return (firstOperand !== 0) === secondOperand;
-    }
-
-    if (secondOperand === null) {
-        return firstOperand === 0;
-    }
-
+    
     if (typeof secondOperand === 'string') {
         let float = parseFloat(secondOperand);
 
@@ -210,6 +258,11 @@ function compareToNumber(firstOperand: number, secondOperand: any): boolean {
         else {
             return firstOperand === 0;
         }
+    }
+
+    // date
+    if (secondOperand instanceof DateTime) {
+        return firstOperand === 1;
     }
 
     return false;
@@ -227,32 +280,12 @@ function compareToNumber(firstOperand: number, secondOperand: any): boolean {
  * │ "php"   │ TRUE  │ FALSE │ FALSE │ TRUE  │ FALSE │ FALSE │ FALSE │ FALSE │ FALSE │ FALSE   │ TRUE  │ FALSE │
  * └─────────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴─────────┴───────┴───────┘
  */
-function compareToString(firstOperand: string, secondOperand: any): boolean {
+function compareToString(
+    firstOperand: string, 
+    secondOperand:  string | object | DateTime | MapLike<any, any>
+): boolean {
     if (typeof secondOperand === 'string') {
         return firstOperand === secondOperand;
-    }
-
-    if (typeof secondOperand === 'boolean') {
-        if (firstOperand.length < 1 || firstOperand === '0') {
-            return !secondOperand;
-        }
-
-        return secondOperand;
-    }
-
-    if (secondOperand === null) {
-        return firstOperand.length < 1;
-    }
-
-    if (typeof secondOperand === 'number') {
-        let float = parseFloat(firstOperand);
-
-        if (float) {
-            return secondOperand === float;
-        }
-        else {
-            return secondOperand === 0;
-        }
     }
 
     return false;

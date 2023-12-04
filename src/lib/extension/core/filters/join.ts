@@ -1,6 +1,6 @@
-import {isNullOrUndefined} from "util";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Joins the values to a string.
@@ -15,26 +15,34 @@ import {iteratorToArray} from "../../../helpers/iterator-to-array";
  *  {# returns 123 #}
  * </pre>
  *
- * @param {any} value A value
- * @param {string} glue The separator
- * @param {string | null} and The separator for the last pair
+ * @param _executionContext
+ * @param value A value
+ * @param glue The separator
+ * @param and The separator for the last pair
  *
  * @returns {Promise<string>} The concatenated string
  */
-export function join(value: any, glue: string = '', and: string = null): Promise<string> {
-    let _do = (): string => {
-        if (isNullOrUndefined(value)) {
+export const join: TwingCallable<[
+    value: any,
+    glue: string,
+    and: string | null
+], string> = (_executionContext, value, glue, and) => {
+    const _do = (): string => {
+        if ((value == null) || (value === undefined)) {
             return '';
         }
 
         if (isTraversable(value)) {
             value = iteratorToArray(value);
 
-            // this is ugly but we have to ensure that each element of the array is rendered as PHP would render it
-            // this is mainly useful for booleans that are not rendered the same way in PHP and JavaScript
-            let safeValue = value.map(function (item: any) {
+            // this is ugly, but we have to ensure that each element of the array is rendered as PHP would render it
+            const safeValue = value.map((item: any) => {
                 if (typeof item === 'boolean') {
                     return (item === true) ? '1' : ''
+                }
+                
+                if (Array.isArray(item)) {
+                    return 'Array';
                 }
 
                 return item;
@@ -55,4 +63,4 @@ export function join(value: any, glue: string = '', and: string = null): Promise
     };
 
     return Promise.resolve(_do());
-}
+};

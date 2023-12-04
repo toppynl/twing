@@ -1,113 +1,84 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeExpressionConstant} from "./expression/constant";
-import {TwingNodeCaptureInterface} from "../node-capture-interface";
-import {type as textType} from "./text";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+import {createConstantNode} from "./expression/constant";
+import {textNodeType} from "./output/text";
+import {createArgumentsNode} from "./expression/arguments";
 
-export const type = new TwingNodeType('set');
+export type SetNodeAttributes = TwingBaseNodeAttributes & {
+    capture: boolean; // todo: rename
+};
 
-export class TwingNodeSet extends TwingNode implements TwingNodeCaptureInterface {
-    TwingNodeCaptureInterfaceImpl: TwingNodeCaptureInterface;
-
-    constructor(capture: boolean, names: TwingNode, values: TwingNode, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
-
-        nodes.set('names', names);
-        nodes.set('values', values);
-
-        let attributes = new Map();
-
-        attributes.set('capture', capture);
-        attributes.set('safe', false);
-
-        super(nodes, attributes, lineno, columnno, tag);
-
-        this.TwingNodeCaptureInterfaceImpl = this;
-
-        /*
-         * Optimizes the node when capture is used for a large block of text.
-         *
-         * {% set foo %}foo{% endset %} is compiled to $context['foo'] = new Twig_Markup("foo");
-         */
-        if (this.getAttribute('capture')) {
-            this.setAttribute('safe', true);
-
-            let values = this.getNode('values');
-
-            if (values.is(textType)) {
-                this.setNode('values', new TwingNodeExpressionConstant(values.getAttribute('data'), values.getTemplateLine(), values.getTemplateColumn()));
-                this.setAttribute('capture', false);
-            }
-        }
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        if (this.getNode('names').getNodes().size > 1) {
-            compiler.write('[');
-
-            for (let [idx, node] of this.getNode('names').getNodes()) {
-                if (idx > 0) {
-                    compiler.raw(', ');
-                }
-
-                compiler
-                    .subcompile(node)
-                ;
-            }
-
-            compiler.raw(']');
-        } else {
-            if (this.getAttribute('capture')) {
-                compiler
-                    .write("outputBuffer.start();\n")
-                    .subcompile(this.getNode('values'))
-                ;
-            }
-
-            compiler.subcompile(this.getNode('names'), false);
-
-            if (this.getAttribute('capture')) {
-                compiler
-                    .raw(" = (() => {let tmp = outputBuffer.getAndClean(); return tmp === '' ? '' : new this.Markup(tmp, this.environment.getCharset());})()")
-                ;
-            }
-        }
-
-        if (!this.getAttribute('capture')) {
-            compiler.raw(' = ');
-
-            if (this.getNode('names').getNodes().size > 1) {
-                compiler.raw('[');
-
-                for (let [idx, value] of this.getNode('values').getNodes()) {
-                    if (idx > 0) {
-                        compiler.raw(', ');
-                    }
-
-                    compiler
-                        .subcompile(value)
-                    ;
-                }
-
-                compiler.raw(']');
-            } else {
-                if (this.getAttribute('safe')) {
-                    compiler
-                        .raw("await (async () => {let tmp = ")
-                        .subcompile(this.getNode('values'))
-                        .raw("; return tmp === '' ? '' : new this.Markup(tmp, this.environment.getCharset());})()")
-                    ;
-                } else {
-                    compiler.subcompile(this.getNode('values'));
-                }
-            }
-        }
-
-        compiler.raw(';\n');
-    }
+export interface TwingSetNode extends TwingBaseNode<"set", SetNodeAttributes, {
+    names: TwingBaseNode;
+    values: TwingBaseNode;
+}> {
 }
+
+export const createSetNode = (
+    capture: boolean,
+    names: TwingSetNode["children"]["names"],
+    values: TwingSetNode["children"]["values"],
+    line: number,
+    column: number,
+    tag: string
+): TwingSetNode => {
+    const baseNode = createBaseNode("set", {
+        capture
+    }, {
+        names,
+        values
+    }, line, column, tag);
+
+    /*
+     * Optimizes the node when capture is used for a large block of text.
+     *
+     * {% set foo %}foo{% endset %} is compiled to $context['foo'] = new Twig_Markup("foo");
+     */
+    if (baseNode.attributes.capture) {
+        const {values} = baseNode.children;
+
+        if (values.is(textNodeType)) {
+            baseNode.children.values = createArgumentsNode({
+                0: createConstantNode(values.attributes.data, values.line, values.column)
+            }, values.line, values.column);
+            baseNode.attributes.capture = false;
+        }
+    }
+
+    const node: TwingSetNode = {
+        ...baseNode,
+        execute: async (executionContext) => {
+            const {context, outputBuffer} = executionContext;
+            const {names: namesNode, values: valuesNode} = node.children;
+            const {capture} = node.attributes;
+
+            const names: Array<string> = await namesNode.execute(executionContext);
+
+            if (capture) {
+                outputBuffer.start();
+
+                await valuesNode.execute(executionContext);
+
+                const value = outputBuffer.getAndClean();
+
+                for (const name of names) {
+                    context.set(name, value);
+                }
+            } else {
+                const values: Array<any> = await valuesNode.execute(executionContext);
+                
+                let index = 0;
+
+                for (const name of names) {
+                    const value = values[index];
+
+                    context.set(name, value);
+                    
+                    index++;
+                }
+            }
+        },
+        isACaptureNode: true
+    };
+
+    return node;
+};

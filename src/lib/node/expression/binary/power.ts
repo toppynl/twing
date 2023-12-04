@@ -1,21 +1,10 @@
-import {TwingNodeExpressionBinary} from "../binary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export const type = new TwingNodeType('expression_binary_power');
-
-export class TwingNodeExpressionBinaryPower extends TwingNodeExpressionBinary {
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .raw('Math.pow(')
-            .subcompile(this.getNode('left'))
-            .raw(', ')
-            .subcompile(this.getNode('right'))
-            .raw(')')
-        ;
-    }
+export interface TwingPowerNode extends TwingBaseBinaryNode<"power"> {
 }
+
+export const createPowerNode = createBinaryNodeFactory<TwingPowerNode>("power", {
+    execute: async (left, right, executionContext) => {
+        return Math.pow(await left.execute(executionContext), await right.execute(executionContext));
+    }
+});

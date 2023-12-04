@@ -1,56 +1,59 @@
-import {TwingNode} from "../node";
-import {TwingNodeExpression} from "./expression";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingExecutionContext} from "../node";
+import type {TwingBaseExpressionNode} from "./expression";
+import type {TwingTemplate} from "../template";
+import {getTraceableMethod} from "../helpers/traceable-method";
+import {include} from "../extension/core/functions/include";
 
-export const type = new TwingNodeType('include');
+export type BaseIncludeNodeAttributes = TwingBaseNodeAttributes & {
+    only: boolean;
+    ignoreMissing: boolean;
+};
 
-export class TwingNodeInclude extends TwingNode {
-    constructor(expr: TwingNodeExpression, variables: TwingNodeExpression, only: boolean, ignoreMissing: boolean, lineno: number, columnno: number, tag: string = null) {
-        let nodes = new Map();
+export type BaseIncludeNodeChildren = {
+    variables: TwingBaseExpressionNode;
+};
 
-        if (expr) {
-            nodes.set('expr', expr);
-        }
-
-        if (variables !== null) {
-            nodes.set('variables', variables);
-        }
-
-        super(nodes, new Map([['only', only], ['ignore_missing', ignoreMissing]]), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        compiler
-            .write('outputBuffer.echo(await this.include(context, outputBuffer, ');
-
-        this.addGetTemplate(compiler);
-
-        compiler.raw(', ');
-
-        if (this.hasNode('variables')) {
-            compiler.subcompile(this.getNode('variables'));
-        }
-        else {
-            compiler.repr(undefined)
-        }
-
-        compiler
-            .raw(', ')
-            .repr(!this.getAttribute('only'))
-            .raw(', ')
-            .repr(this.getAttribute('ignore_missing'))
-            .raw(', ')
-            .repr(this.getTemplateLine())
-            .raw(')')
-            .raw(');\n');
-    }
-
-    protected addGetTemplate(compiler: TwingCompiler) {
-        compiler.subcompile(this.getNode('expr'));
-    }
+export interface TwingBaseIncludeNode<
+    Type extends string,
+    Attributes extends BaseIncludeNodeAttributes = BaseIncludeNodeAttributes,
+    Children extends BaseIncludeNodeChildren = BaseIncludeNodeChildren
+> extends TwingBaseNode<Type, Attributes, Children> {
 }
+
+export const createBaseIncludeNode = <Type extends string, Attributes extends BaseIncludeNodeAttributes, Children extends BaseIncludeNodeChildren = BaseIncludeNodeChildren>(
+    type: Type,
+    attributes: Attributes,
+    children: Children,
+    getTemplate: (executionContext: TwingExecutionContext) => Promise<TwingTemplate | null | Array<TwingTemplate | null>>,
+    line: number,
+    column: number,
+    tag: string
+): TwingBaseIncludeNode<Type, Attributes, Children> => {
+    const baseNode = createBaseNode(type, attributes, children, line, column, tag);
+
+    const node: TwingBaseIncludeNode<Type, Attributes, Children> = {
+        ...baseNode,
+        execute: async (executionContext) => {
+            const {outputBuffer, sandboxed, template} = executionContext;
+            const {variables} = node.children;
+            const {only, ignoreMissing} = node.attributes;
+
+            const templatesToInclude = await getTemplate(executionContext);
+            
+            const traceableInclude = getTraceableMethod(include, baseNode.line, baseNode.column, template.name);
+
+            const output = await traceableInclude(
+                executionContext,
+                templatesToInclude,
+                await variables.execute(executionContext),
+                !only,
+                ignoreMissing,
+                sandboxed
+            );
+
+            outputBuffer.echo(output);
+        }
+    };
+
+    return node;
+};

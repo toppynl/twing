@@ -1,15 +1,13 @@
-import {TwingNodeExpressionUnary} from "../unary";
-import {TwingCompiler} from "../../../compiler";
-import {TwingNodeType} from "../../../node-type";
+import {TwingBaseUnaryNode, createUnaryNodeFactory} from "../unary";
 
-export const type = new TwingNodeType('expression_unary_not');
+export const notNodeType = "not";
 
-export class TwingNodeExpressionUnaryNot extends TwingNodeExpressionUnary {
-    get type() {
-        return type;
-    }
-
-    operator(compiler: TwingCompiler): TwingCompiler {
-        return compiler.raw('!');
-    }
+export interface TwingNotNode extends TwingBaseUnaryNode<typeof notNodeType> {
 }
+
+export const createNotNode = createUnaryNodeFactory<TwingNotNode>(notNodeType, {
+    execute: (operand, executionContext) => {
+        return operand.execute(executionContext)
+            .then((value) => !(value));
+    }
+});

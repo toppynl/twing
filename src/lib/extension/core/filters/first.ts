@@ -1,15 +1,20 @@
-import {first as firstHelper} from "../../../helpers/first";
-import {slice as sliceFilter} from "./slice";
+import {getFirstValue} from "../../../helpers/get-first-value";
+import {slice} from "./slice";
+import {TwingCallable} from "../../../callable-wrapper";
 
 /**
  * Returns the first element of the item.
  *
- * @param {any} item
+ * @param executionContext
+ * @param item
  *
  * @returns {Promise<any>} The first element of the item
  */
-export function first(item: any): Promise<any> {
-    return sliceFilter(item, 0, 1, false).then((elements) => {
-        return typeof elements === 'string' ? elements : firstHelper(elements);
-    });
+export const first: TwingCallable<[
+    item: any
+]> = (executionContext, item) => {
+    return slice(executionContext, item, 0, 1, false)
+        .then((elements) => {
+            return typeof elements === 'string' ? elements : getFirstValue(elements);
+        });
 }

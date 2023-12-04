@@ -1,14 +1,16 @@
-import {TwingSandboxSecurityError} from "./security-error";
-import {TwingSource} from "../source";
+import {BaseSandboxSecurityError, createBaseSandboxSecurityError} from "./security-error";
+import {ErrorLocation} from "../error/base";
 
 /**
- * Exception thrown when a not allowed class property is used in a template.
- *
- * @author Eric MORAND <eric.morand@gmail.com>
+ * Exception thrown when a not allowed object property is used in a template.
  */
-export class TwingSandboxSecurityNotAllowedPropertyError extends TwingSandboxSecurityError {
-    constructor(message: string, lineno: number = -1, source: TwingSource = null) {
-        super(message, lineno, source);
-        this.name = 'TwingSandboxSecurityNotAllowedPropertyError';
-    }
+export interface TwingSandboxSecurityNotAllowedPropertyError extends BaseSandboxSecurityError {
 }
+
+export const createSandboxSecurityNotAllowedPropertyError = (message: string, location?: ErrorLocation, source?: string): TwingSandboxSecurityNotAllowedPropertyError => {
+    const error = createBaseSandboxSecurityError(message, location, source);
+
+    Error.captureStackTrace(error, createSandboxSecurityNotAllowedPropertyError);
+
+    return error;
+};

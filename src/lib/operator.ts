@@ -1,57 +1,60 @@
-import {TwingNode} from "./node";
-import {TwingNodeExpression} from "./node/expression";
+import type {TwingBaseNode} from "./node";
+import type {TwingExpressionNode} from "./node/expression";
 
-export enum TwingOperatorType {
-    UNARY = 'UNARY',
-    BINARY = 'BINARY'
+export type OperatorType =
+    | 'BINARY'
+    | 'UNARY'
+    ;
+
+export type OperatorAssociativity =
+    | 'LEFT'
+    | 'RIGHT'
+    ;
+
+type TwingOperatorExpressionFactory = (operands: [TwingBaseNode, TwingBaseNode], line: number, column: number) => TwingExpressionNode;
+
+export interface TwingOperator {
+    readonly name: string;
+
+    readonly type: OperatorType;
+
+    readonly precedence: number;
+
+    readonly associativity: OperatorAssociativity | null;
+
+    readonly specificationLevel: 2 | 3;
+
+    readonly expressionFactory: TwingOperatorExpressionFactory;
 }
 
-export enum TwingOperatorAssociativity {
-    LEFT = 'LEFT',
-    RIGHT = 'RIGHT'
-}
+export const createOperator = (
+    name: string,
+    type: OperatorType,
+    precedence: number,
+    expressionFactory: TwingOperatorExpressionFactory,
+    associativity: OperatorAssociativity | null = null,
+    specificationLevel: 2 | 3 = 2,
+): TwingOperator => {
+    associativity = type === "BINARY" ? (associativity || "LEFT") : null;
 
-type TwingOperatorExpressionFactory = (operands: [TwingNode, TwingNode], lineno: number, columno: number) => TwingNodeExpression;
-
-export class TwingOperator {
-    private name:string;
-    private type: TwingOperatorType;
-    private precedence: number;
-    private expressionFactory: TwingOperatorExpressionFactory;
-    private associativity: TwingOperatorAssociativity;
-
-    /**
-     * @param {string} name
-     * @param {TwingOperatorType} type
-     * @param {number} precedence
-     * @param {TwingOperatorExpressionFactory} expressionFactory
-     * @param {TwingOperatorAssociativity} associativity
-     */
-    constructor(name: string, type: TwingOperatorType, precedence: number, expressionFactory: TwingOperatorExpressionFactory, associativity?: TwingOperatorAssociativity) {
-        this.name = name;
-        this.type = type;
-        this.precedence = precedence;
-        this.expressionFactory = expressionFactory;
-        this.associativity = type === TwingOperatorType.BINARY ? (associativity || TwingOperatorAssociativity.LEFT) : null;
-    }
-
-    getName(): string {
-        return this.name;
-    }
-
-    getType(): TwingOperatorType {
-        return this.type;
-    }
-
-    getPrecedence(): number {
-        return this.precedence;
-    }
-
-    getAssociativity(): TwingOperatorAssociativity {
-        return this.associativity;
-    }
-
-    getExpressionFactory(): TwingOperatorExpressionFactory {
-        return this.expressionFactory;
-    }
-}
+    return {
+        get associativity() {
+            return associativity;
+        },
+        get expressionFactory() {
+            return expressionFactory;
+        },
+        get name() {
+            return name;
+        },
+        get precedence() {
+            return precedence;
+        },
+        get specificationLevel() {
+            return specificationLevel;
+        },
+        get type() {
+            return type;
+        }
+    };
+};

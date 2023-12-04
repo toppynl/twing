@@ -1,19 +1,12 @@
 /**
- *
- * @param value
- * @returns {boolean}
- */
-import {isNullOrUndefined} from "util";
-
-/**
- * Check that an obejct is traversable in the sense of PHP,
+ * Check that an object is traversable in the sense of PHP,
  * i.e. implements PHP Traversable interface
  *
  * @param value
  * @returns {boolean}
  */
 export function isTraversable(value: any) {
-    if (!isNullOrUndefined(value)) {
+    if ((value !== null) && (value !== undefined)) {
         if (typeof value === 'string') {
             return false;
         }

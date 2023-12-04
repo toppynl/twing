@@ -1,19 +1,23 @@
-import {TwingNode} from "../node";
-import {TwingCompiler} from "../compiler";
-import {TwingNodeType} from "../node-type";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
 
-export const type = new TwingNodeType('line');
+export type TwingLineNodeAttributes = TwingBaseNodeAttributes & {
+    data: number; // todo: rename to something meaningful
+};
 
-export class TwingNodeLine extends TwingNode {
-    constructor(data: number, lineno: number, columnno: number, tag: string) {
-        super(new Map(), new Map([['data', data]]), lineno, columnno, tag);
-    }
-
-    get type() {
-        return type;
-    }
-
-    compile(compiler: TwingCompiler) {
-        // noop
-    }
+export interface TwingLineNode extends TwingBaseNode<"line", TwingLineNodeAttributes> {
 }
+
+export const createLineNode = (
+    data: number,
+    line: number,
+    column: number,
+    tag: string
+): TwingLineNode => {
+    const baseNode = createBaseNode("line", {
+        data
+    }, {}, line, column, tag);
+
+    return {
+        ...baseNode
+    };
+};
