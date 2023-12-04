@@ -17,7 +17,7 @@ npm install twing --save
 
 ## Documentation
 
-See [the Twing website](https://twing-documentation-nightlycommit-4e8a287643e3fabd28bca6a83bd76.gitlab.io/) for documentation.
+See [the Twing website](https://twing.nightlycommit.com) for documentation.
 
 ## Basic API Usage
 
@@ -56,7 +56,7 @@ Copyright © 2018 [Eric MORAND](https://github.com/ericmorand). Released under t
 [npm-url]: https://npmjs.org/package/twing
 [build-image]: https://gitlab.com/nightlycommit/twing/badges/main/pipeline.svg
 [build-url]: https://gitlab.com/nightlycommit/twing/-/pipelines
-[coveralls-image]: https://coveralls.io/repos/github/NightlyCommit/twing/badge.svg
-[coveralls-url]: https://coveralls.io/github/NightlyCommit/twing
+[coveralls-image]: https://coveralls.io/repos/gitlab/nightlycommit/twing/badge.svg
+[coveralls-url]: https://coveralls.io/gitlab/nightlycommit/twing
 [donate-image]: https://img.shields.io/badge/Donate-PayPal-green.svg
 [donate-url]: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7YZU3L2JL2KJA

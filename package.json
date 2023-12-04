@@ -11,12 +11,13 @@
     "typescript"
   ],
   "version": "0.0.0",
-  "homepage": "https://twing-documentation-nightlycommit-4e8a287643e3fabd28bca6a83bd76.gitlab.io/",
+  "homepage": "https://twing.nightlycommit.com",
   "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/nightlycommit/twing"
   },
+  "bugs": "https://gitlab.com/nightlycommit/twing/-/issues",
   "main": "dist/cjs/lib.js",
   "types": "dist/types/lib.d.ts",
   "jsdelivr": "dist/lib.min.js",
