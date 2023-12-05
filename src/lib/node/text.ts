@@ -1,11 +1,10 @@
-import {TwingBaseNodeAttributes} from "../../node";
-import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
+import {createBaseNode, TwingBaseNodeAttributes, TwingBaseNode} from "../node";
 
 export type TwingBaseTextNodeAttributes = TwingBaseNodeAttributes & {
     data: string;
 };
 
-export interface TwingBaseTextNode<Type extends string> extends TwingBaseOutputNode<Type, TwingBaseTextNodeAttributes> {
+export interface TwingBaseTextNode<Type extends string> extends TwingBaseNode<Type, TwingBaseTextNodeAttributes> {
 }
 
 export interface TwingTextNode extends TwingBaseTextNode<"text"> {
@@ -18,7 +17,7 @@ export const createBaseTextNode = <Type extends string>(
     column: number,
     tag: string | null = null
 ): TwingBaseTextNode<Type> => {
-    const outputNode = createBaseOutputNode(type, {
+    const outputNode = createBaseNode(type, {
         data
     }, {}, line, column, tag);
 

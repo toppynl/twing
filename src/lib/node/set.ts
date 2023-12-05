@@ -76,8 +76,7 @@ export const createSetNode = (
                     index++;
                 }
             }
-        },
-        isACaptureNode: true
+        }
     };
 
     return setNode;

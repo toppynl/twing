@@ -1,4 +1,4 @@
-import {createSpacelessNode} from "../node/output/spaceless";
+import {createSpacelessNode} from "../node/spaceless";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 

@@ -1,8 +1,8 @@
 import {createBaseNode} from "../node";
 import {createParsingError} from "../error/parsing";
 import {createBlockNode} from "../node/block";
-import {createPrintNode} from "../node/output/print";
-import {createBlockReferenceNode} from "../node/output/block-reference";
+import {createPrintNode} from "../node/print";
+import {createBlockReferenceNode} from "../node/block-reference";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 

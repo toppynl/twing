@@ -3,8 +3,8 @@ import {TwingTagHandler, TwingTokenParser} from "./tag-handler";
 import {TwingNodeVisitor} from "./node-visitor";
 import {createParsingError, TwingParsingError} from "./error/parsing";
 import {TwingBaseNode, createBaseNode, getChildren, TwingNode} from "./node";
-import {createTextNode} from "./node/output/text";
-import {createPrintNode} from "./node/output/print";
+import {createTextNode} from "./node/text";
+import {createPrintNode} from "./node/print";
 import {TwingBaseExpressionNode, TwingExpressionNode} from "./node/expression";
 import {createBodyNode} from "./node/body";
 import {createTemplateNode, TwingTemplateNode} from "./node/template";
@@ -265,10 +265,10 @@ export const createParser = (
     // checks that the node only contains "constant" elements
     const checkConstantExpression = (stackEntry: TwingTokenStream, node: TwingBaseNode): TwingBaseNode | null => {
         if (!(
-            (node as TwingNode).type === "constant" 
-            || (node as TwingNode).type === "array" 
-            || (node as TwingNode).type === "hash" 
-            || (node as TwingNode).type === "negative" 
+            (node as TwingNode).type === "constant"
+            || (node as TwingNode).type === "array"
+            || (node as TwingNode).type === "hash"
+            || (node as TwingNode).type === "negative"
             || (node as TwingNode).type === "positive"
         )) {
             return node;
@@ -292,7 +292,7 @@ export const createParser = (
     const filterChildBodyNode = (stream: TwingTokenStream, node: TwingBaseNode, nested: boolean = false): TwingBaseNode | null => {
         // non-empty text nodes are not allowed as direct child of a 
         const testedNode = node as TwingNode;
-        
+
         if (testedNode.type === "text" && !isMadeOfWhitespaceOnly(testedNode.attributes.data)) {
             const {data} = testedNode.attributes;
 
@@ -312,21 +312,22 @@ export const createParser = (
             );
         }
 
+        const {type} = (node as TwingNode);
+
         // bypass nodes that "capture" the output
-        if (node.isACaptureNode) {
-            // a "block" tag in such a node will serve as a block definition AND be displayed in place as well
+        if (type === "set") {
             return node;
         }
 
         // to be removed completely in Twig 3.0
-        if (!nested && (node.type === "spaceless")) {
+        if (!nested && (type === "spaceless")) {
             console.warn(`Using the spaceless tag at the root level of a child template in "${stream.source.name}" at line ${node.line} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
         }
 
         // "block" tags that are not capturing (see above) are only used for defining
         // the content of the block. In such a case, nesting it does not work as
         // expected as the definition is not part of the default template code flow.
-        if (nested && (node.type === "block_reference")) {
+        if (nested && (type === "block_reference")) {
             if (level >= 3) {
                 throw createParsingError(`A block definition cannot be nested under non-capturing nodes.`, node, stream.source.name);
             }
@@ -336,17 +337,18 @@ export const createParser = (
                 return null;
             }
         }
-
-        if (node.isAnOutputNode && (node.type !== "spaceless")) {
+        
+        if (type === "block_reference" || type === "print" || type === "text") {
             return null;
         }
-
+        
         // here, nested means "being at the root level of a child template"
         // we need to discard the wrapping node for the "body" node
-        nested = nested || (node.type !== "wrapper");
+        nested = nested || (type !== "wrapper");
 
         for (const [key, child] of getChildren(node)) {
             if (child !== null && (filterChildBodyNode(stream, child, nested) === null)) {
+
                 delete (node.children as any)[key];
             }
         }
@@ -895,7 +897,7 @@ export const createParser = (
                 break;
             }
         }
-        
+
         return createWrapperNode(targets, line, column);
     };
 

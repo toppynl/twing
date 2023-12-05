@@ -1,7 +1,7 @@
 import * as tape from 'tape';
 import {SinonStub, stub} from 'sinon';
 import {createEnvironment, TwingEnvironmentOptions} from "../../../src/lib/environment";
-import {createPrintNode} from "../../../src/lib/node/output/print";
+import {createPrintNode} from "../../../src/lib/node/print";
 import {createConstantNode} from "../../../src/lib/node/expression/constant";
 import {TwingExtension} from "../../../src/lib/extension";
 import {createFilter} from "../../../src/lib/filter";

@@ -1,6 +1,5 @@
-import {TwingBaseNodeAttributes} from "../../node";
+import {TwingBaseNodeAttributes, TwingBaseNode} from "../../node";
 import {TwingBaseExpressionNode, createBaseExpressionNode} from "../expression";
-import {TwingBaseOutputNode} from "../output";
 import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export interface TwingEscapeNodeAttributes extends TwingBaseNodeAttributes {
@@ -8,12 +7,12 @@ export interface TwingEscapeNodeAttributes extends TwingBaseNodeAttributes {
 }
 
 export interface TwingEscapeNode extends TwingBaseExpressionNode<"escape", TwingEscapeNodeAttributes, {
-    body: TwingBaseOutputNode<any>;
+    body: TwingBaseNode;
 }> {
 }
 
 export const createEscapeNode = (
-    body: TwingBaseOutputNode<any>,
+    body: TwingBaseNode,
     strategy: string
 ): TwingEscapeNode => {
     const baseNode = createBaseExpressionNode("escape", {

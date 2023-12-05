@@ -1,7 +1,7 @@
 import {createBlockFunctionNode} from "../node/expression/block-function";
 import {createConstantNode} from "../node/expression/constant";
 import {createBlockNode} from "../node/block";
-import {createPrintNode} from "../node/output/print";
+import {createPrintNode} from "../node/print";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 

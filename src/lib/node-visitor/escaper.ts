@@ -1,5 +1,5 @@
 import {TwingBaseNode, TwingNode} from "../node";
-import {createPrintNode, TwingPrintNode} from "../node/output/print";
+import {createPrintNode, TwingPrintNode} from "../node/print";
 import {createDoNode} from "../node/do";
 import {createConditionalNode, TwingConditionalNode} from "../node/expression/conditional";
 import {createEscapeNode, TwingEscapeNode} from "../node/expression/escape";

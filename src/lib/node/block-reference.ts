@@ -1,12 +1,11 @@
-import {TwingBaseNodeAttributes} from "../../node";
-import {TwingBaseOutputNode, createBaseOutputNode} from "../output";
-import {getTraceableMethod} from "../../helpers/traceable-method";
+import {createBaseNode, TwingBaseNode, TwingBaseNodeAttributes} from "../node";
+import {getTraceableMethod} from "../helpers/traceable-method";
 
 export type TwingBlockReferenceNodeAttributes = TwingBaseNodeAttributes & {
     name: string;
 };
 
-export interface TwingBlockReferenceNode extends TwingBaseOutputNode<"block_reference", TwingBlockReferenceNodeAttributes, {}> {
+export interface TwingBlockReferenceNode extends TwingBaseNode<"block_reference", TwingBlockReferenceNodeAttributes, {}> {
 }
 
 export const createBlockReferenceNode = (
@@ -15,7 +14,7 @@ export const createBlockReferenceNode = (
     column: number,
     tag: string
 ): TwingBlockReferenceNode => {
-    const outputNode = createBaseOutputNode("block_reference", {
+    const outputNode = createBaseNode("block_reference", {
         name
     }, {}, line, column, tag);
 

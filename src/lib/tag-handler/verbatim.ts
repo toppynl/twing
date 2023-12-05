@@ -1,4 +1,4 @@
-import {createVerbatimNode} from "../node/output/verbatim";
+import {createVerbatimNode} from "../node/verbatim";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
 import {TwingNode} from "../node";

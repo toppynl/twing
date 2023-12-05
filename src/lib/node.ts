@@ -1,7 +1,7 @@
 import type {TwingExpressionNode} from "./node/expression";
-import type {TwingPrintNode} from "./node/output/print";
-import type {TwingBlockReferenceNode} from "./node/output/block-reference";
-import type {TwingTextNode} from "./node/output/text";
+import type {TwingPrintNode} from "./node/print";
+import type {TwingBlockReferenceNode} from "./node/block-reference";
+import type {TwingTextNode} from "./node/text";
 import type {TwingAutoEscapeNode} from "./node/auto-escape";
 import type {TwingBodyNode} from "./node/body";
 import type {TwingCheckSecurityNode} from "./node/check-security";
@@ -21,9 +21,9 @@ import type {TwingTemplateNode} from "./node/template";
 import type {TwingBlockNode} from "./node/block";
 import type {TwingTraitNode} from "./node/trait";
 import type {TwingSetNode} from "./node/set";
-import type {TwingVerbatimNode} from "./node/output/verbatim";
+import type {TwingVerbatimNode} from "./node/verbatim";
 import type {TwingSandboxNode} from "./node/sandbox";
-import type {TwingSpacelessNode} from "./node/output/spaceless";
+import type {TwingSpacelessNode} from "./node/spaceless";
 import type {TwingWithNode} from "./node/with";
 import type {TwingIfNode} from "./node/if";
 import type {TwingMethodCallNode} from "./node/expression/method-call";
@@ -82,8 +82,6 @@ export interface TwingBaseNode<
     readonly attributes: Attributes;
     readonly children: Children;
     readonly column: number;
-    readonly isACaptureNode: boolean;
-    readonly isAnOutputNode: boolean;
     readonly line: number;
     readonly tag: string | null;
     readonly type: Type;
@@ -123,8 +121,7 @@ export const createBaseNode = <
         column,
         line,
         tag,
-        isACaptureNode: false,
-        isAnOutputNode: false,
+        type,
         execute: async (executionContext) => {
             const output: Array<any> = [];
 
@@ -133,7 +130,6 @@ export const createBaseNode = <
             }
 
             return output;
-        },
-        type
+        }
     };
 };
