@@ -127,7 +127,7 @@ export interface TwingEnvironment {
      *
      * When a template is encountered, Twing environment emits a `template` event with the name of the encountered template and the source of the template that initiated the loading.
      */
-    on(eventName: "load", listener: (name: string, from: TwingSource | null) => void): void;
+    on(eventName: "load", listener: (name: string, from: string | null) => void): void;
 
     /**
      * Converts a token list to a template.
