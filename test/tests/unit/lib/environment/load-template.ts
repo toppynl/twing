@@ -2,6 +2,7 @@ import * as tape from "tape";
 import {createEnvironment} from "../../../../../src/lib/environment";
 import {createFilesystemLoader, TwingFilesystemLoaderFilesystem} from "../../../../../src/lib/loader/filesystem";
 import {spy} from "sinon";
+import {createArrayLoader} from "../../../../../src/lib/loader/array";
 
 tape('createEnvironment::loadTemplate', ({test}) => {
     test('cache the loaded template under it fully qualified name', ({same, end}) => {
@@ -37,6 +38,31 @@ tape('createEnvironment::loadTemplate', ({test}) => {
                 ]).then(() => {
                     same(getSourceSpy.callCount, 1);
                 });
+            })
+            .finally(end);
+    });
+
+    test('emits a "load" event', ({same, end}) => {
+        const environment = createEnvironment(createArrayLoader({
+            index: `{{ include("partial") }}`,
+            partial: ``
+        }));
+
+        const loadedTemplates: Array<[string, string | null]> = [];
+
+        environment.on("load", (name, from) => {
+            loadedTemplates.push([name, from]);
+        });
+
+        return environment.loadTemplate(('index'))
+            .then((template) => {
+                return template.render({});
+            })
+            .then(() => {
+                same(loadedTemplates, [
+                    ['index', null],
+                    ['partial', 'index']
+                ]);
             })
             .finally(end);
     });
