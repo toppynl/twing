@@ -337,11 +337,11 @@ export const createParser = (
                 return null;
             }
         }
-        
+
         if (type === "block_reference" || type === "print" || type === "text") {
             return null;
         }
-        
+
         // here, nested means "being at the root level of a child template"
         // we need to discard the wrapping node for the "body" node
         nested = nested || (type !== "wrapper");
@@ -653,7 +653,24 @@ export const createParser = (
         return Object.keys(traits).length > 0
     };
 
-    const isBinary = (token: Token): TwingOperator | null => {
+    const isBinary = (token: Token): {
+        associativity: TwingOperator["associativity"];
+        expressionFactory: TwingOperator["expressionFactory"];
+        name: TwingOperator["name"];
+        precedence: TwingOperator["precedence"];
+    } | {
+        expressionFactory: null;
+        name: "is" | "is not";
+        precedence: TwingOperator["precedence"];
+    } | null => {
+        if (token.value === "is" || token.value === "is not") {
+            return {
+                expressionFactory: null,
+                name: token.value,
+                precedence: 100
+            };
+        }
+
         return (token.test("OPERATOR") && binaryOperatorsRegister.get(token.value)) || null;
     };
 
@@ -1020,30 +1037,29 @@ export const createParser = (
 
         let expression = getPrimary(stream);
         let token = stream.current;
-        let operator: TwingOperator | null = null;
+        let operator: ReturnType<typeof isBinary> = null;
 
-        if ((token.value === "is not") || (token.value === "is")) {
+        while (((operator = isBinary(token)) !== null && operator.precedence >= precedence)) {
             stream.next();
 
-            if (token.value === "is not") {
-                expression = parseNotTestExpression(stream, expression);
+            if (operator.expressionFactory === null) {
+                expression = parseTestExpression(stream, expression);
+
+                if (operator.name === "is not") {
+                    const {line, column} = stream.current;
+
+                    expression = createNotNode(expression, line, column);
+                }
             }
             else {
-                expression = parseTestExpression(stream, expression);
-            }
-        }
-        else {
-            while (((operator = isBinary(token)) !== null) && operator.precedence >= precedence) {
-                stream.next();
-
                 const {expressionFactory} = operator;
 
                 const operand = parseExpression(stream, operator.associativity === "LEFT" ? operator.precedence + 1 : operator.precedence, true);
 
                 expression = expressionFactory([expression, operand], token.line, token.column);
-
-                token = stream.current;
             }
+
+            token = stream.current;
         }
 
         if (precedence === 0) {
@@ -1231,12 +1247,6 @@ export const createParser = (
         }
 
         return createWrapperNode(targets, line, column);
-    };
-
-    const parseNotTestExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode): TwingBaseExpressionNode => {
-        const {line, column} = stream.current;
-
-        return createNotNode(parseTestExpression(stream, node), line, column);
     };
 
     const parsePostfixExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode, prefixToken: Token): TwingBaseExpressionNode => {
