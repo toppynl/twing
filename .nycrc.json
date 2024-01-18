@@ -27,5 +27,9 @@
   "reporter": [
     "text-summary",
     "html"
-  ]
+  ],
+  "include": [
+    "**/src/**"
+  ],
+  "exclude": []
 }
