@@ -27,24 +27,24 @@ export interface TwingFilesystemLoader extends TwingLoader {
     /**
      * Adds a path where templates are stored.
      *
-     * @param {string} path A path where to look for templates
-     * @param {string} namespace A path namespace
+     * @param path A path where to look for templates
+     * @param namespace A path namespace
      */
-    addPath(path: string, namespace: string): void;
+    addPath(path: string, namespace?: string | null): void;
 
     /**
      * Prepends a path where templates are stored.
      *
-     * @param {string} path A path where to look for templates
-     * @param {string} namespace A path namespace
+     * @param path A path where to look for templates
+     * @param namespace A path namespace
      */
-    prependPath(path: string, namespace: string): void;
+    prependPath(path: string, namespace?: string | null): void;
 }
 
 export const createFilesystemLoader = (
     filesystem: TwingFilesystemLoaderFilesystem
 ): TwingFilesystemLoader => {
-    const namespacedPaths: Map<string, Array<string>> = new Map();
+    const namespacedPaths: Map<string | null, Array<string>> = new Map();
     
     const stat = (path: string): Promise<TwingFilesystemLoaderFilesystemStats | null> => {
         return new Promise((resolve) => {
@@ -73,7 +73,7 @@ export const createFilesystemLoader = (
     // * if not found yet, resolve from "from"
     const resolve = (name: string, from: string | null): Promise<string | null> => {
         name = normalize(from ? resolvePathFromSource(name, from) : name);
-
+        
         const findTemplateInPath = async (path: string): Promise<string | null> => {
             const stats = await stat(path);
             
@@ -93,7 +93,7 @@ export const createFilesystemLoader = (
                     // then, search for the template from its namespaced name
                     const [namespace, shortname] = parseName(name);
                     
-                    const paths = (namespace && namespacedPaths.get(namespace)) || ['.'];
+                    const paths = namespacedPaths.get(namespace) || ['.'];
 
                     const findTemplateInPathAtIndex = async (index: number): Promise<string | null> => {
                         if (index < paths.length) {
@@ -132,7 +132,7 @@ export const createFilesystemLoader = (
         return [null, name];
     };
 
-    const addPath: TwingFilesystemLoader["addPath"] = (path, namespace) => {
+    const addPath: TwingFilesystemLoader["addPath"] = (path, namespace = null) => {
         let namespacePaths = namespacedPaths.get(namespace);
 
         if (!namespacePaths) {
@@ -144,7 +144,7 @@ export const createFilesystemLoader = (
         namespacePaths.push(rtrim(path, '\/\\\\'));
     }
 
-    const prependPath: TwingFilesystemLoader["prependPath"] = (path, namespace) => {
+    const prependPath: TwingFilesystemLoader["prependPath"] = (path, namespace = null) => {
         path = rtrim(path, '\/\\\\');
 
         const namespacePaths = namespacedPaths.get(namespace);

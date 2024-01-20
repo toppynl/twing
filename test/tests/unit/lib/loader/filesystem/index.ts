@@ -7,7 +7,15 @@ const fileSystemContent: Array<[path: string, content: string]> = [
     ['index.html', 'index.html content'],
     ['foo/index.html','foo/index.html content'],
     ['bar/index.html', 'bar/index.html content'],
-    ['/foo/index.html', '/foo/index.html content']
+    ['/foo/index.html', '/foo/index.html content'],
+    ['views/index.html', 'views/index.html content'],
+    ['views/index2.html', 'views/index2.html content'],
+    ['views/foo.html', 'views/foo.html content'],
+    ['views/foo2.html', 'views/foo2.html content'],
+    ['templates/bar.html', 'templates/bar.html content'],
+    ['templates/bar2.html', 'templates/bar2.html content'],
+    ['views2/foo2.html', 'views2/foo2.html content'],
+    ['templates2/bar2.html', 'templates2/bar2.html content']
 ];
 
 const createFilesystem = (): TwingFilesystemLoaderFilesystem => {
@@ -45,7 +53,8 @@ const createFilesystem = (): TwingFilesystemLoaderFilesystem => {
 tape('createFilesystemLoader', ({test}) => {
     test('resolve', async ({same, end}) => {
         const filesystem = createFilesystem();
-        const loader = createFilesystemLoader(filesystem);
+        
+        let loader = createFilesystemLoader(filesystem);
 
         loader.addPath('foo', 'Foo');
         loader.addPath('foo', '@Foo');
@@ -67,6 +76,20 @@ tape('createFilesystemLoader', ({test}) => {
         same(await loader.resolve('./missing.html', null), null);
         same(await loader.resolve('./foo/missing.html', null), null);
         same(await loader.resolve('../foo/index.html', 'index.html'), null);
+        
+        loader = createFilesystemLoader(filesystem);
+
+        loader.addPath('views');
+        loader.prependPath('views2');
+        loader.addPath('templates', null);
+        loader.prependPath('templates2', null);
+
+        same(await loader.resolve('index2.html', null), 'views/index2.html');
+        same(await loader.resolve('foo.html', null), 'views/foo.html');
+        same(await loader.resolve('bar.html', null), 'templates/bar.html');
+        same(await loader.resolve('foo2.html', null), 'views2/foo2.html');
+        same(await loader.resolve('bar2.html', null), 'templates2/bar2.html');
+        same(await loader.resolve('index.html', null), 'index.html');
 
         end();
     });
