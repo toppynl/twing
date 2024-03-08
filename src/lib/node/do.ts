@@ -18,12 +18,7 @@ export const createDoNode = (
     column: number,
     tag: string | null
 ): TwingDoNode => {
-    const baseNode = createBaseNode("do", {}, {
+    return  createBaseNode("do", {}, {
         body
     }, line, column, tag);
-
-    return {
-        ...baseNode,
-        execute: baseNode.children.body.execute
-    };
 };

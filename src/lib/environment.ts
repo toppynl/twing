@@ -345,9 +345,7 @@ export const createEnvironment = (
                         },
                         leaveNode: (node) => {
                             if (node.type === "template") {
-                                const autoEscapeNode = createAutoEscapeNode(strategy, node.children.body.children.content, node.line, node.column, 'foo');
-
-                                node.children.body.children.content = autoEscapeNode;
+                                node.children.body = createAutoEscapeNode(strategy, node.children.body, node.line, node.column);
                             }
 
                             return node;

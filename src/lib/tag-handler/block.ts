@@ -1,4 +1,4 @@
-import {createBaseNode} from "../node";
+import {createNode} from "../node";
 import {createParsingError} from "../error/parsing";
 import {createBlockNode} from "../node/block";
 import {createPrintNode} from "../node/print";
@@ -32,7 +32,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                     throw createParsingError(`The block '${name}' has already been defined at {${block.line}:${block.column}}.`, {line, column}, stream.source.name);
                 }
 
-                block = createBlockNode(name, createBaseNode(null), line, column);
+                block = createBlockNode(name, createNode(), line, column);
 
                 parser.setBlock(name, block);
                 parser.pushLocalScope();
@@ -59,7 +59,7 @@ export const createBlockTagHandler = (): TwingTagHandler => {
                         }
                     }
                 } else {
-                    body = createBaseNode(null, {}, {
+                    body = createNode({
                         0: createPrintNode(parser.parseExpression(stream), line, column)
                     });
                 }

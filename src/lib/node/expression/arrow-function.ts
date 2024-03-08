@@ -16,31 +16,8 @@ export const createArrowFunctionNode = (
     line: number,
     column: number
 ): TwingArrowFunctionNode => {
-    const baseNode = createBaseExpressionNode("arrow_function", {}, {
+    return createBaseExpressionNode("arrow_function", {}, {
         body,
         names
     }, line, column);
-
-    return {
-        ...baseNode,
-        execute: (executionContext) => {
-            const {context} = executionContext;
-            const {body} = baseNode.children;
-            const assignmentNodes = Object.values(baseNode.children.names.children);
-            
-            return Promise.resolve((...functionArgs: Array<any>): Promise<any> => {
-                let index = 0;
-
-                for (const assignmentNode of assignmentNodes) {
-                    const {name} = assignmentNode.attributes;
-
-                    context.set(name, functionArgs[index]);
-
-                    index++;
-                }
-                
-                return body.execute(executionContext);
-            });
-        }
-    };
 };

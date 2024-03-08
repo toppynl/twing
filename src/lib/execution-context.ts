@@ -3,6 +3,7 @@ import type {TwingContext} from "./context";
 import type {TwingOutputBuffer} from "./output-buffer";
 import type {TwingSourceMapRuntime} from "./source-map-runtime";
 import type {TwingNumberFormat} from "./environment";
+import type {TwingNodeExecutor} from "./node-executor";
 
 export type TwingExecutionContext = {
     aliases: TwingTemplateAliases;
@@ -12,6 +13,7 @@ export type TwingExecutionContext = {
     dateFormat: string;
     dateIntervalFormat: string;
     isStrictVariables: boolean;
+    nodeExecutor: TwingNodeExecutor;
     numberFormat: TwingNumberFormat;
     outputBuffer: TwingOutputBuffer;
     sandboxed: boolean;

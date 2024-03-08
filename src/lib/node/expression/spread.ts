@@ -11,18 +11,7 @@ export const createSpreadNode = (
     line: number,
     column: number
 ): TwingSpreadNode => {
-    const baseNode = createBaseExpressionNode("spread", {}, {
+    return createBaseExpressionNode("spread", {}, {
         iterable
     }, line, column);
-
-    const spreadNode: TwingSpreadNode = {
-        ...baseNode,
-        execute: (executionContext) => {
-            const {iterable} = spreadNode.children;
-
-            return iterable.execute(executionContext);
-        }
-    };
-
-    return spreadNode;
 };

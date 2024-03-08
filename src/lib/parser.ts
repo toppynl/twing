@@ -2,11 +2,10 @@ import type {TwingTokenStream} from "./token-stream";
 import {TwingTagHandler, TwingTokenParser} from "./tag-handler";
 import {TwingNodeVisitor} from "./node-visitor";
 import {createParsingError, TwingParsingError} from "./error/parsing";
-import {TwingBaseNode, createBaseNode, getChildren, TwingNode} from "./node";
+import {TwingBaseNode, getChildren, TwingNode, createNode} from "./node";
 import {createTextNode} from "./node/text";
 import {createPrintNode} from "./node/print";
 import {TwingBaseExpressionNode, TwingExpressionNode} from "./node/expression";
-import {createBodyNode} from "./node/body";
 import {createTemplateNode, TwingTemplateNode} from "./node/template";
 import {createNodeTraverser} from "./node-traverser";
 import {TwingMacroNode} from "./node/macro";
@@ -23,7 +22,7 @@ import {
     createAttributeAccessorNode,
     TwingAttributeAccessorCallType
 } from "./node/expression/attribute-accessor";
-import {TwingArrayNode, createArrayNode, getKeyValuePairs} from "./node/expression/array";
+import {TwingArrayNode, createArrayNode} from "./node/expression/array";
 import {createMethodCallNode} from "./node/expression/method-call";
 import {createHashNode, TwingHashNode} from "./node/expression/hash";
 import {TwingTest} from "./test";
@@ -70,7 +69,7 @@ import {createUseTagHandler} from "./tag-handler/use";
 import {createVerbatimTagHandler} from "./tag-handler/verbatim";
 import {createWithTagHandler} from "./tag-handler/with";
 import {createSpreadNode} from "./node/expression/spread";
-import {createWrapperNode, TwingWrapperNode} from "./node/wrapper";
+import {getKeyValuePairs} from "./helpers/get-key-value-pairs";
 
 const nameRegExp = new RegExp(namePattern);
 
@@ -116,7 +115,9 @@ export interface TwingParser {
 
     parseArguments(stream: TwingTokenStream, namedArguments?: boolean, definition?: boolean, allowArrow?: true): TwingArrayNode;
 
-    parseAssignmentExpression(stream: TwingTokenStream): TwingWrapperNode<TwingAssignmentNode>;
+    parseAssignmentExpression(stream: TwingTokenStream): TwingBaseNode<null, {}, {
+        [key: number]: TwingAssignmentNode;
+    }>;
 
     parseExpression(stream: TwingTokenStream, precedence?: number, allowArrow?: true): TwingExpressionNode;
 
@@ -127,7 +128,7 @@ export interface TwingParser {
 
     parseFilterExpressionRaw(stream: TwingTokenStream, node: TwingBaseExpressionNode, tag?: string | null): TwingFilterNode;
 
-    parseMultiTargetExpression(stream: TwingTokenStream): TwingWrapperNode;
+    parseMultiTargetExpression(stream: TwingTokenStream): TwingBaseNode<null>;
 
     peekBlockStack(): string;
 
@@ -344,7 +345,7 @@ export const createParser = (
 
         // here, nested means "being at the root level of a child template"
         // we need to discard the wrapping node for the "body" node
-        nested = nested || (type !== "wrapper");
+        nested = nested || (type !== null);
 
         for (const [key, child] of getChildren(node)) {
             if (child !== null && (filterChildBodyNode(stream, child, nested) === null)) {
@@ -558,7 +559,7 @@ export const createParser = (
             const expression = parseExpression(stream, operator.precedence);
             const expressionFactory = operator.expressionFactory;
 
-            return parsePostfixExpression(stream, expressionFactory([expression, createBaseNode(null)], token.line, token.column), token);
+            return parsePostfixExpression(stream, expressionFactory([expression, createNode()], token.line, token.column), token);
         }
         else if (token.test("PUNCTUATION", '(')) {
             stream.next();
@@ -707,7 +708,7 @@ export const createParser = (
             body = subparse(stream, tag, test);
 
             if (parent !== null && (body = filterChildBodyNode(stream, body)) === null) {
-                body = createBaseNode(null);
+                body = createNode();
             }
         } catch (error: any) {
             if (!(error as TwingParsingError).source) {
@@ -718,11 +719,11 @@ export const createParser = (
         }
 
         let node = createTemplateNode(
-            createBodyNode(body, 1, 1),
+            body,
             parent,
-            createBaseNode(null, {}, blocks),
-            createBaseNode(null, {}, macros),
-            createBaseNode(null, {}, traits),
+            createNode(blocks),
+            createNode(macros),
+            createNode(traits),
             embeddedTemplates,
             stream.source,
             1, 1
@@ -915,7 +916,7 @@ export const createParser = (
             }
         }
 
-        return createWrapperNode(targets, line, column);
+        return createNode(targets, line, column);
     };
 
     const parseArrow = (stream: TwingTokenStream): TwingArrowFunctionNode | null => {
@@ -935,7 +936,7 @@ export const createParser = (
 
             stream.expect("ARROW");
 
-            return createArrowFunctionNode(parseExpression(stream, 0), createBaseNode(null, {}, names), line, column);
+            return createArrowFunctionNode(parseExpression(stream, 0), createNode(names), line, column);
         }
 
         // first, determine if we are parsing an arrow function by finding => (long form)
@@ -993,7 +994,7 @@ export const createParser = (
         stream.expect("PUNCTUATION", ')');
         stream.expect("ARROW");
 
-        return createArrowFunctionNode(parseExpression(stream, 0), createBaseNode(null, {}, names), line, column);
+        return createArrowFunctionNode(parseExpression(stream, 0), createNode(names), line, column);
     };
 
     const parseConditionalExpression = (stream: TwingTokenStream, expression: TwingBaseExpressionNode): TwingBaseExpressionNode => {
@@ -1174,7 +1175,7 @@ export const createParser = (
                 const spreadNode = createSpreadNode(expression, current.line, current.column);
 
                 elements.push({
-                    key: createBaseNode(null),
+                    key: createNode(),
                     value: spreadNode
                 });
 
@@ -1246,7 +1247,7 @@ export const createParser = (
             }
         }
 
-        return createWrapperNode(targets, line, column);
+        return createNode(targets, line, column);
     };
 
     const parsePostfixExpression = (stream: TwingTokenStream, node: TwingBaseExpressionNode, prefixToken: Token): TwingBaseExpressionNode => {
@@ -1337,7 +1338,7 @@ export const createParser = (
                     const expression = parsePrimaryExpression(stream);
                     const {expressionFactory} = operator;
 
-                    node = expressionFactory([expression, createBaseNode(null)], token.line, token.column);
+                    node = expressionFactory([expression, createNode()], token.line, token.column);
 
                     break;
                 }
@@ -1589,7 +1590,7 @@ export const createParser = (
                             return children[0];
                         }
 
-                        return createWrapperNode(children, line, column);
+                        return createNode(children, line, column);
                     }
 
                     if (!tokenParsers.has(token.value)) {
@@ -1646,7 +1647,7 @@ export const createParser = (
             return children[0];
         }
 
-        return createWrapperNode(children, line, column);
+        return createNode(children, line, column);
     };
 
     const parser = {

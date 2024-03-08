@@ -10,10 +10,11 @@ import {cloneMethodCallNode} from "../node/expression/method-call";
 import {TwingBaseExpressionNode} from "../node/expression";
 import {createParsingError} from "../error/parsing";
 import {createTestNode, TwingTestNode} from "../node/expression/call/test";
-import {createArrayNode, getKeyValuePairs} from "../node/expression/array";
+import {createArrayNode} from "../node/expression/array";
 import {createConditionalNode} from "../node/expression/conditional";
 import {TwingFilterNode} from "../node/expression/call/filter";
 import type {TwingNode} from "../node";
+import {getKeyValuePairs} from "../helpers/get-key-value-pairs";
 
 export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     const enteredNodes: Array<TwingBaseExpressionNode> = [];

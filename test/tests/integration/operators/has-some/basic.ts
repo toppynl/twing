@@ -1,7 +1,7 @@
 import {runTest} from "../../TestBase";
 
 runTest({
-    description: '"has every" operator',
+    description: '"has some" operator',
     templates: {
         "index.twig": `
 {{ ([0, 2, 4] has some v => 0 == v % 2) ? 'Some' : 'No' }} items are even in array

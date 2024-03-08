@@ -1,9 +1,8 @@
 import {createParsingError} from "../error/parsing";
 import {TwingConstantNode, createConstantNode} from "../node/expression/constant";
-import {createBaseNode} from "../node";
 import {createTraitNode} from "../node/trait";
 import {TwingTagHandler} from "../tag-handler";
-import {createWrapperNode} from "../node/wrapper";
+import {createNode} from "../node";
 
 export const createUseTagHandler = (): TwingTagHandler => {
     const tag = 'use';
@@ -41,9 +40,9 @@ export const createUseTagHandler = (): TwingTagHandler => {
 
                 stream.expect("TAG_END");
                 
-                parser.addTrait(createTraitNode(template, createWrapperNode(targets, line, column), line, column));
+                parser.addTrait(createTraitNode(template, createNode(targets, line, column), line, column));
 
-                return createBaseNode(null);
+                return createNode({}, line, column, tag);
             };
         }
     };

@@ -14,16 +14,7 @@ export const createAssignmentNode = (
     line: number,
     column: number
 ): TwingAssignmentNode => {
-    const baseNode = createBaseNode("assignment", {
+    return createBaseNode("assignment", {
         name
     }, {}, line, column);
-    
-    const assignmentNode: TwingAssignmentNode = {
-        ...baseNode,
-        execute: () => {
-            return Promise.resolve(assignmentNode.attributes.name);
-        }
-    };
-    
-    return assignmentNode;
 };

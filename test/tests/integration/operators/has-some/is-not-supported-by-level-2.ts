@@ -1,7 +1,7 @@
 import {runTest} from "../../TestBase";
 
 runTest({
-    description: '"has every" operator is not supported by Twig specification level 2',
+    description: '"has some" operator is not supported by Twig specification level 2',
     templates: {
         "index.twig": `
 {{ [] has some v => true }}

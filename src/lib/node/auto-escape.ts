@@ -15,15 +15,11 @@ export const createAutoEscapeNode = (
     body: TwingBaseNode,
     line: number,
     column: number,
-    tag: string
+    tag?: string
 ): TwingAutoEscapeNode => {
-    const baseNode = createBaseNode("auto_escape", {
+    return createBaseNode("auto_escape", {
         strategy
     }, {
         body
     }, line, column, tag);
-
-    return {
-        ...baseNode
-    };
 };

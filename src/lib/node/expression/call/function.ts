@@ -10,7 +10,5 @@ export const createFunctionNode = (
     line: number,
     column: number
 ): TwingFunctionNode => {
-    const node = createBaseCallNode("function", functionName, null, functionArguments, line, column);
-
-    return node;
+    return createBaseCallNode("function", functionName, null, functionArguments, line, column);
 };

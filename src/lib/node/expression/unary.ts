@@ -3,7 +3,6 @@ import type {TwingNodeType} from "../../node";
 import type {TwingNegativeNode} from "./unary/negative";
 import type {TwingNotNode} from "./unary/not";
 import type {TwingPositiveNode} from "./unary/positive";
-import type {TwingExecutionContext} from "../../execution-context";
 
 export type TwingUnaryNode =
     | TwingNegativeNode
@@ -17,13 +16,7 @@ export interface TwingBaseUnaryNode<Type extends string> extends TwingBaseExpres
 }
 
 export const createUnaryNodeFactory = <InstanceType extends TwingBaseUnaryNode<any>>(
-    type: TwingNodeType<InstanceType>,
-    definition: {
-        execute: (
-            operand: TwingBaseExpressionNode,
-            executionContext: TwingExecutionContext
-        ) => Promise<any>;
-    }
+    type: TwingNodeType<InstanceType>
 ) => {
     const factory = (
         operand: TwingBaseExpressionNode,
@@ -33,10 +26,7 @@ export const createUnaryNodeFactory = <InstanceType extends TwingBaseUnaryNode<a
         const baseNode = createBaseUnaryNode(type, operand, line, column);
 
         return {
-            ...baseNode,
-            execute: (executionContext) => {
-                return definition.execute(baseNode.children.operand, executionContext);
-            }
+            ...baseNode
         } as InstanceType;
     };
 

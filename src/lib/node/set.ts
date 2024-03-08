@@ -1,6 +1,5 @@
-import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode} from "../node";
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode, TwingNode, createNode} from "../node";
 import {createConstantNode} from "./expression/constant";
-import {createWrapperNode} from "./wrapper";
 
 export type TwingSetNodeAttributes = TwingBaseNodeAttributes & {
     captures: boolean;
@@ -20,7 +19,7 @@ export const createSetNode = (
     column: number,
     tag: string
 ): TwingSetNode => {
-    const baseNode = createBaseNode("set", {
+    const setNode = createBaseNode("set", {
         captures
     }, {
         names,
@@ -32,52 +31,16 @@ export const createSetNode = (
      *
      * {% set foo %}foo{% endset %} is compiled to $context['foo'] = new Twig_Markup("foo");
      */
-    if (baseNode.attributes.captures) {
-        const values = baseNode.children.values as TwingNode;
+    if (setNode.attributes.captures) {
+        const values = setNode.children.values as TwingNode;
 
         if (values.type === "text") {
-            baseNode.children.values = createWrapperNode({
+            setNode.children.values = createNode({
                 0: createConstantNode(values.attributes.data, values.line, values.column)
             }, values.line, values.column);
-            baseNode.attributes.captures = false;
+            setNode.attributes.captures = false;
         }
     }
-
-    const setNode: TwingSetNode = {
-        ...baseNode,
-        execute: async (executionContext) => {
-            const {context, outputBuffer} = executionContext;
-            const {names: namesNode, values: valuesNode} = setNode.children;
-            const {captures} = setNode.attributes;
-
-            const names: Array<string> = await namesNode.execute(executionContext);
-
-            if (captures) {
-                outputBuffer.start();
-
-                await valuesNode.execute(executionContext);
-
-                const value = outputBuffer.getAndClean();
-
-                for (const name of names) {
-                    context.set(name, value);
-                }
-            }
-            else {
-                const values: Array<any> = await valuesNode.execute(executionContext);
-
-                let index = 0;
-
-                for (const name of names) {
-                    const value = values[index];
-
-                    context.set(name, value);
-
-                    index++;
-                }
-            }
-        }
-    };
-
+    
     return setNode;
 };

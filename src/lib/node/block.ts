@@ -16,11 +16,5 @@ export const createBlockNode = (
     column: number,
     tag: string | null = null
 ): TwingBlockNode => {
-    const baseNode = createBaseNode("block", {name}, {body}, line, column, tag);
-
-    const blockNode: TwingBlockNode = {
-        ...baseNode
-    };
-
-    return blockNode;
+    return createBaseNode("block", {name}, {body}, line, column, tag);
 };

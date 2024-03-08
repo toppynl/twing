@@ -12,22 +12,7 @@ export const createDeprecatedNode = (
     column: number,
     tag: string
 ): TwingDeprecatedNode => {
-    const baseNode = createBaseNode("deprecated", {}, {
+    return createBaseNode("deprecated", {}, {
         message
     }, line, column, tag);
-
-    const deprecatedNode: TwingDeprecatedNode = {
-        ...baseNode,
-        execute: (executionContext) => {
-            const {template} = executionContext;
-            const {message} = deprecatedNode.children;
-
-            return message.execute(executionContext)
-                .then((message) => {
-                    console.warn(`${message} ("${template.name}" at line ${deprecatedNode.line}, column ${deprecatedNode.column})`);
-                });
-        }
-    };
-
-    return deprecatedNode;
 };

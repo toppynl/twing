@@ -37,11 +37,5 @@ export const createNullishCoalescingNode = (
         column
     );
 
-    const baseNode = createBaseConditionalNode("nullish_coalescing", testNode, left, right, line, column);
-
-    const nullishCoalescingNode: TwingNullishCoalescingNode = {
-        ...baseNode
-    };
-
-    return nullishCoalescingNode;
+    return createBaseConditionalNode("nullish_coalescing", testNode, left, right, line, column);
 };

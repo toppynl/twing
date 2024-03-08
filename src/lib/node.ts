@@ -3,7 +3,6 @@ import type {TwingPrintNode} from "./node/print";
 import type {TwingBlockReferenceNode} from "./node/block-reference";
 import type {TwingTextNode} from "./node/text";
 import type {TwingAutoEscapeNode} from "./node/auto-escape";
-import type {TwingBodyNode} from "./node/body";
 import type {TwingCheckSecurityNode} from "./node/check-security";
 import type {TwingCheckToStringNode} from "./node/check-to-string";
 import type {TwingCommentNode} from "./node/comment";
@@ -29,15 +28,12 @@ import type {TwingIfNode} from "./node/if";
 import type {TwingMethodCallNode} from "./node/expression/method-call";
 import type {TwingEscapeNode} from "./node/expression/escape";
 import type {TwingApplyNode} from "./node/apply";
-import type {TwingExecutionContext} from "./execution-context";
-import type {TwingWrapperNode} from "./node/wrapper";
 
 export type TwingNode =
     | TwingApplyNode
     | TwingAutoEscapeNode
     | TwingBlockNode
     | TwingBlockReferenceNode
-    | TwingBodyNode
     | TwingCheckSecurityNode
     | TwingCheckToStringNode
     | TwingCommentNode
@@ -64,7 +60,6 @@ export type TwingNode =
     | TwingTraitNode
     | TwingVerbatimNode
     | TwingWithNode
-    | TwingWrapperNode
     ;
 
 export type TwingNodeType<T> = T extends TwingBaseNode<infer Type, any, any> ? Type : never;
@@ -85,8 +80,6 @@ export interface TwingBaseNode<
     readonly line: number;
     readonly tag: string | null;
     readonly type: Type;
-
-    execute(executionContext: TwingExecutionContext): Promise<any>;
 }
 
 export type KeysOf<T> = T extends T ? keyof T : never;
@@ -121,15 +114,25 @@ export const createBaseNode = <
         column,
         line,
         tag,
-        type,
-        execute: async (executionContext) => {
-            const output: Array<any> = [];
-
-            for (const [, child] of Object.entries(children)) {
-                output.push(await child.execute(executionContext));
-            }
-
-            return output;
-        }
+        type
     };
+};
+
+/**
+ * Create a node acting as a container for the passed list of indexed nodes.
+ *
+ * @param children The children of the created node
+ * @param line The line of the created node
+ * @param column The column of the created node
+ * @param tag The tag of the created node
+ */
+export const createNode = <
+    Children extends TwingBaseNodeChildren
+>(
+    children: Children = {} as Children,
+    line: number = 0,
+    column: number = 0,
+    tag: string | null = null
+): TwingBaseNode<null, {}, Children> => {
+    return createBaseNode(null, {}, children, line, column, tag);
 };
