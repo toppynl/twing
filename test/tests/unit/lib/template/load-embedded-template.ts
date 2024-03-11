@@ -3,7 +3,6 @@ import {createEnvironment} from "../../../../../src/lib/environment";
 import {createArrayLoader} from "../../../../../src/lib/loader/array";
 import {createTemplate} from "../../../../../src/lib/template";
 import {createTemplateNode} from "../../../../../src/lib/node/template";
-import {createBodyNode} from "../../../../../src/lib/node/body";
 import {createBaseNode} from "../../../../../src/lib/node";
 import {createSource} from "../../../../../src/lib/source";
 
@@ -11,7 +10,9 @@ tape('createTemplate => ::loadEmbeddedTemplate', ({test}) => {
     test('throws an error on invalid index', ({fail, same, end}) => {
         const environment = createEnvironment(createArrayLoader({}));
         const template = createTemplate(environment, createTemplateNode(
-            createBodyNode(createBaseNode(null), 1, 1),
+            createBaseNode(null, {}, {
+                content: createBaseNode(null)
+            }, 1, 1),
             null,
             createBaseNode(null),
             createBaseNode(null),

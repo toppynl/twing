@@ -1,4 +1,4 @@
-import {createBaseNode} from "../node";
+import {createNode} from "../node";
 import {createIfNode} from "../node/if";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
@@ -70,7 +70,7 @@ export const createIfTagHandler = (): TwingTagHandler => {
 
                 stream.expect("TAG_END");
 
-                return createIfNode(createBaseNode(null, {}, tests), elseNode, line, column, tag);
+                return createIfNode(createNode(tests), elseNode, line, column, tag);
             };
         }
     };

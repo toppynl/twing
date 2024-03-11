@@ -17,26 +17,9 @@ export const createBaseTextNode = <Type extends string>(
     column: number,
     tag: string | null = null
 ): TwingBaseTextNode<Type> => {
-    const outputNode = createBaseNode(type, {
+    return  createBaseNode(type, {
         data
     }, {}, line, column, tag);
-
-    const textNode: TwingBaseTextNode<Type> = {
-        ...outputNode,
-        execute(executionContext) {
-            const {template, outputBuffer, sourceMapRuntime} = executionContext;
-
-            sourceMapRuntime?.enterSourceMapBlock(textNode.line, textNode.column, textNode.type, template.source, outputBuffer);
-
-            outputBuffer.echo(textNode.attributes.data);
-
-            sourceMapRuntime?.leaveSourceMapBlock(outputBuffer);
-
-            return Promise.resolve();
-        }
-    };
-
-    return textNode;
 };
 
 export const createTextNode = (

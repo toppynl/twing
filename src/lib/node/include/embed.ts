@@ -4,7 +4,6 @@ import {
     TwingBaseIncludeNodeChildren,
     createBaseIncludeNode
 } from "../include";
-import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export type TwingEmbedNodeAttributes = TwingBaseIncludeNodeAttributes & {
     index: number;
@@ -20,21 +19,12 @@ export const createEmbedNode = (
     column: number,
     tag: string
 ): TwingEmbedNode => {
-    const embedNode: TwingEmbedNode = createBaseIncludeNode(
+    return createBaseIncludeNode(
         "embed",
         attributes,
         children,
-        ({template}) => {
-            const {index} = embedNode.attributes;
-
-            const loadTemplate = getTraceableMethod(template.loadEmbeddedTemplate, embedNode.line, embedNode.column, template.name);
-
-            return loadTemplate(index);
-        },
         line,
         column,
         tag
     );
-
-    return embedNode;
 };

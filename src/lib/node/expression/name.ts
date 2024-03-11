@@ -1,7 +1,5 @@
 import type {TwingBaseExpressionNodeAttributes} from "../expression";
 import {createBaseNode, TwingBaseNode} from "../../node";
-import {getContextValue} from "../../helpers/get-context-value";
-import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export type TwingNameNodeAttributes = TwingBaseExpressionNodeAttributes & {
     name: string;
@@ -25,34 +23,7 @@ export const createNameNode = (
         shouldTestExistence: false
     };
 
-    const baseNode = createBaseNode("name", attributes, {}, line, column);
-
-    const nameNode: TwingNameNode = {
-        ...baseNode,
-        execute: async ({template, context, charset, isStrictVariables}) => {
-            const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = nameNode.attributes;
-
-            const traceableGetContextValue = getTraceableMethod(
-                getContextValue,
-                nameNode.line,
-                nameNode.column,
-                template.name
-            );
-
-            return traceableGetContextValue(
-                charset,
-                template.name,
-                isStrictVariables,
-                context,
-                name,
-                isAlwaysDefined,
-                shouldIgnoreStrictCheck,
-                shouldTestExistence
-            );
-        }
-    };
-
-    return nameNode;
+    return createBaseNode("name", attributes, {}, line, column);
 };
 
 export const cloneNameNode = (

@@ -14,7 +14,6 @@ tape('library index', ({same, end}) => {
         'createApplyNode',
         'createAutoEscapeNode',
         'createBlockNode',
-        'createBodyNode',
         'createCheckSecurityNode',
         'createCheckToStringNode',
         'createCommentNode',
@@ -33,7 +32,6 @@ tape('library index', ({same, end}) => {
         'createSetNode',
         'createTraitNode',
         'createWithNode',
-        'createWrapperNode',
         'createBaseArrayNode', 'createArrayNode',
         'createArrowFunctionNode',
         'createAssignmentNode',
@@ -113,7 +111,10 @@ tape('library index', ({same, end}) => {
         'createUseTagHandler',
         'createVerbatimTagHandler',
         'createWithTagHandler',
-        'createBaseNode', 'getChildren', 'getChildrenCount',
+        'createBaseNode',
+        'createNode',
+        'getChildren',
+        'getChildrenCount',
         'createEnvironment',
         'createExtensionSet',
         'createFilter',
@@ -124,7 +125,8 @@ tape('library index', ({same, end}) => {
         'createSource',
         'createSourceMapRuntime',
         'createTemplate',
-        'createTest'
+        'createTest',
+        'executeNode'
     ];
 
     const propertyNames = Object.getOwnPropertyNames(index).filter((name) => name !== '__esModule');
@@ -132,10 +134,10 @@ tape('library index', ({same, end}) => {
     for (const key of expected) {
         same(propertyNames.includes(key), true, `${key} is exported by the index`);
     }
-
+    
     for (const key of propertyNames) {
         same(expected.includes(key), true, `${key} is legit in the index`);
     }
-
+    
     end();
 });

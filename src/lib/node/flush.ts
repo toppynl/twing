@@ -8,12 +8,5 @@ export const createFlushNode = (
     column: number,
     tag?: string
 ): TwingFlushNode => {
-    return {
-        ...createBaseNode("flush", {}, {}, line, column, tag),
-        execute: ({outputBuffer}) => {
-            outputBuffer.flush();
-
-            return Promise.resolve();
-        }
-    }
+    return createBaseNode("flush", {}, {}, line, column, tag);
 };

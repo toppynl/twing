@@ -47,7 +47,6 @@ export type {TwingApplyNode, TwingApplyNodeAttributes, TwingApplyNodeChildren} f
 export type {TwingAutoEscapeNode, TwingAutoEscapeNodeAttributes} from "./lib/node/auto-escape";
 export type {TwingBlockNode, TwingBlockNodeAttributes} from "./lib/node/block";
 export type {TwingBlockReferenceNode, TwingBlockReferenceNodeAttributes} from "./lib/node/block-reference";
-export type {TwingBodyNode} from "./lib/node/body";
 export type {TwingCheckSecurityNode, TwingCheckSecurityNodeAttributes} from "./lib/node/check-security";
 export type {TwingCheckToStringNode} from "./lib/node/check-to-string";
 export type {TwingCommentNode, TwingCommentNodeAttributes} from "./lib/node/comment";
@@ -75,13 +74,11 @@ export type {TwingTextNode, TwingBaseTextNode, TwingBaseTextNodeAttributes} from
 export type {TwingTraitNode} from "./lib/node/trait";
 export type {TwingVerbatimNode} from "./lib/node/verbatim";
 export type {TwingWithNode, TwingWithNodeAttributes, TwingWithNodeChildren} from "./lib/node/with";
-export type {TwingWrapperNode, TwingWrapperNodeChildren} from "./lib/node/wrapper";
 
 export {createApplyNode} from "./lib/node/apply";
 export {createAutoEscapeNode} from "./lib/node/auto-escape";
 export {createBlockNode} from "./lib/node/block";
 export {createBlockReferenceNode} from "./lib/node/block-reference";
-export {createBodyNode} from "./lib/node/body";
 export {createCheckSecurityNode} from "./lib/node/check-security";
 export {createCheckToStringNode} from "./lib/node/check-to-string";
 export {createCommentNode} from "./lib/node/comment";
@@ -104,7 +101,6 @@ export {createTextNode} from "./lib/node/text";
 export {createTraitNode} from "./lib/node/trait";
 export {createVerbatimNode} from "./lib/node/verbatim";
 export {createWithNode} from "./lib/node/with";
-export {createWrapperNode} from "./lib/node/wrapper";
 
 // node/expression
 export type {TwingBaseArrayNode, TwingArrayNode} from "./lib/node/expression/array";
@@ -237,6 +233,9 @@ export type {TwingIncludeNode, TwingIncludeNodeChildren} from "./lib/node/includ
 export {createEmbedNode} from "./lib/node/include/embed";
 export {createIncludeNode} from "./lib/node/include/include";
 
+// node executors
+export {executeNode, type TwingNodeExecutor} from "./lib/node-executor";
+
 // tag handlers
 export type {TwingTagHandler, TwingTokenParser} from "./lib/tag-handler";
 
@@ -308,7 +307,7 @@ export {createExtensionSet} from "./lib/extension-set";
 export {createFilter} from "./lib/filter";
 export {createFunction} from "./lib/function";
 export {createLexer} from "./lib/lexer";
-export {createBaseNode, getChildren, getChildrenCount} from "./lib/node";
+export {createBaseNode, createNode, getChildren, getChildrenCount} from "./lib/node";
 export {createOperator} from "./lib/operator";
 export {createSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
 export {createSource} from "./lib/source";

@@ -8,11 +8,11 @@
  * </pre>
  */
 import {createParsingError} from "../error/parsing";
-import {createBodyNode} from "../node/body";
 import {createMacroNode, VARARGS_NAME} from "../node/macro";
 import {Token} from "twig-lexer";
 import {TwingTagHandler} from "../tag-handler";
-import {getKeyValuePairs} from "../node/expression/array";
+import {getKeyValuePairs} from "../helpers/get-key-value-pairs";
+import {createNode} from "../../lib/node";
 
 export const createMacroTagHandler = (): TwingTagHandler => {
     const tag = 'macro';
@@ -40,9 +40,9 @@ export const createMacroTagHandler = (): TwingTagHandler => {
                 const body = parser.subparse(stream, tag, (token: Token) => {
                     return token.test("NAME", 'endmacro');
                 });
-                
+
                 stream.next();
-                
+
                 const nextToken = stream.nextIf("NAME");
 
                 if (nextToken) {
@@ -59,7 +59,7 @@ export const createMacroTagHandler = (): TwingTagHandler => {
 
                 stream.expect("TAG_END");
 
-                parser.setMacro(name, createMacroNode(name, createBodyNode(body, line, column), macroArguments, line, column, tag));
+                parser.setMacro(name, createMacroNode(name, createNode({body}, line, column), macroArguments, line, column, tag));
 
                 return null;
             };

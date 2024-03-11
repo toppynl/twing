@@ -12,7 +12,5 @@ export const createFilterNode = (
     line: number,
     column: number
 ): TwingFilterNode => {
-    const node = createBaseCallNode("filter", filterName, operand, filterArguments, line, column);
-
-    return node;
+    return createBaseCallNode("filter", filterName, operand, filterArguments, line, column);
 };

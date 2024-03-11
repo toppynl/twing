@@ -15,16 +15,7 @@ export const createConstantNode = <Value extends string | number | boolean | nul
     line: number,
     column: number
 ): TwingConstantNode<Value> => {
-    const parent = createBaseExpressionNode("constant", {
+    return createBaseExpressionNode("constant", {
         value
     }, {}, line, column);
-
-    const constantNode: TwingConstantNode<Value> = {
-        ...parent,
-        execute: () => {
-            return Promise.resolve(constantNode.attributes.value);
-        }
-    };
-
-    return constantNode;
 };

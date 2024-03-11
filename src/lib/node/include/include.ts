@@ -20,19 +20,12 @@ export const createIncludeNode = (
     column: number,
     tag: string
 ): TwingIncludeNode => {
-    const baseNode = createBaseIncludeNode(
+    return createBaseIncludeNode(
         "include",
         attributes,
         children,
-        children.expression.execute,
         line,
         column,
         tag
     );
-
-    const includeNode: TwingIncludeNode = {
-        ...baseNode
-    };
-
-    return includeNode;
 }

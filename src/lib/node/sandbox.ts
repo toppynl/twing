@@ -11,19 +11,7 @@ export const createSandboxNode = (
     column: number,
     tag: string
 ): TwingSandboxNode => {
-    const baseNode = createBaseNode("sandbox", {}, {
+    return createBaseNode("sandbox", {}, {
         body
     }, line, column, tag);
-
-    return {
-        ...baseNode,
-        execute: (executionContext) => {
-            const {body} = baseNode.children;
-
-            return body.execute({
-                ...executionContext,
-                sandboxed: true
-            });
-        }
-    };
 };

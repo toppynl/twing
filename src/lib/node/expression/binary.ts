@@ -29,7 +29,6 @@ import {createBaseExpressionNode} from "../expression";
 import type {TwingSpaceshipNode} from "./binary/spaceship";
 import type {TwingHasEveryNode} from "./binary/has-every";
 import type {TwingHasSomeNode} from "./binary/has-some";
-import type {TwingExecutionContext} from "../../execution-context";
 
 export type TwingBinaryNode =
     | TwingAddNode
@@ -87,13 +86,6 @@ export const createBaseBinaryNode = <Type extends string>(
 
 export const createBinaryNodeFactory = <InstanceType extends TwingBaseBinaryNode<any>>(
     type: TwingNodeType<InstanceType>,
-    definition: {
-        execute: (
-            left: TwingBaseExpressionNode,
-            right: TwingBaseExpressionNode,
-            executionContext: TwingExecutionContext
-        ) => Promise<any>
-    }
 ) => {
     const factory = (
         operands: [TwingBaseExpressionNode, TwingBaseExpressionNode],
@@ -104,9 +96,6 @@ export const createBinaryNodeFactory = <InstanceType extends TwingBaseBinaryNode
 
         return {
             ...baseNode,
-            execute: (executionContext) => {
-                return definition.execute(baseNode.children.left, baseNode.children.right, executionContext);
-            }
         } as InstanceType;
     };
 

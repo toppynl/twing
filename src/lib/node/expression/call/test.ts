@@ -12,7 +12,5 @@ export const createTestNode = (
     line: number,
     column: number
 ): TwingTestNode => {
-    const node = createBaseCallNode("test", testName, operand, testArguments, line, column);
-    
-    return node;
+    return createBaseCallNode("test", testName, operand, testArguments, line, column);
 };

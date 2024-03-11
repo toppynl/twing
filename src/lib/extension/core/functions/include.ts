@@ -34,7 +34,7 @@ export const include: TwingCallable<[
     ignoreMissing,
     sandboxed
 ): Promise<TwingMarkup> => {
-    const {template, charset, context, outputBuffer, sourceMapRuntime} = executionContext;
+    const {template, charset, context, nodeExecutor, outputBuffer, sourceMapRuntime} = executionContext;
     const from = template.name;
 
     if (!isPlainObject(variables) && !isTraversable(variables)) {
@@ -73,6 +73,7 @@ export const include: TwingCallable<[
                 return template.render(
                     createContext(variables),
                     {
+                        nodeExecutor,
                         outputBuffer,
                         sandboxed,
                         sourceMapRuntime: sourceMapRuntime || undefined

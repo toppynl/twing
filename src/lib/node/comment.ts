@@ -12,11 +12,7 @@ export const createCommentNode = (
     line: number,
     column: number
 ): TwingCommentNode => {
-    const baseNode = createBaseNode("comment", {
+    return createBaseNode("comment", {
         data
     }, {}, line, column);
-
-    return {
-        ...baseNode
-    }
 };

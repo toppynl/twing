@@ -2,7 +2,6 @@ import {TwingBaseNode, getChildren, TwingNode} from "../node";
 import {createCheckSecurityNode} from "../node/check-security";
 import {createCheckToStringNode} from "../node/check-to-string";
 import {createNodeVisitor, TwingNodeVisitor} from "../node-visitor";
-import type {TwingWrapperNode} from "../node/wrapper";
 
 export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
     let tags: Map<string, TwingBaseNode>;
@@ -103,7 +102,7 @@ export const createSandboxNodeVisitor = (): TwingNodeVisitor => {
     };
 
     const wrapArrayNode = <T extends TwingNode>(node: T, name: keyof T["children"]) => {
-        const args: TwingWrapperNode = (node.children as any)[name]; // todo: check with TS team with we have to cast children as any
+        const args: TwingBaseNode = (node.children as any)[name]; // todo: check with TS team with we have to cast children as any
 
         for (const [name] of getChildren(args)) {
             wrapNode(args, name);

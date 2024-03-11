@@ -13,11 +13,7 @@ export const createLineNode = (
     column: number,
     tag: string
 ): TwingLineNode => {
-    const baseNode = createBaseNode("line", {
+    return createBaseNode("line", {
         data
     }, {}, line, column, tag);
-
-    return {
-        ...baseNode
-    };
 };
