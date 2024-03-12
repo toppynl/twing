@@ -6,6 +6,7 @@ export const executeBlockReferenceNode: TwingNodeExecutor<TwingBlockReferenceNod
     const {
         template,
         context,
+        environment,
         outputBuffer,
         blocks,
         nodeExecutor: execute,
@@ -17,6 +18,7 @@ export const executeBlockReferenceNode: TwingNodeExecutor<TwingBlockReferenceNod
     const renderBlock = getTraceableMethod(template.renderBlock, node.line, node.column, template.name);
 
     return renderBlock(
+        environment,
         name,
         context.clone(),
         outputBuffer,

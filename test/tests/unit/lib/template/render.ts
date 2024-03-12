@@ -40,12 +40,12 @@ tape('createTemplate => ::render', ({test}) => {
             }
         };
 
-        const template = createTemplate(environment, ast);
+        const template = createTemplate(ast);
         const outputBuffer = createOutputBuffer();
 
         outputBuffer.start();
 
-        return template.render(createContext(), {
+        return template.render(environment, createContext(), {
             outputBuffer,
             nodeExecutor
         }).then(() => {

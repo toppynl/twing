@@ -11,11 +11,11 @@ import {
 } from "../sandbox/security-not-allowed-tag-error";
 
 export const executeCheckSecurityNode: TwingNodeExecutor<TwingCheckSecurityNode> = (node, executionContext) => {
-    const {template, sandboxed} = executionContext;
+    const {template, environment, sandboxed} = executionContext;
     const {usedTags, usedFunctions, usedFilters} = node.attributes;
 
     try {
-        sandboxed && template.checkSecurity(
+        sandboxed && environment.sandboxPolicy.checkSecurity(
             [...usedTags.keys()],
             [...usedFilters.keys()],
             [...usedFunctions.keys()]

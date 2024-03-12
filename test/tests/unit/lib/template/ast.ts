@@ -14,9 +14,9 @@ tape('createTemplate => ::ast', ({test}) => {
             .then(({ast}) => {
                 const serializedAST = JSON.stringify(ast);
                 const deserializedAST: TwingTemplateNode = JSON.parse(serializedAST);
-                const template = createTemplate(environment, deserializedAST);
+                const template = createTemplate(deserializedAST);
 
-                return template.render({})
+                return template.render(environment, {})
                     .then((output) => {
                         same(output, '10');
                     })
@@ -39,9 +39,9 @@ tape('createTemplate => ::ast', ({test}) => {
             .then(({ast}) => {
                 const serializedAST = JSON.stringify(ast);
                 const deserializedAST: TwingTemplateNode = JSON.parse(serializedAST);
-                const template = createTemplate(environment, deserializedAST);
+                const template = createTemplate(deserializedAST);
 
-                return template.render({})
+                return template.render(environment, {})
                     .then((output) => {
                         same(output, 'Foo');
                     })

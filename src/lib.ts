@@ -293,7 +293,6 @@ export type {TwingSandboxSecurityNotAllowedTagError} from "./lib/sandbox/securit
 export type {TwingSource} from "./lib/source";
 export type {TwingSourceMapRuntime} from "./lib/source-map-runtime";
 export type {
-    TwingTemplate,
     TwingTemplateAliases,
     TwingTemplateBlockMap,
     TwingTemplateBlockHandler,
@@ -301,6 +300,11 @@ export type {
 } from "./lib/template";
 export type {TwingTest} from "./lib/test";
 export type {TwingTokenStream} from "./lib/token-stream";
+
+export interface TwingTemplate {
+    execute: import("./lib/template").TwingTemplate["execute"];
+    render: import("./lib/template").TwingTemplate["render"];
+}
 
 export {createEnvironment} from "./lib/environment";
 export {createExtensionSet} from "./lib/extension-set";

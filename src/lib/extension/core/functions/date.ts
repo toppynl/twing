@@ -104,5 +104,5 @@ export const date: TwingCallable = (
         return Promise.resolve(date);
     }
 
-    return createDate(executionContext.timezone, date, timezone);
+    return createDate(executionContext.environment.timezone, date, timezone);
 }

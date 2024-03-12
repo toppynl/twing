@@ -44,7 +44,7 @@
     "create-hash": "^1.2.0",
     "esrever": "^0.2.0",
     "htmlspecialchars": "^1.0.5",
-    "iconv-lite": "^0.4.19",
+    "iconv-lite": "^0.6.3",
     "is-plain-object": "^2.0.4",
     "isobject": "^3.0.1",
     "levenshtein": "^1.0.5",

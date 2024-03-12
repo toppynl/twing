@@ -23,6 +23,7 @@ const createMockCache = (): TwingCache => {
 
 // todo: unit test every property because this is the public API
 import "./load-template";
+import "./loader";
 
 tape('createEnvironment ', ({test}) => {
     test('options', ({test}) => {
@@ -85,7 +86,9 @@ tape('createEnvironment ', ({test}) => {
                     return Promise.resolve();
                 });
 
-                return getEnvironment().loadTemplate('foo')
+                const environment = getEnvironment();
+
+                return environment.loadTemplate('foo')
                     .then(() => {
                         return getEnvironment().loadTemplate('foo');
                     })
@@ -93,7 +96,7 @@ tape('createEnvironment ', ({test}) => {
                         return getEnvironment().loadTemplate('foo');
                     })
                     .then((template) => {
-                        return template?.render({});
+                        return template?.render(environment, {});
                     })
                     .then((content) => {
                         same(content, '1');
@@ -149,7 +152,9 @@ tape('createEnvironment ', ({test}) => {
                             return Promise.resolve();
                         });
 
-                        return getEnvironment().loadTemplate('foo')
+                        const environment = getEnvironment();
+
+                        return environment.loadTemplate('foo')
                             .then(() => {
                                 return getEnvironment().loadTemplate('foo');
                             })
@@ -157,7 +162,7 @@ tape('createEnvironment ', ({test}) => {
                                 return getEnvironment().loadTemplate('foo');
                             })
                             .then((template) => {
-                                return template?.render({});
+                                return template?.render(environment, {});
                             })
                             .then((content) => {
                                 same(content, '-1');
@@ -183,7 +188,9 @@ tape('createEnvironment ', ({test}) => {
                     return Promise.resolve(false);
                 });
 
-                return getEnvironment().loadTemplate('foo')
+                const environment = getEnvironment();
+
+                return environment.loadTemplate('foo')
                     .then(() => {
                         return getEnvironment().loadTemplate('foo');
                     })
@@ -191,7 +198,7 @@ tape('createEnvironment ', ({test}) => {
                         return getEnvironment().loadTemplate('foo');
                     })
                     .then((template) => {
-                        return template?.render({});
+                        return template?.render(environment, {});
                     })
                     .then(() => {
                         same(isFreshStub.callCount, 0);
@@ -267,7 +274,7 @@ tape('createEnvironment ', ({test}) => {
                     return environment.loadTemplate('foo');
                 })
                 .then((template) => {
-                    return template?.render({});
+                    return template?.render(environment, {});
                 })
                 .then((content) => {
                     same(content, 'bar');

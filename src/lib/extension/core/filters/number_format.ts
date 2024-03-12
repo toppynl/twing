@@ -23,7 +23,8 @@ export const numberFormat: TwingCallable = (
     decimalPoint: string | null,
     thousandSeparator: string | null
 ): Promise<string> => {
-    const {numberFormat} = executionContext;
+    const {environment} = executionContext;
+    const {numberFormat} = environment;
 
     if (numberOfDecimals === null) {
         numberOfDecimals = numberFormat.numberOfDecimals;

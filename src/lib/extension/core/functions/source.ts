@@ -14,14 +14,17 @@ export const source: TwingCallable<[
     name: string,
     ignoreMissing: boolean
 ], string | null> = (executionContext, name, ignoreMissing) => {
-    const {template} = executionContext;
+    const {template, environment} = executionContext;
 
-    return template.getTemplateSource(name)
-        .then((source) => {
-            if (!ignoreMissing && (source === null)) {
+    return environment.loadTemplate(name, template.name)
+        .catch(() => {
+            return null;
+        })
+        .then((template) => {
+            if (!ignoreMissing && (template === null)) {
                 throw createTemplateLoadingError([name]);
             }
 
-            return source?.code || null;
+            return template?.source.code || null;
         });
 };
