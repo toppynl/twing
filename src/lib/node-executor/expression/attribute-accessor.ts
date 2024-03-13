@@ -4,7 +4,7 @@ import {getTraceableMethod} from "../../helpers/traceable-method";
 import {getAttribute} from "../../helpers/get-attribute";
 
 export const executeAttributeAccessorNode: TwingNodeExecutor<TwingAttributeAccessorNode> = (node, executionContext) => {
-    const {template, sandboxed, isStrictVariables, nodeExecutor: execute} = executionContext;
+    const {template, sandboxed, environment, nodeExecutor: execute} = executionContext;
     const {target, attribute, arguments: methodArguments} = node.children;
     const {type, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
@@ -16,15 +16,14 @@ export const executeAttributeAccessorNode: TwingNodeExecutor<TwingAttributeAcces
         const traceableGetAttribute = getTraceableMethod(getAttribute, node.line, node.column, template.name);
 
         return traceableGetAttribute(
-            template,
+            environment,
             target,
             attribute,
             methodArguments,
             type,
             shouldTestExistence,
             shouldIgnoreStrictCheck || null,
-            sandboxed,
-            isStrictVariables
+            sandboxed
         )
     })
 };

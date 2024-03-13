@@ -23,8 +23,9 @@ const array_rand = require('locutus/php/array/array_rand');
  * @returns {Promise<any>} A random value from the given sequence
  */
 export const random: TwingCallable = (executionContext, values: any | null, max: number | null): any => {
-    const {charset} = executionContext;
-    
+    const {environment} = executionContext;
+    const {charset} = environment;
+
     let _do = (): any => {
         if (values === null) {
             return max === null ? mt_rand() : mt_rand(0, max);

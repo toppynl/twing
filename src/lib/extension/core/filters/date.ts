@@ -24,7 +24,8 @@ export const date: TwingCallable = (
     format: string | null,
     timezone: string | null | false
 ): Promise<string> => {
-    const {dateFormat, dateIntervalFormat} = executionContext;
+    const {environment} = executionContext;
+    const {dateFormat, dateIntervalFormat} = environment;
 
     return createDate(executionContext, date, timezone)
         .then((date) => {

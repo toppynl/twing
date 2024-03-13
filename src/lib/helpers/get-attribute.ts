@@ -5,37 +5,39 @@ import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
 import type {TwingAttributeAccessorCallType} from "../node/expression/attribute-accessor";
 import {isBoolean, isFloat} from "./php";
-import {TwingTemplate} from "../template";
+import type {TwingEnvironment} from "../environment";
 
 const isObject = require('isobject');
 
 /**
  * Returns the attribute value for a given array/object.
  *
- * @param {TwingTemplate} template
+ * @param environment
  * @param {*} object The object or array from where to get the item
  * @param {*} attribute The item to get from the array or object
  * @param {Map<any, any>} methodArguments A map of arguments to pass if the item is an object method
  * @param {string} type The type of attribute (@see Twig_Template constants)
  * @param {boolean} shouldTestExistence Whether this is only a defined check
  * @param {boolean} shouldIgnoreStrictCheck Whether to ignore the strict attribute check or not
+ * @param sandboxed
  *
  * @return {Promise<any>} The attribute value, or a boolean when isDefinedTest is true, or null when the attribute is not set and ignoreStrictCheck is true
  *
  * @throw {TwingErrorRuntime} if the attribute does not exist and Twing is running in strict mode and isDefinedTest is false
  */
 export const getAttribute = (
-    template: TwingTemplate,
+    environment: TwingEnvironment,
     object: any,
     attribute: any,
     methodArguments: Map<any, any>,
     type: TwingAttributeAccessorCallType,
     shouldTestExistence: boolean,
     shouldIgnoreStrictCheck: boolean | null,
-    sandboxed: boolean,
-    isStrictVariables: boolean
+    sandboxed: boolean
 ): Promise<any> => {
-    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !isStrictVariables : shouldIgnoreStrictCheck;
+    const {sandboxPolicy} = environment;
+    
+    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !environment.isStrictVariables : shouldIgnoreStrictCheck;
 
     const _do = (): any => {
         let message: string;
@@ -65,7 +67,7 @@ export const getAttribute = (
                     }
 
                     if (type !== "array" && sandboxed) {
-                        template.checkPropertyAllowed(object, attribute);
+                        sandboxPolicy.checkPropertyAllowed(object, attribute);
                     }
 
                     return get(object, arrayItem);
@@ -155,7 +157,7 @@ export const getAttribute = (
                 }
 
                 if (sandboxed) {
-                    template.checkPropertyAllowed(object, attribute);
+                    sandboxPolicy.checkPropertyAllowed(object, attribute);
                 }
 
                 return get(object, attribute);
@@ -250,7 +252,7 @@ export const getAttribute = (
         }
 
         if (sandboxed) {
-            template.checkMethodAllowed(object, method);
+            sandboxPolicy.checkMethodAllowed(object, method);
         }
 
         return get(object, method).apply(object, [...methodArguments.values()]);

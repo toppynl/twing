@@ -8,6 +8,9 @@ import {TwingBaseNode} from "../../node";
 import {createConstantNode, TwingConstantNode} from "../../node/expression/constant";
 import {TwingBaseExpressionNode} from "../../node/expression";
 import {getKeyValuePairs} from "../../helpers/get-key-value-pairs";
+import {getTest} from "../../helpers/get-test";
+import {getFunction} from "../../helpers/get-function";
+import {getFilter} from "../../helpers/get-filter";
 
 const array_merge = require('locutus/php/array/array_merge');
 const snakeCase = require('snake-case');
@@ -124,24 +127,24 @@ const getArguments = (
 
 export const executeCallNode: TwingNodeExecutor<TwingBaseCallNode<any>> = async (node, executionContext) => {
     const {type} = node;
-    const {template, nodeExecutor: execute} = executionContext
+    const {template, environment, nodeExecutor: execute} = executionContext
     const {operatorName} = node.attributes;
 
     let callableWrapper: TwingCallableWrapper | null;
 
     switch (type) {
         case "filter":
-            callableWrapper = template.getFilter(operatorName);
+            callableWrapper = getFilter(environment.filters, operatorName);
             break;
 
         case "function":
-            callableWrapper = template.getFunction(operatorName);
+            callableWrapper = getFunction(environment.functions, operatorName);
             break;
 
         // for some reason, using `case "test"` makes the compiler assume that callableWrapper is used
         // before it is assigned a value; this is probably a bug of the compiler
         default:
-            callableWrapper = template.getTest(operatorName);
+            callableWrapper = getTest(environment.tests, operatorName);
             break;
     }
 

@@ -56,7 +56,7 @@ tape('createEnvironment::loadTemplate', ({test}) => {
 
         return environment.loadTemplate(('index'))
             .then((template) => {
-                return template.render({});
+                return template.render(environment, {});
             })
             .then(() => {
                 same(loadedTemplates, [

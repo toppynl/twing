@@ -32,9 +32,9 @@ tape('createTemplate => ::execute', ({test}) => {
 
             const executeNodeSpy = spy(executeNode);
 
-            const template = createTemplate(environment, ast);
+            const template = createTemplate(ast);
 
-            return template.execute(createContext(), createOutputBuffer(), new Map(), executeNodeSpy)
+            return template.execute(environment,  createContext(), createOutputBuffer(), new Map(), executeNodeSpy)
                 .then(() => {
                     same(executeNodeSpy.firstCall.args[1].sandboxed, false);
                     same(executeNodeSpy.firstCall.args[1].sourceMapRuntime, undefined);
@@ -59,11 +59,11 @@ tape('createTemplate => ::execute', ({test}) => {
 
             const executeNodeSpy = spy(executeNode);
 
-            const template = createTemplate(environment, ast);
+            const template = createTemplate(ast);
 
             const sourceMapRuntime = createSourceMapRuntime();
 
-            return template.execute(createContext(), createOutputBuffer(), new Map(), executeNodeSpy, {
+            return template.execute(environment, createContext(), createOutputBuffer(), new Map(), executeNodeSpy, {
                 sandboxed: true,
                 sourceMapRuntime
             }).then(() => {
@@ -101,12 +101,12 @@ tape('createTemplate => ::execute', ({test}) => {
             }
         };
 
-        const template = createTemplate(environment, ast);
+        const template = createTemplate(ast);
         const outputBuffer = createOutputBuffer();
 
         outputBuffer.start();
 
-        return template.execute(createContext(), outputBuffer, new Map(), nodeExecutor).then(() => {
+        return template.execute(environment, createContext(), outputBuffer, new Map(), nodeExecutor).then(() => {
             same(outputBuffer.getContents(), 'foo5');
         }).finally(end);
     });

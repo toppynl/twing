@@ -5,7 +5,7 @@ import type {TwingMethodCallNode} from "../../node/expression/method-call";
 import {getKeyValuePairs} from "../../helpers/get-key-value-pairs";
 
 export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (node, executionContext) => {
-    const {template, context, outputBuffer, aliases, nodeExecutor: execute, sandboxed, sourceMapRuntime} = executionContext;
+    const {template, context, environment, outputBuffer, aliases, nodeExecutor: execute, sandboxed, sourceMapRuntime} = executionContext;
     const {methodName, shouldTestExistence} = node.attributes;
     const {operand, arguments: methodArguments} = node.children;
 
@@ -31,7 +31,7 @@ export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (
             if (macroHandler) {
                 return Promise.resolve(macroHandler);
             } else {
-                return template.getParent(context, outputBuffer, sandboxed, execute)
+                return template.getParent(environment, context, outputBuffer, sandboxed, execute)
                     .then((parent) => {
                         if (parent) {
                             return getHandler(parent);
@@ -45,7 +45,7 @@ export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (
         return getHandler(macroTemplate)
             .then((handler) => {
                 if (handler) {
-                    return handler(outputBuffer, sandboxed, sourceMapRuntime, execute, ...macroArguments);
+                    return handler(environment, outputBuffer, sandboxed, sourceMapRuntime, execute, ...macroArguments);
                 } else {
                     throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, node, template.name);
                 }

@@ -319,7 +319,7 @@ export const createEnvironment = (
                     throw createTemplateLoadingError([name]);
                 }
 
-                const template = createTemplate(environment, ast);
+                const template = createTemplate(ast);
 
                 loadedTemplates.set(templateFqn, template);
 
@@ -383,7 +383,7 @@ export const createEnvironment = (
         render: (name, context) => {
             return environment.loadTemplate(name)
                 .then((template) => {
-                    return template.render(context, {
+                    return template.render(environment, context, {
                         sandboxed: isSandboxed
                     });
                 });
@@ -393,7 +393,7 @@ export const createEnvironment = (
 
             return environment.loadTemplate(name)
                 .then((template) => {
-                    return template.render(context, {
+                    return template.render(environment, context, {
                         sandboxed: isSandboxed,
                         sourceMapRuntime
                     });

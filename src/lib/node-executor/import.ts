@@ -5,7 +5,7 @@ import {getTraceableMethod} from "../helpers/traceable-method";
 import type {TwingNameNode} from "../node/expression/name";
 
 export const executeImportNode: TwingNodeExecutor<TwingImportNode> = async (node, executionContext) => {
-    const {template, aliases, nodeExecutor: execute,} = executionContext;
+    const {template, environment, aliases, nodeExecutor: execute,} = executionContext;
     const {alias: aliasNode, templateName: templateNameNode} = node.children;
 
     const {global} = node.attributes;
@@ -19,7 +19,7 @@ export const executeImportNode: TwingNodeExecutor<TwingImportNode> = async (node
 
         const loadTemplate = getTraceableMethod(template.loadTemplate, node.line, node.column, template.name);
 
-        aliasValue = await loadTemplate(templateName);
+        aliasValue = await loadTemplate(environment, templateName);
     }
 
     aliases.set(aliasNode.attributes.name, aliasValue);

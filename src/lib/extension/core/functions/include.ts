@@ -34,7 +34,7 @@ export const include: TwingCallable<[
     ignoreMissing,
     sandboxed
 ): Promise<TwingMarkup> => {
-    const {template, charset, context, nodeExecutor, outputBuffer, sourceMapRuntime} = executionContext;
+    const {template, environment, context, nodeExecutor, outputBuffer, sourceMapRuntime} = executionContext;
     const from = template.name;
 
     if (!isPlainObject(variables) && !isTraversable(variables)) {
@@ -54,7 +54,7 @@ export const include: TwingCallable<[
     }
     
     const resolveTemplate = (templates: Array<string | TwingTemplate | null>): Promise<TwingTemplate | null> => {
-        return template.resolveTemplate(templates)
+        return template.resolveTemplate(environment, templates)
             .catch((error) => {
                 if (!ignoreMissing) {
                     throw error;
@@ -71,6 +71,7 @@ export const include: TwingCallable<[
 
             if (template) {
                 return template.render(
+                    environment,
                     createContext(variables),
                     {
                         nodeExecutor,
@@ -87,6 +88,6 @@ export const include: TwingCallable<[
         .then(() => {
             const result = outputBuffer.getAndClean();
 
-            return createMarkup(result, charset);
+            return createMarkup(result, environment.charset);
         });
 }

@@ -20,7 +20,8 @@ export const dateModify: TwingCallable = (
     date: Date | DateTime | string,
     modifier: string
 ): Promise<DateTime> => {
-    const {timezone: defaultTimezone} = executionContext;
+    const {environment} = executionContext;
+    const {timezone: defaultTimezone} = environment;
 
     return createDate(defaultTimezone, date, null)
         .then((dateTime) => {

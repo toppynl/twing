@@ -1,5 +1,6 @@
 import {createMarkup, TwingMarkup} from "../../../markup";
 import type {TwingCallable} from "../../../callable-wrapper";
+import {escapeValue} from "../../../helpers/escape-value";
 
 export const escape: TwingCallable<[
     value: string | TwingMarkup | null,
@@ -13,12 +14,12 @@ export const escape: TwingCallable<[
         strategy = "html";
     }
     
-    const {template, charset} = executionContext;
+    const {template, environment} = executionContext;
 
-    return template.escape(value, strategy, charset)
+    return escapeValue(template, environment, value, strategy, environment.charset)
         .then((value) => {
             if (typeof value === "string") {
-                return createMarkup(value, charset);
+                return createMarkup(value, environment.charset);
             }
 
             return value;
