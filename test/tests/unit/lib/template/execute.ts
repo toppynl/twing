@@ -12,6 +12,7 @@ import {createSourceMapRuntime} from "../../../../../src/lib/source-map-runtime"
 import {executeNode, type TwingNodeExecutor} from "../../../../../src/lib/node-executor";
 import {createTextNode} from "../../../../../src/lib/node/text";
 import {createVerbatimNode} from "../../../../../src/lib/node/verbatim";
+import {createTemplateLoader, type TwingTemplateLoader} from "../../../../../src/lib/template-loader";
 
 tape('createTemplate => ::execute', ({test}) => {
     test('executes the AST according to the passed options', ({test}) => {
@@ -34,12 +35,18 @@ tape('createTemplate => ::execute', ({test}) => {
 
             const template = createTemplate(ast);
 
-            return template.execute(environment,  createContext(), createOutputBuffer(), new Map(), executeNodeSpy)
-                .then(() => {
-                    same(executeNodeSpy.firstCall.args[1].sandboxed, false);
-                    same(executeNodeSpy.firstCall.args[1].sourceMapRuntime, undefined);
-                })
-                .finally(end);
+            return template.execute(
+                environment,
+                createContext(),
+                createOutputBuffer(),
+                {
+                    blocks: new Map(),
+                    nodeExecutor: executeNodeSpy
+                }
+            ).then(() => {
+                same(executeNodeSpy.firstCall.args[1].sandboxed, false);
+                same(executeNodeSpy.firstCall.args[1].sourceMapRuntime, undefined);
+            }).finally(end);
         });
 
         test('when some options are passed', ({same, end}) => {
@@ -63,10 +70,17 @@ tape('createTemplate => ::execute', ({test}) => {
 
             const sourceMapRuntime = createSourceMapRuntime();
 
-            return template.execute(environment, createContext(), createOutputBuffer(), new Map(), executeNodeSpy, {
-                sandboxed: true,
-                sourceMapRuntime
-            }).then(() => {
+            return template.execute(
+                environment,
+                createContext(),
+                createOutputBuffer(),
+                {
+                    blocks: new Map(),
+                    nodeExecutor: executeNodeSpy,
+                    sandboxed: true,
+                    sourceMapRuntime
+                }
+            ).then(() => {
                 same(executeNodeSpy.firstCall.args[1].sandboxed, true);
                 same(executeNodeSpy.firstCall.args[1].sourceMapRuntime, sourceMapRuntime);
             }).finally(end);
@@ -96,7 +110,8 @@ tape('createTemplate => ::execute', ({test}) => {
                 executionContext.outputBuffer.echo('foo');
 
                 return Promise.resolve();
-            } else {
+            }
+            else {
                 return executeNode(node, executionContext);
             }
         };
@@ -106,8 +121,46 @@ tape('createTemplate => ::execute', ({test}) => {
 
         outputBuffer.start();
 
-        return template.execute(environment, createContext(), outputBuffer, new Map(), nodeExecutor).then(() => {
+        return template.execute(environment, createContext(), outputBuffer, {
+            nodeExecutor
+        }).then(() => {
             same(outputBuffer.getContents(), 'foo5');
+        }).finally(end);
+    });
+
+    test('honors the passed template loader', ({same, end}) => {
+        const environment = createEnvironment(createArrayLoader({
+            bar: 'BAR',
+            foo: 'FOO'
+        }));
+        const ast = environment.parse(environment.tokenize(createSource('index', `{{ include("foo") }}{{ include("bar") }}`)));
+
+        const loadedTemplates: Array<string> = [];
+        const baseTemplateLoader = createTemplateLoader(environment);
+
+        const templateLoader: TwingTemplateLoader = (name, from) => {
+            loadedTemplates.push(`${from}::${name}`);
+
+            return baseTemplateLoader(name, from);
+        }
+
+        const template = createTemplate(ast);
+        const outputBuffer = createOutputBuffer();
+
+        outputBuffer.start();
+
+        return template.execute(
+            environment,
+            createContext(),
+            outputBuffer,
+            {
+                templateLoader
+            }
+        ).then(() => {
+            same(loadedTemplates, [
+                'index::foo',
+                'index::bar'
+            ]);
         }).finally(end);
     });
 });

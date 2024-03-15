@@ -203,6 +203,10 @@ export default abstract class {
     getExpectedDeprecationMessages(): string[] | null {
         return null;
     }
+    
+    getStrict(): boolean {
+        return true;
+    }
 }
 
 /**
@@ -262,12 +266,14 @@ export const runTest = async (
         expectedErrorMessage,
         expectedDeprecationMessages,
         expectedSourceMapMappings,
+        sandboxed,
         sandboxPolicy,
         sandboxSecurityPolicyFilters,
         sandboxSecurityPolicyTags,
         sandboxSecurityPolicyFunctions,
         sandboxSecurityPolicyMethods,
         sandboxSecurityPolicyProperties,
+        strict,
         trimmedExpectation
     } = integrationTest;
 
@@ -290,6 +296,10 @@ export const runTest = async (
         if (environmentOptions.parserOptions.level === undefined) {
             environmentOptions.parserOptions.level = 2;
         }
+        
+        if (strict === undefined) {
+            strict = true;
+        }
 
         let environment = createEnvironment(loader, Object.assign({}, <TwingEnvironmentOptions>{
             sandboxPolicy: sandboxPolicy || createSandboxSecurityPolicy({
@@ -299,7 +309,6 @@ export const runTest = async (
                 allowedMethods: sandboxSecurityPolicyMethods,
                 allowedProperties: sandboxSecurityPolicyProperties
             }),
-            strictVariables: true,
             emitsSourceMap: expectedSourceMapMappings !== undefined
         }, environmentOptions));
 
@@ -323,7 +332,7 @@ export const runTest = async (
                 consoleData.push(data);
             });
         }
-
+        
         return (context || Promise.resolve({})).then(async (context: Record<string, any>) => {
             if (!expectedErrorMessage) {
                 try {
@@ -333,13 +342,19 @@ export const runTest = async (
                     let sourceMap: RawSourceMap | null = null;
 
                     if (expectedSourceMapMappings !== undefined) {
-                        const result = await environment.renderWithSourceMap('index.twig', context);
+                        const result = await environment.renderWithSourceMap('index.twig', context, {
+                            sandboxed,
+                            strict
+                        });
 
                         actual = result.data;
                         sourceMap = result.sourceMap;
                     }
                     else {
-                        actual = await environment.render('index.twig', context);
+                        actual = await environment.render('index.twig', context, {
+                            sandboxed,
+                            strict
+                        });
                     }
 
                     console.timeEnd(description);
@@ -383,6 +398,8 @@ export const runTest = async (
                         same(mappings, expectedSourceMapMappings);
                     }
                 } catch (e) {
+                    console.log(e);
+                    
                     console.timeEnd(description);
 
                     fail(`${description}: should not throw an error (${e})`);
@@ -391,8 +408,11 @@ export const runTest = async (
             else {
                 try {
                     console.time(description);
-
-                    await environment.render('index.twig', context);
+                    
+                    await environment.render('index.twig', context, {
+                        sandboxed,
+                        strict
+                    });
 
                     fail(`${description}: should throw an error`);
                 } catch (error: any) {

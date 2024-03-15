@@ -86,10 +86,8 @@ not
         }
     }
 
-    getEnvironmentOptions() {
-        return {
-            strictVariables: false
-        }
+    getStrict(): boolean {
+        return false;
     }
 }
 

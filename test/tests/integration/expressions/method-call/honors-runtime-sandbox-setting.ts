@@ -35,9 +35,9 @@ for (const [name, context, errorMessage] of testCases) {
             context: Promise.resolve(context),
             trimmedExpectation: sandboxed ? undefined : 'bar',
             expectedErrorMessage: sandboxed ? errorMessage : undefined,
+            sandboxed,
             environmentOptions: {
                 cache,
-                sandboxed,
                 sandboxPolicy: createSandboxSecurityPolicy()
             }
         });

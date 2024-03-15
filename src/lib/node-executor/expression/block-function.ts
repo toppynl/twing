@@ -4,7 +4,12 @@ import {TwingTemplate} from "../../template";
 import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = async (node, executionContext) => {
-    const {template, context, environment, nodeExecutor: execute, outputBuffer, blocks, sandboxed, sourceMapRuntime} = executionContext;
+    const {
+        template,
+        context,
+        nodeExecutor: execute,
+        blocks
+    } = executionContext;
     const {template: templateNode, name: blockNameNode} = node.children;
 
     const blockName = await execute(blockNameNode, executionContext);
@@ -21,24 +26,33 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
             template.name
         );
 
-        resolveTemplate = loadTemplate(environment, templateName);
+        resolveTemplate = loadTemplate(executionContext, templateName);
     } else {
         resolveTemplate = Promise.resolve(template)
     }
 
     return resolveTemplate
-        .then<Promise<boolean | string>>((executionContextOfTheBlock) => {
+        .then<Promise<boolean | string>>((templateOfTheBlock) => {
             if (node.attributes.shouldTestExistence) {
-                const hasBlock = getTraceableMethod(executionContextOfTheBlock.hasBlock, node.line, node.column, template.name);
+                const hasBlock = getTraceableMethod(templateOfTheBlock.hasBlock, node.line, node.column, template.name);
 
-                return hasBlock(environment, blockName, context.clone(), outputBuffer, blocks, sandboxed, execute);
+                return hasBlock({
+                    ...executionContext,
+                    context: context.clone()
+                }, blockName, blocks);
             } else {
-                const renderBlock = getTraceableMethod(executionContextOfTheBlock.renderBlock, node.line, node.column, template.name);
+                const renderBlock = getTraceableMethod(templateOfTheBlock.renderBlock, node.line, node.column, template.name);
 
                 if (templateNode) {
-                    return renderBlock(environment, blockName, context.clone(), outputBuffer, new Map(), false, sandboxed, execute, sourceMapRuntime);
+                    return renderBlock({
+                        ...executionContext,
+                        context: context.clone()
+                    }, blockName, false);
                 } else {
-                    return renderBlock(environment, blockName, context.clone(), outputBuffer, blocks, true, sandboxed, execute, sourceMapRuntime);
+                    return renderBlock({
+                        ...executionContext,
+                        context: context.clone()
+                    }, blockName, true);
                 }
             }
         });

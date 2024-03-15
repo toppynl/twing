@@ -13,9 +13,7 @@ runTest({
     },
     sandboxSecurityPolicyFilters: ['upper'],
     sandboxSecurityPolicyTags: ['sandbox', 'include'],
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     context: Promise.resolve({
         foo: {
             bar: 'foo.bar'

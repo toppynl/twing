@@ -9,8 +9,6 @@ runTest({
 `,
         'foo.twig': `{{ foo }}`
     },
-    environmentOptions: {
-        strictVariables: false
-    },
+    strict: false,
     expectation: ''
 });

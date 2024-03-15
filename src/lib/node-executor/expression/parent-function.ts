@@ -3,9 +3,9 @@ import type {TwingParentFunctionNode} from "../../node/expression/parent-functio
 import {getTraceableMethod} from "../../helpers/traceable-method";
 
 export const executeParentFunction: TwingNodeExecutor<TwingParentFunctionNode> = (node, executionContext) => {
-    const {template, context, environment, nodeExecutor: execute, outputBuffer, sandboxed, sourceMapRuntime,} = executionContext;
+    const {template} = executionContext;
     const {name} = node.attributes;
     const renderParentBlock = getTraceableMethod(template.renderParentBlock, node.line, node.column, template.name);
 
-    return renderParentBlock(environment, name, context, outputBuffer, sandboxed, execute, sourceMapRuntime);
+    return renderParentBlock(executionContext, name);
 };

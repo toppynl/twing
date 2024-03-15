@@ -5,7 +5,7 @@ import type {TwingMethodCallNode} from "../../node/expression/method-call";
 import {getKeyValuePairs} from "../../helpers/get-key-value-pairs";
 
 export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (node, executionContext) => {
-    const {template, context, environment, outputBuffer, aliases, nodeExecutor: execute, sandboxed, sourceMapRuntime} = executionContext;
+    const {template, aliases, nodeExecutor: execute} = executionContext;
     const {methodName, shouldTestExistence} = node.attributes;
     const {operand, arguments: methodArguments} = node.children;
 
@@ -25,13 +25,15 @@ export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (
         // by nature, the alias exists - the parser only creates a method call node when the name _is_ an alias.
         const macroTemplate = aliases.get(operand.attributes.name)!;
 
+        console.log('executeMethodCall', template.name, aliases.has('macros'));
+        
         const getHandler = (template: TwingTemplate): Promise<TwingTemplateMacroHandler | null> => {
             const macroHandler = template.macroHandlers.get(methodName);
 
             if (macroHandler) {
                 return Promise.resolve(macroHandler);
             } else {
-                return template.getParent(environment, context, outputBuffer, sandboxed, execute)
+                return template.getParent(executionContext)
                     .then((parent) => {
                         if (parent) {
                             return getHandler(parent);
@@ -45,7 +47,7 @@ export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (
         return getHandler(macroTemplate)
             .then((handler) => {
                 if (handler) {
-                    return handler(environment, outputBuffer, sandboxed, sourceMapRuntime, execute, ...macroArguments);
+                    return handler(executionContext, ...macroArguments);
                 } else {
                     throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, node, template.name);
                 }

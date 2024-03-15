@@ -21,12 +21,14 @@ export type IntegrationTest = {
     expectedSourceMapMappings?: Array<MappingItem>;
     expectation?: string;
     globals?: Record<string, any>;
+    sandboxed?: boolean;
     sandboxPolicy?: TwingSandboxSecurityPolicy;
     sandboxSecurityPolicyTags?: Array<string>;
     sandboxSecurityPolicyFilters?: Array<string>;
     sandboxSecurityPolicyFunctions?: Array<string>;
     sandboxSecurityPolicyProperties?: Map<Function, Array<string>>;
     sandboxSecurityPolicyMethods?: Map<Function, Array<string>>;
+    strict?: boolean;
     trimmedExpectation?: string;
 } & ({
     templates: {
@@ -50,7 +52,8 @@ export const createIntegrationTest = (
         sandboxSecurityPolicyTags: testInstance.getSandboxSecurityPolicyTags(),
         sandboxSecurityPolicyFilters: testInstance.getSandboxSecurityPolicyFilters(),
         sandboxSecurityPolicyFunctions: testInstance.getSandboxSecurityPolicyFunctions(),
-        expectedDeprecationMessages: testInstance.getExpectedDeprecationMessages()
+        expectedDeprecationMessages: testInstance.getExpectedDeprecationMessages(),
+        strict: testInstance.getStrict()
     };
 };
 

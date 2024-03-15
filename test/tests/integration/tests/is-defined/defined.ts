@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {TwingEnvironmentOptions} from "../../../../../src/lib/environment";
 
 class Foo {
     public array: any[];
@@ -138,11 +137,9 @@ export class StrictVariablesSetToFalse extends Test {
     getDescription(): string {
         return super.getDescription() + ' (strict_variables set to false)';
     }
-
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            strictVariables: false
-        }
+    
+    getStrict(): boolean {
+        return false;
     }
 }
 

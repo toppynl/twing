@@ -153,10 +153,8 @@ ok
         } as any;
     }
 
-    getEnvironmentOptions() {
-        return {
-            strictVariables: false
-        }
+    getStrict(): boolean {
+        return false;
     }
 }
 

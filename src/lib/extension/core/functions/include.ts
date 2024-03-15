@@ -21,7 +21,7 @@ import type {TwingCallable} from "../../../callable-wrapper";
  * @returns {Promise<TwingMarkup>} The rendered template
  */
 export const include: TwingCallable<[
-    templates: string | TwingTemplate | null | Array<string | TwingTemplate | null> ,
+    templates: string | TwingTemplate | null | Array<string | TwingTemplate | null>,
     variables: Map<string, any>,
     withContext: boolean,
     ignoreMissing: boolean,
@@ -34,7 +34,16 @@ export const include: TwingCallable<[
     ignoreMissing,
     sandboxed
 ): Promise<TwingMarkup> => {
-    const {template, environment, context, nodeExecutor, outputBuffer, sourceMapRuntime} = executionContext;
+    const {
+        template,
+        environment,
+        templateLoader,
+        context,
+        nodeExecutor,
+        outputBuffer,
+        sourceMapRuntime,
+        strict
+    } = executionContext;
     const from = template.name;
 
     if (!isPlainObject(variables) && !isTraversable(variables)) {
@@ -50,11 +59,11 @@ export const include: TwingCallable<[
     }
 
     if (!Array.isArray(templates)) {
-        templates =[templates];
+        templates = [templates];
     }
-    
+
     const resolveTemplate = (templates: Array<string | TwingTemplate | null>): Promise<TwingTemplate | null> => {
-        return template.resolveTemplate(environment, templates)
+        return template.resolveTemplate(executionContext, templates)
             .catch((error) => {
                 if (!ignoreMissing) {
                     throw error;
@@ -64,25 +73,27 @@ export const include: TwingCallable<[
                 }
             });
     };
-    
+
     return resolveTemplate(templates)
         .then((template) => {
             outputBuffer.start();
 
             if (template) {
-                return template.render(
+                return template.execute(
                     environment,
                     createContext(variables),
+                    outputBuffer,
                     {
                         nodeExecutor,
-                        outputBuffer,
                         sandboxed,
-                        sourceMapRuntime: sourceMapRuntime || undefined
+                        sourceMapRuntime: sourceMapRuntime || undefined,
+                        strict,
+                        templateLoader
                     }
                 );
             }
             else {
-                return Promise.resolve('');
+                return Promise.resolve();
             }
         })
         .then(() => {

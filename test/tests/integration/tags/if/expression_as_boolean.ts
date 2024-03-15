@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {TwingEnvironmentOptions} from "../../../../../src/lib/environment";
 
 export class EmptyString extends TestBase {
     getDescription(): string {
@@ -189,11 +188,9 @@ export class Undefined extends TestBase {
             undefined: undefined
         };
     }
-    
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            strictVariables: false
-        };
+
+    getStrict(): boolean {
+        return false;
     }
 }
 

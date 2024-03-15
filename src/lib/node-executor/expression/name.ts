@@ -6,7 +6,8 @@ import {getContextValue} from "../../helpers/get-context-value";
 export const executeNameNode: TwingNodeExecutor<TwingNameNode> = (node, {
     template,
     context,
-    environment
+    environment,
+    strict
 }) => {
     const {name, isAlwaysDefined, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
 
@@ -20,7 +21,7 @@ export const executeNameNode: TwingNodeExecutor<TwingNameNode> = (node, {
     return traceableGetContextValue(
         environment.charset,
         template.name,
-        environment.isStrictVariables,
+        strict,
         context,
         name,
         isAlwaysDefined,

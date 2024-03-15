@@ -317,4 +317,5 @@ export {createSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
 export {createSource} from "./lib/source";
 export {createSourceMapRuntime} from "./lib/source-map-runtime";
 export {createTemplate} from "./lib/template";
+export {type TwingTemplateLoader, createTemplateLoader} from "./lib/template-loader";
 export {createTest} from "./lib/test";

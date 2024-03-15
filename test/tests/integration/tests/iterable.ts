@@ -162,10 +162,8 @@ export class NotDefinedTernaryNotStrictIterableTest extends TestBase {
         };
     }
 
-    getEnvironmentOptions() {
-        return {
-            strictVariables: false
-        };
+    getStrict() {
+        return  false;
     }
 
     getExpected() {
@@ -184,10 +182,8 @@ export class NotDefinedIfNotStrictIterableTest extends TestBase {
         };
     }
 
-    getEnvironmentOptions() {
-        return {
-            strictVariables: false
-        };
+    getStrict() {
+        return  false;
     }
 
     getExpected() {
@@ -212,10 +208,8 @@ export class UndefinedTernaryNotStrictIterableTest extends TestBase {
         }
     }
 
-    getEnvironmentOptions() {
-        return {
-            strictVariables: false
-        };
+    getStrict() {
+        return  false;
     }
 
     getExpected() {
@@ -240,10 +234,8 @@ export class UndefinedIfNotStrictIterableTest extends TestBase {
         }
     }
 
-    getEnvironmentOptions() {
-        return {
-            strictVariables: false
-        };
+    getStrict() {
+        return  false;
     }
 
     getExpected() {

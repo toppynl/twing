@@ -5,10 +5,8 @@ runTest({
     templates: {
         "index.twig": `{{ foo }}`
     },
-    environmentOptions: {
-        sandboxed: true,
-        strictVariables: false
-    },
+    sandboxed: true,
+    strict: false,
     expectation: ''
 });
 
@@ -17,9 +15,7 @@ runTest({
     templates: {
         "index.twig": `{{ foo.bar() }}`
     },
-    environmentOptions: {
-        sandboxed: true,
-        strictVariables: false
-    },
+    sandboxed: true,
+    strict: false,
     expectation: ''
 });

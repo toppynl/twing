@@ -7,9 +7,7 @@ runTest({
 {{ dump(5) }}
 `
     },
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     sandboxSecurityPolicyFunctions: [
         'dump'
     ],
@@ -22,9 +20,7 @@ runTest({
         "index.twig": `
 {{ dump(5) }}
 `
-    },
-    environmentOptions: {
-        sandboxed: true
-    },
+    }, 
+    sandboxed: true,
     expectedErrorMessage: 'TwingSandboxSecurityError: Function "dump" is not allowed in "index.twig" at line 2, column 4.'
 });
