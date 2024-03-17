@@ -63,7 +63,7 @@ export const include: TwingCallable<[
     }
 
     const resolveTemplate = (templates: Array<string | TwingTemplate | null>): Promise<TwingTemplate | null> => {
-        return template.resolveTemplate(executionContext, templates)
+        return template.loadTemplate(executionContext, templates)
             .catch((error) => {
                 if (!ignoreMissing) {
                     throw error;
@@ -82,6 +82,7 @@ export const include: TwingCallable<[
                 return template.execute(
                     environment,
                     createContext(variables),
+                    new Map(),
                     outputBuffer,
                     {
                         nodeExecutor,

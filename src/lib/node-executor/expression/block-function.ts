@@ -8,7 +8,8 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
         template,
         context,
         nodeExecutor: execute,
-        blocks
+        blocks,
+        outputBuffer
     } = executionContext;
     const {template: templateNode, name: blockNameNode} = node.children;
 
@@ -41,19 +42,18 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
                     context: context.clone()
                 }, blockName, blocks);
             } else {
-                const renderBlock = getTraceableMethod(templateOfTheBlock.renderBlock, node.line, node.column, template.name);
+                const displayBlock = getTraceableMethod(templateOfTheBlock.displayBlock, node.line, node.column, template.name);
 
-                if (templateNode) {
-                    return renderBlock({
-                        ...executionContext,
-                        context: context.clone()
-                    }, blockName, false);
-                } else {
-                    return renderBlock({
-                        ...executionContext,
-                        context: context.clone()
-                    }, blockName, true);
-                }
+                let useBlocks = templateNode === undefined;
+
+                outputBuffer.start();
+                
+                return displayBlock({
+                    ...executionContext,
+                    context: context.clone()
+                }, blockName, useBlocks).then<string>(() => {
+                    return outputBuffer.getAndClean();
+                });
             }
         });
 };

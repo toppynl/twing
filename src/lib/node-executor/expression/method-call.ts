@@ -24,8 +24,6 @@ export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (
 
         // by nature, the alias exists - the parser only creates a method call node when the name _is_ an alias.
         const macroTemplate = aliases.get(operand.attributes.name)!;
-
-        console.log('executeMethodCall', template.name, aliases.has('macros'));
         
         const getHandler = (template: TwingTemplate): Promise<TwingTemplateMacroHandler | null> => {
             const macroHandler = template.macroHandlers.get(methodName);

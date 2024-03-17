@@ -1,4 +1,4 @@
 import "./ast";
+import "./embedded-templates";
 import "./execute";
-import "./load-embedded-template";
 import "./render";

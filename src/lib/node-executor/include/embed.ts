@@ -7,8 +7,15 @@ export const executeEmbedNode: TwingNodeExecutor<TwingEmbedNode> = (node, execut
     return executeBaseIncludeNode(node, executionContext, ({template}) => {
         const {index} = node.attributes;
 
-        const loadTemplate = getTraceableMethod(template.loadEmbeddedTemplate, node.line, node.column, template.name);
+        const loadEmbeddedTemplate = getTraceableMethod(() => {
+            const {embeddedTemplates} = template;
 
-        return loadTemplate(index);
+            // by design, it is guaranteed that an embed node is always executed with an index that corresponds to an existing embedded template
+            const embeddedTemplate = embeddedTemplates.get(index)!;
+
+            return Promise.resolve(embeddedTemplate);
+        }, node.line, node.column, template.name);
+
+        return loadEmbeddedTemplate();
     })
 };

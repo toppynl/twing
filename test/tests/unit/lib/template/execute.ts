@@ -38,9 +38,9 @@ tape('createTemplate => ::execute', ({test}) => {
             return template.execute(
                 environment,
                 createContext(),
+                new Map(),
                 createOutputBuffer(),
                 {
-                    blocks: new Map(),
                     nodeExecutor: executeNodeSpy
                 }
             ).then(() => {
@@ -73,9 +73,9 @@ tape('createTemplate => ::execute', ({test}) => {
             return template.execute(
                 environment,
                 createContext(),
+                new Map(),
                 createOutputBuffer(),
                 {
-                    blocks: new Map(),
                     nodeExecutor: executeNodeSpy,
                     sandboxed: true,
                     sourceMapRuntime
@@ -121,7 +121,7 @@ tape('createTemplate => ::execute', ({test}) => {
 
         outputBuffer.start();
 
-        return template.execute(environment, createContext(), outputBuffer, {
+        return template.execute(environment, createContext(), new Map(), outputBuffer, {
             nodeExecutor
         }).then(() => {
             same(outputBuffer.getContents(), 'foo5');
@@ -152,6 +152,7 @@ tape('createTemplate => ::execute', ({test}) => {
         return template.execute(
             environment,
             createContext(),
+            new Map(),
             outputBuffer,
             {
                 templateLoader
@@ -161,6 +162,32 @@ tape('createTemplate => ::execute', ({test}) => {
                 'index::foo',
                 'index::bar'
             ]);
+        }).finally(end);
+    });
+
+    test('with some blocks', async ({same, end}) => {
+        const environment = createEnvironment(createArrayLoader({
+            index: '{{ block("foo") }}, {{ block("aliased-bar") }}',
+            blocks: `{% block foo %}foo block content{% endblock %}{% block bar %}bar block content{% endblock %}`
+        }));
+        
+        const template = await environment.loadTemplate('index');
+        const outputBuffer = createOutputBuffer();
+
+        outputBuffer.start();
+
+        const blockTemplate = await environment.loadTemplate('blocks');
+        
+        return template.execute(
+            environment,
+            createContext(),
+            new Map([
+                ['foo', [blockTemplate, 'foo']],
+                ['aliased-bar', [blockTemplate, 'bar']]
+            ]),
+            outputBuffer
+        ).then(() => {
+            same(outputBuffer.getContents(), 'foo block content, bar block content');
         }).finally(end);
     });
 });
