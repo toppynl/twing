@@ -11,8 +11,6 @@ export function getTraceableMethod<M extends (...args: Array<any>) => Promise<an
                         error.source = templateName;
                     }
                 } else {
-                    console.log(error);
-                    
                     throw createRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, {
                         line,
                         column

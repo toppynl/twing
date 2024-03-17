@@ -5,19 +5,18 @@ import {getTraceableMethod} from "../helpers/traceable-method";
 export const executeBlockReferenceNode: TwingNodeExecutor<TwingBlockReferenceNode> = (node, executionContext) => {
     const {
         template,
-        context,
-        outputBuffer
+        context
     } = executionContext;
     const {name} = node.attributes;
 
-    const renderBlock = getTraceableMethod(template.renderBlock, node.line, node.column, template.name);
+    const displayBlock = getTraceableMethod(template.displayBlock, node.line, node.column, template.name);
 
-    return renderBlock(
+    return displayBlock(
         {
             ...executionContext,
             context: context.clone()
         },
         name,
         true,
-    ).then(outputBuffer.echo);
+    );
 };

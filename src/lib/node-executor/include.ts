@@ -14,7 +14,7 @@ export const executeBaseIncludeNode = async (
     const {only, ignoreMissing} = node.attributes;
 
     const templatesToInclude = await getTemplate(executionContext);
-
+    
     const traceableInclude = getTraceableMethod(include, node.line, node.column, template.name);
 
     const output = await traceableInclude(

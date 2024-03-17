@@ -25,10 +25,6 @@ export const executeImportNode: TwingNodeExecutor<TwingImportNode> = async (node
     aliases.set(aliasNode.attributes.name, aliasValue);
 
     if (global) {
-        console.log('executeImportNode', template.name, template.aliases.has('macros'));
-
         template.aliases.set(aliasNode.attributes.name, aliasValue);
-        
-        console.log('>>> executeImportNode', template.name, template.aliases.has('macros'));
     }
 };
