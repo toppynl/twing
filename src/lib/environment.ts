@@ -20,15 +20,14 @@ import {TwingTemplateNode} from "./node/template";
 import {RawSourceMap} from "source-map";
 import {createSourceMapRuntime} from "./source-map-runtime";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
-import {createTemplate, TwingTemplate} from "./template";
+import {TwingTemplate} from "./template";
 import {Settings as DateTimeSettings} from "luxon";
-import {EventEmitter} from "events";
-import {createTemplateLoadingError} from "./error/loader";
 import {TwingParsingError} from "./error/parsing";
 import {createLexer, TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
 import {createCoreExtension} from "./extension/core";
-import {createAutoEscapeNode} from "../lib";
+import {createAutoEscapeNode, createTemplateLoadingError} from "../lib";
+import {createTemplateLoader} from "./template-loader";
 
 export type TwingNumberFormat = {
     numberOfDecimals: number;
@@ -45,15 +44,10 @@ export type TwingEnvironmentOptions = {
     autoEscapingStrategy?: string;
 
     /**
-     * Controls whether the templates are recompiled whenever their content changes or not.
-     *
-     * When set to `true`, templates are recompiled whenever their content changes instead of fetching them from the persistent cache. Note that this won't invalidate the environment inner cache but only the cache passed using the `cache` option. Defaults to `false`.
-     */
-    autoReload?: boolean;
-    /**
      * The persistent cache instance.
      */
     cache?: TwingCache;
+    
     /**
      * The default charset. Defaults to "UTF-8".
      */
@@ -62,21 +56,12 @@ export type TwingEnvironmentOptions = {
     dateIntervalFormat?: string;
     numberFormat?: TwingNumberFormat;
     parserOptions?: TwingParserOptions;
-    sandboxed?: boolean;
     sandboxPolicy?: TwingSandboxSecurityPolicy;
-    /**
-     * Controls whether accessing invalid variables (variables and or attributes/methods that do not exist) triggers a runtime error.
-     *
-     * When set to `true`, accessing invalid variables triggers a runtime error.
-     * When set to `false`, accessing invalid variables returns `null`.
-     *
-     * Defaults to `false`.
-     */
-    strictVariables?: boolean;
     timezone?: string;
 };
 
 export interface TwingEnvironment {
+    readonly cache: TwingCache | null;
     readonly charset: string;
     readonly dateFormat: string;
     readonly dateIntervalFormat: string;
@@ -84,7 +69,6 @@ export interface TwingEnvironment {
     readonly numberFormat: TwingNumberFormat;
     readonly filters: Map<string, TwingFilter>;
     readonly functions: Map<string, TwingFunction>;
-    readonly isStrictVariables: boolean;
     readonly loader: TwingLoader;
     readonly sandboxPolicy: TwingSandboxSecurityPolicy;
     readonly tests: Map<string, TwingTest>;
@@ -123,13 +107,6 @@ export interface TwingEnvironment {
     loadTemplate(name: string, from?: string | null): Promise<TwingTemplate>;
 
     /**
-     * Register the passed listener...
-     *
-     * When a template is encountered, Twing environment emits a `template` event with the name of the encountered template and the source of the template that initiated the loading.
-     */
-    on(eventName: "load", listener: (name: string, from: string | null) => void): void;
-
-    /**
      * Converts a token list to a template.
      *
      * @param {TwingTokenStream} stream
@@ -142,12 +119,18 @@ export interface TwingEnvironment {
     /**
      * Convenient method that renders a template from its name.
      */
-    render(name: string, context: Record<string, any>): Promise<string>;
+    render(name: string, context: Record<string, any>, options?: {
+        sandboxed?: boolean;
+        strict?: boolean;
+    }): Promise<string>;
 
     /**
      * Convenient method that renders a template from its name and returns both the render result and its belonging source map.
      */
-    renderWithSourceMap(name: string, context: Record<string, any>): Promise<{
+    renderWithSourceMap(name: string, context: Record<string, any>, options?: {
+        sandboxed?: boolean;
+        strict?: boolean;
+    }): Promise<{
         data: string;
         sourceMap: RawSourceMap;
     }>;
@@ -190,7 +173,6 @@ export const createEnvironment = (
 
     extensionSet.addExtension(createCoreExtension());
 
-    const shouldAutoReload = options?.autoReload || false;
     const cache: TwingCache | null = options?.cache || null;
     const charset = options?.charset || 'UTF-8';
     const dateFormat = options?.dateFormat || 'F j, Y H:i';
@@ -200,16 +182,15 @@ export const createEnvironment = (
         numberOfDecimals: 0,
         thousandSeparator: ','
     };
-    const eventEmitter = new EventEmitter();
     const sandboxPolicy = options?.sandboxPolicy || createSandboxSecurityPolicy();
 
-    let isSandboxed = options?.sandboxed ? true : false;
     let lexer: TwingLexer;
     let parser: TwingParser;
 
-    const loadedTemplates: Map<string, TwingTemplate> = new Map();
-
     const environment: TwingEnvironment = {
+        get cache() {
+            return cache;
+        },
         get charset() {
             return charset;
         },
@@ -227,9 +208,6 @@ export const createEnvironment = (
         },
         get functions() {
             return extensionSet.functions;
-        },
-        get isStrictVariables() {
-            return options?.strictVariables ? true : false;
         },
         get loader() {
             return loader;
@@ -254,80 +232,16 @@ export const createEnvironment = (
         addTagHandler: extensionSet.addTagHandler,
         addTest: extensionSet.addTest,
         loadTemplate: async (name, from = null) => {
-            eventEmitter.emit('load', name, from);
+            const templateLoader = createTemplateLoader(environment);
 
-            let templateFqn = await loader.resolve(name, from) || name;
-            let loadedTemplate = loadedTemplates.get(templateFqn);
-
-            if (loadedTemplate) {
-                return Promise.resolve(loadedTemplate);
-            }
-            else {
-                const timestamp = cache ? await cache.getTimestamp(templateFqn) : 0;
-
-                const getAstFromCache = async (): Promise<TwingTemplateNode | null> => {
-                    if (cache === null) {
-                        return Promise.resolve(null);
+            return templateLoader(name, from)
+                .then((template) => {
+                    if (template === null) {
+                        throw createTemplateLoadingError([name]);
                     }
 
-                    let content: TwingTemplateNode | null;
-
-                    /**
-                     * When auto-reload is disabled, we always challenge the cache
-                     * When auto-reload is enabled, we challenge the cache only if the template is considered as fresh by the loader
-                     */
-                    if (shouldAutoReload) {
-                        const isFresh = await loader.isFresh(name, timestamp, from);
-
-                        if (isFresh) {
-                            content = await cache.load(name);
-                        }
-                        else {
-                            content = null;
-                        }
-                    }
-                    else {
-                        content = await cache.load(name);
-                    }
-
-                    return content;
-                };
-
-                const getAstFromLoader = async (): Promise<TwingTemplateNode | null> => {
-                    const source = await loader.getSource(name, from);
-
-                    if (source === null) {
-                        return null;
-                    }
-
-                    const ast = environment.parse(environment.tokenize(source));
-
-                    if (cache !== null) {
-                        await cache.write(name, ast);
-                    }
-
-                    return ast;
-                };
-
-                let ast = await getAstFromCache();
-
-                if (ast === null) {
-                    ast = await getAstFromLoader();
-                }
-
-                if (ast === null) {
-                    throw createTemplateLoadingError([name]);
-                }
-
-                const template = createTemplate(ast);
-
-                loadedTemplates.set(templateFqn, template);
-
-                return template;
-            }
-        },
-        on: (eventName, listener) => {
-            eventEmitter.on(eventName, listener);
+                    return template;
+                });
         },
         registerEscapingStrategy: (handler, name) => {
             escapingStrategyHandlers[name] = handler;
@@ -380,21 +294,19 @@ export const createEnvironment = (
                 throw error;
             }
         },
-        render: (name, context) => {
+        render: (name, context, options) => {
             return environment.loadTemplate(name)
                 .then((template) => {
-                    return template.render(environment, context, {
-                        sandboxed: isSandboxed
-                    });
+                    return template.render(environment, context, options);
                 });
         },
-        renderWithSourceMap: (name, context) => {
+        renderWithSourceMap: (name, context, options) => {
             const sourceMapRuntime = createSourceMapRuntime();
-
+            
             return environment.loadTemplate(name)
                 .then((template) => {
                     return template.render(environment, context, {
-                        sandboxed: isSandboxed,
+                        ...options,
                         sourceMapRuntime
                     });
                 })

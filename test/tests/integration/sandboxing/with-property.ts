@@ -7,9 +7,7 @@ runTest({
 {{ foo.bar }}
 `
     },
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     sandboxSecurityPolicyProperties: new Map([
         [Object, ['bar']]
     ]),
@@ -28,9 +26,7 @@ runTest({
 {{ foo.bar }}
 `
     },
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     context: Promise.resolve({
         foo: {
             bar: 5

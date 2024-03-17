@@ -20,6 +20,7 @@ const isObject = require('isobject');
  * @param {boolean} shouldTestExistence Whether this is only a defined check
  * @param {boolean} shouldIgnoreStrictCheck Whether to ignore the strict attribute check or not
  * @param sandboxed
+ * @param strict
  *
  * @return {Promise<any>} The attribute value, or a boolean when isDefinedTest is true, or null when the attribute is not set and ignoreStrictCheck is true
  *
@@ -33,11 +34,12 @@ export const getAttribute = (
     type: TwingAttributeAccessorCallType,
     shouldTestExistence: boolean,
     shouldIgnoreStrictCheck: boolean | null,
-    sandboxed: boolean
+    sandboxed: boolean,
+    strict: boolean
 ): Promise<any> => {
     const {sandboxPolicy} = environment;
     
-    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !environment.isStrictVariables : shouldIgnoreStrictCheck;
+    shouldIgnoreStrictCheck = (shouldIgnoreStrictCheck === null) ? !strict : shouldIgnoreStrictCheck;
 
     const _do = (): any => {
         let message: string;

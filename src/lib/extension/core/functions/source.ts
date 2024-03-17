@@ -14,9 +14,9 @@ export const source: TwingCallable<[
     name: string,
     ignoreMissing: boolean
 ], string | null> = (executionContext, name, ignoreMissing) => {
-    const {template, environment} = executionContext;
+    const {template} = executionContext;
 
-    return environment.loadTemplate(name, template.name)
+    return template.loadTemplate(executionContext, name)
         .catch(() => {
             return null;
         })

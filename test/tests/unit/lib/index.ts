@@ -8,3 +8,4 @@ import "./node-traverser";
 import "./output-buffer";
 import "./parser";
 import "./template";
+import "./template-loader";

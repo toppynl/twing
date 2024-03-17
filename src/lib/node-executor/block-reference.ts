@@ -6,26 +6,18 @@ export const executeBlockReferenceNode: TwingNodeExecutor<TwingBlockReferenceNod
     const {
         template,
         context,
-        environment,
-        outputBuffer,
-        blocks,
-        nodeExecutor: execute,
-        sandboxed,
-        sourceMapRuntime
+        outputBuffer
     } = executionContext;
     const {name} = node.attributes;
 
     const renderBlock = getTraceableMethod(template.renderBlock, node.line, node.column, template.name);
 
     return renderBlock(
-        environment,
+        {
+            ...executionContext,
+            context: context.clone()
+        },
         name,
-        context.clone(),
-        outputBuffer,
-        blocks,
         true,
-        sandboxed,
-        execute,
-        sourceMapRuntime
     ).then(outputBuffer.echo);
 };

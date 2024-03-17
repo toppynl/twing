@@ -1,6 +1,5 @@
 import TestBase, {runTest} from "../TestBase";
 import {createIntegrationTest} from "../test";
-import {TwingEnvironmentOptions} from "../../../../src/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -34,10 +33,8 @@ class Test extends TestBase {
         return 'TwingRuntimeError: Variable "foo2" does not exist in "index.twig" at line 11, column 10.';
     }
 
-    getEnvironmentOptions(): TwingEnvironmentOptions {
-        return {
-            strictVariables: true
-        };
+    getStrict(): boolean {
+        return true;
     }
 }
 

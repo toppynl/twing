@@ -126,7 +126,8 @@ tape('library index', ({same, end}) => {
         'createSourceMapRuntime',
         'createTemplate',
         'createTest',
-        'executeNode'
+        'executeNode',
+        'createTemplateLoader'
     ];
 
     const propertyNames = Object.getOwnPropertyNames(index).filter((name) => name !== '__esModule');

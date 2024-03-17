@@ -7,9 +7,7 @@ runTest({
 {% block foo %}5{% endblock %}
 `
     },
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     sandboxSecurityPolicyTags: [
         'block'
     ],
@@ -23,8 +21,6 @@ runTest({
 {% block foo %}5{% endblock %}
 `
     },
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     expectedErrorMessage: 'TwingSandboxSecurityError: Tag "block" is not allowed in "index.twig" at line 2, column 4.'
 });

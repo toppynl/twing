@@ -34,9 +34,9 @@ for (const [name, context, errorMessage] of testCases) {
             context: Promise.resolve(context),
             trimmedExpectation: strictVariables ? undefined : '',
             expectedErrorMessage: strictVariables ? errorMessage : undefined,
+            strict: strictVariables,
             environmentOptions: {
-                cache,
-                strictVariables
+                cache
             }
         });
     }

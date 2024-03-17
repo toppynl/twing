@@ -39,8 +39,8 @@ runTest({
 {{ foo|e }}
 {{ foo|e }}`
     },
+    sandboxed: true,
     environmentOptions: {
-        sandboxed: true,
         sandboxPolicy: createSandboxSecurityPolicy({
             allowedFunctions: ['include']
         })

@@ -32,10 +32,8 @@ class Test extends TestBase {
         };
     }
 
-    getEnvironmentOptions() {
-        return {
-            strictVariables: false
-        }
+    getStrict(): boolean {
+        return false;
     }
 
     getExpectedDeprecationMessages() {

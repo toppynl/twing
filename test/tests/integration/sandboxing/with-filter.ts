@@ -7,9 +7,7 @@ runTest({
 {{ 5|upper }}
 `
     },
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     sandboxSecurityPolicyFilters: [
         'upper'
     ],
@@ -23,8 +21,6 @@ runTest({
 {{ 5|upper }}
 `
     },
-    environmentOptions: {
-        sandboxed: true
-    },
+    sandboxed: true,
     expectedErrorMessage: 'TwingSandboxSecurityError: Filter "upper" is not allowed in "index.twig" at line 2, column 6.'
 });
