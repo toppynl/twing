@@ -28,7 +28,9 @@ import {TwingParsingError} from "./error/parsing";
 import {createLexer, TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
 import {createCoreExtension} from "./extension/core";
-import {createAutoEscapeNode} from "../lib";
+import {createAutoEscapeNode, type TwingContext} from "../lib";
+import {iteratorToMap} from "./helpers/iterator-to-map";
+import {createContext} from "./context";
 
 export type TwingNumberFormat = {
     numberOfDecimals: number;
@@ -60,6 +62,7 @@ export type TwingEnvironmentOptions = {
     charset?: string;
     dateFormat?: string;
     dateIntervalFormat?: string;
+    globals?: Record<string, any>;
     numberFormat?: TwingNumberFormat;
     parserOptions?: TwingParserOptions;
     sandboxed?: boolean;
@@ -84,6 +87,7 @@ export interface TwingEnvironment {
     readonly numberFormat: TwingNumberFormat;
     readonly filters: Map<string, TwingFilter>;
     readonly functions: Map<string, TwingFunction>;
+    readonly globals: TwingContext<string, any>;
     readonly isStrictVariables: boolean;
     readonly loader: TwingLoader;
     readonly sandboxPolicy: TwingSandboxSecurityPolicy;
@@ -202,6 +206,7 @@ export const createEnvironment = (
     };
     const eventEmitter = new EventEmitter();
     const sandboxPolicy = options?.sandboxPolicy || createSandboxSecurityPolicy();
+    const globals = createContext(iteratorToMap(options?.globals || {}));
 
     let isSandboxed = options?.sandboxed ? true : false;
     let lexer: TwingLexer;
@@ -227,6 +232,9 @@ export const createEnvironment = (
         },
         get functions() {
             return extensionSet.functions;
+        },
+        get globals() {
+            return globals;
         },
         get isStrictVariables() {
             return options?.strictVariables ? true : false;
