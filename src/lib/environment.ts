@@ -26,8 +26,10 @@ import {TwingParsingError} from "./error/parsing";
 import {createLexer, TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
 import {createCoreExtension} from "./extension/core";
-import {createAutoEscapeNode, createTemplateLoadingError} from "../lib";
+import {createAutoEscapeNode, createTemplateLoadingError, type TwingContext} from "../lib";
 import {createTemplateLoader} from "./template-loader";
+import {createContext} from "./context";
+import {iterableToMap} from "./helpers/iterator-to-map";
 
 export type TwingNumberFormat = {
     numberOfDecimals: number;
@@ -54,6 +56,7 @@ export type TwingEnvironmentOptions = {
     charset?: string;
     dateFormat?: string;
     dateIntervalFormat?: string;
+    globals?: Record<string, any>;
     numberFormat?: TwingNumberFormat;
     parserOptions?: TwingParserOptions;
     sandboxPolicy?: TwingSandboxSecurityPolicy;
@@ -69,6 +72,7 @@ export interface TwingEnvironment {
     readonly numberFormat: TwingNumberFormat;
     readonly filters: Map<string, TwingFilter>;
     readonly functions: Map<string, TwingFunction>;
+    readonly globals: TwingContext<string, any>;
     readonly loader: TwingLoader;
     readonly sandboxPolicy: TwingSandboxSecurityPolicy;
     readonly tests: Map<string, TwingTest>;
@@ -183,6 +187,7 @@ export const createEnvironment = (
         thousandSeparator: ','
     };
     const sandboxPolicy = options?.sandboxPolicy || createSandboxSecurityPolicy();
+    const globals = createContext(iterableToMap(options?.globals || {}));
 
     let lexer: TwingLexer;
     let parser: TwingParser;
@@ -208,6 +213,9 @@ export const createEnvironment = (
         },
         get functions() {
             return extensionSet.functions;
+        },
+        get globals() {
+            return globals;
         },
         get loader() {
             return loader;

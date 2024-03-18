@@ -27,3 +27,5 @@ export const iteratorToMap = (thing: any): Map<any, any> => {
         return result;
     }
 };
+
+export const iterableToMap = iteratorToMap;
