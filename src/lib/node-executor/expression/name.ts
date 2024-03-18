@@ -2,6 +2,8 @@ import {TwingNodeExecutor} from "../../node-executor";
 import {TwingNameNode} from "../../node/expression/name";
 import {getTraceableMethod} from "../../helpers/traceable-method";
 import {getContextValue} from "../../helpers/get-context-value";
+import {mergeIterables} from "../../helpers/merge-iterables";
+import {createContext} from "../../context";
 
 export const executeNameNode: TwingNodeExecutor<TwingNameNode> = (node, {
     template,
@@ -22,7 +24,7 @@ export const executeNameNode: TwingNodeExecutor<TwingNameNode> = (node, {
         environment.charset,
         template.name,
         strict,
-        context,
+        createContext(mergeIterables(environment.globals, context)),
         name,
         isAlwaysDefined,
         shouldIgnoreStrictCheck,

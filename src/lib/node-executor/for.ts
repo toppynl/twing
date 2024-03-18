@@ -19,14 +19,9 @@ export const executeForNode: TwingNodeExecutor<TwingForNode> = async (forNode, e
     context.set('_parent', context.clone());
 
     const executedSequence: TwingContext<any, any> | any = await execute(sequenceNode, executionContext);
+    const sequence = ensureTraversable(executedSequence);
 
-    let sequence = ensureTraversable(executedSequence);
-
-    if (sequence === context) {
-        context.set('_seq', context.clone());
-    } else {
-        context.set('_seq', sequence);
-    }
+    context.set('_seq', sequence);
 
     if (elseNode) {
         context.set('_iterated', false);

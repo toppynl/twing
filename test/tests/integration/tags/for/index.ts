@@ -3,6 +3,7 @@ import "./condition.legacy";
 import "./condition_and_nested_for_loop_access";
 import "./containing_with";
 import "./context";
+import "./context-as-sequence";
 import "./hashes";
 import "./inner_variables";
 import "./inside_with";
