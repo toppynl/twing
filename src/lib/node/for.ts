@@ -87,11 +87,7 @@ export const createForNode = (
 
             let sequence = ensureTraversable(executedSequence);
 
-            if (sequence === context) {
-                context.set('_seq', context.clone());
-            } else {
-                context.set('_seq', sequence);
-            }
+            context.set('_seq', sequence);
 
             if (elseNode) {
                 context.set('_iterated', false);

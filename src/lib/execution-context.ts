@@ -11,6 +11,7 @@ export type TwingExecutionContext = {
     context: TwingContext<any, any>;
     dateFormat: string;
     dateIntervalFormat: string;
+    globals: TwingContext<string, any>;
     isStrictVariables: boolean;
     numberFormat: TwingNumberFormat;
     outputBuffer: TwingOutputBuffer;
