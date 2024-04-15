@@ -17,7 +17,7 @@ export const executeImportNode: TwingNodeExecutor<TwingImportNode> = async (node
     } else {
         const templateName = await execute(templateNameNode, executionContext);
 
-        const loadTemplate = getTraceableMethod(template.loadTemplate, node.line, node.column, template.name);
+        const loadTemplate = getTraceableMethod(template.loadTemplate, node, template.source);
 
         aliasValue = await loadTemplate(executionContext, templateName);
     }

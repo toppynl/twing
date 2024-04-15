@@ -1,8 +1,3 @@
-import {createSandboxSecurityNotAllowedFilterError} from "./security-not-allowed-filter-error";
-import {createSandboxSecurityNotAllowedTagError} from "./security-not-allowed-tag-error";
-import {createSandboxSecurityNotAllowedFunctionError} from "./security-not-allowed-function-error";
-import {createSandboxSecurityNotAllowedPropertyError} from "./security-not-allowed-property-error";
-import {createSandboxSecurityNotAllowedMethodError} from "./security-not-allowed-method-error";
 import {isAMarkup, TwingMarkup} from "../markup";
 
 export interface TwingSandboxSecurityPolicy {
@@ -22,7 +17,11 @@ export interface TwingSandboxSecurityPolicy {
      */
     checkPropertyAllowed(candidate: any | TwingMarkup, property: string): void;
 
-    checkSecurity(tags: Array<string>, filters: Array<string>, functions: Array<string>): void;
+    checkSecurity(tags: Array<string>, filters: Array<string>, functions: Array<string>): {
+        message: string;
+        token: string;
+        type: "filter" | "function" | "tag"
+    } | null;
 }
 
 export const createSandboxSecurityPolicy = (
@@ -51,15 +50,15 @@ export const createSandboxSecurityPolicy = (
                 for (const [constructorName, methods] of allowedMethods) {
                     if (candidate instanceof constructorName) {
                         allowed = methods.includes(method);
-                        
+
                         break;
                     }
                 }
 
                 if (!allowed) {
                     const constructorName = candidate.constructor.name || '(anonymous)';
-                    
-                    throw createSandboxSecurityNotAllowedMethodError(`Calling "${method}" method on an instance of ${constructorName} is not allowed.`);
+
+                    throw new Error(`Calling "${method}" method on an instance of ${constructorName} is not allowed.`);
                 }
             },
             checkPropertyAllowed: (candidate, property) => {
@@ -76,27 +75,41 @@ export const createSandboxSecurityPolicy = (
                 if (!allowed) {
                     const constructorName = candidate.constructor.name || '(anonymous)';
 
-                    throw createSandboxSecurityNotAllowedPropertyError(`Calling "${property}" property on an instance of ${constructorName} is not allowed.`);
+                    throw new Error(`Calling "${property}" property on an instance of ${constructorName} is not allowed.`);
                 }
             },
             checkSecurity: (tags, filters, functions) => {
-                for (const tag of tags) {
-                    if (!allowedTags.includes(tag)) {
-                        throw createSandboxSecurityNotAllowedTagError(`Tag "${tag}" is not allowed.`, tag);
+                for (const tagName of tags) {
+                    if (!allowedTags.includes(tagName)) {
+                        return ({
+                            message: `Tag "${tagName}" is not allowed.`,
+                            token: tagName,
+                            type: "tag"
+                        });
                     }
                 }
 
                 for (const filterName of filters) {
                     if (!allowedFilters.includes(filterName)) {
-                        throw createSandboxSecurityNotAllowedFilterError(`Filter "${filterName}" is not allowed.`, filterName);
+                        return ({
+                            message: `Filter "${filterName}" is not allowed.`,
+                            token: filterName,
+                            type: "filter"
+                        });
                     }
                 }
 
-                for (const function_ of functions) {
-                    if (!allowedFunctions.includes(function_)) {
-                        throw createSandboxSecurityNotAllowedFunctionError(`Function "${function_}" is not allowed.`, function_);
+                for (const functionName of functions) {
+                    if (!allowedFunctions.includes(functionName)) {
+                        return ({
+                            message: `Function "${functionName}" is not allowed.`,
+                            token: functionName,
+                            type: "function"
+                        });
                     }
                 }
+
+                return null;
             }
         }
     ;

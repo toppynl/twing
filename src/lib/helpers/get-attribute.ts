@@ -1,5 +1,4 @@
 import {isAMapLike} from "./map-like";
-import {createRuntimeError} from "../error/runtime";
 import {examineObject} from "./examine-object";
 import {isPlainObject} from "./is-plain-object";
 import {get} from "./get";
@@ -124,7 +123,7 @@ export const getAttribute = (
                     message = `Impossible to access an attribute ("${attribute}") on a ${typeof object} variable ("${object}").`;
                 }
 
-                throw createRuntimeError(message);
+                throw new Error(message);
             }
         }
 
@@ -148,7 +147,7 @@ export const getAttribute = (
                 message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
             }
 
-            throw createRuntimeError(message);
+            throw new Error(message);
         }
 
         // object property
@@ -246,7 +245,7 @@ export const getAttribute = (
                 return;
             }
 
-            throw createRuntimeError(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
+            throw new Error(`Neither the property "${attribute}" nor one of the methods ${attribute}()" or "get${attribute}()"/"is${attribute}()"/"has${attribute}()" exist and have public access in class "${object.constructor.name}".`);
         }
 
         if (shouldTestExistence) {

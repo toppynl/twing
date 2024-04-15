@@ -20,5 +20,5 @@ runTest({
 {{ random([]) }}
 `
     },
-    expectedErrorMessage: `TwingRuntimeError: The random function cannot pick from an empty array in "index.twig".`
+    expectedErrorMessage: `TwingRuntimeError: The random function cannot pick from an empty array in "index.twig" at line 2, column 4.`
 });

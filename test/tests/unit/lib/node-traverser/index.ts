@@ -39,7 +39,10 @@ tape('node-traverser', (test) => {
         const node = traverse(createBaseNode(null, {}, {
             0: nodeToRemove,
             1: nodeToKeep
-        }));
+        }), {
+            name: 'name',
+            code: 'code'
+        });
 
         test.same(node?.children[0], undefined);
         test.same(node?.children[1].type, 'foo');

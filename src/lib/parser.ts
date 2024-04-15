@@ -1,7 +1,7 @@
 import type {TwingTokenStream} from "./token-stream";
 import {TwingTagHandler, TwingTokenParser} from "./tag-handler";
 import {TwingNodeVisitor} from "./node-visitor";
-import {createParsingError, TwingParsingError} from "./error/parsing";
+import {createParsingError} from "./error/parsing";
 import {TwingBaseNode, getChildren, TwingNode, createNode} from "./node";
 import {createTextNode} from "./node/text";
 import {createPrintNode} from "./node/print";
@@ -309,7 +309,7 @@ export const createParser = (
             throw createParsingError(
                 `A template that extends another one cannot include content outside Twig blocks. Did you forget to put the content inside a {% block %} tag?`,
                 node,
-                stream.source.name
+                stream.source
             );
         }
 
@@ -330,7 +330,7 @@ export const createParser = (
         // expected as the definition is not part of the default template code flow.
         if (nested && (type === "block_reference")) {
             if (level >= 3) {
-                throw createParsingError(`A block definition cannot be nested under non-capturing nodes.`, node, stream.source.name);
+                throw createParsingError(`A block definition cannot be nested under non-capturing nodes.`, node, stream.source);
             }
             else {
                 console.warn(`Nesting a block definition under a non-capturing node in "${stream.source.name}" at line ${node.line} is deprecated since Twig 2.5.0 and will become a syntax error in Twig 3.0.`);
@@ -388,7 +388,7 @@ export const createParser = (
             }
         }
         else if (strict) {
-            const error = createParsingError(`Unknown filter "${name}".`, {line, column}, stream.source.name);
+            const error = createParsingError(`Unknown filter "${name}".`, {line, column}, stream.source);
 
             error.addSuggestions(name, filterNames);
 
@@ -421,7 +421,7 @@ export const createParser = (
             }
         }
         else if (strict) {
-            const error = createParsingError(`Unknown function "${name}".`, {line, column}, stream.source.name);
+            const error = createParsingError(`Unknown function "${name}".`, {line, column}, stream.source);
 
             error.addSuggestions(name, functionNames);
 
@@ -440,14 +440,14 @@ export const createParser = (
                     throw createParsingError('Calling "parent" outside a block is forbidden.', {
                         line,
                         column
-                    }, stream.source.name);
+                    }, stream.source);
                 }
 
                 if (!parent && !hasTraits()) {
                     throw createParsingError('Calling "parent" on a template that does not extend nor "use" another template is forbidden.', {
                         line,
                         column
-                    }, stream.source.name);
+                    }, stream.source);
                 }
 
                 return createParentFunctionNode(peekBlockStack(), line, column);
@@ -459,7 +459,7 @@ export const createParser = (
                     throw createParsingError('The "block" function takes one argument (the block name).', {
                         line,
                         column
-                    }, stream.source.name);
+                    }, stream.source);
                 }
 
                 return createBlockFunctionNode(keyValuePairs[0].value, keyValuePairs.length > 1 ? keyValuePairs[1].value : null, line, column);
@@ -471,7 +471,7 @@ export const createParser = (
                     throw createParsingError('The "attribute" function takes at least two arguments (the variable and the attributes).', {
                         line,
                         column
-                    }, stream.source.name);
+                    }, stream.source);
                 }
 
                 return createAttributeAccessorNode(
@@ -639,7 +639,7 @@ export const createParser = (
             return name;
         }
 
-        const error = createParsingError(`Unknown test "${name}".`, {line, column}, stream.source.name);
+        const error = createParsingError(`Unknown test "${name}".`, {line, column}, stream.source);
 
         error.addSuggestions(name, testNames);
 
@@ -702,20 +702,10 @@ export const createParser = (
         }];
         embeddedTemplates = [];
 
-        let body: TwingBaseNode | null;
+        let body: TwingBaseNode | null = subparse(stream, tag, test);
 
-        try {
-            body = subparse(stream, tag, test);
-
-            if (parent !== null && (body = filterChildBodyNode(stream, body)) === null) {
-                body = createNode();
-            }
-        } catch (error: any) {
-            if (!(error as TwingParsingError).source) {
-                (error as TwingParsingError).source = stream.source.name;
-            }
-
-            throw error;
+        if (parent !== null && (body = filterChildBodyNode(stream, body)) === null) {
+            body = createNode();
         }
 
         let node = createTemplateNode(
@@ -732,7 +722,7 @@ export const createParser = (
         // passed visitors
         let traverse = createNodeTraverser(visitors);
 
-        node = traverse(node) as TwingTemplateNode;
+        node = traverse(node, stream.source) as TwingTemplateNode;
 
         // core visitors
         traverse = createNodeTraverser([
@@ -741,7 +731,7 @@ export const createParser = (
             createSandboxNodeVisitor()
         ]);
 
-        node = traverse(node) as TwingTemplateNode;
+        node = traverse(node, stream.source) as TwingTemplateNode;
 
         // restore previous stack so previous parse() call can resume working
         const previousStackEntry = stack.pop()!;
@@ -804,7 +794,7 @@ export const createParser = (
 
             if (namedArguments && (token = stream.nextIf("OPERATOR", '='))) {
                 if (value.type !== "name") {
-                    throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source.name);
+                    throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source);
                 }
 
                 key = createConstantNode(value.attributes.name, value.line, value.column);
@@ -815,7 +805,7 @@ export const createParser = (
                     const notConstantNode = checkConstantExpression(stream, value);
 
                     if (notConstantNode !== null) {
-                        throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode, stream.source.name);
+                        throw createParsingError(`A default value for an argument must be a constant (a boolean, a string, a number, or an array).`, notConstantNode, stream.source);
                     }
                 }
                 else {
@@ -906,7 +896,7 @@ export const createParser = (
             let value = token.value;
 
             if (['true', 'false', 'none', 'null'].indexOf(value.toLowerCase()) > -1) {
-                throw createParsingError(`You cannot assign a value to "${value}".`, token, stream.source.name);
+                throw createParsingError(`You cannot assign a value to "${value}".`, token, stream.source);
             }
 
             pushToRecord(targets, createAssignmentNode(value, token.line, token.column));
@@ -979,7 +969,7 @@ export const createParser = (
             token = stream.current;
 
             if (!token.test("NAME")) {
-                throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.name);
+                throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source);
             }
 
             names[i++] = createAssignmentNode(token.value, token.line, token.column);
@@ -1216,7 +1206,7 @@ export const createParser = (
                 throw createParsingError(`A hash key must be a quoted string, a number, a name, or an expression enclosed in parentheses (unexpected token "${typeToEnglish(type)}" of value "${value}".`, {
                     line,
                     column
-                }, stream.source.name);
+                }, stream.source);
             }
 
             stream.expect("PUNCTUATION", ':', 'A hash key must be followed by a colon (:)');
@@ -1351,10 +1341,10 @@ export const createParser = (
                     node = parseHashExpression(stream);
                 }
                 else if (token.test("OPERATOR", '=') && (stream.look(-1).value === '==' || stream.look(-1).value === '!=')) {
-                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source.name);
+                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source);
                 }
                 else {
-                    throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source.name);
+                    throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source);
                 }
         }
 
@@ -1428,7 +1418,7 @@ export const createParser = (
                 }
             }
             else {
-                throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source.name);
+                throw createParsingError('Expected name or number.', {line, column: column + 1}, stream.source);
             }
 
             if ((node.type === "name") && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
@@ -1582,7 +1572,7 @@ export const createParser = (
                     token = stream.current;
 
                     if (token.type !== "NAME") {
-                        throw createParsingError('A block must start with a tag name.', token, stream.source.name);
+                        throw createParsingError('A block must start with a tag name.', token, stream.source);
                     }
 
                     if ((test !== null) && test(token)) {
@@ -1600,7 +1590,7 @@ export const createParser = (
                             error = createParsingError(
                                 `Unexpected "${token.value}" tag`,
                                 token,
-                                stream.source.name
+                                stream.source
                             );
 
                             error.appendMessage(` (expecting closing tag for the "${tag}" tag defined line ${line}).`);
@@ -1609,7 +1599,7 @@ export const createParser = (
                             error = createParsingError(
                                 `Unknown "${token.value}" tag.`,
                                 token,
-                                stream.source.name
+                                stream.source
                             );
 
                             error.addSuggestions(token.value, tags);

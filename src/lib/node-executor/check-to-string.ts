@@ -20,7 +20,7 @@ export const executeCheckToStringNode: TwingNodeExecutor<TwingCheckToStringNode>
                     }
 
                     return Promise.resolve(value);
-                }, valueNode.line, valueNode.column, template.name)
+                }, valueNode, template.source)
 
                 return assertToStringAllowed(value);
             }

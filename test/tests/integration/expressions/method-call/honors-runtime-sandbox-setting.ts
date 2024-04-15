@@ -22,7 +22,7 @@ const testCases: Array<[title: string, Record<string, any>, errorMessage: string
                 return 'bar';
             }
         })
-    }, 'TwingSandboxSecurityError: Calling "bar" method on an instance of (anonymous) is not allowed in "index.twig" at line 1, column 4.']
+    }, 'TwingRuntimeError: Calling "bar" method on an instance of (anonymous) is not allowed in "index.twig" at line 1, column 4.']
 ];
 
 for (const [name, context, errorMessage] of testCases) {

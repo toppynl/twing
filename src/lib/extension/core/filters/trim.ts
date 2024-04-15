@@ -1,4 +1,3 @@
-import {createRuntimeError} from "../../../error/runtime";
 import {TwingCallable} from "../../../callable-wrapper";
 
 const phpTrim = require('locutus/php/strings/trim');
@@ -26,7 +25,7 @@ export const trim: TwingCallable = (_executionContext, string: string, character
             case 'right':
                 return phpRightTrim(string, characterMask);
             default:
-                throw createRuntimeError('Trimming side must be "left", "right" or "both".');
+                throw new Error('Trimming side must be "left", "right" or "both".');
         }
     };
 

@@ -15,7 +15,7 @@ export const createUseTagHandler = (): TwingTagHandler => {
                 const template = parser.parseExpression(stream);
 
                 if (template.type !== "constant") {
-                    throw createParsingError('The template references in a "use" statement must be a string.', {line, column}, stream.source.name);
+                    throw createParsingError('The template references in a "use" statement must be a string.', {line, column}, stream.source);
                 }
                 
                 const targets: Record<string, TwingConstantNode<string>> = {};

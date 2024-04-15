@@ -1,20 +1,16 @@
-import {isATwingError} from "../error";
 import {createRuntimeError} from "../error/runtime";
+import type {TwingSource} from "../source";
+import {isATwingError} from "../error";
 
-export function getTraceableMethod<M extends (...args: Array<any>) => Promise<any>>(method: M, line: number, column: number, templateName: string): M {
+export function getTraceableMethod<M extends (...args: Array<any>) => Promise<any>>(method: M, location: {
+    line: number;
+    column: number;
+}, templateSource: TwingSource): M {
     return ((...args: Array<any>) => {
         return method(...args)
             .catch((error) => {
-                if (isATwingError(error)) {
-                    if (error.location === undefined) {
-                        error.location = {line, column};
-                        error.source = templateName;
-                    }
-                } else {
-                    throw createRuntimeError(`An exception has been thrown during the rendering of a template ("${error.message}").`, {
-                        line,
-                        column
-                    }, templateName, error);
+                if (!isATwingError(error)) {
+                    throw createRuntimeError(error.message, location, templateSource, error);
                 }
 
                 throw error;

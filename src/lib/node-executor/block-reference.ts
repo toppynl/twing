@@ -9,7 +9,7 @@ export const executeBlockReferenceNode: TwingNodeExecutor<TwingBlockReferenceNod
     } = executionContext;
     const {name} = node.attributes;
 
-    const displayBlock = getTraceableMethod(template.displayBlock, node.line, node.column, template.name);
+    const displayBlock = getTraceableMethod(template.displayBlock, node, template.source);
 
     return displayBlock(
         {

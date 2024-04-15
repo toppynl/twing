@@ -22,5 +22,5 @@ runTest({
 `
     }, 
     sandboxed: true,
-    expectedErrorMessage: 'TwingSandboxSecurityError: Function "dump" is not allowed in "index.twig" at line 2, column 4.'
+    expectedErrorMessage: 'TwingRuntimeError: Function "dump" is not allowed in "index.twig" at line 2, column 4.'
 });

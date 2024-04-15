@@ -16,7 +16,7 @@ export const executeWithNode: TwingNodeExecutor<TwingWithNode> = async (node, ex
         const variables = await execute(variablesNode, executionContext);
 
         if (typeof variables !== "object") {
-            throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, node, template.name);
+            throw createRuntimeError(`Variables passed to the "with" tag must be a hash.`, node, template.source);
         }
 
         if (only) {

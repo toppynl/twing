@@ -15,9 +15,8 @@ export const executeNameNode: TwingNodeExecutor<TwingNameNode> = (node, {
 
     const traceableGetContextValue = getTraceableMethod(
         getContextValue,
-        node.line,
-        node.column,
-        template.name
+        node,
+        template.source
     );
     
     return traceableGetContextValue(

@@ -1,15 +1,4 @@
-import {createBaseError, TwingErrorLocation, TwingBaseError} from "./base";
-
-export const templateLoadingError = 'TwingTemplateLoadingError';
-
-/**
- * Exception thrown when an error occurs during template loading.
- */
-export interface TwingTemplateLoadingError extends TwingBaseError<typeof templateLoadingError> {
-
-}
-
-export const createTemplateLoadingError = (names: Array<string | null>, location?: TwingErrorLocation, source?: string, previous?: any): TwingTemplateLoadingError => {
+export const createTemplateLoadingError = (names: Array<string | null>): Error => {
     let message: string;
     
     if (names.length === 1) {
@@ -20,13 +9,9 @@ export const createTemplateLoadingError = (names: Array<string | null>, location
         message = `Unable to find one of the following templates: "${names.join('", "')}".`;
     }
     
-    const error = createBaseError(templateLoadingError, message, location, source, previous);
+    const error = Error(message);
     
     Error.captureStackTrace(error, createTemplateLoadingError);
     
     return error;
-};
-
-export const isATemplateLoadingError = (candidate: any): candidate is TwingTemplateLoadingError => {
-    return (candidate as TwingTemplateLoadingError).name === templateLoadingError;
 };

@@ -11,6 +11,7 @@ import {getKeyValuePairs} from "../../helpers/get-key-value-pairs";
 import {getTest} from "../../helpers/get-test";
 import {getFunction} from "../../helpers/get-function";
 import {getFilter} from "../../helpers/get-filter";
+import type {TwingTemplate} from "../../template";
 
 const array_merge = require('locutus/php/array/array_merge');
 const snakeCase = require('snake-case');
@@ -21,6 +22,7 @@ const normalizeName = (name: string) => {
 
 const getArguments = (
     node: TwingBaseCallNode<any>,
+    template: TwingTemplate,
     argumentsNode: TwingArrayNode,
     acceptedArguments: Array<TwingCallableArgument>,
     isVariadic: boolean
@@ -44,7 +46,7 @@ const getArguments = (
             name = normalizeName(name);
         }
         else if (named) {
-            throw createRuntimeError(`Positional arguments cannot be used after named arguments for ${callType} "${callName}".`, node);
+            throw createRuntimeError(`Positional arguments cannot be used after named arguments for ${callType} "${callName}".`, node, template.source);
         }
 
         parameters.set(name, {
@@ -69,7 +71,7 @@ const getArguments = (
 
         if (parameter) {
             if (parameters.has(position)) {
-                throw createRuntimeError(`Argument "${name}" is defined twice for ${callType} "${callName}".`, node);
+                throw createRuntimeError(`Argument "${name}" is defined twice for ${callType} "${callName}".`, node, template.source);
             }
 
             arguments_ = array_merge(arguments_, optionalArguments);
@@ -91,7 +93,7 @@ const getArguments = (
                 arguments_.push(createConstantNode(callableParameter.defaultValue, node.line, node.column));
             }
             else {
-                throw createRuntimeError(`Value for argument "${name}" is required for ${callType} "${callName}".`, node);
+                throw createRuntimeError(`Value for argument "${name}" is required for ${callType} "${callName}".`, node, template.source);
             }
         }
     }
@@ -119,7 +121,7 @@ const getArguments = (
     if (parameters.size > 0) {
         const unknownParameter = [...parameters.values()][0];
 
-        throw createRuntimeError(`Unknown argument${parameters.size > 1 ? 's' : ''} "${[...parameters.keys()].join('", "')}" for ${callType} "${callName}(${names.join(', ')})".`, unknownParameter.key);
+        throw createRuntimeError(`Unknown argument${parameters.size > 1 ? 's' : ''} "${[...parameters.keys()].join('", "')}" for ${callType} "${callName}(${names.join(', ')})".`, unknownParameter.key, template.source);
     }
 
     return arguments_;
@@ -149,13 +151,14 @@ export const executeCallNode: TwingNodeExecutor<TwingBaseCallNode<any>> = async 
     }
 
     if (callableWrapper === null) {
-        throw createRuntimeError(`Unknown ${type} "${operatorName}".`, node);
+        throw createRuntimeError(`Unknown ${type} "${operatorName}".`, node, template.source);
     }
 
     const {operand, arguments: callArguments} = node.children;
 
     const argumentNodes = getArguments(
         node,
+        template,
         callArguments,
         callableWrapper.acceptedArguments,
         callableWrapper.isVariadic
@@ -175,7 +178,7 @@ export const executeCallNode: TwingNodeExecutor<TwingBaseCallNode<any>> = async 
 
     actualArguments.push(...providedArguments);
 
-    const traceableCallable = getTraceableMethod(callableWrapper.callable, node.line, node.column, template.name);
+    const traceableCallable = getTraceableMethod(callableWrapper.callable, node, template.source);
 
     return traceableCallable(executionContext, ...actualArguments).then((value) => {
         return value;

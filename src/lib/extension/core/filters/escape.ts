@@ -16,6 +16,7 @@ export const escape: TwingCallable<[
     
     const {template, environment} = executionContext;
 
+    // todo: probably we need to use traceable method
     return escapeValue(template, environment, value, strategy, environment.charset)
         .then((value) => {
             if (typeof value === "string") {

@@ -22,9 +22,8 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
 
         const loadTemplate = getTraceableMethod(
             template.loadTemplate,
-            templateNode.line,
-            templateNode.column,
-            template.name
+            templateNode,
+            template.source
         );
 
         resolveTemplate = loadTemplate(executionContext, templateName);
@@ -35,14 +34,14 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
     return resolveTemplate
         .then<Promise<boolean | string>>((templateOfTheBlock) => {
             if (node.attributes.shouldTestExistence) {
-                const hasBlock = getTraceableMethod(templateOfTheBlock.hasBlock, node.line, node.column, template.name);
+                const hasBlock = getTraceableMethod(templateOfTheBlock.hasBlock, node, template.source);
 
                 return hasBlock({
                     ...executionContext,
                     context: context.clone()
                 }, blockName, blocks);
             } else {
-                const displayBlock = getTraceableMethod(templateOfTheBlock.displayBlock, node.line, node.column, template.name);
+                const displayBlock = getTraceableMethod(templateOfTheBlock.displayBlock, node, template.source);
 
                 let useBlocks = templateNode === undefined;
 

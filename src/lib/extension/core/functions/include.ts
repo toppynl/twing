@@ -1,7 +1,6 @@
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {mergeIterables} from "../../../helpers/merge-iterables";
 import {isTraversable} from "../../../helpers/is-traversable";
-import {createRuntimeError} from "../../../error/runtime";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 import {createContext} from "../../../context";
 import {createMarkup, TwingMarkup} from "../../../markup";
@@ -44,12 +43,10 @@ export const include: TwingCallable<[
         sourceMapRuntime,
         strict
     } = executionContext;
-    const from = template.name;
-
     if (!isPlainObject(variables) && !isTraversable(variables)) {
         const isVariablesNullOrUndefined = variables === null || variables === undefined;
 
-        return Promise.reject(createRuntimeError(`Variables passed to the "include" function or tag must be iterable, got "${!isVariablesNullOrUndefined ? typeof variables : variables}".`, undefined, from));
+        return Promise.reject(new Error(`Variables passed to the "include" function or tag must be iterable, got "${!isVariablesNullOrUndefined ? typeof variables : variables}".`));
     }
 
     variables = iteratorToMap(variables);

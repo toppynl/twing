@@ -14,7 +14,7 @@ export const executeEmbedNode: TwingNodeExecutor<TwingEmbedNode> = (node, execut
             const embeddedTemplate = embeddedTemplates.get(index)!;
 
             return Promise.resolve(embeddedTemplate);
-        }, node.line, node.column, template.name);
+        }, node, template.source);
 
         return loadEmbeddedTemplate();
     })

@@ -22,5 +22,5 @@ runTest({
 `
     },
     sandboxed: true,
-    expectedErrorMessage: 'TwingSandboxSecurityError: Tag "block" is not allowed in "index.twig" at line 2, column 4.'
+    expectedErrorMessage: 'TwingRuntimeError: Tag "block" is not allowed in "index.twig" at line 2, column 4.'
 });

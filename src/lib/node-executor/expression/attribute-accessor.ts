@@ -13,7 +13,7 @@ export const executeAttributeAccessorNode: TwingNodeExecutor<TwingAttributeAcces
         execute(attribute, executionContext),
         execute(methodArguments, executionContext)
     ]).then(([target, attribute, methodArguments]) => {
-        const traceableGetAttribute = getTraceableMethod(getAttribute, node.line, node.column, template.name);
+        const traceableGetAttribute = getTraceableMethod(getAttribute, node, template.source);
 
         return traceableGetAttribute(
             environment,

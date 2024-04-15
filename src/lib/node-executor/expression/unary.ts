@@ -4,7 +4,7 @@ import {createRuntimeError} from "../../error/runtime";
 
 export const executeUnaryNode: TwingNodeExecutor<TwingBaseUnaryNode<any>> = (node, executionContext) => {
     const {operand} = node.children;
-    const {nodeExecutor: execute} = executionContext;
+    const {nodeExecutor: execute, template} = executionContext;
 
     switch (node.type) {
         case "negative": {
@@ -18,5 +18,5 @@ export const executeUnaryNode: TwingNodeExecutor<TwingBaseUnaryNode<any>> = (nod
         }
     }
 
-    return Promise.reject(createRuntimeError(`Unrecognized unary node of type "${node.type}"`, node));
+    return Promise.reject(createRuntimeError(`Unrecognized unary node of type "${node.type}"`, node, template.source));
 };

@@ -35,7 +35,7 @@ tape('createEnvironment ', ({test}) => {
             return environment.render('foo', {})
                 .then(() => fail)
                 .catch((error: any) => {
-                    same((error as Error).name, 'TwingTemplateLoadingError');
+                    same((error as Error).name, 'Error');
                     same((error as Error).message, 'Unable to find template "foo".');
                 })
                 .finally(end);
