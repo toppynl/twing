@@ -28,7 +28,7 @@ export const createSandboxTagHandler = (): TwingTagHandler => {
                         
                         if (!(child.type === "text" && isMadeOfWhitespaceOnly(child.attributes.data))) {
                             if (child.type !== "include" && child.type !== "embed") {
-                                throw createParsingError('Only "include" tags are allowed within a "sandbox" section.', child, stream.source.name);
+                                throw createParsingError('Only "include" tags are allowed within a "sandbox" section.', child, stream.source);
                             }
                         }
                     }

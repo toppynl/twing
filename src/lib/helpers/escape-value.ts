@@ -1,5 +1,4 @@
 import {isAMarkup, TwingMarkup} from "../markup";
-import {createRuntimeError} from "../error/runtime";
 import {TwingEnvironment} from "../environment";
 import {TwingEscapingStrategy} from "../escaping-strategy";
 import {TwingTemplate} from "../template";
@@ -28,7 +27,7 @@ export const escapeValue = (
         const strategyHandler = environment.escapingStrategyHandlers[strategy];
 
         if (strategyHandler === undefined) {
-            return Promise.reject(createRuntimeError(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(environment.escapingStrategyHandlers).sort().join(', ')}).`));
+            return Promise.reject(new Error(`Invalid escaping strategy "${strategy}" (valid ones: ${Object.keys(environment.escapingStrategyHandlers).sort().join(', ')}).`));
         }
 
         result = strategyHandler(value.toString(), charset || environment.charset, template.name);

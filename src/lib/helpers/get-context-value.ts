@@ -1,5 +1,4 @@
 import type {TwingContext} from "../context";
-import {createRuntimeError} from "../error/runtime";
 
 export const getContextValue = (
     charset: string,
@@ -40,7 +39,7 @@ export const getContextValue = (
             result = context.get(name);
 
             if (result === undefined) {
-                return Promise.reject(createRuntimeError(`Variable "${name}" does not exist.`));
+                return Promise.reject(new Error(`Variable "${name}" does not exist.`));
             }
         }
     }

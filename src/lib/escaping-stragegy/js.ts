@@ -1,8 +1,6 @@
 import type {TwingEscapingStrategyHandler} from "../escaping-strategy";
 
-const phpBin2hex = require("locutus/php/strings/bin2hex");
 const phpSprintf = require('locutus/php/strings/sprintf');
-const strlen = require('utf8-binary-cutter').getBinarySize;
 
 export const createJsEscapingStrategyHandler = (): TwingEscapingStrategyHandler => {
     return (value) => {
@@ -30,16 +28,22 @@ export const createJsEscapingStrategyHandler = (): TwingEscapingStrategyHandler 
                 return shortMap.get(char);
             }
 
-            // \uHHHH
-            char = phpBin2hex(char).toUpperCase();
+            let codePoint = char.codePointAt(0)!;
 
-            if (strlen(char) <= 4) {
-                return phpSprintf('\\u%04s', char);
+            if (codePoint <= 0x10000) {
+                return phpSprintf('\\u%04X', codePoint);
             }
+            
+            // Split characters outside the BMP into surrogate pairs
+            // https://tools.ietf.org/html/rfc2781.html#section-2.1
+            codePoint = codePoint - 0x10000;
+            
+            const high = 0xD800 | (codePoint >> 10);
+            const low = 0xDC00 | (codePoint & 0x3FF);
 
-            return phpSprintf('\\u%04s\\u%04s', char.substr(0, 4), char.substr(4, 4));
+            return phpSprintf('\\u%04X\\u%04X', high, low);
         });
-
+        
         return value;
     }
 };

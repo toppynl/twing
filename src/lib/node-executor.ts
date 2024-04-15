@@ -197,7 +197,7 @@ export const executeNode: TwingNodeExecutor = (node, executionContext) => {
         executor = executeWithNode;
     }
     else {
-        return Promise.reject(createRuntimeError(`Unrecognized node of type "${node.type}"`, node));
+        return Promise.reject(createRuntimeError(`Unrecognized node of type "${node.type}"`, node, executionContext.template.source));
     }
 
     return executor(node, executionContext);

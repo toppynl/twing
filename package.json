@@ -48,7 +48,7 @@
     "is-plain-object": "^2.0.4",
     "isobject": "^3.0.1",
     "levenshtein": "^1.0.5",
-    "locutus": "^2.0.11",
+    "locutus": "^2.0.31",
     "luxon": "^1.19.3",
     "pad": "^2.0.3",
     "regex-parser": "^2.2.8",

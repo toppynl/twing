@@ -1,6 +1,5 @@
 import {DateTime, Duration} from "luxon";
 import {modifyDate} from "../../../helpers/modify-date";
-import {createRuntimeError} from "../../../error/runtime";
 import {TwingCallable} from "../../../callable-wrapper";
 
 /**
@@ -72,7 +71,7 @@ export const createDate = (
         }
 
         if (!result || !result.isValid) {
-            throw createRuntimeError(`Failed to parse date "${input}".`);
+            throw new Error(`Failed to parse date "${input}".`);
         }
 
         // now let's apply timezone

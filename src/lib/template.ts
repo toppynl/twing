@@ -6,9 +6,8 @@ import {TwingTemplateNode} from "./node/template";
 import {mergeIterables} from "./helpers/merge-iterables";
 import {createRuntimeError} from "./error/runtime";
 import {createNode, getChildren, getChildrenCount, TwingBaseNode} from "./node";
-import {TwingError} from "./error";
 import {createMarkup, TwingMarkup} from "./markup";
-import {createTemplateLoadingError, isATemplateLoadingError} from "./error/loader";
+import {createTemplateLoadingError} from "./error/loader";
 import {cloneMap} from "./helpers/clone-map";
 import {iteratorToMap} from "./helpers/iterator-to-map";
 import {TwingSource} from "./source";
@@ -283,13 +282,14 @@ export const createTemplate = (
                 }
             }
             else {
+                // todo: use traceable method?
                 return Promise.reject(createTemplateLoadingError((names as Array<string | null>).map((name) => {
                     if (name === null) {
                         return '';
                     }
 
                     return name;
-                }), undefined, template.name));
+                })));
             }
         };
 
@@ -354,10 +354,10 @@ export const createTemplate = (
                                 if (block) {
                                     const [blockTemplate] = block!;
 
-                                    throw createRuntimeError(`Block "${name}" should not call parent() in "${blockTemplate.name}" as the block does not exist in the parent template "${template.name}".`, undefined, blockTemplate.name);
+                                    throw new Error(`Block "${name}" should not call parent() in "${blockTemplate.name}" as the block does not exist in the parent template "${template.name}".`);
                                 }
                                 else {
-                                    throw createRuntimeError(`Block "${name}" on template "${template.name}" does not exist.`, undefined, template.name);
+                                    throw new Error(`Block "${name}" on template "${template.name}" does not exist.`);
                                 }
                             }
                         });
@@ -382,7 +382,7 @@ export const createTemplate = (
                                     return parent.displayBlock(executionContext, name, false);
                                 }
                                 else {
-                                    throw createRuntimeError(`The template has no parent and no traits defining the "${name}" block.`, undefined, template.name);
+                                    throw new Error(`The template has no parent and no traits defining the "${name}" block.`);
                                 }
                             });
                     }
@@ -424,16 +424,6 @@ export const createTemplate = (
                         return parent.execute(environment, context, blocks, outputBuffer, options);
                     }
                 });
-            }).catch((error: TwingError) => {
-                if (!error.source) {
-                    error.source = template.name;
-                }
-
-                if (isATemplateLoadingError(error)) {
-                    error = createRuntimeError(error.rootMessage, error.location, error.source, error);
-                }
-
-                throw error;
             });
         },
         getBlocks: (executionContext) => {
@@ -471,9 +461,8 @@ export const createTemplate = (
 
                         const loadTemplate = getTraceableMethod(
                             template.loadTemplate,
-                            parentNode.line,
-                            parentNode.column,
-                            template.name
+                            parentNode,
+                            template.source
                         );
 
                         const loadedParent = await loadTemplate(executionContext, parentName);
@@ -501,15 +490,14 @@ export const createTemplate = (
 
                     const loadTemplate = getTraceableMethod(
                         template.loadTemplate,
-                        templateNameNode.line,
-                        templateNameNode.column,
-                        template.name
+                        templateNameNode,
+                        template.source
                     );
 
                     const traitTemplate = await loadTemplate(executionContext, templateName);
 
                     if (!traitTemplate.canBeUsedAsATrait) {
-                        throw createRuntimeError(`Template ${templateName} cannot be used as a trait.`, templateNameNode, template.name);
+                        throw createRuntimeError(`Template ${templateName} cannot be used as a trait.`, templateNameNode, template.source);
                     }
 
                     const traitBlocks = cloneMap(await traitTemplate.getBlocks(executionContext));
@@ -518,7 +506,7 @@ export const createTemplate = (
                         const traitBlock = traitBlocks.get(key);
 
                         if (!traitBlock) {
-                            throw createRuntimeError(`Block "${key}" is not defined in trait "${templateName}".`, templateNameNode, template.name);
+                            throw createRuntimeError(`Block "${key}" is not defined in trait "${templateName}".`, templateNameNode, template.source);
                         }
 
                         const targetValue = (target as TwingConstantNode<string>).attributes.value;

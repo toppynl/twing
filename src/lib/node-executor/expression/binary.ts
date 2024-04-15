@@ -10,7 +10,7 @@ import {createRuntimeError} from "../../error/runtime";
 
 export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = async (node, executionContext) => {
     const {left, right} = node.children;
-    const {nodeExecutor: execute} = executionContext;
+    const {nodeExecutor: execute, template} = executionContext;
 
     switch (node.type) {
         case "add": {
@@ -161,5 +161,5 @@ export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = as
         }
     }
 
-    return Promise.reject(createRuntimeError(`Unrecognized binary node of type "${node.type}"`, node));
+    return Promise.reject(createRuntimeError(`Unrecognized binary node of type "${node.type}"`, node, template.source));
 };

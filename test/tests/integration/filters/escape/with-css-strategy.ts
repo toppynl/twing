@@ -31,17 +31,17 @@ for (const [value, expectation] of owaspTestCases) {
 
 const specialCharacters: { [k: string]: string } = {
     /* HTML special chars - escape without exception to hex */
-    '<': '\\3C ',
-    '>': '\\3E ',
-    '\'': '\\27 ',
-    '"': '\\22 ',
-    '&': '\\26 ',
+    '<': '\\u003C',
+    '>': '\\u003E',
+    '\'': '\\u0027',
+    '"': '\\u0022',
+    '&': '\\u0026',
     /* Characters beyond ASCII value 255 to unicode escape */
-    'Ā': '\\100 ',
+    'Ā': '\\u0100',
     /* Immune chars excluded */
-    ',': '\\2C ',
-    '.': '\\2E ',
-    '_': '\\5F ',
+    ',': '\\u002C',
+    '.': '\\u002E',
+    '_': '\\u005F',
     /* Basic alnums excluded */
     'a': 'a',
     'A': 'A',
@@ -50,19 +50,19 @@ const specialCharacters: { [k: string]: string } = {
     '0': '0',
     '9': '9',
     /* Basic control characters and null */
-    "\r": '\\D ',
-    "\n": '\\A ',
-    "\t": '\\9 ',
-    "\0": '\\0 ',
+    "\r": '\\u000D',
+    "\n": '\\u000A',
+    "\t": '\\u0009',
+    "\0": '\\u0000',
     /* Encode spaces for quoteless attribute protection */
-    ' ': '\\20 ',
+    ' ': '\\u0020',
 };
 
 for (const key in specialCharacters) {
     let value = specialCharacters[key];
 
     runTest({
-        description: `"escape" filter with "css" strategy on special character "${value}"`,
+        description: `"escape" filter with "css" strategy on special character "${key}"`,
         templates: {
             "index.twig": `{{ key|escape("css") }}`
         },

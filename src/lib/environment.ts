@@ -22,7 +22,6 @@ import {createSourceMapRuntime} from "./source-map-runtime";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
 import {TwingTemplate} from "./template";
 import {Settings as DateTimeSettings} from "luxon";
-import {TwingParsingError} from "./error/parsing";
 import {createLexer, TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
 import {createCoreExtension} from "./extension/core";
@@ -290,17 +289,7 @@ export const createEnvironment = (
                 );
             }
 
-            try {
-                return parser.parse(stream);
-            } catch (error: any) {
-                const source = stream.source;
-
-                if (!(error as TwingParsingError).source) {
-                    (error as TwingParsingError).source = source.name;
-                }
-
-                throw error;
-            }
+            return parser.parse(stream);
         },
         render: (name, context, options) => {
             return environment.loadTemplate(name)

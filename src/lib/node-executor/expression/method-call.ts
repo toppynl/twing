@@ -47,7 +47,7 @@ export const executeMethodCall: TwingNodeExecutor<TwingMethodCallNode> = async (
                 if (handler) {
                     return handler(executionContext, ...macroArguments);
                 } else {
-                    throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, node, template.name);
+                    throw createRuntimeError(`Macro "${methodName}" is not defined in template "${macroTemplate.name}".`, node, template.source);
                 }
             });
     }

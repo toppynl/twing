@@ -8,12 +8,11 @@ export type {TwingError} from "./lib/error";
 export type {TwingBaseError, TwingErrorLocation} from "./lib/error/base";
 export type {TwingParsingError} from "./lib/error/parsing";
 export type {TwingRuntimeError} from "./lib/error/runtime";
-export type {TwingTemplateLoadingError} from "./lib/error/loader";
 
 export {isATwingError} from "./lib/error";
 export {createParsingError} from "./lib/error/parsing";
-export {createRuntimeError, isARuntimeError} from "./lib/error/runtime";
-export {createTemplateLoadingError, isATemplateLoadingError} from "./lib/error/loader";
+export {createRuntimeError} from "./lib/error/runtime";
+export {createTemplateLoadingError} from "./lib/error/loader";
 
 // loader
 export type {
@@ -283,13 +282,7 @@ export type {
 } from "./lib/operator";
 export type {TwingOutputBuffer} from "./lib/output-buffer";
 export type {TwingParser, TwingParserOptions} from "./lib/parser";
-export type {TwingSandboxSecurityError} from "./lib/sandbox/security-error";
 export type {TwingSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
-export type {TwingSandboxSecurityNotAllowedFilterError} from "./lib/sandbox/security-not-allowed-filter-error";
-export type {TwingSandboxSecurityNotAllowedFunctionError} from "./lib/sandbox/security-not-allowed-function-error";
-export type {TwingSandboxSecurityNotAllowedMethodError} from "./lib/sandbox/security-not-allowed-method-error";
-export type {TwingSandboxSecurityNotAllowedPropertyError} from "./lib/sandbox/security-not-allowed-property-error";
-export type {TwingSandboxSecurityNotAllowedTagError} from "./lib/sandbox/security-not-allowed-tag-error";
 export type {TwingSource} from "./lib/source";
 export type {TwingSourceMapRuntime} from "./lib/source-map-runtime";
 export type {

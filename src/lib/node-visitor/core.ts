@@ -15,6 +15,7 @@ import {createConditionalNode} from "../node/expression/conditional";
 import {TwingFilterNode} from "../node/expression/call/filter";
 import type {TwingNode} from "../node";
 import {getKeyValuePairs} from "../helpers/get-key-value-pairs";
+import type {TwingSource} from "../source";
 
 export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     const enteredNodes: Array<TwingBaseExpressionNode> = [];
@@ -48,7 +49,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
         return newNode;
     };
 
-    const enterDefinedTestNode = (node: TwingTestNode): TwingTestNode => {
+    const enterDefinedTestNode = (node: TwingTestNode, source: TwingSource): TwingTestNode => {
         const operand = node.children.operand! as TwingNode;
         
         if (
@@ -61,7 +62,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
             operand.type !== "method_call" &&
             !(operand.type === "function" && operand.attributes.operatorName === 'constant')
         ) {
-            throw createParsingError('The "defined" test only works with simple variables.', node);
+            throw createParsingError('The "defined" test only works with simple variables.', node, source);
         }
 
         let newOperand: TwingBaseExpressionNode;
@@ -139,7 +140,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
     };
 
     return {
-        enterNode: (node: TwingNode) => {
+        enterNode: (node: TwingNode, source) => {
             if (!enteredNodes.includes(node)) {
                 enteredNodes.push(node);
 
@@ -151,7 +152,7 @@ export const createCoreNodeVisitor = (): TwingNodeVisitor => {
 
                 if (node.type === "test") {
                     if (node.attributes.operatorName === "defined") {
-                        return enterDefinedTestNode(node);
+                        return enterDefinedTestNode(node, source);
                     }
                 }
             }

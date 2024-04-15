@@ -18,7 +18,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingSandboxSecurityError: Tag "do" is not allowed in "foo.twig" at line 1, column 4.';
+        return 'TwingRuntimeError: Tag "do" is not allowed in "foo.twig" at line 1, column 4.';
     }
 }
 

@@ -10,7 +10,7 @@ export const executeEscapeNode: TwingNodeExecutor<TwingEscapeNode> = (node, exec
 
     return execute(body, executionContext)
         .then((value) => {
-            const traceableEscape = getTraceableMethod(escapeValue, node.line, node.column, template.name);
+            const traceableEscape = getTraceableMethod(escapeValue, node, template.source);
 
             return traceableEscape(template, environment, value, strategy, null);
         });

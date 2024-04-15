@@ -4,8 +4,8 @@ import * as index from "../../../src/lib";
 tape('library index', ({same, end}) => {
     const expected: Array<string> = [
         'isATwingError',
-        'createTemplateLoadingError', 'isATemplateLoadingError',
-        'createRuntimeError', 'isARuntimeError',
+        'createTemplateLoadingError',
+        'createRuntimeError',
         'createParsingError',
         'createFilesystemLoader',
         'createArrayLoader',

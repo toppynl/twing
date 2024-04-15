@@ -1,3 +1,5 @@
+import type {TwingSource} from "../source";
+
 export type TwingErrorLocation = {
     line: number;
     column: number;
@@ -7,14 +9,14 @@ export interface TwingBaseError<Name extends string> extends Error {
     readonly name: Name;
     readonly previous: any | undefined;
     readonly rootMessage: string;
-    location: TwingErrorLocation | undefined;
-    source: string | undefined;
+    location: TwingErrorLocation;
+    source: TwingSource;
     
     appendMessage(message: string): void;
 }
 
 export const createBaseError = <Name extends string>(
-    name: Name, message: string, location?: TwingErrorLocation, source?: string, previous?: any
+    name: Name, message: string, location: TwingErrorLocation, source: TwingSource, previous?: any
 ): TwingBaseError<Name> => {
     const baseError = Error(message);
 
@@ -22,20 +24,10 @@ export const createBaseError = <Name extends string>(
 
     const error = Object.create(baseError, {
         location: {
-            get: () => location,
-            set: (value: TwingErrorLocation) => {
-                location = value;
-
-                updateRepresentation();
-            }
+            get: () => location
         },
         source: {
-            get: () => source,
-            set: (value: string) => {
-                source = value;
-
-                updateRepresentation();
-            }
+            get: () => source
         },
         previous: {
             value: previous
@@ -69,15 +61,11 @@ export const createBaseError = <Name extends string>(
             questionMark = true;
         }
 
-        if (source) {
-            representation += ` in "${source}"`;
-        }
+        representation += ` in "${source.name}"`;
 
-        if (location !== undefined) {
-            const {line, column} = location;
-            
-            representation += ` at line ${line}, column ${column}`;
-        }
+        const {line, column} = location;
+
+        representation += ` at line ${line}, column ${column}`;
 
         if (dot) {
             representation += '.';

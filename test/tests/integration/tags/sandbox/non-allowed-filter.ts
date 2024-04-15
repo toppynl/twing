@@ -18,7 +18,7 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingSandboxSecurityError: Filter "upper" is not allowed in "foo.twig" at line 1, column 10.';
+        return 'TwingRuntimeError: Filter "upper" is not allowed in "foo.twig" at line 1, column 10.';
     }
 }
 

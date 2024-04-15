@@ -19,5 +19,5 @@ runTest({
             bar: 'foo.bar'
         }
     }),
-    expectedErrorMessage: 'TwingSandboxSecurityError: Calling "bar" property on an instance of Object is not allowed in "index.twig" at line 5, column 4.'
+    expectedErrorMessage: 'TwingRuntimeError: Calling "bar" property on an instance of Object is not allowed in "index.twig" at line 5, column 4.'
 })
