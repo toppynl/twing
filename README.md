@@ -39,22 +39,22 @@ npm run test:browser
 
 ### Writing and executing tests
 
-Assuming one want to execute the test located in `test/tests/integration/comparison/to-array.ts`, one would run:
+Assuming one want to execute the test located in `src/test/tests/integration/comparison/to-array.ts`, one would run:
 
 ```shell
-ts-node test/tests/integration/comparison/to-array.ts
+ts-node src/test/tests/integration/comparison/to-array.ts
 ```
 
 It is even possible - and recommended - to track the coverage while writing tests:
 
 ```shell
-nyc ts-node test/tests/integration/comparison/to-array.ts
+nyc ts-node src/test/tests/integration/comparison/to-array.ts
 ```
 
 Of course, it is also perfectly possible to pipe the result of the test to your favorite tap formatter:
 
 ```shell
-test/tests/integration/comparison$ ts-node . | tap-nyan
+src/test/tests/integration/comparison$ ts-node . | tap-nyan
  9   -_-_-_-_-_,------,
  0   -_-_-_-_-_|   /\_/\ 
  0   -_-_-_-_-^|__( ^ .^) 

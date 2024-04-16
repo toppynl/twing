@@ -34,9 +34,9 @@
     "test": "node dist/test",
     "test:browser": "browserify dist/test/index.js | tape-run --sandbox=false",
     "build": "npm run build:cjs && npm run build:types && npm run bundle",
-    "build:cjs": "rimraf dist/cjs && tsc --project . --module commonjs --outDir dist/cjs",
-    "build:test": "rimraf dist && tsc --project test --outDir dist",
-    "build:types": "rimraf dist/types && tsc --project . --declaration true --emitDeclarationOnly true --outDir dist/types",
+    "build:cjs": "rimraf dist/cjs && tsc --project src/main --module commonjs --outDir dist/cjs",
+    "build:test": "rimraf dist && tsc --project src/test --outDir dist",
+    "build:types": "rimraf dist/types && tsc --project src/main --declaration true --emitDeclarationOnly true --outDir dist/types",
     "bundle": "browserify dist/cjs/lib.js -g uglifyify -s Twing -o dist/lib.min.js"
   },
   "dependencies": {
