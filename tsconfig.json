@@ -8,9 +8,5 @@
     "strict": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true
-  },
-  "include": [
-    "src/lib.ts"
-  ],
-  "exclude": []
+  }
 }
