@@ -1,11 +1,11 @@
 import * as tape from 'tape';
-import {TwingLexer, typeToEnglish} from "../../../../../main/lib/lexer";
+import {createLexer, typeToEnglish} from "../../../../../main/lib/lexer";
 import {createOperator} from "../../../../../main/lib/operator";
 
 tape('lexer', (test) => {
     test.test('constructor', (test) => {
         test.test('support custom operators', (test) => {
-            let lexer = new TwingLexer(
+            let lexer = createLexer(
                 2,
                 [
                     createOperator('foo', "BINARY", 0, () => {

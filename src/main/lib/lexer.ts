@@ -85,11 +85,11 @@ export const createLexer = (
     binaryOperators: Array<TwingOperator>,
     unaryOperators: Array<TwingOperator>
 ): TwingLexer => {
-    const keepCompatibleOperators = (operator: TwingOperator) => operator.specificationLevel <= level;
+    const keepCompatibleOperator = (operator: TwingOperator) => operator.specificationLevel <= level;
     
     return new TwingLexer(
         level, 
-        binaryOperators.filter(keepCompatibleOperators), 
-        unaryOperators.filter(keepCompatibleOperators)
+        binaryOperators.filter(keepCompatibleOperator), 
+        unaryOperators.filter(keepCompatibleOperator)
     );
 };

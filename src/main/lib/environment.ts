@@ -22,7 +22,7 @@ import {createSourceMapRuntime} from "./source-map-runtime";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
 import {TwingTemplate} from "./template";
 import {Settings as DateTimeSettings} from "luxon";
-import {createLexer, TwingLexer} from "./lexer";
+import {createLexer, type TwingLexer} from "./lexer";
 import {TwingCache} from "./cache";
 import {createCoreExtension} from "./extension/core";
 import {createAutoEscapeNode, createTemplateLoadingError, type TwingContext} from "../lib";
@@ -102,7 +102,7 @@ export interface TwingEnvironment {
      * @param name The name of the template to load
      * @param from The name of the template that requested the load
      *
-     * @throws {TwingTemplateLoadingError}  When the template cannot be found
+     * @throws {Error}  When the template cannot be found
      * @throws {TwingParsingError} When an error occurred during the parsing of the source
      *
      * @return
