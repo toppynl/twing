@@ -1,0 +1,41 @@
+import TestBase, {runTest} from "../../../TestBase";
+import {createIntegrationTest} from "../../../test";
+
+class Test extends TestBase {
+    getDescription() {
+        return '"for" tag can use an "else" clause';
+    }
+
+    getTemplates() {
+        return {
+            'index.twig': `{% for item in items %}
+  * {{ item }}
+{% else %}
+  no item
+{% endfor %}
+`
+        }
+    }
+
+    getStrict(): boolean {
+        return false;
+    }
+
+    getContext() {
+        return {
+            items: [
+                'a',
+                'b'
+            ]
+        };
+    }
+
+    getExpected() {
+        return `
+  * a
+  * b`;
+    }
+
+}
+
+runTest(createIntegrationTest(new Test));

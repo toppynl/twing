@@ -7,7 +7,7 @@ First-class TypeScript and JavaScript Twig compiler
 
 This projects needs at least **node.js 16.0.0** to run.
 
-It is also strongly recommended to have [ts-node](https://www.npmjs.com/package/ts-node) and [nyc](https://www.npmjs.com/package/nyc) installed globally to ease the writing of tests and the tracking of the code coverage.
+It is also strongly recommended to have [ts-node](https://www.npmjs.com/package/ts-node) and [One Double Zero](https://www.npmjs.com/package/one-double-zero) installed globally to ease the writing of tests and the tracking of the code coverage.
 
 ## Usage
 
@@ -39,22 +39,22 @@ npm run test:browser
 
 ### Writing and executing tests
 
-Assuming one want to execute the test located in `test/tests/integration/comparison/to-array.ts`, one would run:
+Assuming one want to execute the test located in `src/test/tests/integration/comparison/to-array.ts`, one would run:
 
 ```shell
-ts-node test/tests/integration/comparison/to-array.ts
+ts-node src/test/tests/integration/comparison/to-array.ts
 ```
 
 It is even possible - and recommended - to track the coverage while writing tests:
 
 ```shell
-nyc ts-node test/tests/integration/comparison/to-array.ts
+odz ts-node src/test/tests/integration/comparison/to-array.ts
 ```
 
 Of course, it is also perfectly possible to pipe the result of the test to your favorite tap formatter:
 
 ```shell
-test/tests/integration/comparison$ ts-node . | tap-nyan
+src/test/tests/integration/comparison$ ts-node . | tap-nyan
  9   -_-_-_-_-_,------,
  0   -_-_-_-_-_|   /\_/\ 
  0   -_-_-_-_-^|__( ^ .^) 

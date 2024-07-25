@@ -1,0 +1,9 @@
+{
+  "reporters": [
+    "text",
+    "html"
+  ],
+  "sources": [
+    "src/main/**/*.ts"
+  ]
+}
