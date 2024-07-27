@@ -27,7 +27,7 @@ import {TwingCache, TwingSynchronousCache} from "./cache";
 import {createCoreExtension, createSynchronousCoreExtension} from "./extension/core";
 import {createAutoEscapeNode, createTemplateLoadingError, type TwingContext} from "../lib";
 import {createSynchronousTemplateLoader, createTemplateLoader} from "./template-loader";
-import {createContext, TwingContext2} from "./context";
+import {createContext} from "./context";
 import {iterableToMap} from "./helpers/iterator-to-map";
 
 export type TwingNumberFormat = {
@@ -165,7 +165,7 @@ export interface TwingSynchronousEnvironment {
     readonly numberFormat: TwingNumberFormat;
     readonly filters: Map<string, TwingSynchronousFilter>;
     readonly functions: Map<string, TwingSynchronousFunction>;
-    readonly globals: TwingContext2;
+    readonly globals: Map<string, any>;
     readonly loader: TwingSynchronousLoader;
     readonly sandboxPolicy: TwingSandboxSecurityPolicy;
     readonly tests: Map<string, TwingSynchronousTest>;
@@ -567,14 +567,14 @@ export const createSynchronousEnvironment = (
         },
         render: (name, data, options) => {
             const template = environment.loadTemplate(name);
-            const context: TwingContext2 = new Map(Object.entries(data));
+            const context: Map<string, any> = new Map(Object.entries(data));
 
             return template.render(environment, context, options);
         },
         renderWithSourceMap: (name, data, options) => {
             const sourceMapRuntime = createSourceMapRuntime();
 
-            const context: TwingContext2 = new Map(Object.entries(data));
+            const context: Map<string, any> = new Map(Object.entries(data));
             const template = environment.loadTemplate(name);
             const output = template.render(environment, context, {
                 ...options,

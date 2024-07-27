@@ -69,5 +69,3 @@ export const getEntries = <V>(context: Record<string, V>): IterableIterator<[str
 export const getValues = <V>(context: Record<string, V>): Array<V> => {
     return Object.values(context);
 };
-
-export type TwingContext2 = Map<string, any>;

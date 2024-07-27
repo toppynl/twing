@@ -1,4 +1,4 @@
-import type {TwingContext, TwingContext2} from "../context";
+import type {TwingContext} from "../context";
 
 export const getContextValue = (
     charset: string,
@@ -51,8 +51,8 @@ export const getContextValueSynchronously = (
     charset: string,
     templateName: string,
     isStrictVariables: boolean,
-    context: TwingContext2,
-    globals: TwingContext2,
+    context: Map<string, any>,
+    globals: Map<string, any>,
     name: string,
     isAlwaysDefined: boolean,
     shouldIgnoreStrictCheck: boolean,
