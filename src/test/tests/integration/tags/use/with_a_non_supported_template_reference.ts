@@ -5,8 +5,8 @@ runTest({
     templates: {
         'index.twig': '{% use foo %}'
     },
-    context: Promise.resolve({
+    context: {
         foo: 'foo.twig'
-    }),
+    },
     expectedErrorMessage: 'TwingParsingError: The template references in a "use" statement must be a string in "index.twig" at line 1, column 4.'
 });

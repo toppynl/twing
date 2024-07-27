@@ -1,4 +1,4 @@
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 const explode = require('locutus/php/strings/explode');
 
@@ -27,28 +27,52 @@ const explode = require('locutus/php/strings/explode');
  */
 export const split: TwingCallable = (_executionContext, value: string, delimiter: string, limit: number | null): Promise<Array<string>> => {
     let _do = (): Array<string> => {
-        if (delimiter) {
-            return !limit ? explode(delimiter, value) : explode(delimiter, value, limit);
-        }
+    if (delimiter) {
+        return !limit ? explode(delimiter, value) : explode(delimiter, value, limit);
+    }
 
-        if (!limit || limit <= 1) {
-            return value.match(/.{1,1}/ug)!;
-        }
+    if (!limit || limit <= 1) {
+        return value.match(/.{1,1}/ug)!;
+    }
 
-        let length = value.length;
+    let length = value.length;
 
-        if (length < limit) {
-            return [value];
-        }
+    if (length < limit) {
+        return [value];
+    }
 
-        let r = [];
+    let r = [];
 
-        for (let i = 0; i < length; i += limit) {
-            r.push(value.substr(i, limit));
-        }
+    for (let i = 0; i < length; i += limit) {
+        r.push(value.substr(i, limit));
+    }
 
-        return r;
-    };
+    return r;
+};
 
     return Promise.resolve(_do());
+};
+
+export const splitSynchronously: TwingSynchronousCallable = (_executionContext, value: string, delimiter: string, limit: number | null): Array<string> => {
+    if (delimiter) {
+        return !limit ? explode(delimiter, value) : explode(delimiter, value, limit);
+    }
+
+    if (!limit || limit <= 1) {
+        return value.match(/.{1,1}/ug)!;
+    }
+
+    let length = value.length;
+
+    if (length < limit) {
+        return [value];
+    }
+
+    let r = [];
+
+    for (let i = 0; i < length; i += limit) {
+        r.push(value.substr(i, limit));
+    }
+
+    return r;
 };

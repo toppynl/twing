@@ -1,8 +1,9 @@
 import {TwingBaseIncludeNode} from "../node/include";
-import {getTraceableMethod} from "../helpers/traceable-method";
-import {include} from "../extension/core/functions/include";
-import {TwingExecutionContext} from "../execution-context";
-import {TwingTemplate} from "../template";
+import {getSynchronousTraceableMethod, getTraceableMethod} from "../helpers/traceable-method";
+import {include, includeSynchronously} from "../extension/core/functions/include";
+import {TwingExecutionContext, TwingSynchronousExecutionContext} from "../execution-context";
+import {TwingSynchronousTemplate, TwingTemplate} from "../template";
+import {isPlainObject} from "../helpers/is-plain-object";
 
 export const executeBaseIncludeNode = async (
     node: TwingBaseIncludeNode<any>, 
@@ -21,6 +22,36 @@ export const executeBaseIncludeNode = async (
         executionContext,
         templatesToInclude,
         await execute(variables, executionContext),
+        !only,
+        ignoreMissing,
+        sandboxed
+    );
+
+    outputBuffer.echo(output);
+};
+
+export const executeBaseIncludeNodeSynchronously = (
+    node: TwingBaseIncludeNode<any>,
+    executionContext: TwingSynchronousExecutionContext,
+    getTemplate: (executionContext: TwingSynchronousExecutionContext) => TwingSynchronousTemplate | null | Array<TwingSynchronousTemplate | null>
+) => {
+    const {nodeExecutor: execute, outputBuffer, sandboxed, template} = executionContext;
+    const {variables: variablesNode} = node.children;
+    const {only, ignoreMissing} = node.attributes;
+
+    const templatesToInclude = getTemplate(executionContext);
+    const traceableInclude = getSynchronousTraceableMethod(includeSynchronously, node, template.source);
+    
+    let variables = execute(variablesNode, executionContext);
+    
+    if (isPlainObject(variables)) {
+        variables = new Map(Object.entries(variables));
+    }
+    
+    const output = traceableInclude(
+        executionContext,
+        templatesToInclude,
+        variables,
         !only,
         ignoreMissing,
         sandboxed

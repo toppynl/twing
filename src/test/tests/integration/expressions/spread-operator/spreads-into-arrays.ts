@@ -17,6 +17,11 @@ runTest({
             level: 3
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            level: 3
+        }
+    },
     expectation: `
 1,2,3,4
 1,2,5,6,7,8

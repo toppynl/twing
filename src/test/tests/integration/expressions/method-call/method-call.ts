@@ -138,9 +138,9 @@ runTest({
     templates: {
         "index.twig": `{{ foo.foo }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: new AnotherFoo()
-    }),
+    },
     trimmedExpectation: `foo`
 });
 
@@ -149,9 +149,9 @@ runTest({
     templates: {
         "index.twig": `{{ foo.bar }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: new AnotherFoo()
-    }),
+    },
     trimmedExpectation: `getBar`
 });
 
@@ -160,9 +160,9 @@ runTest({
     templates: {
         "index.twig": `{{ foo.Oof }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: new AnotherFoo()
-    }),
+    },
     trimmedExpectation: `isOof`
 });
 
@@ -171,9 +171,9 @@ runTest({
     templates: {
         "index.twig": `{{ foo.fooBar }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: new AnotherFoo()
-    }),
+    },
     trimmedExpectation: `hasFooBar`
 });
 
@@ -182,8 +182,8 @@ runTest({
     templates: {
         "index.twig": `{{ foo.getfoo }} {{ foo.GeTfOo }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: new AnotherFoo()
-    }),
+    },
     trimmedExpectation: `getFoo getFoo`
 });

@@ -1,6 +1,6 @@
-import {chunk} from "../../../helpers/chunk";
+import {chunk, chunkSynchronously} from "../../../helpers/chunk";
 import {fillMap} from "../../../helpers/fill-map";
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 /**
  * Batches item.
@@ -34,4 +34,26 @@ export const batch: TwingCallable<[
             
             return chunks;
         });
+};
+
+export const batchSynchronously: TwingSynchronousCallable<[
+    items: Array<any>,
+    size: number,
+    fill: any,
+    preserveKeys: boolean
+], Array<Map<any, any>>> = (_executionContext, items, size, fill, preserveKeys) => {
+    if ((items === null) || (items === undefined)) {
+        return [];
+    }
+
+    const chunks = chunkSynchronously(items, size, preserveKeys);
+
+    if (fill !== null && chunks.length) {
+        const last = chunks.length - 1;
+        const lastChunk: Map<any, any> = chunks[last];
+
+        fillMap(lastChunk, size, fill);
+    }
+
+    return chunks;
 };

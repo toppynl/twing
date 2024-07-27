@@ -1,10 +1,14 @@
 import * as tape from "tape";
-import {createEnvironment} from "../../../../../main/lib/environment";
-import {createFilesystemLoader, TwingFilesystemLoaderFilesystem} from "../../../../../main/lib/loader/filesystem";
+import {createEnvironment, createSynchronousEnvironment} from "../../../../../main/lib/environment";
+import {
+    createFilesystemLoader,
+    createSynchronousFilesystemLoader,
+    TwingFilesystemLoaderFilesystem, TwingSynchronousFilesystemLoaderFilesystem
+} from "../../../../../main/lib/loader/filesystem";
 import {spy, stub} from "sinon";
-import {createTemplateLoader} from "../../../../../main/lib/template-loader";
-import {createArrayLoader} from "../../../../../main/lib/loader/array";
-import type {TwingCache} from "../../../../../main/lib/cache";
+import {createSynchronousTemplateLoader, createTemplateLoader} from "../../../../../main/lib/template-loader";
+import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../main/lib/loader/array";
+import type {TwingCache, TwingSynchronousCache} from "../../../../../main/lib/cache";
 
 const createMockCache = (): TwingCache => {
     return {
@@ -16,6 +20,20 @@ const createMockCache = (): TwingCache => {
         },
         getTimestamp: () => {
             return Promise.resolve(0);
+        }
+    };
+};
+
+const createMockSynchronousCache = (): TwingSynchronousCache => {
+    return {
+        write: () => {
+            return;
+        },
+        load: () => {
+            return null;
+        },
+        getTimestamp: () => {
+            return 0;
         }
     };
 };
@@ -131,5 +149,107 @@ tape('createTemplateLoader::()', ({test}) => {
                 same(getSourceSpy.callCount, 1);
             })
             .finally(end);
+    });
+});
+
+tape('createTemplateLoader::()', ({test}) => {
+    test('cache the loaded template under it fully qualified name', ({same, end}) => {
+        const fileSystem: TwingSynchronousFilesystemLoaderFilesystem = {
+            readFileSync(_path) {
+                return Buffer.from('');
+            },
+            statSync(path) {
+                return path === 'foo/bar' ? {
+                    isFile() {
+                        return true;
+                    },
+                    mtime: new Date(0)
+                } : null;
+            }
+        };
+        const loader = createSynchronousFilesystemLoader(fileSystem);
+
+        loader.addPath('foo', '@Foo');
+        loader.addPath('foo', 'Bar');
+
+        const environment = createSynchronousEnvironment(loader);
+        const loadTemplate = createSynchronousTemplateLoader(environment);
+
+        const getSourceSpy = spy(loader, "getSource");
+
+        loadTemplate('@Foo/bar', null);
+        loadTemplate('foo/bar', null);
+        loadTemplate('./foo/bar', null);
+        loadTemplate('../foo/bar', 'there/index.html');
+        loadTemplate('Bar/bar', null);
+        
+        same(getSourceSpy.callCount, 1);
+        
+        end();
+    });
+
+    test('hits the loader when the templates is considered as dirty', ({same, end}) => {
+        const loader = createSynchronousArrayLoader({
+            foo: 'bar'
+        });
+        const cache = createMockSynchronousCache();
+
+        stub(loader, "isFresh").returns(false);
+
+        const loadSpy = spy(cache, "load");
+        const getSourceSpy = spy(loader, "getSource");
+
+        const environment = createSynchronousEnvironment(
+            loader,
+            {
+                cache
+            }
+        );
+        const loadTemplate = createSynchronousTemplateLoader(environment);
+
+        loadTemplate('foo', null);
+        loadTemplate('foo', null);
+        
+        const template = loadTemplate('foo', null);
+        
+        const content = template?.render(environment, new Map());
+        
+        same(content, 'bar');
+        same(loadSpy.callCount, 0);
+        same(getSourceSpy.callCount, 1);
+                
+        end();
+    });
+
+    test('hits the cache when the templates is considered as fresh', ({same, end}) => {
+        const loader = createSynchronousArrayLoader({
+            foo: 'bar'
+        });
+        const cache = createMockSynchronousCache();
+
+        const loadSpy = spy(cache, "load");
+        const getSourceSpy = spy(loader, "getSource");
+
+        const environment = createSynchronousEnvironment(
+            loader,
+            {
+                cache
+            }
+        );
+        const loadTemplate = createSynchronousTemplateLoader(environment);
+
+        loadTemplate('foo', null);
+        loadTemplate('foo', null);
+        
+        stub(loader, "isFresh").returns(true);
+
+        const template = loadTemplate('foo', null);
+        const content = template?.render(environment, new Map());
+
+        same(content, 'bar');
+        same(loadSpy.callCount, 1);
+        same(getSourceSpy.callCount, 1);
+        
+        end();  
     });
 });

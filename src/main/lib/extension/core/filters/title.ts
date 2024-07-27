@@ -1,5 +1,5 @@
 import type {TwingMarkup} from "../../../markup";
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 const phpUcwords = require('locutus/php/strings/ucwords');
 
@@ -17,4 +17,12 @@ export const title: TwingCallable<[
     const result: string = phpUcwords(string.toString().toLowerCase());
 
     return Promise.resolve(result);
+};
+
+export const titleSynchronously: TwingSynchronousCallable<[
+    string: string | TwingMarkup
+], string> = (_executionContext, string) => {
+    const result: string = phpUcwords(string.toString().toLowerCase());
+
+    return result;
 };

@@ -6,7 +6,7 @@ runTest({
         'index.twig': `{{ 5 }}
 {{ 5 }}{{ 5 }}`
     },
-    context: Promise.resolve({}),
+    context: {},
     expectedSourceMapMappings: [{
         source: 'index.twig',
         generatedLine: 1,

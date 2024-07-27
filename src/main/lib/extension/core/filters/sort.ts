@@ -1,7 +1,7 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
-import {asort} from "../../../helpers/asort";
-import {TwingCallable} from "../../../callable-wrapper";
+import {asort, asortSynchronously} from "../../../helpers/asort";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 /**
  * Sorts an iterable.
@@ -24,5 +24,20 @@ export const sort: TwingCallable<[
     
     await asort(map, arrow || undefined);
     
+    return map;
+};
+
+export const sortSynchronously: TwingSynchronousCallable<[
+    iterable: any,
+    arrow: ((a: any, b: any) => -1 | 0 | 1) | null
+], Map<any, any>> = (_executionContext, iterable, arrow)=> {
+    if (!isTraversable(iterable)) {
+        throw new Error(`The sort filter only works with iterables, got "${typeof iterable}".`);
+    }
+
+    const map = iteratorToMap(iterable);
+
+    asortSynchronously(map, arrow || undefined);
+
     return map;
 };

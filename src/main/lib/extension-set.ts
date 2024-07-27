@@ -1,25 +1,22 @@
 import {TwingTagHandler} from "./tag-handler";
-import {TwingFilter} from "./filter";
-import {TwingFunction} from "./function";
 import {TwingNodeVisitor} from "./node-visitor";
-import {TwingTest} from "./test";
 import {TwingOperator} from "./operator";
-import type {TwingExtension} from "./extension";
+import type {TwingExtension, TwingSynchronousExtension} from "./extension";
 
-export interface TwingExtensionSet {
+export interface TwingExtensionSet<Extension extends TwingExtension | TwingSynchronousExtension> {
     readonly binaryOperators: Array<TwingOperator>;
-    readonly filters: Map<string, TwingFilter>;
-    readonly functions: Map<string, TwingFunction>;
+    readonly filters: Map<string, Extension["filters"][number]>;
+    readonly functions: Map<string, Extension["functions"][number]>;
     readonly nodeVisitors: Array<TwingNodeVisitor>;
     readonly tagHandlers: Array<TwingTagHandler>;
-    readonly tests: Map<string, TwingTest>;
+    readonly tests: Map<string, Extension["tests"][number]>;
     readonly unaryOperators: Array<TwingOperator>;
 
-    addExtension(extension: TwingExtension): void;
+    addExtension(extension: Extension): void;
 
-    addFilter(filter: TwingFilter): void;
+    addFilter(filter: Extension["filters"][number]): void;
 
-    addFunction(twingFunction: TwingFunction): void;
+    addFunction(twingFunction: Extension["functions"][number]): void;
 
     addNodeVisitor(visitor: TwingNodeVisitor): void;
 
@@ -27,19 +24,19 @@ export interface TwingExtensionSet {
     
     addTagHandler(tagHandler: TwingTagHandler): void;
 
-    addTest(test: TwingTest): void;
+    addTest(test: Extension["tests"][number]): void;
 }
 
-export const createExtensionSet = (): TwingExtensionSet => {
+export const createExtensionSet = <Extension extends TwingExtension | TwingSynchronousExtension> (): TwingExtensionSet<Extension> => {
     const binaryOperators: Array<TwingOperator> = [];
-    const filters: Map<string, TwingFilter> = new Map();
-    const functions: Map<string, TwingFunction> = new Map();
+    const filters: Map<string, Extension["filters"][number]> = new Map();
+    const functions: Map<string, Extension["functions"][number]> = new Map();
     const nodeVisitors: Array<TwingNodeVisitor> = [];
     const tagHandlers: Array<TwingTagHandler> = [];
-    const tests: Map<string, TwingTest> = new Map();
+    const tests: Map<string, Extension["tests"][number]> = new Map();
     const unaryOperators: Array<TwingOperator> = [];
 
-    const extensionSet: TwingExtensionSet = {
+    const extensionSet: TwingExtensionSet<Extension> = {
         get binaryOperators() {
             return binaryOperators;
         },

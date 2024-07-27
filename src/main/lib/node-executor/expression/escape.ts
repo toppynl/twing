@@ -1,7 +1,7 @@
-import {TwingNodeExecutor} from "../../node-executor";
+import {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "../../node-executor";
 import {TwingEscapeNode} from "../../node/expression/escape";
-import {getTraceableMethod} from "../../helpers/traceable-method";
-import {escapeValue} from "../../helpers/escape-value";
+import {getSynchronousTraceableMethod, getTraceableMethod} from "../../helpers/traceable-method";
+import {escapeValue, escapeValueSynchronously} from "../../helpers/escape-value";
 
 export const executeEscapeNode: TwingNodeExecutor<TwingEscapeNode> = (node, executionContext) => {
     const {template, environment, nodeExecutor: execute} = executionContext;
@@ -14,4 +14,16 @@ export const executeEscapeNode: TwingNodeExecutor<TwingEscapeNode> = (node, exec
 
             return traceableEscape(template, environment, value, strategy, null);
         });
+};
+
+export const executeEscapeNodeSynchronously: TwingSynchronousNodeExecutor<TwingEscapeNode> = (node, executionContext) => {
+    const {template, environment, nodeExecutor: execute} = executionContext;
+    const {strategy} = node.attributes;
+    const {body} = node.children;
+
+    const value = execute(body, executionContext);
+    
+    const traceableEscape = getSynchronousTraceableMethod(escapeValueSynchronously, node, template.source);
+
+    return traceableEscape(template, environment, value, strategy, null);
 };

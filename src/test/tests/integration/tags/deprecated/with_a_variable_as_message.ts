@@ -5,9 +5,9 @@ runTest({
     templates: {
         'index.twig': '{% deprecated foo %}'
     },
-    context: Promise.resolve({
+    context: {
         foo: 'bar'
-    }),
+    },
     expectedDeprecationMessages: [
         'bar ("index.twig" at line 1, column 4)'
     ]

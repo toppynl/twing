@@ -1,4 +1,4 @@
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 export const isDefined: TwingCallable<[
     value: any
@@ -7,4 +7,13 @@ export const isDefined: TwingCallable<[
     value
 ) => {
     return Promise.resolve(!!value);
+};
+
+export const isDefinedSynchronously: TwingSynchronousCallable<[
+    value: any
+], boolean> = (
+    _executionContext,
+    value
+) => {
+    return !!value;
 };

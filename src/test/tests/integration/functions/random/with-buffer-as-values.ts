@@ -10,10 +10,10 @@ runTest({
 {{ random(emptyBuffer) == "" }}
 `
     },
-    context: Promise.resolve({
+    context: {
         buffer: Buffer.from('Äé'),
         emptyBuffer: Buffer.from('')
-    }),
+    },
     trimmedExpectation: `
 1
 1
@@ -28,10 +28,13 @@ runTest({
 {{ random1 == "Ä"|convert_encoding('ISO-8859-1', 'UTF-8') or random1 == "é"|convert_encoding('ISO-8859-1', 'UTF-8') }}
 `
     },
-    context: Promise.resolve({
+    context: {
         buffer: iconv('UTF-8', 'ISO-8859-1', Buffer.from('Äé')),
-    }),
+    },
     environmentOptions: {
+        charset: 'ISO-8859-1'
+    },
+    synchronousEnvironmentOptions: {
         charset: 'ISO-8859-1'
     },
     trimmedExpectation: `

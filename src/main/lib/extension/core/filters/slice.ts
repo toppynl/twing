@@ -1,7 +1,7 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToMap} from "../../../helpers/iterator-to-map";
 import {sliceMap} from "../../../helpers/slice-map";
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 /**
  * Slices a variable.
@@ -37,4 +37,29 @@ export const slice: TwingCallable<[
     }
 
     return Promise.resolve(item.substr(start, length));
+};
+
+export const sliceSynchronously: TwingSynchronousCallable<[
+    item: any,
+    start: number,
+    length: number | null,
+    preserveKeys: boolean
+], string | Map<any, any>> = (_executionContext, item, start, length, preserveKeys) => {
+    if (isTraversable(item)) {
+        const iterableItem = iteratorToMap(item);
+
+        if (length === null) {
+            length = iterableItem.size - start;
+        }
+
+        return sliceMap(iterableItem, start, length, preserveKeys);
+    }
+
+    item = '' + (item ? item : '');
+
+    if (length === null) {
+        length = item.length - start;
+    }
+
+    return item.substr(start, length);
 };

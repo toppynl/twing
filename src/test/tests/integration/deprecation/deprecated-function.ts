@@ -1,11 +1,18 @@
 import {runTest} from "../TestBase";
-import {createFunction} from "../../../../main/lib/function";
+import {createFunction, createSynchronousFunction} from "../../../../main/lib/function";
 
 runTest({
     description: 'deprecated function',
     additionalFunctions: [
         createFunction('foo', () => {
             return Promise.resolve('');
+        }, [], {
+            deprecated: true,
+        })
+    ],
+    additionalSynchronousFunctions: [
+        createSynchronousFunction('foo', () => {
+            return '';
         }, [], {
             deprecated: true,
         })
@@ -28,6 +35,14 @@ runTest({
             alternative: 'bar'
         })
     ],
+    additionalSynchronousFunctions: [
+        createSynchronousFunction('foo', () => {
+            return '';
+        }, [], {
+            deprecated: true,
+            alternative: 'bar'
+        })
+    ],
     templates: {
         'index.twig': '{{ foo() }}'
     },
@@ -41,6 +56,14 @@ runTest({
     additionalFunctions: [
         createFunction('foo', () => {
             return Promise.resolve('');
+        }, [], {
+            deprecated: 'x.y.z',
+            alternative: 'bar'
+        })
+    ],
+    additionalSynchronousFunctions: [
+        createSynchronousFunction('foo', () => {
+            return '';
         }, [], {
             deprecated: 'x.y.z',
             alternative: 'bar'

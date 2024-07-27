@@ -18,6 +18,11 @@ runTest({
             level: 3
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            level: 3
+        }
+    },
     expectation: `
 Every items are even in array
 Every items are even in object

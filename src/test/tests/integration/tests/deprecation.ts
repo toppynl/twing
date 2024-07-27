@@ -1,11 +1,18 @@
 import {runTest} from "../TestBase";
-import {createTest} from "../../../../main/lib/test";
+import {createSynchronousTest, createTest} from "../../../../main/lib/test";
 
 runTest({
     description: 'deprecated test',
     additionalTests: [
         createTest('foo', () => {
             return Promise.resolve(true);
+        }, [], {
+            deprecated: true
+        })
+    ],
+    additionalSynchronousTests: [
+        createSynchronousTest('foo', () => {
+            return true;
         }, [], {
             deprecated: true
         })
@@ -28,6 +35,14 @@ runTest({
             alternative: 'bar'
         })
     ],
+    additionalSynchronousTests: [
+        createSynchronousTest('foo', () => {
+            return true;
+        }, [], {
+            deprecated: true,
+            alternative: 'bar'
+        })
+    ],
     templates: {
         'index.twig': '{{ 5 is foo }}'
     },
@@ -41,6 +56,14 @@ runTest({
     additionalTests: [
         createTest('foo', () => {
             return Promise.resolve(true);
+        }, [], {
+            deprecated: 'x.y.z',
+            alternative: 'bar'
+        })
+    ],
+    additionalSynchronousTests: [
+        createSynchronousTest('foo', () => {
+            return true;
         }, [], {
             deprecated: 'x.y.z',
             alternative: 'bar'

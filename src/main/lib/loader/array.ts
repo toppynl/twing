@@ -1,7 +1,11 @@
-import type {TwingLoader} from "../loader";
+import type {TwingLoader, TwingSynchronousLoader} from "../loader";
 import {createSource} from "../source";
 
 export interface TwingArrayLoader extends TwingLoader {
+    setTemplate(name: string, template: string): void;
+}
+
+export interface TwingSynchronousArrayLoader extends TwingSynchronousLoader {
     setTemplate(name: string, template: string): void;
 }
 
@@ -37,6 +41,39 @@ export const createArrayLoader = (
         },
         isFresh: () => {
             return Promise.resolve(true)
+        }
+    };
+
+    return loader;
+};
+
+export const createSynchronousArrayLoader = (
+    templates: Record<string, string>
+): TwingSynchronousArrayLoader => {
+    const loader: TwingSynchronousArrayLoader = {
+        setTemplate: (name, template) => {
+            templates[name] = template;
+        },
+        getSource: (name, from) => {
+            if (loader.exists(name, from)) {
+                return createSource(name, templates[name]);
+
+            }
+
+            return null;
+        },
+        exists(name) {
+            return templates[name] !== undefined;
+        },
+        resolve: (name, from) => {
+            if (loader.exists(name, from)) {
+                return name;
+            }
+
+            return null;
+        },
+        isFresh: () => {
+            return true;
         }
     };
 

@@ -32,9 +32,9 @@ runTest({
 {{ true == foo ? 1 : 0 }}
 `
     },
-    context: Promise.resolve({
+    context: {
         foo: new (class{})
-    }),
+    },
     trimmedExpectation: `
 0
 1

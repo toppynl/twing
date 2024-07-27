@@ -8,9 +8,9 @@
  *
  * @returns {any}
  */
-import {TwingContext} from "../context";
+import {TwingContext, TwingContext2} from "../context";
 
-export function getConstant(context: TwingContext<any, any>, name: string, object: any | null): any {
+export function getConstant(context: TwingContext<any, any> | TwingContext2, name: string, object: any | null): any {
     if (object) {
         return object[name];
     } else {

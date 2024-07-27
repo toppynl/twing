@@ -19,5 +19,10 @@ runTest({
             level: 3
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            level: 3
+        }
+    },
     expectedErrorMessage: `TwingParsingError: A block definition cannot be nested under non-capturing nodes in "index.twig" at line 5, column 8.`
 });

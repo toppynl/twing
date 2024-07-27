@@ -17,3 +17,20 @@ export function getTraceableMethod<M extends (...args: Array<any>) => Promise<an
             });
     }) as typeof method;
 }
+
+export function getSynchronousTraceableMethod<M extends (...args: Array<any>) => any>(method: M, location: {
+    line: number;
+    column: number;
+}, templateSource: TwingSource): M {
+    return ((...args: Array<any>) => {
+        try {
+            return method(...args);
+        } catch (error) {
+            if (!isATwingError(error as Error)) {
+                throw createRuntimeError((error as Error).message, location, templateSource, (error as Error));
+            }
+
+            throw error;
+        }
+    }) as typeof method;
+}

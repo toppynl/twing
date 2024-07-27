@@ -1,5 +1,6 @@
 import {createTemplateLoadingError} from "../../../error/loader";
-import type {TwingCallable} from "../../../callable-wrapper";
+import type {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
+import {TwingSynchronousTemplate} from "../../../template";
 
 /**
  * Returns a template content without rendering it.
@@ -8,7 +9,7 @@ import type {TwingCallable} from "../../../callable-wrapper";
  * @param name The template name
  * @param ignoreMissing Whether to ignore missing templates or not
  *
- * @return {Promise<string>} The template source
+ * @return The template source
  */
 export const source: TwingCallable<[
     name: string,
@@ -27,4 +28,26 @@ export const source: TwingCallable<[
 
             return template?.source.code || null;
         });
+};
+
+export const sourceSynchronously: TwingSynchronousCallable<[
+    name: string,
+    ignoreMissing: boolean
+], string | null> = (executionContext, name, ignoreMissing) => {
+    const {template} = executionContext;
+
+    let loadedTemplate: TwingSynchronousTemplate | null;
+    
+    try {
+        loadedTemplate = template.loadTemplate(executionContext, name)
+    }
+    catch (error) {
+        loadedTemplate = null;
+    }
+
+    if (!ignoreMissing && (loadedTemplate === null)) {
+        throw createTemplateLoadingError([name]);
+    }
+
+    return loadedTemplate?.source.code || null;
 };

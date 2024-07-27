@@ -11,5 +11,11 @@ runTest({
             level: 3
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            strict: true,
+            level: 3
+        }
+    },
     expectedErrorMessage: 'TwingParsingError: Unknown "spaceless" tag in "index.twig" at line 1, column 4.'
 });

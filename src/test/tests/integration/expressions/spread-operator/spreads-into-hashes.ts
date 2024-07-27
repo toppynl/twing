@@ -25,10 +25,15 @@ runTest({
 {% endfor %}
 `
     },
-    context: Promise.resolve({
+    context: {
         jsMap: new Map([['favoriteShoes', 'barefoot']]) 
-    }),
+    },
     environmentOptions: {
+        parserOptions: {
+            level: 3
+        }
+    },
+    synchronousEnvironmentOptions: {
         parserOptions: {
             level: 3
         }

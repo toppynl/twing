@@ -6,12 +6,12 @@ for (const testCase of [['0.1', '0'], ['1.6', '1']]) {
         templates: {
             "index.twig": `{{ foo[${testCase[0]}] }}`
         },
-        context: Promise.resolve({
+        context: {
             foo: {
                 0: '0',
                 1: '1'
             }
-        }),
+        },
         trimmedExpectation: `${testCase[1]}`
     });
 }

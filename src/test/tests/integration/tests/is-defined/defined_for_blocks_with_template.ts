@@ -1,7 +1,7 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {createEnvironment} from "../../../../../main/lib/environment";
-import {createArrayLoader} from "../../../../../main/lib/loader/array";
+import {createEnvironment, createSynchronousEnvironment} from "../../../../../main/lib/environment";
+import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../main/lib/loader/array";
 
 class Test extends TestBase {
     getName() {
@@ -46,6 +46,20 @@ ok
                     included_loaded_internal: template
                 };
             });
+    }
+    
+    getSynchronousContext(): Record<string, any> | null {
+        const environment = createSynchronousEnvironment(createSynchronousArrayLoader({
+            'included.twig': `
+{% block foo %}FOO{% endblock %}`
+        }));
+        
+        const template = environment.loadTemplate('included.twig');
+        
+        return {
+            included_loaded: template,
+            included_loaded_internal: template
+        };
     }
 }
 

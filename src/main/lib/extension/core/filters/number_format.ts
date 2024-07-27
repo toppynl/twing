@@ -1,4 +1,4 @@
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 const phpNumberFormat = require('locutus/php/strings/number_format');
 
@@ -39,4 +39,29 @@ export const numberFormat: TwingCallable = (
     }
 
     return Promise.resolve(phpNumberFormat(number, numberOfDecimals, decimalPoint, thousandSeparator));
+};
+
+export const numberFormatSynchronously: TwingSynchronousCallable = (
+    executionContext,
+    number: any,
+    numberOfDecimals: number | null,
+    decimalPoint: string | null,
+    thousandSeparator: string | null
+): string => {
+    const {environment} = executionContext;
+    const {numberFormat} = environment;
+
+    if (numberOfDecimals === null) {
+        numberOfDecimals = numberFormat.numberOfDecimals;
+    }
+
+    if (decimalPoint === null) {
+        decimalPoint = numberFormat.decimalPoint;
+    }
+
+    if (thousandSeparator === null) {
+        thousandSeparator = numberFormat.thousandSeparator;
+    }
+
+    return phpNumberFormat(number, numberOfDecimals, decimalPoint, thousandSeparator);
 };

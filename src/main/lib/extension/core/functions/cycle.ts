@@ -1,5 +1,5 @@
 import {isAMapLike} from "../../../helpers/map-like";
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 /**
  * Cycles over a value.
@@ -31,4 +31,27 @@ export const cycle: TwingCallable<[
     }
     
     return Promise.resolve(values[position % size]);
+}
+
+export const cycleSynchronously: TwingSynchronousCallable<[
+    value: Map<any, any> | Array<any> | string | boolean | null,
+    position: number
+]> = (_executionContext, value, position) => {
+    if (!isAMapLike(value) && !Array.isArray(value)) {
+        return value;
+    }
+
+    let values: Array<any>;
+    let size: number;
+
+    if (Array.isArray(value)) {
+        values = value;
+        size = value.length;
+    }
+    else {
+        values = [...value.values()];
+        size = value.size;
+    }
+
+    return values[position % size];
 }

@@ -11,5 +11,11 @@ runTest({
             level: 2
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            strict: false,
+            level: 2
+        }
+    },
     expectedErrorMessage: 'TwingRuntimeError: Unknown filter "unknown" in "index.twig" at line 1, column 6.'
 });

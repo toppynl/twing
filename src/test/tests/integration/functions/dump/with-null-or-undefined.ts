@@ -8,11 +8,11 @@ runTest({
 {{ dump(functions.undefined()) }}
 `
     },
-    context: Promise.resolve({
+    context: {
         functions: {
             undefined: () => undefined
         }
-    }),
+    },
     trimmedExpectation: `
 NULL
 

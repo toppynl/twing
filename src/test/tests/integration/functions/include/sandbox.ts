@@ -45,5 +45,10 @@ runTest({
             allowedFunctions: ['include']
         })
     },
+    synchronousEnvironmentOptions: {
+        sandboxPolicy: createSandboxSecurityPolicy({
+            allowedFunctions: ['include']
+        })
+    },
     expectedErrorMessage: 'TwingRuntimeError: Filter "e" is not allowed in "foo.twig" at line 2, column 8.'
 });

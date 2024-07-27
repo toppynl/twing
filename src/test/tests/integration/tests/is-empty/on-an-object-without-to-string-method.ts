@@ -5,8 +5,8 @@ runTest({
     templates: {
         "index.twig": '{{ foo is empty ? "OK" : "KO" }}'
     },
-    context: Promise.resolve({
+    context: {
         foo: {}
-    }),
+    },
     trimmedExpectation: 'OK'
 });

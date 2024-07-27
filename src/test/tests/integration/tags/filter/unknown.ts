@@ -7,6 +7,11 @@ runTest({
             strict: false
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            strict: false
+        }
+    },
     templates: {
         'index.twig': '{% filter foo %}{% endfilter %}'
     },

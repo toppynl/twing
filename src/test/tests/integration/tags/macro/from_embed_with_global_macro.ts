@@ -19,7 +19,7 @@ runTest({
     {% block foo %}
     {% endblock %}`
     },
-    context: Promise.resolve({}),
+    context: {},
     trimmedExpectation: '',
     expectedErrorMessage: 'TwingParsingError: Unknown function "input" in "index.twig" at line 6, column 12.'
 });

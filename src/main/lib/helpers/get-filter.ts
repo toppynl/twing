@@ -1,4 +1,4 @@
-import type {TwingFilter} from "../filter";
+import type {TwingFilter, TwingSynchronousFilter} from "../filter";
 
 /**
  * Get a filter by name.
@@ -7,10 +7,10 @@ import type {TwingFilter} from "../filter";
  *
  * @return {TwingFilter|false} A TwingFilter instance or false if the filter does not exist
  */
-export const getFilter = (
-    filters: Map<string, TwingFilter>,
+export const getFilter = <Filter extends TwingFilter | TwingSynchronousFilter>(
+    filters: Map<string, Filter>,
     name: string
-): TwingFilter | null => {
+): Filter | null => {
     const result = filters.get(name);
 
     if (result) {

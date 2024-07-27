@@ -1,6 +1,6 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToHash} from "../../../helpers/iterator-to-hash";
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 const phpHttpBuildQuery = require('locutus/php/url/http_build_query');
 
@@ -23,4 +23,18 @@ export const url_encode: TwingCallable = (_executionContext, url: string | {}): 
     }
 
     return Promise.resolve(encodeURIComponent(url));
+}
+
+export const urlEncodeSynchronously: TwingSynchronousCallable = (_executionContext, url: string | {}): string => {
+    if (typeof url !== 'string') {
+        if (isTraversable(url)) {
+            url = iteratorToHash(url);
+        }
+
+        const builtUrl: string = phpHttpBuildQuery(url, '', '&');
+
+        return builtUrl.replace(/\+/g, '%20');
+    }
+
+    return encodeURIComponent(url);
 }

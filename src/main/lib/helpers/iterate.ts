@@ -1,4 +1,5 @@
 export type IterateCallback = (key: any, value: any) => Promise<void>;
+export type SynchronousIterateCallback = (key: any, value: any) => void;
 
 /**
  * Executes the provided function once for each element of an iterable.
@@ -35,3 +36,34 @@ export const iterate = async (iterable: any, callback: IterateCallback): Promise
         }
     }
 }
+
+export const iterateSynchronously = (iterable: any, callback: SynchronousIterateCallback): void => {
+    // todo: maybe useless when we pass records instead of TwingContext
+    if (iterable.entries) {
+        for (const [key, value] of iterable.entries()) {
+            callback(key, value);
+        }
+    }
+    else if (typeof iterable[Symbol.iterator] === 'function') {
+        let i: number = 0;
+
+        for (let value of iterable) {
+            callback(i++, value);
+        }
+    }
+    // todo: check why this is not covered anymore
+    // else if (typeof iterable['next'] === 'function') {
+    //     let i: number = 0;
+    //     let next: any;
+    //
+    //     while ((next = iterable.next()) && !next.done) {
+    //         callback(i++, next.value)
+    //     }
+    // }
+    else {
+        for (const key in iterable) {
+            callback(key, iterable[key]);
+        }
+    }
+}
+

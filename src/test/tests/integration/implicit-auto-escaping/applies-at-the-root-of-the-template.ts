@@ -15,6 +15,9 @@ runTest({
     environmentOptions: {
         autoEscapingStrategy: 'html'
     },
+    synchronousEnvironmentOptions: {
+        autoEscapingStrategy: 'html'
+    },
     expectation: `
 &lt;br/&gt;
     <br/>

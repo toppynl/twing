@@ -1,21 +1,26 @@
 import TestBase from "./TestBase";
-import {TwingEnvironmentOptions} from "../../../main/lib/environment";
+import {TwingEnvironmentOptions, TwingSynchronousEnvironmentOptions} from "../../../main/lib/environment";
 import {MappingItem} from "source-map";
-import {TwingFilter} from "../../../main/lib/filter";
-import {TwingFunction} from "../../../main/lib/function";
-import {TwingTest} from "../../../main/lib/test";
+import {TwingFilter, TwingSynchronousFilter} from "../../../main/lib/filter";
+import {TwingFunction, TwingSynchronousFunction} from "../../../main/lib/function";
+import {TwingSynchronousTest, TwingTest} from "../../../main/lib/test";
 import {TwingNodeVisitor} from "../../../main/lib/node-visitor";
-import {TwingLoader} from "../../../main/lib/loader";
+import {TwingLoader, TwingSynchronousLoader} from "../../../main/lib/loader";
 import {TwingSandboxSecurityPolicy} from "../../../main/lib/sandbox/security-policy";
 
 export type IntegrationTest = {
     additionalFilters?: Array<TwingFilter>;
+    additionalSynchronousFilters?: Array<TwingSynchronousFilter>;
     additionalFunctions?: Array<TwingFunction>;
+    additionalSynchronousFunctions?: Array<TwingSynchronousFunction>;
     additionalNodeVisitors?: Array<TwingNodeVisitor>;
     additionalTests?: Array<TwingTest>;
+    additionalSynchronousTests?: Array<TwingSynchronousTest>;
     context?: Record<string, any> | Promise<Record<string, any>>;
+    synchronousContext?: Record<string, any>;
     description: string;
     environmentOptions?: TwingEnvironmentOptions;
+    synchronousEnvironmentOptions?: TwingSynchronousEnvironmentOptions;
     expectedErrorMessage?: string | null;
     expectedDeprecationMessages?: Array<string> | null;
     expectedSourceMapMappings?: Array<MappingItem>;
@@ -36,7 +41,8 @@ export type IntegrationTest = {
     } & Record<string, string>;
 } | {
     loader: TwingLoader;
-})
+    synchronousLoader: TwingSynchronousLoader;
+});
 
 export const createIntegrationTest = (
     testInstance: TestBase
@@ -44,10 +50,12 @@ export const createIntegrationTest = (
     return {
         description: testInstance.getDescription(),
         context: Promise.resolve(testInstance.getContext()),
+        synchronousContext: testInstance.getSynchronousContext() || testInstance.getContext(),
         trimmedExpectation: testInstance.getExpected(),
         templates: testInstance.getTemplates() as any,
         expectedErrorMessage: testInstance.getExpectedErrorMessage(),
         environmentOptions: testInstance.getEnvironmentOptions(),
+        synchronousEnvironmentOptions: testInstance.getSynchronousEnvironmentOptions(),
         globals: testInstance.getGlobals(),
         sandboxSecurityPolicyTags: testInstance.getSandboxSecurityPolicyTags(),
         sandboxSecurityPolicyFilters: testInstance.getSandboxSecurityPolicyFilters(),

@@ -1,4 +1,4 @@
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 const phpRound = require('locutus/php/math/round');
 const phpCeil = require('locutus/php/math/ceil');
@@ -15,23 +15,24 @@ const phpFloor = require('locutus/php/math/floor');
  */
 export const round: TwingCallable = (_executionContext, value: any, precision: number, method: string): Promise<number> => {
     const _do = (): number => {
-        if (method === 'common') {
-            return phpRound(value, precision);
-        }
+    if (method === 'common') {
+        return phpRound(value, precision);
+    }
 
-        if (method !== 'ceil' && method !== 'floor') {
-            throw new Error('The round filter only supports the "common", "ceil", and "floor" methods.');
-        }
+    if (method !== 'ceil' && method !== 'floor') {
+        throw new Error('The round filter only supports the "common", "ceil", and "floor" methods.');
+    }
 
-        const intermediateValue = value * Math.pow(10, precision);
-        const intermediateDivider = Math.pow(10, precision);
+    const intermediateValue = value * Math.pow(10, precision);
+    const intermediateDivider = Math.pow(10, precision);
 
-        if (method === 'ceil') {
-            return phpCeil(intermediateValue) / intermediateDivider;
-        } else {
-            return phpFloor(intermediateValue) / intermediateDivider;
-        }
-    };
+    if (method === 'ceil') {
+        return phpCeil(intermediateValue) / intermediateDivider;
+    }
+    else {
+        return phpFloor(intermediateValue) / intermediateDivider;
+    }
+};
 
     try {
         const result = _do();
@@ -39,5 +40,25 @@ export const round: TwingCallable = (_executionContext, value: any, precision: n
         return Promise.resolve(result);
     } catch (error: any) {
         return Promise.reject(error);
+    }
+};
+
+export const roundSynchronously: TwingSynchronousCallable = (_executionContext, value: any, precision: number, method: string): number => {
+    if (method === 'common') {
+        return phpRound(value, precision);
+    }
+
+    if (method !== 'ceil' && method !== 'floor') {
+        throw new Error('The round filter only supports the "common", "ceil", and "floor" methods.');
+    }
+
+    const intermediateValue = value * Math.pow(10, precision);
+    const intermediateDivider = Math.pow(10, precision);
+
+    if (method === 'ceil') {
+        return phpCeil(intermediateValue) / intermediateDivider;
+    }
+    else {
+        return phpFloor(intermediateValue) / intermediateDivider;
     }
 };

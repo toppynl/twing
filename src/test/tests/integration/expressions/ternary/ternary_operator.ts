@@ -19,8 +19,8 @@ NO1
 foo<br />
 foo-bar
 `,
-    context: Promise.resolve({
+    context: {
         foo: 'foo',
         bar: 'bar'
-    })
+    }
 })

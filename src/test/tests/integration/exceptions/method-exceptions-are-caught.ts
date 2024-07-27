@@ -8,11 +8,11 @@ runTest({
 `
     },
     expectedErrorMessage: 'TwingRuntimeError: I am Error in "index.twig" at line 2, column 4',
-    context: Promise.resolve({
+    context: {
         foo: {
             bar: () => {
                 throw new Error('I am Error');
             }
         }
-    })
+    }
 });

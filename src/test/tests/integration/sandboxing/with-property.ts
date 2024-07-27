@@ -11,11 +11,11 @@ runTest({
     sandboxSecurityPolicyProperties: new Map([
         [Object, ['bar']]
     ]),
-    context: Promise.resolve({
+    context: {
         foo: {
             bar: 5
         }
-    }),
+    },
     trimmedExpectation: `5`
 });
 
@@ -27,11 +27,11 @@ runTest({
 `
     },
     sandboxed: true,
-    context: Promise.resolve({
+    context: {
         foo: {
             bar: 5
         }
-    }),
+    },
     sandboxSecurityPolicyProperties: new Map([
         [Map, ['bar']]
     ]),

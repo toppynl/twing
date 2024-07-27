@@ -8,13 +8,13 @@ runTest({
 {{ null.bar is defined ? 'KO' : 'OK' }}
 `
     },
-    context: Promise.resolve({
+    context: {
         foo: new (class {
             get bar() {
                 return 'foo.bar';
             }
         })
-    }),
+    },
     trimmedExpectation: `
 OK
 OK

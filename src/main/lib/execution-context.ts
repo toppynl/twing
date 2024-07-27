@@ -1,10 +1,13 @@
 import type {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "./template";
-import type {TwingContext} from "./context";
+import type {TwingContext, TwingContext2} from "./context";
 import type {TwingOutputBuffer} from "./output-buffer";
 import type {TwingSourceMapRuntime} from "./source-map-runtime";
-import type {TwingEnvironment} from "./environment";
+import type {TwingEnvironment, TwingSynchronousEnvironment} from "./environment";
 import type {TwingNodeExecutor} from "./node-executor";
 import type {TwingTemplateLoader} from "./template-loader";
+import {TwingSynchronousNodeExecutor} from "./node-executor";
+import {TwingSynchronousTemplate, TwingSynchronousTemplateAliases, TwingSynchronousTemplateBlockMap} from "./template";
+import {TwingSynchronousTemplateLoader} from "./template-loader";
 
 export type TwingExecutionContext = {
     aliases: TwingTemplateAliases;
@@ -18,4 +21,18 @@ export type TwingExecutionContext = {
     strict: boolean;
     template: TwingTemplate;
     templateLoader: TwingTemplateLoader;
+};
+
+export type TwingSynchronousExecutionContext = {
+    aliases: TwingSynchronousTemplateAliases;
+    blocks: TwingSynchronousTemplateBlockMap;
+    context: TwingContext2;
+    environment: TwingSynchronousEnvironment;
+    nodeExecutor: TwingSynchronousNodeExecutor;
+    outputBuffer: TwingOutputBuffer;
+    sandboxed: boolean;
+    sourceMapRuntime?: TwingSourceMapRuntime;
+    strict: boolean;
+    template: TwingSynchronousTemplate;
+    templateLoader: TwingSynchronousTemplateLoader;
 };

@@ -1,11 +1,18 @@
 import {runTest} from "../TestBase";
-import {createFilter} from "../../../../main/lib/filter";
+import {createFilter, createSynchronousFilter} from "../../../../main/lib/filter";
 
 runTest({
     description: 'deprecated filter',
     additionalFilters: [
         createFilter('foo', (operand) => {
             return Promise.resolve(operand);
+        }, [], {
+            deprecated: true
+        })
+    ],
+    additionalSynchronousFilters: [
+        createSynchronousFilter('foo', (operand) => {
+            return operand;
         }, [], {
             deprecated: true
         })
@@ -28,6 +35,14 @@ runTest({
             alternative: 'bar'
         })
     ],
+    additionalSynchronousFilters: [
+        createSynchronousFilter('foo', (operand) => {
+            return operand;
+        }, [], {
+            deprecated: true,
+            alternative: 'bar'
+        })
+    ],
     templates: {
         'index.twig': '{{ 5|foo() }}'
     },
@@ -41,6 +56,14 @@ runTest({
     additionalFilters: [
         createFilter('foo', (operand) => {
             return Promise.resolve(operand);
+        }, [], {
+            deprecated: 'x.y.z',
+            alternative: 'bar'
+        })
+    ],
+    additionalSynchronousFilters: [
+        createSynchronousFilter('foo', (operand) => {
+            return operand;
         }, [], {
             deprecated: 'x.y.z',
             alternative: 'bar'
