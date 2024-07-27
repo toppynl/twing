@@ -11,8 +11,14 @@ runTest({
             bar: 'bar from globals'
         }
     },
-    context: Promise.resolve({
+    synchronousEnvironmentOptions: {
+        globals: {
+            foo: 'foo from globals',
+            bar: 'bar from globals'
+        }
+    },
+    context: {
         bar: 'bar from context'
-    }),
+    },
     expectation: `foo from globals, bar from context`
 });

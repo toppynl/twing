@@ -1,12 +1,12 @@
-import {TwingNodeExecutor} from "../node-executor";
+import {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "../node-executor";
 import {TwingCheckToStringNode} from "../node/check-to-string";
-import {getTraceableMethod} from "../helpers/traceable-method";
+import {getSynchronousTraceableMethod, getTraceableMethod} from "../helpers/traceable-method";
 
 export const executeCheckToStringNode: TwingNodeExecutor<TwingCheckToStringNode> = (node, executionContext) => {
     const {template, environment, nodeExecutor: execute, sandboxed} = executionContext;
     const {value: valueNode} = node.children;
     const {sandboxPolicy} = environment;
-    
+
     return execute(valueNode, executionContext)
         .then((value) => {
             if (sandboxed) {
@@ -27,4 +27,26 @@ export const executeCheckToStringNode: TwingNodeExecutor<TwingCheckToStringNode>
 
             return value;
         });
+};
+
+export const executeCheckToStringNodeSynchronously: TwingSynchronousNodeExecutor<TwingCheckToStringNode> = (node, executionContext) => {
+    const {template, environment, nodeExecutor: execute, sandboxed} = executionContext;
+    const {value: valueNode} = node.children;
+    const {sandboxPolicy} = environment;
+
+    const value = execute(valueNode, executionContext);
+
+    if (sandboxed) {
+        const assertToStringAllowed = getSynchronousTraceableMethod((value: any) => {
+            if ((value !== null) && (typeof value === 'object')) {
+                sandboxPolicy.checkMethodAllowed(value, 'toString');
+            }
+
+            return value;
+        }, valueNode, template.source)
+
+        return assertToStringAllowed(value);
+    }
+
+    return value;
 };

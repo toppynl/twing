@@ -9,13 +9,13 @@ runTest({
 {{ null.bar() is defined ? 'KO' : 'OK' }}
 `
     },
-    context: Promise.resolve({
+    context: {
         foo: {
             bar: () => {
                 return 'foo.bar';
             }
         }
-    }),
+    },
     trimmedExpectation: `
 OK
 OK

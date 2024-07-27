@@ -5,10 +5,10 @@ runTest({
     templates: {
         "index.twig": `{% do 5 %}{{ foo }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: {
             toString: () => 'foo'
         }
-    }),
+    },
     trimmedExpectation: `foo`
 })

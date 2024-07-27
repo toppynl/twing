@@ -1,7 +1,7 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {createEnvironment} from "../../../../../main/lib/environment";
-import {createArrayLoader} from "../../../../../main/lib/loader/array";
+import {createEnvironment, createSynchronousEnvironment} from "../../../../../main/lib/environment";
+import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../main/lib/loader/array";
 
 class Test extends TestBase {
     getDescription() {
@@ -37,6 +37,19 @@ BAR`
                     foo: template
                 }
             });
+    }
+    
+    getSynchronousContext(): any {
+        const environment = createSynchronousEnvironment(
+            createSynchronousArrayLoader({
+                'foo.twig': `
+BAR`
+            })
+        );
+        
+        return {
+            foo: environment.loadTemplate('foo.twig')
+        }
     }
 }
 

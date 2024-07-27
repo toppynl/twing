@@ -2,16 +2,21 @@ import {runTest} from "../TestBase";
 import {stub} from "sinon";
 import {createSource} from "../../../../main/lib/source";
 import {resolve} from "path";
-import {createArrayLoader} from "../../../../main/lib/loader/array";
+import {createArrayLoader, createSynchronousArrayLoader} from "../../../../main/lib/loader/array";
 
 const loader = createArrayLoader({});
+const synchronousLoader = createSynchronousArrayLoader({});
 
-stub(loader, "getSource").resolves(createSource(resolve('foo/bar'), '{% spaceless %} 5 {% endspaceless %}'));
+const source = createSource(resolve('foo/bar'), '{% spaceless %} 5 {% endspaceless %}');
+
+stub(loader, "getSource").resolves(source);
+stub(synchronousLoader, "getSource").returns(source);
 
 runTest({
     description: '"spaceless" node source map',
     loader,
-    context: Promise.resolve({}),
+    synchronousLoader,
+    context: {},
     expectedSourceMapMappings: [{
         source: 'foo/bar',
         generatedLine: 1,

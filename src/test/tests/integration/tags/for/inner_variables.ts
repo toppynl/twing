@@ -13,7 +13,8 @@ class Test extends TestBase {
   {% for j in 0..2 %}
     {{k}}{% set k = k+1 %} {{ loop.parent.loop.index }}
   {% endfor %}
-{% endfor %}`
+{% endfor %}
+{{k}}`
         };
     }
 
@@ -25,7 +26,7 @@ class Test extends TestBase {
         3 2
       4 2
       5 2
-`;
+  6`;
     }
 
 

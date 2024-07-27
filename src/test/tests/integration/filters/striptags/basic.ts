@@ -15,7 +15,7 @@ content
 <div>content</div>
 <div><span>content</span></div>
 `,
-    context: Promise.resolve({
+    context: {
         markup: createMarkup(('FoO'), "UTF-8")
-    })
+    }
 });

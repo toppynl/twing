@@ -30,7 +30,7 @@ runTest({
 0
 0
 `,
-    context: Promise.resolve({
+    context:{
         array: []
-    })
+    }
 });

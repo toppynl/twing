@@ -20,6 +20,11 @@ runTest({
             level: 3
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            level: 3
+        }
+    },
     expectation: `
 Some items are even in array
 Some items are even in object

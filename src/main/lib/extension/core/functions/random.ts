@@ -1,7 +1,7 @@
 import {iconv} from "../../../helpers/iconv";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 const runes = require('runes');
 const mt_rand = require('locutus/php/math/mt_rand');
@@ -85,4 +85,69 @@ export const random: TwingCallable = (executionContext, values: any | null, max:
     };
 
     return Promise.resolve(_do());
+}
+
+export const randomSynchronously: TwingSynchronousCallable = (executionContext, values: any | null, max: number | null): any => {
+    const {environment} = executionContext;
+    const {charset} = environment;
+
+    if (values === null) {
+        return max === null ? mt_rand() : mt_rand(0, max);
+    }
+
+    if (typeof values === 'number') {
+        let min: number;
+
+        if (max === null) {
+            if (values < 0) {
+                max = 0;
+                min = values;
+            }
+            else {
+                max = values;
+                min = 0;
+            }
+        }
+        else {
+            min = values;
+        }
+
+        return mt_rand(min, max);
+    }
+
+    if (typeof values === 'string') {
+        values = Buffer.from(values);
+    }
+
+    if (Buffer.isBuffer(values)) {
+        if (values.toString() === '') {
+            return '';
+        }
+
+        if (charset !== 'UTF-8') {
+            values = iconv(charset, 'UTF-8', values);
+        }
+
+        // unicode split
+        values = runes(values.toString());
+
+        if (charset !== 'UTF-8') {
+            values = values.map((value: string) => {
+                return iconv('UTF-8', charset, Buffer.from(value)).toString();
+            });
+        }
+    }
+    else if (isTraversable(values)) {
+        values = iteratorToArray(values);
+    }
+
+    if (!Array.isArray(values)) {
+        return values;
+    }
+
+    if (values.length < 1) {
+        throw new Error('The random function cannot pick from an empty array.');
+    }
+
+    return values[array_rand(values, 1)];
 }

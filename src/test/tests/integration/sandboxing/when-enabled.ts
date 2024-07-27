@@ -6,11 +6,11 @@ runTest({
     templates: {
         "index.twig": `{% do 5 %}{{ foo }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: {
             toString: () => 'foo'
         }
-    }),
+    },
     expectedErrorMessage: `TwingRuntimeError: Tag "do" is not allowed in "index.twig" at line 1, column 4.`,
     sandboxed: true,
     sandboxPolicy: createSandboxSecurityPolicy()

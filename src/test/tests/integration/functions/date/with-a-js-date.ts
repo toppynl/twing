@@ -8,8 +8,8 @@ runTest({
 {{ date|date(timezone="UTC") }}
 `
     },
-    context: Promise.resolve({
+    context: {
         date: new Date('2000-01-01T00:00:00Z') // this is UTC
-    }),
+    },
     trimmedExpectation: 'January 1, 2000 00:00'
 });

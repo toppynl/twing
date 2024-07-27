@@ -1,5 +1,6 @@
-import {isEmpty} from "../tests/is-empty";
+import {isEmpty, isEmptySynchronously} from "../tests/is-empty";
 import type {TwingCallable} from "../../../callable-wrapper";
+import {TwingSynchronousCallable} from "../../../callable-wrapper";
 
 export const defaultFilter: TwingCallable<[
     value: any,
@@ -14,4 +15,15 @@ export const defaultFilter: TwingCallable<[
                 return Promise.resolve(value);
             }
         });
+};
+
+export const defaultFilterSynchronously: TwingSynchronousCallable<[
+    value: any,
+    defaultValue: any | null
+]> = (executionContext, value, defaultValue) => {
+    if (isEmptySynchronously(executionContext, value)) {
+        return defaultValue;
+    }
+
+    return value;
 };

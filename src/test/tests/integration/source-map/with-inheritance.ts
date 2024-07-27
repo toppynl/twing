@@ -11,7 +11,7 @@ Child content + {{ parent() }} + something after
 Parent content
 {%- endblock %}`
     },
-    context: Promise.resolve({}),
+    context: {},
     expectedSourceMapMappings: [
         {source: 'index.twig', generatedLine: 1, generatedColumn: 0, originalLine: 3, originalColumn: 0, name: 'text'},
         {source: 'parent.twig', generatedLine: 1, generatedColumn: 16, originalLine: 2, originalColumn: 0, name: 'text'},

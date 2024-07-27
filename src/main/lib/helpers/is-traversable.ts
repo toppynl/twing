@@ -1,3 +1,5 @@
+import {isPlainObject} from "./is-plain-object";
+
 /**
  * Check that an object is traversable in the sense of PHP,
  * i.e. implements PHP Traversable interface
@@ -6,6 +8,10 @@
  * @returns {boolean}
  */
 export function isTraversable(value: any) {
+    if (isPlainObject(value)) {
+        return true;
+    }
+    
     if ((value !== null) && (value !== undefined)) {
         if (typeof value === 'string') {
             return false;

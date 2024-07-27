@@ -1,20 +1,39 @@
 import {
     TwingCallableWrapperOptions,
     TwingCallableArgument,
-    TwingCallable, TwingCallableWrapper, createCallableWrapper
+    TwingCallable,
+    TwingCallableWrapper,
+    createCallableWrapper,
+    TwingSynchronousCallableWrapper,
+    TwingSynchronousCallable, createSynchronousCallableWrapper
 } from "./callable-wrapper";
 
 export interface TwingFunction extends TwingCallableWrapper {
     
 }
 
-export const createFunction = <Callable extends TwingCallable>(
+export interface TwingSynchronousFunction extends TwingSynchronousCallableWrapper {
+
+}
+
+export const createFunction = (
     name: string, 
-    callable: Callable, 
+    callable: TwingCallable, 
     acceptedArguments: TwingCallableArgument[], 
     options: TwingCallableWrapperOptions = {}
 ): TwingFunction => {
     const callableWrapper = createCallableWrapper(name, callable, acceptedArguments, options);
     
+    return callableWrapper;
+};
+
+export const createSynchronousFunction = (
+    name: string,
+    callable: TwingSynchronousCallable,
+    acceptedArguments: TwingCallableArgument[],
+    options: TwingCallableWrapperOptions = {}
+): TwingSynchronousFunction => {
+    const callableWrapper = createSynchronousCallableWrapper(name, callable, acceptedArguments, options);
+
     return callableWrapper;
 };

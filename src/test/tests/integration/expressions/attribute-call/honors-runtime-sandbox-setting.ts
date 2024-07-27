@@ -32,7 +32,7 @@ for (const [name, context, errorMessage] of testCases) {
             templates: {
                 "index.twig": `{{ foo.bar }}`
             },
-            context: Promise.resolve(context),
+            context,
             trimmedExpectation: sandboxed ? undefined : 'bar',
             expectedErrorMessage: sandboxed ? errorMessage : undefined,
             sandboxed,

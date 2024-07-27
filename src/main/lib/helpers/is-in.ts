@@ -31,13 +31,6 @@ export function isIn(value: number | string | object | TwingMarkup, compare: str
                 break;
             }
         }
-    } else if (typeof compare === 'object') {
-        for (const key in compare) {
-            if (compareHelper((compare as any)[key], value)) {
-                result = true;
-                break;
-            }
-        }
     }
 
     return result;

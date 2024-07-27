@@ -5,12 +5,12 @@ runTest({
     templates: {
         "index.twig": `{{ foo.bar }}`
     },
-    context: Promise.resolve({
+    context: {
         foo: new (class {
             get bar() {
                 return 'foo.bar';
             }
         })
-    }),
+    },
     trimmedExpectation: 'foo.bar'
 });

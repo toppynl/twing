@@ -1,6 +1,6 @@
 import {runTest} from "../../TestBase";
-import {createEnvironment} from "../../../../../main/lib/environment";
-import {createArrayLoader} from "../../../../../main/lib/loader/array";
+import {createEnvironment, createSynchronousEnvironment} from "../../../../../main/lib/environment";
+import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../main/lib/loader/array";
 
 runTest({
     description: '"extends" tag with template instance',
@@ -32,7 +32,15 @@ BARFOO
                 }
             })
         );
-    })
+    }),
+    synchronousContext: {
+        foo: createSynchronousEnvironment(
+            createSynchronousArrayLoader({
+                'foo.twig': `
+{% block content %}BAR{% endblock %}`
+            })
+        ).loadTemplate('foo.twig')
+    }
 });
 
 runTest({
@@ -65,5 +73,13 @@ BARFOO
                 };
             })
         );
-    })
+    }),
+    synchronousContext: {
+        foo: createSynchronousEnvironment(
+            createSynchronousArrayLoader({
+                'foo.twig': `
+{% block content %}BAR{% endblock %}`
+            })
+        ).loadTemplate('foo.twig')
+    }
 });

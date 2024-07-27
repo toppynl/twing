@@ -31,7 +31,7 @@ for (const [name, context, errorMessage] of testCases) {
             templates: {
                 "index.twig": `{{ foo.bar }}`
             },
-            context: Promise.resolve(context),
+            context,
             trimmedExpectation: strictVariables ? undefined : '',
             expectedErrorMessage: strictVariables ? errorMessage : undefined,
             strict: strictVariables,

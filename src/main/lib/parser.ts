@@ -25,7 +25,7 @@ import {
 import {TwingArrayNode, createArrayNode} from "./node/expression/array";
 import {createMethodCallNode} from "./node/expression/method-call";
 import {createHashNode, TwingHashNode} from "./node/expression/hash";
-import {TwingTest} from "./test";
+import {TwingSynchronousTest, TwingTest} from "./test";
 import {createNotNode} from "./node/expression/unary/not";
 import {createConditionalNode} from "./node/expression/conditional";
 import {TwingOperator} from "./operator";
@@ -35,9 +35,9 @@ import {createFunctionNode} from "./node/expression/call/function";
 import {createFilterNode, TwingFilterNode} from "./node/expression/call/filter";
 import type {TwingTraitNode} from "./node/trait";
 import {pushToRecord} from "./helpers/record";
-import {TwingFilter} from "./filter";
-import {TwingFunction} from "./function";
-import {TwingCallableWrapper} from "./callable-wrapper";
+import {TwingFilter, TwingSynchronousFilter} from "./filter";
+import {TwingFunction, TwingSynchronousFunction} from "./function";
+import {TwingCallableWrapper, TwingSynchronousCallableWrapper} from "./callable-wrapper";
 import {TwingBlockNode} from "./node/block";
 import {getFunction} from "./helpers/get-function";
 import {getFilter} from "./helpers/get-filter";
@@ -159,7 +159,7 @@ export type StackEntry = {
 };
 
 const getNames = (
-    map: Map<string, TwingCallableWrapper>
+    map: Map<string, TwingCallableWrapper | TwingSynchronousCallableWrapper>
 ): Array<string> => {
     return [...map.values()].map(({name}) => name);
 };
@@ -169,9 +169,9 @@ export const createParser = (
     binaryOperators: Array<TwingOperator>,
     additionalTagHandlers: Array<TwingTagHandler>,
     visitors: Array<TwingNodeVisitor>,
-    filters: Map<string, TwingFilter>,
-    functions: Map<string, TwingFunction>,
-    tests: Map<string, TwingTest>,
+    filters: Map<string, TwingFilter | TwingSynchronousFilter>,
+    functions: Map<string, TwingFunction | TwingSynchronousFunction>,
+    tests: Map<string, TwingTest | TwingSynchronousTest>,
     options?: TwingParserOptions
 ): TwingParser => {
     const strict = options?.strict !== undefined ? options.strict : true;

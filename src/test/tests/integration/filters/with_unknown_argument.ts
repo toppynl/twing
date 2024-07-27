@@ -1,5 +1,5 @@
 import {runTest} from "../TestBase";
-import {createFilter} from "../../../../main/lib/filter";
+import {createFilter, createSynchronousFilter} from "../../../../main/lib/filter";
 
 runTest({
     description: 'filter with unknown argument',
@@ -11,6 +11,11 @@ runTest({
     additionalFilters: [
         createFilter('foo', () => {
             return Promise.resolve('wrong');
+        }, [])
+    ],
+    additionalSynchronousFilters: [
+        createSynchronousFilter('foo', () => {
+            return 'wrong';
         }, [])
     ],
     expectedErrorMessage: 'TwingRuntimeError: Unknown argument "foo" for filter "foo()" in "index.twig" at line 2, column 12.'
@@ -26,6 +31,11 @@ runTest({
     additionalFilters: [
         createFilter('foo', () => {
             return Promise.resolve('wrong');
+        }, [])
+    ],
+    additionalSynchronousFilters: [
+        createSynchronousFilter('foo', () => {
+            return 'wrong';
         }, [])
     ],
     expectedErrorMessage: 'TwingRuntimeError: Unknown arguments "foo", "bar" for filter "foo()" in "index.twig" at line 2, column 12.'

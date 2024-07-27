@@ -1,6 +1,6 @@
 import {DateTime} from "luxon";
-import {createDate} from "../functions/date";
-import {TwingCallable} from "../../../callable-wrapper";
+import {createDateTime, createDateTimeSynchronously} from "../functions/date";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 /**
  * Returns a new date object modified.
@@ -23,21 +23,46 @@ export const dateModify: TwingCallable = (
     const {environment} = executionContext;
     const {timezone: defaultTimezone} = environment;
 
-    return createDate(defaultTimezone, date, null)
+    return createDateTime(defaultTimezone, date, null)
         .then((dateTime) => {
-            let regExp = new RegExp(/(\+|-)([0-9])(.*)/);
-            let parts = regExp.exec(modifier)!;
+    let regExp = new RegExp(/(\+|-)([0-9])(.*)/);
+    let parts = regExp.exec(modifier)!;
 
-            let operator: string = parts[1];
-            let operand: number = Number.parseInt(parts[2]);
-            let unit: string = parts[3].trim();
+    let operator: string = parts[1];
+    let operand: number = Number.parseInt(parts[2]);
+    let unit: string = parts[3].trim();
 
-            let duration: any = {};
+    let duration: any = {};
 
-            duration[unit] = operator === '-' ? -operand : operand;
+    duration[unit] = operator === '-' ? -operand : operand;
 
-            dateTime = dateTime.plus(duration);
+    dateTime = dateTime.plus(duration);
 
-            return dateTime;
+    return dateTime;
         });
+};
+
+export const dateModifySynchronously: TwingSynchronousCallable = (
+    executionContext,
+    date: Date | DateTime | string,
+    modifier: string
+): DateTime => {
+    const {environment} = executionContext;
+    const {timezone: defaultTimezone} = environment;
+
+    let dateTime = createDateTimeSynchronously(defaultTimezone, date, null);
+    let regExp = new RegExp(/(\+|-)([0-9])(.*)/);
+    let parts = regExp.exec(modifier)!;
+
+    let operator: string = parts[1];
+    let operand: number = Number.parseInt(parts[2]);
+    let unit: string = parts[3].trim();
+
+    let duration: any = {};
+
+    duration[unit] = operator === '-' ? -operand : operand;
+
+    dateTime = dateTime.plus(duration);
+
+    return dateTime;
 };

@@ -14,8 +14,8 @@ runTest({
         'index.twig': `
 {% autoescape "bar" %}{{ foo }}{% endautoescape %}`
     },
-    context: Promise.resolve({
+    context: {
         foo: 'html'
-    }),
+    },
     expectedErrorMessage: 'TwingRuntimeError: Invalid escaping strategy "bar" (valid ones: css, custom, html, html_attr, js, url) in "index.twig" at line 2, column 26.'
 });

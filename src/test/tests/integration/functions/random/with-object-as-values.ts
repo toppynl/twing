@@ -21,9 +21,9 @@ runTest({
 {{ random1 == foo }}
 `
     },
-    context: Promise.resolve({
+    context: {
        foo: new (class {}) 
-    }),
+    },
     trimmedExpectation: `
 1
 `

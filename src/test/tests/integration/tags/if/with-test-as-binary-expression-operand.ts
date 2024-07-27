@@ -9,8 +9,8 @@ runTest({
     },
     expectation: `
 true`,
-    context: Promise.resolve({
+    context: {
         a: true,
         b: true
-    })
+    }
 });

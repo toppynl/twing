@@ -10,9 +10,9 @@ runTest({
 {{ jsMap|length }}
 `
     },
-    context: Promise.resolve({
+    context: {
         jsMap: new Map([[0, 1], [1, 2]])
-    }),
+    },
     expectation: `
 0
 1

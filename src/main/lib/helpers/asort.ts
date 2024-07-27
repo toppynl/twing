@@ -11,7 +11,7 @@ export const asort = async (map: Map<any, any>, compareFunction?: (a: any, b: an
     const sortedMap = new Map();
     const keys: Array<any> = ([] as Array<any>).fill(null, 0, map.size);
     const values = [...map.values()];
-    
+
     let sortedValues: Array<any>;
 
     if (compareFunction) {
@@ -20,7 +20,38 @@ export const asort = async (map: Map<any, any>, compareFunction?: (a: any, b: an
     else {
         sortedValues = values.sort();
     }
-    
+
+    for (const [key, value] of map) {
+        const index = sortedValues.indexOf(value);
+
+        keys[index] = key;
+    }
+
+    for (const key of keys) {
+        sortedMap.set(key, map.get(key));
+    }
+
+    map.clear();
+
+    for (const [key, value] of sortedMap) {
+        map.set(key, value);
+    }
+}
+
+export const asortSynchronously = (map: Map<any, any>, compareFunction?: (a: any, b: any) => -1 | 0 | 1) => {
+    const sortedMap = new Map();
+    const keys: Array<any> = ([] as Array<any>).fill(null, 0, map.size);
+    const values = [...map.values()];
+
+    let sortedValues: Array<any>;
+
+    if (compareFunction) {
+        sortedValues = values.sort(compareFunction);
+    }
+    else {
+        sortedValues = values.sort();
+    }
+
     for (const [key, value] of map) {
         const index = sortedValues.indexOf(value);
 

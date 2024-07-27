@@ -1,4 +1,5 @@
 import type {TwingFunction} from "../function";
+import {TwingSynchronousFunction} from "../function";
 
 /**
  * Get a function by name.
@@ -6,10 +7,10 @@ import type {TwingFunction} from "../function";
  * @param {string} name         function name
  * @returns {TwingFunction}     A TwingFunction instance or null if the function does not exist
  */
-export const getFunction = (
-    functions: Map<string, TwingFunction>,
+export const getFunction = <Function extends TwingFunction | TwingSynchronousFunction>(
+    functions: Map<string, Function>,
     name: string
-): TwingFunction | null => {
+): Function | null => {
     const result = functions.get(name);
 
     if (result) {

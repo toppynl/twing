@@ -9,8 +9,8 @@ runTest({
 {% endautoescape %}
 `
     },
-    context: Promise.resolve({
+    context: {
         strategy: 'html'
-    }),
+    },
     expectedErrorMessage: 'TwingParsingError: An escaping strategy must be a string or false in "index.twig" at line 2, column 15.'
 })

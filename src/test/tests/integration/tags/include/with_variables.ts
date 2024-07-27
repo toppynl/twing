@@ -2,6 +2,10 @@ import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
 
 class Test extends TestBase {
+    getDescription(): string {
+        return '"include" tag with variables';
+    }
+
     getTemplates() {
         return {
             'foo.twig': `{{ foo }}

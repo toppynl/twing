@@ -1,6 +1,6 @@
 import TestBase, {runTest} from "../../TestBase";
 import {createIntegrationTest} from "../../test";
-import {TwingEnvironmentOptions} from "../../../../../main/lib/environment";
+import {TwingEnvironmentOptions, TwingSynchronousEnvironmentOptions} from "../../../../../main/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -25,6 +25,13 @@ class Test extends TestBase {
     }
     
     getEnvironmentOptions(): TwingEnvironmentOptions {
+        return {
+            dateFormat: 'Y-m-d',
+            dateIntervalFormat: '%d days %h hours'
+        };
+    }
+
+    getSynchronousEnvironmentOptions(): TwingSynchronousEnvironmentOptions {
         return {
             dateFormat: 'Y-m-d',
             dateIntervalFormat: '%d days %h hours'

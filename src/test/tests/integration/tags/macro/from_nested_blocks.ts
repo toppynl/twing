@@ -17,7 +17,7 @@ runTest({
 {% endmacro %}
 `
     },
-    context: Promise.resolve({}),
+    context: {},
     trimmedExpectation: '',
     expectedErrorMessage: 'TwingParsingError: Unknown function "linput" in "index.twig" at line 6, column 13.'
 });

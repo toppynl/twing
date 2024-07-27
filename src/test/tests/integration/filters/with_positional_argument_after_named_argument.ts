@@ -1,5 +1,5 @@
 import {runTest} from "../TestBase";
-import {createFilter} from "../../../../main/lib/filter";
+import {createFilter, createSynchronousFilter} from "../../../../main/lib/filter";
 
 runTest({
     description: 'filter with positional argument after named argument',
@@ -11,6 +11,17 @@ runTest({
     additionalFilters: [
         createFilter('foo', () => {
             return Promise.resolve('wrong');
+        }, [
+            {
+                name: 'bar'
+            }
+        ], {
+            is_variadic: true
+        })
+    ],
+    additionalSynchronousFilters: [
+        createSynchronousFilter('foo', () => {
+            return 'wrong';
         }, [
             {
                 name: 'bar'

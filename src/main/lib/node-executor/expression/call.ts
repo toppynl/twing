@@ -1,8 +1,8 @@
-import type {TwingNodeExecutor} from "../../node-executor";
+import type {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "../../node-executor";
 import type {TwingBaseCallNode} from "../../node/expression/call";
-import {TwingCallableArgument, TwingCallableWrapper} from "../../callable-wrapper";
+import {TwingCallableArgument, TwingCallableWrapper, TwingSynchronousCallableWrapper} from "../../callable-wrapper";
 import {createRuntimeError} from "../../error/runtime";
-import {getTraceableMethod} from "../../helpers/traceable-method";
+import {getSynchronousTraceableMethod, getTraceableMethod} from "../../helpers/traceable-method";
 import {TwingArrayNode} from "../../node/expression/array";
 import {TwingBaseNode} from "../../node";
 import {createConstantNode, TwingConstantNode} from "../../node/expression/constant";
@@ -11,7 +11,7 @@ import {getKeyValuePairs} from "../../helpers/get-key-value-pairs";
 import {getTest} from "../../helpers/get-test";
 import {getFunction} from "../../helpers/get-function";
 import {getFilter} from "../../helpers/get-filter";
-import type {TwingTemplate} from "../../template";
+import type {TwingSynchronousTemplate, TwingTemplate} from "../../template";
 
 const array_merge = require('locutus/php/array/array_merge');
 const snakeCase = require('snake-case');
@@ -22,7 +22,7 @@ const normalizeName = (name: string) => {
 
 const getArguments = (
     node: TwingBaseCallNode<any>,
-    template: TwingTemplate,
+    template: TwingTemplate | TwingSynchronousTemplate,
     argumentsNode: TwingArrayNode,
     acceptedArguments: Array<TwingCallableArgument>,
     isVariadic: boolean
@@ -184,3 +184,58 @@ export const executeCallNode: TwingNodeExecutor<TwingBaseCallNode<any>> = async 
         return value;
     });
 };
+
+export const executeCallNodeSynchronously: TwingSynchronousNodeExecutor<TwingBaseCallNode<any>> = (node, executionContext) => {
+    const {type} = node;
+    const {template, environment, nodeExecutor: execute} = executionContext
+    const {operatorName} = node.attributes;
+
+    let callableWrapper: TwingSynchronousCallableWrapper | null;
+
+    switch (type) {
+        case "filter":
+            callableWrapper = getFilter(environment.filters, operatorName);
+            break;
+
+        case "function":
+            callableWrapper = getFunction(environment.functions, operatorName);
+            break;
+
+        // for some reason, using `case "test"` makes the compiler assume that callableWrapper is used
+        // before it is assigned a value; this is probably a bug of the compiler
+        default:
+            callableWrapper = getTest(environment.tests, operatorName);
+            break;
+    }
+
+    if (callableWrapper === null) {
+        throw createRuntimeError(`Unknown ${type} "${operatorName}".`, node, template.source);
+    }
+
+    const {operand, arguments: callArguments} = node.children;
+
+    const argumentNodes = getArguments(
+        node,
+        template,
+        callArguments,
+        callableWrapper.acceptedArguments,
+        callableWrapper.isVariadic
+    );
+
+    const actualArguments: Array<any> = [];
+
+    actualArguments.push(...callableWrapper!.nativeArguments);
+
+    if (operand) {
+        actualArguments.push(execute(operand, executionContext));
+    }
+    
+    const providedArguments = argumentNodes.map((node) => execute(node, executionContext));
+
+    actualArguments.push(...providedArguments);
+
+    const traceableCallable = getSynchronousTraceableMethod(callableWrapper.callable, node, template.source);
+
+    return traceableCallable(executionContext, ...actualArguments);
+};
+

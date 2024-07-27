@@ -1,6 +1,6 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
-import {TwingCallable} from "../../../callable-wrapper";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 /**
  * Joins the values to a string.
@@ -63,4 +63,43 @@ export const join: TwingCallable<[
     };
 
     return Promise.resolve(_do());
+};
+
+export const joinSynchronously: TwingSynchronousCallable<[
+    value: any,
+    glue: string,
+    and: string | null
+], string> = (_executionContext, value, glue, and) => {
+    if ((value == null) || (value === undefined)) {
+        return '';
+    }
+
+    if (isTraversable(value)) {
+        value = iteratorToArray(value);
+
+        // this is ugly, but we have to ensure that each element of the array is rendered as PHP would render it
+        const safeValue = value.map((item: any) => {
+            if (typeof item === 'boolean') {
+                return (item === true) ? '1' : ''
+            }
+
+            if (Array.isArray(item)) {
+                return 'Array';
+            }
+
+            return item;
+        });
+
+        if (and === null || and === glue) {
+            return safeValue.join(glue);
+        }
+
+        if (safeValue.length === 1) {
+            return safeValue[0];
+        }
+
+        return safeValue.slice(0, -1).join(glue) + and + safeValue[safeValue.length - 1];
+    }
+
+    return '';
 };

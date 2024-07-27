@@ -6,8 +6,8 @@ runTest({
         "index.twig": `{% for key, value in _context %}{{ key }}{{ value }}{% endfor %}`
     },
     expectation: `foofoo valuebarbar value_parent[object Object]`,
-    context: Promise.resolve({
+    context: {
         foo: 'foo value',
         bar: 'bar value'
-    })
+    }
 });

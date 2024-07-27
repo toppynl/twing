@@ -12,5 +12,10 @@ runTest({
             level: 2
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            level: 2
+        }
+    },
     expectedErrorMessage: `TwingParsingError: Unexpected token "name" of value "has" ("end of print statement" expected) in "index.twig" at line 2, column 7.`
 });

@@ -12,8 +12,8 @@ runTest({
 1
 0
 `,
-    context: Promise.resolve({
+    context: {
         foo: {},
         bar: {}
-    })
+    }
 });

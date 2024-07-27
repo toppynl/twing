@@ -8,13 +8,13 @@ runTest({
 {{ dump(function2) }}
 `
     },
-    context: Promise.resolve({
+    context: {
         function: () => {
         },
         function2: (value: any) => {
             return value;
         }
-    }),
+    },
     trimmedExpectation: `
 object(Closure) (0) {}
 

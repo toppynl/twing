@@ -8,6 +8,12 @@ runTest({
             level: 2
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            strict: true,
+            level: 2
+        }
+    },
     templates: {
         'index.twig': '{{ 5 is unknown }}'
     },
@@ -17,6 +23,12 @@ runTest({
 runTest({
     description: 'Unknown two-words test throws a parsing error on strict mode',
     environmentOptions: {
+        parserOptions: {
+            strict: true,
+            level: 2
+        }
+    },
+    synchronousEnvironmentOptions: {
         parserOptions: {
             strict: true,
             level: 2

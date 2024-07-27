@@ -7,7 +7,7 @@ runTest({
         "index.twig": '{% autoescape %}{{ foo|escape("html") }}{% endautoescape %}'
     },
     expectation: '<br/>',
-    context: Promise.resolve({
+    context: {
         foo: createMarkup('<br/>', "UTF-8")
-    })
+    }
 });

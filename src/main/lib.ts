@@ -18,12 +18,12 @@ export {createTemplateLoadingError} from "./lib/error/loader";
 export type {
     TwingFilesystemLoader, TwingFilesystemLoaderFilesystem, TwingFilesystemLoaderFilesystemStats
 } from "./lib/loader/filesystem";
-export type {TwingArrayLoader} from "./lib/loader/array";
+export type {TwingArrayLoader, TwingSynchronousArrayLoader} from "./lib/loader/array";
 export type {TwingChainLoader} from "./lib/loader/chain";
-export type {TwingLoader} from "./lib/loader";
+export type {TwingLoader, TwingSynchronousLoader} from "./lib/loader";
 
-export {createFilesystemLoader} from "./lib/loader/filesystem";
-export {createArrayLoader} from "./lib/loader/array";
+export {createFilesystemLoader, createSynchronousFilesystemLoader} from "./lib/loader/filesystem";
+export {createArrayLoader, createSynchronousArrayLoader} from "./lib/loader/array";
 export {createChainLoader} from "./lib/loader/chain";
 
 // markup
@@ -233,7 +233,7 @@ export {createEmbedNode} from "./lib/node/include/embed";
 export {createIncludeNode} from "./lib/node/include/include";
 
 // node executors
-export {executeNode, type TwingNodeExecutor} from "./lib/node-executor";
+export {executeNode, executeNodeSynchronously, type TwingNodeExecutor, type TwingSynchronousNodeExecutor} from "./lib/node-executor";
 
 // tag handlers
 export type {TwingTagHandler, TwingTokenParser} from "./lib/tag-handler";
@@ -299,7 +299,7 @@ export interface TwingTemplate {
     render: import("./lib/template").TwingTemplate["render"];
 }
 
-export {createEnvironment} from "./lib/environment";
+export {createEnvironment, createSynchronousEnvironment} from "./lib/environment";
 export {createExtensionSet} from "./lib/extension-set";
 export {createFilter} from "./lib/filter";
 export {createFunction} from "./lib/function";

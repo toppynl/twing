@@ -14,9 +14,9 @@ runTest({
 {% endautoescape %}
 `
     },
-    context: Promise.resolve({
+    context: {
         someVar: '<br />'
-    }),
+    },
     trimmedExpectation: `
 <br />
 &lt;br /&gt;

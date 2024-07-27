@@ -1,5 +1,5 @@
 import {runTest} from "../TestBase";
-import {createFilter} from "../../../../main/lib/filter";
+import {createFilter, createSynchronousFilter} from "../../../../main/lib/filter";
 
 runTest({
     description: 'variadic filter',
@@ -14,6 +14,13 @@ runTest({
     additionalFilters: [
         createFilter('variadic', (_executionContext, operand: string, ...values: Array<number>) => {
             return Promise.resolve(`${operand}=>${values.join(',')}`);
+        }, [], {
+            is_variadic: true
+        })
+    ],
+    additionalSynchronousFilters: [
+        createSynchronousFilter('variadic', (_executionContext, operand: string, ...values: Array<number>) => {
+            return `${operand}=>${values.join(',')}`;
         }, [], {
             is_variadic: true
         })

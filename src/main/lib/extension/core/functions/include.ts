@@ -1,11 +1,11 @@
-import {iteratorToMap} from "../../../helpers/iterator-to-map";
-import {mergeIterables} from "../../../helpers/merge-iterables";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {isPlainObject} from "../../../helpers/is-plain-object";
-import {createContext} from "../../../context";
+import {createContext, TwingContext2} from "../../../context";
 import {createMarkup, TwingMarkup} from "../../../markup";
-import type {TwingTemplate} from "../../../template";
-import type {TwingCallable} from "../../../callable-wrapper";
+import type {TwingSynchronousTemplate, TwingTemplate} from "../../../template";
+import type {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
+import {iterableToMap, iteratorToMap} from "../../../helpers/iterator-to-map";
+import {mergeIterables} from "../../../helpers/merge-iterables";
 
 /**
  * Renders a template.
@@ -78,7 +78,7 @@ export const include: TwingCallable<[
             if (template) {
                 return template.execute(
                     environment,
-                    createContext(variables),
+                    createContext(iterableToMap(variables)),
                     new Map(),
                     outputBuffer,
                     {
@@ -99,4 +99,86 @@ export const include: TwingCallable<[
 
             return createMarkup(result, environment.charset);
         });
+}
+
+export const includeSynchronously: TwingSynchronousCallable<[
+    templates: string | TwingSynchronousTemplate | null | Array<string | TwingSynchronousTemplate | null>,
+    variables: TwingContext2,
+    withContext: boolean,
+    ignoreMissing: boolean,
+    sandboxed: boolean
+]> = (
+    executionContext,
+    templates,
+    variables,
+    withContext,
+    ignoreMissing,
+    sandboxed
+): TwingMarkup => {
+    const {
+        template,
+        environment,
+        templateLoader,
+        context,
+        nodeExecutor,
+        outputBuffer,
+        sourceMapRuntime,
+        strict
+    } = executionContext;
+    
+    if (!isPlainObject(variables) && !isTraversable(variables)) {
+        const isVariablesNullOrUndefined = variables === null || variables === undefined;
+
+        throw new Error(`Variables passed to the "include" function or tag must be iterable, got "${!isVariablesNullOrUndefined ? typeof variables : variables}".`);
+    }
+    
+    variables = iteratorToMap(variables);
+
+    if (withContext) {
+        variables = new Map([
+            ...context.entries(),
+            ...variables.entries()
+        ]);
+    }
+
+    if (!Array.isArray(templates)) {
+        templates = [templates];
+    }
+
+    const resolveTemplate = (templates: Array<string | TwingSynchronousTemplate | null>): TwingSynchronousTemplate | null => {
+        try {
+            return template.loadTemplate(executionContext, templates);
+        } catch (error) {
+            if (!ignoreMissing) {
+                throw error;
+            }
+            else {
+                return null;
+            }
+        }
+    };
+
+    const resolvedTemplate = resolveTemplate(templates);
+
+    outputBuffer.start();
+
+    if (resolvedTemplate) {
+        resolvedTemplate.execute(
+            environment,
+            variables,
+            new Map(),
+            outputBuffer,
+            {
+                nodeExecutor,
+                sandboxed,
+                sourceMapRuntime: sourceMapRuntime || undefined,
+                strict,
+                templateLoader
+            }
+        );
+    }
+            
+    const result = outputBuffer.getAndClean();
+
+    return createMarkup(result, environment.charset);
 }

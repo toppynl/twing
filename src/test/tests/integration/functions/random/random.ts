@@ -10,6 +10,6 @@ runTest({
 {% if (value == "a") %}OK{% endif %}
 `
     },
-    context: Promise.resolve({}),
+    context: {},
     trimmedExpectation: `OKOK`
 });

@@ -10,9 +10,9 @@ runTest({
 {{ jsArray|length }}
 `
     },
-    context: Promise.resolve({
+    context: {
         jsArray: [1, 2]
-    }),
+    },
     expectation: `
 0
 1

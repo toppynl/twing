@@ -11,6 +11,11 @@ runTest({
             title: 'foo'
         }
     },
+    synchronousEnvironmentOptions: {
+        globals: {
+            title: 'foo'
+        }
+    },
     expectation: `foo`
 });
 
@@ -25,6 +30,11 @@ runTest({
             title: 'foo'
         }
     },
+    synchronousEnvironmentOptions: {
+        globals: {
+            title: 'foo'
+        }
+    },
     expectation: `bar`
 });
 
@@ -35,6 +45,11 @@ runTest({
         'foo': `{{ title }}`
     },
     environmentOptions: {
+        globals: {
+            title: 'foo'
+        }
+    },
+    synchronousEnvironmentOptions: {
         globals: {
             title: 'foo'
         }

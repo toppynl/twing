@@ -23,9 +23,9 @@ for (const [value, expectation] of owaspTestCases) {
             "index.twig": `{{ value|escape("css") == value ? "true" : "false" }}`
         },
         trimmedExpectation: `${expectation}`,
-        context: Promise.resolve({
+        context: {
             value
-        })
+        }
     });
 }
 
@@ -67,9 +67,9 @@ for (const key in specialCharacters) {
             "index.twig": `{{ key|escape("css") }}`
         },
         trimmedExpectation: `${value}`,
-        context: Promise.resolve({
+        context: {
             key
-        })
+        }
     });
 }
 

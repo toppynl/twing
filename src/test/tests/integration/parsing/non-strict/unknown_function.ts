@@ -8,6 +8,12 @@ runTest({
             level: 2
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            strict: false,
+            level: 2
+        }
+    },
     templates: {
         'index.twig': `
 {{ unknown() }}`

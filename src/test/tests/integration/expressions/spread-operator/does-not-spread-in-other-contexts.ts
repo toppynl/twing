@@ -12,5 +12,10 @@ runTest({
             level: 3
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            level: 3
+        }
+    },
     expectedErrorMessage: `TwingParsingError: Unexpected token "spread operator" of value "..." in "index.twig" at line 2, column 12.`
 })

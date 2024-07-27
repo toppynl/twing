@@ -1,6 +1,6 @@
 import {getFirstValue} from "../../../helpers/get-first-value";
-import {slice} from "./slice";
-import {TwingCallable} from "../../../callable-wrapper";
+import {slice, sliceSynchronously} from "./slice";
+import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 /**
  * Returns the last element of the item.
@@ -15,6 +15,14 @@ export const last: TwingCallable<[
 ]> = (executionContext, item) => {
     return slice(executionContext, item, -1, 1, false)
         .then((elements) => {
-            return typeof elements === 'string' ? elements : getFirstValue(elements);
+    return typeof elements === 'string' ? elements : getFirstValue(elements);
         });
+};
+
+export const lastSynchronously: TwingSynchronousCallable<[
+    item: any
+]> = (executionContext, item) => {
+    const elements = sliceSynchronously(executionContext, item, -1, 1, false)
+
+    return typeof elements === 'string' ? elements : getFirstValue(elements);
 };

@@ -1,7 +1,7 @@
-import type {TwingNodeExecutor} from "../../node-executor";
+import type {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "../../node-executor";
 import type {TwingBlockFunctionNode} from "../../node/expression/block-function";
-import {TwingTemplate} from "../../template";
-import {getTraceableMethod} from "../../helpers/traceable-method";
+import {TwingSynchronousTemplate, TwingTemplate} from "../../template";
+import {getSynchronousTraceableMethod, getTraceableMethod} from "../../helpers/traceable-method";
 
 export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = async (node, executionContext) => {
     const {
@@ -27,7 +27,8 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
         );
 
         resolveTemplate = loadTemplate(executionContext, templateName);
-    } else {
+    }
+    else {
         resolveTemplate = Promise.resolve(template)
     }
 
@@ -40,13 +41,14 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
                     ...executionContext,
                     context: context.clone()
                 }, blockName, blocks);
-            } else {
+            }
+            else {
                 const displayBlock = getTraceableMethod(templateOfTheBlock.displayBlock, node, template.source);
 
                 let useBlocks = templateNode === undefined;
 
                 outputBuffer.start();
-                
+
                 return displayBlock({
                     ...executionContext,
                     context: context.clone()
@@ -55,4 +57,57 @@ export const executeBlockFunction: TwingNodeExecutor<TwingBlockFunctionNode> = a
                 });
             }
         });
+};
+
+export const executeSynchronousBlockFunction: TwingSynchronousNodeExecutor<TwingBlockFunctionNode> = (node, executionContext) => {
+    const {
+        template,
+        context,
+        nodeExecutor: execute,
+        blocks,
+        outputBuffer
+    } = executionContext;
+    const {template: templateNode, name: blockNameNode} = node.children;
+
+    const blockName = execute(blockNameNode, executionContext);
+
+    let templateOfTheBlock: TwingSynchronousTemplate;
+
+    if (templateNode) {
+        const templateName = execute(templateNode, executionContext);
+
+        const loadTemplate = getSynchronousTraceableMethod(
+            template.loadTemplate,
+            templateNode,
+            template.source
+        );
+
+        templateOfTheBlock = loadTemplate(executionContext, templateName);
+    }
+    else {
+        templateOfTheBlock = template;
+    }
+
+    if (node.attributes.shouldTestExistence) {
+        const hasBlock = getSynchronousTraceableMethod(templateOfTheBlock.hasBlock, node, template.source);
+
+        return hasBlock({
+            ...executionContext,
+            context: new Map(context.entries())
+        }, blockName, blocks);
+    }
+    else {
+        const displayBlock = getSynchronousTraceableMethod(templateOfTheBlock.displayBlock, node, template.source);
+
+        let useBlocks = templateNode === undefined;
+
+        outputBuffer.start();
+
+        displayBlock({
+            ...executionContext,
+            context: new Map(context.entries())
+        }, blockName, useBlocks);
+        
+        return outputBuffer.getAndClean();
+    }
 };

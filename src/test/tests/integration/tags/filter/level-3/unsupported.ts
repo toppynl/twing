@@ -11,5 +11,10 @@ runTest({
             level: 3
         }
     },
+    synchronousEnvironmentOptions: {
+        parserOptions: {
+            level: 3
+        }
+    },
     expectedErrorMessage: 'TwingParsingError: Unknown "filter" tag in "index.twig" at line 1, column 4.'
 });

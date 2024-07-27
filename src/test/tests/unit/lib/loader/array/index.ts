@@ -1,5 +1,5 @@
 import * as tape from 'tape';
-import {createArrayLoader} from "../../../../../../main/lib/loader/array";
+import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../../main/lib/loader/array";
 
 tape('createArrayLoader', ({test}) => {
     test('resolve', async ({same, end}) => {
@@ -66,6 +66,76 @@ tape('createArrayLoader', ({test}) => {
 
         same(await loader.isFresh('foo', 0, null), true);
         same(await loader.isFresh('bar', 0, null), true);
+
+        end();
+    });
+});
+
+tape('createSynchronousArrayLoader', ({test}) => {
+    test('resolve', ({same, end}) => {
+        let loader = createSynchronousArrayLoader({
+            foo: 'bar',
+            bar: 'foo'
+        });
+
+        same(loader.resolve('foo', null), 'foo');
+        same(loader.resolve('bar', null), 'bar');
+
+        loader = createSynchronousArrayLoader({});
+
+        same(loader.resolve('foo', null), null);
+        same(loader.resolve('bar', null), null);
+
+        end();
+    });
+
+    test('getSourceContext', ({same, end}) => {
+        const loader = createSynchronousArrayLoader({});
+
+        same(loader.getSource('foo', null), null);
+
+        end();
+    });
+
+    test('resolve', async ({test}) => {
+        test('on found template', ({same, end}) => {
+            let loader = createSynchronousArrayLoader({
+                foo: 'bar',
+                bar: 'bar'
+            });
+
+            same(loader.resolve('foo', null), 'foo');
+            same(loader.resolve('bar', null), 'bar');
+
+            end();
+        });
+
+        test('returns null on missing template', ({same, end}) => {
+            const loader = createSynchronousArrayLoader({});
+
+            same(loader.resolve('foo', null), null);
+
+            end();
+        });
+    });
+
+    test('setTemplate', ({same, end}) => {
+        const loader = createSynchronousArrayLoader({});
+
+        loader.setTemplate('foo', 'bar');
+
+        same((loader.getSource('foo', null))?.code, 'bar');
+
+        end();
+    });
+
+    test('isFresh', ({same, end}) => {
+        const loader = createSynchronousArrayLoader({
+            foo: 'bar'
+        });
+
+        same(loader.isFresh('foo', 0, null), true);
+        same(loader.isFresh('bar', 0, null), true);
 
         end();
     });

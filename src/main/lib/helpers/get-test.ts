@@ -1,4 +1,5 @@
 import type {TwingTest} from "../test";
+import {TwingSynchronousTest} from "../test";
 
 /**
  * Gets a test by name.
@@ -6,10 +7,10 @@ import type {TwingTest} from "../test";
  * @param {string} name The test name
  * @returns {TwingTest} A MyTest instance or null if the test does not exist
  */
-export const getTest = (
-    tests: Map<string, TwingTest>,
+export const getTest = <Test extends TwingTest | TwingSynchronousTest>(
+    tests: Map<string, Test>,
     name: string
-): TwingTest | null => {
+): Test | null => {
     const result = tests.get(name);
 
     if (result) {

@@ -44,9 +44,9 @@ for (const key in specialCharacters) {
             "index.twig": `{{ key|escape("url") }}`
         },
         trimmedExpectation: `${value}`,
-        context: Promise.resolve({
+        context: {
             key
-        })
+        }
     });
 }
 

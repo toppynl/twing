@@ -13,7 +13,7 @@ runTest({
 FOO
 FOO
 `,
-    context: Promise.resolve({
+    context: {
         markup: createMarkup(('FoO'), "UTF-8")
-    })
+    }
 });

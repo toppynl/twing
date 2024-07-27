@@ -1,13 +1,13 @@
-export interface TwingContext<K, V> {
+export interface TwingContext<K extends string, V> {
     readonly size: number;
 
-    [Symbol.iterator](): IterableIterator<[K, V]>;
+    [Symbol.iterator](): IterableIterator<[string, V]>;
 
     clone(): TwingContext<K, V>;
 
     delete(key: K): boolean;
 
-    entries(): IterableIterator<[K, V]>;
+    entries(): IterableIterator<[string, V]>;
 
     get(key: K): V | undefined;
 
@@ -61,3 +61,13 @@ export const createContext = <K extends string, V>(
 
     return context;
 };
+
+export const getEntries = <V>(context: Record<string, V>): IterableIterator<[string, V]> => {
+    return Object.entries(context)[Symbol.iterator]();
+};
+
+export const getValues = <V>(context: Record<string, V>): Array<V> => {
+    return Object.values(context);
+};
+
+export type TwingContext2 = Map<string, any>;

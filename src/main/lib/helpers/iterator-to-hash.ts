@@ -1,5 +1,5 @@
-export function iteratorToHash(value: any) {
-    let result: any;
+export function iteratorToHash(value: any): Record<any, any> {
+    let result: Record<any, any>;
 
     if (value.entries) {
         result = {};
