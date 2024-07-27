@@ -1,6 +1,6 @@
 import {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "../node-executor";
 import {TwingForNode} from "../node/for";
-import {TwingContext, TwingContext2} from "../context";
+import {TwingContext} from "../context";
 import {ensureTraversable} from "../helpers/ensure-traversable";
 import {count} from "../helpers/count";
 import {iterate, iterateSynchronously} from "../helpers/iterate";
@@ -140,7 +140,7 @@ export const executeForNodeSynchronously: TwingSynchronousNodeExecutor<TwingForN
         }
     }
 
-    const parent: TwingContext2 = context.get('_parent');
+    const parent: Map<string, any> = context.get('_parent');
 
     context.delete('_seq');
     context.delete('_iterated');

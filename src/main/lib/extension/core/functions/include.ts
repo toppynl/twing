@@ -1,6 +1,6 @@
 import {isTraversable} from "../../../helpers/is-traversable";
 import {isPlainObject} from "../../../helpers/is-plain-object";
-import {createContext, TwingContext2} from "../../../context";
+import {createContext} from "../../../context";
 import {createMarkup, TwingMarkup} from "../../../markup";
 import type {TwingSynchronousTemplate, TwingTemplate} from "../../../template";
 import type {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
@@ -103,7 +103,7 @@ export const include: TwingCallable<[
 
 export const includeSynchronously: TwingSynchronousCallable<[
     templates: string | TwingSynchronousTemplate | null | Array<string | TwingSynchronousTemplate | null>,
-    variables: TwingContext2,
+    variables: Map<string, any>,
     withContext: boolean,
     ignoreMissing: boolean,
     sandboxed: boolean

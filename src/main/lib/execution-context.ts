@@ -1,5 +1,5 @@
 import type {TwingTemplate, TwingTemplateAliases, TwingTemplateBlockMap} from "./template";
-import type {TwingContext, TwingContext2} from "./context";
+import type {TwingContext} from "./context";
 import type {TwingOutputBuffer} from "./output-buffer";
 import type {TwingSourceMapRuntime} from "./source-map-runtime";
 import type {TwingEnvironment, TwingSynchronousEnvironment} from "./environment";
@@ -26,7 +26,7 @@ export type TwingExecutionContext = {
 export type TwingSynchronousExecutionContext = {
     aliases: TwingSynchronousTemplateAliases;
     blocks: TwingSynchronousTemplateBlockMap;
-    context: TwingContext2;
+    context: Map<string, any>;
     environment: TwingSynchronousEnvironment;
     nodeExecutor: TwingSynchronousNodeExecutor;
     outputBuffer: TwingOutputBuffer;

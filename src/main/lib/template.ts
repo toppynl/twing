@@ -1,4 +1,4 @@
-import {createContext, TwingContext, TwingContext2} from "./context";
+import {createContext, TwingContext} from "./context";
 import {TwingEnvironment, TwingSynchronousEnvironment} from "./environment";
 import {createOutputBuffer, TwingOutputBuffer} from "./output-buffer";
 import {TwingSourceMapRuntime} from "./source-map-runtime";
@@ -184,7 +184,7 @@ export interface TwingSynchronousTemplate {
      */
     execute(
         environment: TwingSynchronousEnvironment,
-        context: TwingContext2,
+        context: Map<string, any>,
         blocks: TwingSynchronousTemplateBlockMap,
         outputBuffer: TwingOutputBuffer,
         options?: {
@@ -225,7 +225,7 @@ export interface TwingSynchronousTemplate {
 
     render(
         environment: TwingSynchronousEnvironment,
-        context: TwingContext2,
+        context: Map<string, any>,
         options?: {
             nodeExecutor?: TwingSynchronousNodeExecutor;
             outputBuffer?: TwingOutputBuffer;
@@ -749,7 +749,7 @@ export const createSynchronousTemplate = (
 
             const aliases = {...template.aliases};
 
-            const localVariables: TwingContext2 = new Map();
+            const localVariables: Map<string, any> = new Map();
 
             for (const {key: keyNode, value: defaultValueNode} of keyValuePairs) {
                 const key = keyNode.attributes.value as string;

@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 
 // cache
-export type {TwingCache} from "./lib/cache";
+export type {TwingCache, TwingSynchronousCache} from "./lib/cache";
 
 // error
 export type {TwingError} from "./lib/error";
@@ -16,15 +16,15 @@ export {createTemplateLoadingError} from "./lib/error/loader";
 
 // loader
 export type {
-    TwingFilesystemLoader, TwingFilesystemLoaderFilesystem, TwingFilesystemLoaderFilesystemStats
+    TwingFilesystemLoader, TwingFilesystemLoaderFilesystem, TwingFilesystemLoaderFilesystemStats, TwingSynchronousFilesystemLoader, TwingSynchronousFilesystemLoaderFilesystem
 } from "./lib/loader/filesystem";
 export type {TwingArrayLoader, TwingSynchronousArrayLoader} from "./lib/loader/array";
-export type {TwingChainLoader} from "./lib/loader/chain";
+export type {TwingChainLoader, TwingSynchronousChainLoader} from "./lib/loader/chain";
 export type {TwingLoader, TwingSynchronousLoader} from "./lib/loader";
 
 export {createFilesystemLoader, createSynchronousFilesystemLoader} from "./lib/loader/filesystem";
 export {createArrayLoader, createSynchronousArrayLoader} from "./lib/loader/array";
-export {createChainLoader} from "./lib/loader/chain";
+export {createChainLoader, createSynchronousChainLoader} from "./lib/loader/chain";
 
 // markup
 export type {TwingMarkup} from "./lib/markup";
@@ -263,18 +263,18 @@ export {createWithTagHandler} from "./lib/tag-handler/with";
 
 // core
 export type {
-    TwingCallable, TwingCallableArgument, TwingCallableWrapperOptions, TwingCallableWrapper
+    TwingCallable, TwingCallableArgument, TwingCallableWrapperOptions, TwingCallableWrapper, TwingSynchronousCallable, TwingSynchronousCallableWrapper
 } from "./lib/callable-wrapper";
 export {type TwingContext, createContext} from "./lib/context";
-export type {TwingEnvironment, TwingEnvironmentOptions, TwingNumberFormat} from "./lib/environment";
+export type {TwingEnvironment, TwingEnvironmentOptions, TwingNumberFormat, TwingSynchronousEnvironment, TwingSynchronousEnvironmentOptions} from "./lib/environment";
 export type {
     TwingEscapingStrategy, TwingEscapingStrategyHandler, TwingEscapingStrategyResolver
 } from "./lib/escaping-strategy";
-export type {TwingExecutionContext} from "./lib/execution-context";
-export type {TwingExtension} from "./lib/extension";
+export type {TwingExecutionContext, TwingSynchronousExecutionContext} from "./lib/execution-context";
+export type {TwingExtension, TwingSynchronousExtension} from "./lib/extension";
 export type {TwingExtensionSet} from "./lib/extension-set";
-export type {TwingFilter} from "./lib/filter";
-export type {TwingFunction} from "./lib/function";
+export type {TwingFilter, TwingSynchronousFilter} from "./lib/filter";
+export type {TwingFunction, TwingSynchronousFunction} from "./lib/function";
 export type {TwingLexer} from "./lib/lexer";
 export type {TwingNodeVisitor} from "./lib/node-visitor";
 export type {
@@ -289,26 +289,25 @@ export type {
     TwingTemplateAliases,
     TwingTemplateBlockMap,
     TwingTemplateBlockHandler,
-    TwingTemplateMacroHandler
+    TwingTemplateMacroHandler,
+    TwingSynchronousTemplateAliases,
+    TwingSynchronousTemplateBlockHandler,
+    TwingSynchronousTemplateBlockMap,
+    TwingSynchronousTemplateMacroHandler
 } from "./lib/template";
-export type {TwingTest} from "./lib/test";
+export type {TwingTest, TwingSynchronousTest} from "./lib/test";
 export type {TwingTokenStream} from "./lib/token-stream";
-
-export interface TwingTemplate {
-    execute: import("./lib/template").TwingTemplate["execute"];
-    render: import("./lib/template").TwingTemplate["render"];
-}
 
 export {createEnvironment, createSynchronousEnvironment} from "./lib/environment";
 export {createExtensionSet} from "./lib/extension-set";
-export {createFilter} from "./lib/filter";
-export {createFunction} from "./lib/function";
+export {createFilter, createSynchronousFilter} from "./lib/filter";
+export {createFunction, createSynchronousFunction} from "./lib/function";
 export {createLexer} from "./lib/lexer";
 export {createBaseNode, createNode, getChildren, getChildrenCount} from "./lib/node";
 export {createOperator} from "./lib/operator";
 export {createSandboxSecurityPolicy} from "./lib/sandbox/security-policy";
 export {createSource} from "./lib/source";
 export {createSourceMapRuntime} from "./lib/source-map-runtime";
-export {createTemplate} from "./lib/template";
-export {type TwingTemplateLoader, createTemplateLoader} from "./lib/template-loader";
-export {createTest} from "./lib/test";
+export {type TwingTemplate, createTemplate, type TwingSynchronousTemplate, createSynchronousTemplate} from "./lib/template";
+export {type TwingTemplateLoader, type TwingSynchronousTemplateLoader, createTemplateLoader, createSynchronousTemplateLoader} from "./lib/template-loader";
+export {createTest, createSynchronousTest} from "./lib/test";

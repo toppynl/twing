@@ -1,6 +1,6 @@
 import {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "../node-executor";
 import {TwingWithNode} from "../node/with";
-import {createContext, TwingContext, TwingContext2} from "../context";
+import {createContext, TwingContext} from "../context";
 import {createRuntimeError} from "../error/runtime";
 import {mergeIterables} from "../helpers/merge-iterables";
 import {iteratorToMap} from "../helpers/iterator-to-map";
@@ -47,7 +47,7 @@ export const executeWithNodeSynchronously: TwingSynchronousNodeExecutor<TwingWit
     const {variables: variablesNode, body} = node.children;
     const {only} = node.attributes;
 
-    let scopedContext: TwingContext2;
+    let scopedContext: Map<string, any>;
 
     if (variablesNode) {
         let variables = execute(variablesNode, executionContext);
