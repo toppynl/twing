@@ -1,5 +1,3 @@
-import {PassThrough, Readable} from "stream";
-
 interface TwingOutputHandler {
     getContent(): string;
 
@@ -24,8 +22,14 @@ const createOutputHandler = (): TwingOutputHandler => {
     };
 };
 
+interface Writable {
+    write(chunk: string): void;
+}
+
 export interface TwingOutputBuffer {
-    readonly outputStream: Readable;
+    readonly outputStream: Writable & {
+        pipe(writable: Writable): void;
+    };
     
     echo(string: any): string | void;
 
@@ -174,7 +178,17 @@ export interface TwingOutputBuffer {
 
 export const createOutputBuffer = (): TwingOutputBuffer => {
     const handlers: Array<TwingOutputHandler> = [];
-    const outputStream = new PassThrough();
+    
+    const writables: Array<Writable> = [];
+    
+    const outputStream: TwingOutputBuffer["outputStream"] = {
+        write: (chunk) => {
+            writables.forEach((writable) => writable.write(chunk));
+        },
+        pipe: (writable) => {
+            writables.push(writable);
+        }
+    };
 
     /**
      * Append the string to the top-most buffer or write it to the output stream if there is none
