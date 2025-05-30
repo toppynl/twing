@@ -9,6 +9,9 @@ import {spy, stub} from "sinon";
 import {createSynchronousTemplateLoader, createTemplateLoader} from "../../../../../main/lib/template-loader";
 import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../main/lib/loader/array";
 import type {TwingCache, TwingSynchronousCache} from "../../../../../main/lib/cache";
+import {createTemplateNode, type TwingTemplateNode} from "../../../../../main/lib/node/template";
+import {createBaseNode} from "../../../../../main/lib/node";
+import {createSource} from "../../../../../main/lib/source";
 
 const createMockCache = (): TwingCache => {
     return {
@@ -150,6 +153,41 @@ tape('createTemplateLoader::()', ({test}) => {
             })
             .finally(end);
     });
+
+    test('does not hit the loader when the templates is retrieved from the cache', ({same, end}) => {
+        const loader = createArrayLoader({
+            foo: 'bar'
+        });
+        const cache = createMockCache();
+
+        stub(cache, "load").resolves(createTemplateNode(
+            createBaseNode(null),
+            null,
+            createBaseNode(null),
+            createBaseNode(null),
+            createBaseNode(null),
+            new Array<TwingTemplateNode>(),
+            createSource('foo', 'bar'),
+            0, 0
+        ));
+
+        const getSourceSpy = spy(loader, "getSource");
+
+        const environment = createEnvironment(
+            loader,
+            {
+                cache
+            }
+        );
+        const loadTemplate = createTemplateLoader(environment);
+
+        return loadTemplate('foo', null)
+            .then(() => {
+                same(getSourceSpy.callCount, 0);
+
+            })
+            .finally(end);
+    });
 });
 
 tape('createTemplateLoader::()', ({test}) => {
@@ -251,5 +289,39 @@ tape('createTemplateLoader::()', ({test}) => {
         same(getSourceSpy.callCount, 1);
         
         end();  
+    });
+
+    test('does not hit the loader when the templates is retrieved from the cache', ({same, end}) => {
+        const loader = createSynchronousArrayLoader({
+            foo: 'bar'
+        });
+        const cache = createMockSynchronousCache();
+
+        stub(cache, "load").returns(createTemplateNode(
+            createBaseNode(null),
+            null,
+            createBaseNode(null),
+            createBaseNode(null),
+            createBaseNode(null),
+            new Array<TwingTemplateNode>(),
+            createSource('foo', 'bar'),
+            0, 0
+        ));
+
+        const getSourceSpy = spy(loader, "getSource");
+
+        const environment = createSynchronousEnvironment(
+            loader,
+            {
+                cache
+            }
+        );
+        const loadTemplate = createSynchronousTemplateLoader(environment);
+
+        loadTemplate('foo', null);
+
+        same(getSourceSpy.callCount, 0);
+
+        end();
     });
 });
