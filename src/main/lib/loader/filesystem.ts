@@ -1,9 +1,10 @@
 import type {TwingLoader, TwingSynchronousLoader} from "../loader";
 import type {TwingSource} from "../source";
-import {join, isAbsolute, dirname, normalize} from "path";
+import * as Path from "path";
 import {createSource} from "../source";
 
 const rtrim = require('locutus/php/strings/rtrim');
+const {join, isAbsolute, dirname, normalize} = Path.posix;
 
 export interface TwingFilesystemLoaderFilesystemStats {
     isFile(): boolean;
