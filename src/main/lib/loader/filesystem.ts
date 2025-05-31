@@ -4,7 +4,7 @@ import * as Path from "path";
 import {createSource} from "../source";
 
 const rtrim = require('locutus/php/strings/rtrim');
-const {join, isAbsolute, dirname, normalize} = Path.posix;
+const {join, dirname, normalize} = Path.posix;
 
 export interface TwingFilesystemLoaderFilesystemStats {
     isFile(): boolean;
@@ -85,21 +85,15 @@ export const createFilesystemLoader = (
     };
 
     const resolvePathFromSource = (name: string, from: string): string => {
-        if (name && !isAbsolute(name) && name.startsWith('.')) {
-            name = join(dirname(from), name);
-        }
-
-        return name;
+        return join(dirname(from), name);
     };
-
-    // todo: rework
-    // * if no slash, resolve from "from"
-    // * if contains a slash, extract namespace and check if registered:
-    //   * if so, resolve from namespace
-    // * if not found yet, resolve from "from"
+    
+    /**
+     * If the name starts with a slash, resolve absolutely;
+     * else, if the name starts with a dot, resolve relatively to the passed _from_;
+     * else, resolve from the namespace.
+     */
     const resolve = (name: string, from: string | null): Promise<string | null> => {
-        name = normalize(from ? resolvePathFromSource(name, from) : name);
-
         const findTemplateInPath = async (path: string): Promise<string | null> => {
             const stats = await stat(path);
 
@@ -111,54 +105,55 @@ export const createFilesystemLoader = (
             }
         };
 
-        // first search for the template from its fully qualified name
-        return findTemplateInPath(name)
-            .then((templatePath) => {
-                if (templatePath) {
-                    return templatePath;
+        if (name.startsWith('/')) {
+            // If the name starts with a slash, resolve absolutely;
+            return findTemplateInPath(name);
+        }
+        else if (name.startsWith('.')) {
+            // else, if the name starts with a dot, resolve relatively to the passed _from_;
+            name = normalize(from ? resolvePathFromSource(name, from) : name);
+            
+            return findTemplateInPath(name);
+        }
+        else {
+            // else, resolve from the namespace.
+            const [namespace, shortname] = parseName(name);
+
+            // todo: we keep the fallback to ['.'] for backward compatibility purpose; with Twing 8, we can be more restrictive.
+            const paths = namespacedPaths.get(namespace) || ['.'];
+
+            const findTemplateInPathAtIndex = async (index: number): Promise<string | null> => {
+                if (index < paths.length) {
+                    const path = paths[index];
+                    const templatePath = await findTemplateInPath(join(path, shortname));
+
+                    if (templatePath) {
+                        return Promise.resolve(templatePath);
+                    }
+                    else {
+                        // let's continue searching
+                        return findTemplateInPathAtIndex(index + 1);
+                    }
                 }
                 else {
-                    // then, search for the template from its namespaced name
-                    const [namespace, shortname] = parseName(name);
-
-                    const paths = namespacedPaths.get(namespace) || ['.'];
-
-                    const findTemplateInPathAtIndex = async (index: number): Promise<string | null> => {
-                        if (index < paths.length) {
-                            const path = paths[index];
-                            const templatePath = await findTemplateInPath(join(path, shortname));
-
-                            if (templatePath) {
-                                return Promise.resolve(templatePath);
-                            }
-                            else {
-                                // let's continue searching
-                                return findTemplateInPathAtIndex(index + 1);
-                            }
-                        }
-                        else {
-                            return Promise.resolve(null);
-                        }
-                    };
-
-                    return findTemplateInPathAtIndex(0);
+                    return Promise.resolve(null);
                 }
-            });
+            };
+
+            return findTemplateInPathAtIndex(0);
+        }
     };
 
     const parseName = (name: string): [string | null, string] => {
-        // only non-relative names can be namespace references
-        if (name[0] !== '.') {
-            const position = name.indexOf('/');
+        const position = name.indexOf('/');
+        const potentialNamespace = name.substring(0, position);
+        
+        if (namespacedPaths.get(potentialNamespace) !== undefined) {
+            const shortname = name.substring(position + 1);
 
-            if (position >= 0) {
-                const namespace = name.substring(0, position);
-                const shortname = name.substring(position + 1);
-
-                return [namespace, shortname];
-            }
+            return [potentialNamespace, shortname];
         }
-
+        
         return [null, name];
     };
 
@@ -248,21 +243,15 @@ export const createSynchronousFilesystemLoader = (
     };
 
     const resolvePathFromSource = (name: string, from: string): string => {
-        if (name && !isAbsolute(name) && name.startsWith('.')) {
-            name = join(dirname(from), name);
-        }
-
-        return name;
+        return join(dirname(from), name);
     };
 
-    // todo: rework
-    // * if no slash, resolve from "from"
-    // * if contains a slash, extract namespace and check if registered:
-    //   * if so, resolve from namespace
-    // * if not found yet, resolve from "from"
+    /**
+     * If the name starts with a slash, resolve absolutely;
+     * else, if the name starts with a dot, resolve relatively to the passed _from_;
+     * else, resolve from the namespace.
+     */
     const resolve = (name: string, from: string | null): string | null => {
-        name = normalize(from ? resolvePathFromSource(name, from) : name);
-
         const findTemplateInPath = (path: string): string | null => {
             const stats = stat(path);
 
@@ -274,16 +263,21 @@ export const createSynchronousFilesystemLoader = (
             }
         };
 
-        // first search for the template from its fully qualified name
-        const templatePath = findTemplateInPath(name);
+        if (name.startsWith('/')) {
+            // If the name starts with a slash, resolve absolutely;
+            return findTemplateInPath(name);
+        }
+        else if (name.startsWith('.')) {
+            // else, if the name starts with a dot, resolve relatively to the passed _from_;
+            name = normalize(from ? resolvePathFromSource(name, from) : name);
 
-        if (templatePath) {
-            return templatePath;
+            return findTemplateInPath(name);
         }
         else {
-            // then, search for the template from its namespaced name
+            // else, resolve from the namespace.
             const [namespace, shortname] = parseName(name);
 
+            // todo: we keep the fallback to ['.'] for backward compatibility purpose; with Twing 8, we can be more restrictive.
             const paths = namespacedPaths.get(namespace) || ['.'];
 
             const findTemplateInPathAtIndex = (index: number): string | null => {
@@ -309,16 +303,13 @@ export const createSynchronousFilesystemLoader = (
     };
 
     const parseName = (name: string): [string | null, string] => {
-        // only non-relative names can be namespace references
-        if (name[0] !== '.') {
-            const position = name.indexOf('/');
+        const position = name.indexOf('/');
+        const potentialNamespace = name.substring(0, position);
 
-            if (position >= 0) {
-                const namespace = name.substring(0, position);
-                const shortname = name.substring(position + 1);
+        if (namespacedPaths.get(potentialNamespace) !== undefined) {
+            const shortname = name.substring(position + 1);
 
-                return [namespace, shortname];
-            }
+            return [potentialNamespace, shortname];
         }
 
         return [null, name];
