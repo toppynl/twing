@@ -38,7 +38,7 @@ export const createTemplateLoader = (environment: TwingEnvironment): TwingTempla
                 const isFresh = await loader.isFresh(name, timestamp, from);
 
                 if (isFresh) {
-                    content = await cache.load(name);
+                    content = await cache.load(templateFqn);
                 }
                 else {
                     content = null;
@@ -57,7 +57,7 @@ export const createTemplateLoader = (environment: TwingEnvironment): TwingTempla
                 const ast = environment.parse(environment.tokenize(source));
 
                 if (cache !== null) {
-                    await cache.write(name, ast);
+                    await cache.write(templateFqn, ast);
                 }
 
                 return ast;
@@ -108,7 +108,7 @@ export const createSynchronousTemplateLoader = (environment: TwingSynchronousEnv
                 const isFresh = loader.isFresh(name, timestamp, from);
 
                 if (isFresh) {
-                    content = cache.load(name);
+                    content = cache.load(templateFqn);
                 }
                 else {
                     content = null;
@@ -127,7 +127,7 @@ export const createSynchronousTemplateLoader = (environment: TwingSynchronousEnv
                 const ast = environment.parse(environment.tokenize(source));
 
                 if (cache !== null) {
-                    cache.write(name, ast);
+                    cache.write(templateFqn, ast);
                 }
 
                 return ast;

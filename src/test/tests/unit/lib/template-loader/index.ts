@@ -80,6 +80,48 @@ tape('createTemplateLoader::()', ({test}) => {
             .finally(end);
     });
 
+    test('register the loaded template to the persistent cache under it fully qualified name', ({same, end}) => {
+        const fileSystem: TwingFilesystemLoaderFilesystem = {
+            readFile(_path, callback) {
+                callback(null, Buffer.from(''));
+            },
+            stat(path, callback) {
+                callback(null, path === 'foo/bar' ? {
+                    isFile() {
+                        return true;
+                    },
+                    mtime: new Date(0)
+                } : null);
+            }
+        };
+        const loader = createFilesystemLoader(fileSystem);
+
+        loader.addPath('foo', '@Foo');
+
+        const cache = createMockCache();
+        const cacheWrite = spy(cache, "write");
+        const cacheLoad = spy(cache, "load");
+
+        stub(loader, "isFresh").resolves(true);
+        
+        const environment = createEnvironment(loader, {
+            cache
+        });
+        const loadTemplate = createTemplateLoader(environment);
+        
+        return loadTemplate('@Foo/bar', null)
+            .then(() => {
+                const loadTemplate = createTemplateLoader(environment);
+                
+                return loadTemplate('@Foo/bar', null);
+            })
+            .then(() => {
+                same(cacheWrite.firstCall.firstArg, 'foo/bar');
+                same(cacheLoad.firstCall.firstArg, 'foo/bar');
+            })
+            .finally(end);
+    });
+
     test('hits the loader when the templates is considered as dirty', ({same, end}) => {
         const loader = createArrayLoader({
             foo: 'bar'
@@ -223,6 +265,48 @@ tape('createTemplateLoader::()', ({test}) => {
         
         same(getSourceSpy.callCount, 1);
         
+        end();
+    });
+
+    test('register the loaded template to the persistent cache under it fully qualified name', ({same, end}) => {
+        const fileSystem: TwingSynchronousFilesystemLoaderFilesystem = {
+            readFileSync(_path) {
+                return Buffer.from('');
+            },
+            statSync(path) {
+                return path === 'foo/bar' ? {
+                    isFile() {
+                        return true;
+                    },
+                    mtime: new Date(0)
+                } : null;
+            }
+        };
+        const loader = createSynchronousFilesystemLoader(fileSystem);
+
+        loader.addPath('foo', '@Foo');
+
+        const cache = createMockSynchronousCache();
+        const cacheWrite = spy(cache, "write");
+        const cacheLoad = spy(cache, "load");
+
+        stub(loader, "isFresh").returns(true);
+
+        const environment = createSynchronousEnvironment(loader, {
+            cache
+        });
+        
+        let loadTemplate = createSynchronousTemplateLoader(environment);
+
+        loadTemplate('@Foo/bar', null);
+
+        loadTemplate = createSynchronousTemplateLoader(environment);
+
+        loadTemplate('@Foo/bar', null);
+        
+        same(cacheWrite.firstCall.firstArg, 'foo/bar');
+        same(cacheLoad.firstCall.firstArg, 'foo/bar');
+
         end();
     });
 
