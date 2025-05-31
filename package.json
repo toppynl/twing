@@ -63,7 +63,7 @@
     "@types/create-hash": "^1.2.5",
     "@types/locutus": "^0.0.8",
     "@types/luxon": "^1.4.0",
-    "@types/node": "^10.17.60",
+    "@types/node": "^16.18.126",
     "@types/sinon": "^17.0.2",
     "@types/tape": "^4.2.33",
     "browserify": "^17.0.0",
