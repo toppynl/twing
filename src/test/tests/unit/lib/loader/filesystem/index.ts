@@ -19,7 +19,8 @@ const fileSystemContent: Array<[path: string, content: string]> = [
     ['templates/bar.html', 'templates/bar.html content'],
     ['templates/bar2.html', 'templates/bar2.html content'],
     ['views2/foo2.html', 'views2/foo2.html content'],
-    ['templates2/bar2.html', 'templates2/bar2.html content']
+    ['templates2/bar2.html', 'templates2/bar2.html content'],
+    ['views/partials/index.html', 'views/partials/index.html content']
 ];
 
 const createFilesystem = (): TwingFilesystemLoaderFilesystem => {
@@ -92,15 +93,16 @@ tape('createFilesystemLoader', ({test}) => {
         
         let loader = createFilesystemLoader(filesystem);
 
+        loader.addPath('views');
         loader.addPath('foo', 'Foo');
         loader.addPath('foo', '@Foo');
         loader.addPath('bar', 'Foo');
         loader.prependPath('foo', 'Bar');
         loader.prependPath('bar', 'Bar');
 
-        same(await loader.resolve('index.html', null), 'index.html');
+        same(await loader.resolve('index.html', null), 'views/index.html');
         same(await loader.resolve('./index.html', null), 'index.html');
-        same(await loader.resolve('foo/index.html', null), 'foo/index.html');
+        same(await loader.resolve('foo/index.html', null), null);
         same(await loader.resolve('Foo/index.html', null), 'foo/index.html');
         same(await loader.resolve('@Foo/index.html', null), 'foo/index.html');
         same(await loader.resolve('Bar/index.html', null), 'bar/index.html');
@@ -112,7 +114,8 @@ tape('createFilesystemLoader', ({test}) => {
         same(await loader.resolve('./missing.html', null), null);
         same(await loader.resolve('./foo/missing.html', null), null);
         same(await loader.resolve('../foo/index.html', 'index.html'), null);
-        
+        same(await loader.resolve('partials/index.html', null), 'views/partials/index.html');
+
         loader = createFilesystemLoader(filesystem);
 
         loader.addPath('views');
@@ -125,7 +128,7 @@ tape('createFilesystemLoader', ({test}) => {
         same(await loader.resolve('bar.html', null), 'templates/bar.html');
         same(await loader.resolve('foo2.html', null), 'views2/foo2.html');
         same(await loader.resolve('bar2.html', null), 'templates2/bar2.html');
-        same(await loader.resolve('index.html', null), 'index.html');
+        same(await loader.resolve('index.html', null), 'views/index.html');
 
         end();
     });
@@ -277,7 +280,7 @@ tape('createSynchronousFilesystemLoader', ({test}) => {
         same(await loader.resolve('bar.html', null), 'templates/bar.html');
         same(await loader.resolve('foo2.html', null), 'views2/foo2.html');
         same(await loader.resolve('bar2.html', null), 'templates2/bar2.html');
-        same(await loader.resolve('index.html', null), 'index.html');
+        same(await loader.resolve('index.html', null), 'views/index.html');
 
         end();
     });
