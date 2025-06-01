@@ -128,7 +128,7 @@ export const getAttribute = (
         }
 
         // ANY_CALL or METHOD_CALL
-        if ((object === null) || (!isObject(object)) || (isAMapLike(object))) {
+        if ((object === null) || (!isObject(object))) {
             if (shouldTestExistence) {
                 return false;
             }
@@ -139,9 +139,6 @@ export const getAttribute = (
 
             if (object === null) {
                 message = `Impossible to invoke a method ("${attribute}") on a null variable.`;
-            }
-            else if (isAMapLike(object) || Array.isArray(object)) {
-                message = `Impossible to invoke a method ("${attribute}") on an array.`;
             }
             else {
                 message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;
@@ -368,7 +365,7 @@ export const getAttributeSynchronously = (
     }
 
     // ANY_CALL or METHOD_CALL
-    if ((object === null) || (!isObject(object)) || (isAMapLike(object))) {
+    if ((object === null) || (!isObject(object))) {
         if (shouldTestExistence) {
             return false;
         }
@@ -379,9 +376,6 @@ export const getAttributeSynchronously = (
 
         if (object === null) {
             message = `Impossible to invoke a method ("${attribute}") on a null variable.`;
-        }
-        else if (isAMapLike(object) || Array.isArray(object)) {
-            message = `Impossible to invoke a method ("${attribute}") on an array.`;
         }
         else {
             message = `Impossible to invoke a method ("${attribute}") on a ${typeof object} variable ("${object}").`;

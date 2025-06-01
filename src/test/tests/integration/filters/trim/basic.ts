@@ -18,7 +18,8 @@ class Test extends TestBase {
 {{ "xxxI like Twig.xxx"|trim("x", "right") }}
 {{ "/  foo/"|trim("/", "left") }}
 {{ "/  foo/"|trim(character_mask="/", side="left") }}
-{{ "  do nothing.  "|trim("", "right") }}`
+{{ "  do nothing.  "|trim("", "right") }}
+{{ null|trim }}`
         };
     }
 
@@ -32,8 +33,7 @@ xxxI like Twig.
 xxxI like Twig.
   foo/
   foo/
-  do nothing.
-`;
+  do nothing.`;
     }
 }
 
