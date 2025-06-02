@@ -1,0 +1,26 @@
+[data]
+author = "Eric MORAND <eric.morand@gmail.com>"
+bugs = "https://gitlab.com/nightlycommit/twing/-/issues"
+description = "First-class Twig engine for the JavaScript ecosystem"
+homepage = "https://twing.nightlycommit.com"
+jsdelivr = "lib.min.js"
+keywords = [
+    "browser",
+    "compiler",
+    "template",
+    "twig",
+    "twig-engine",
+    "typescript"
+]
+license = "BSD-2-Clause"
+main = "cjs/lib.js"
+name = "twing"
+types = "types/lib.d.ts"
+version = "1.0.0-SNAPSHOT"
+
+[data.engines]
+node = ">=16.0.0"
+
+[data.repository]
+type = "git"
+url = "https://gitlab.com/nightlycommit/twing"
