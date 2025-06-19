@@ -1,7 +1,7 @@
 import * as tape from "tape";
-import {createEnvironment} from "../../../../../main/lib/environment";
-import {createArrayLoader} from "../../../../../main/lib/loader/array";
-import {createTemplate} from "../../../../../main/lib/template";
+import {createEnvironment, createSynchronousEnvironment} from "../../../../../main/lib/environment";
+import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../main/lib/loader/array";
+import {createSynchronousTemplate, createTemplate} from "../../../../../main/lib/template";
 import {createTemplateNode} from "../../../../../main/lib/node/template";
 import {createBaseNode} from "../../../../../main/lib/node";
 import {createSource} from "../../../../../main/lib/source";
@@ -13,6 +13,8 @@ import {executeNode, type TwingNodeExecutor} from "../../../../../main/lib/node-
 import {createTextNode} from "../../../../../main/lib/node/text";
 import {createVerbatimNode} from "../../../../../main/lib/node/verbatim";
 import {createTemplateLoader, type TwingTemplateLoader} from "../../../../../main/lib/template-loader";
+import {createPrintNode} from "../../../../../main/lib/node/print";
+import {createNameNode} from "../../../../../main/lib/node/expression/name";
 
 tape('createTemplate => ::execute', ({test}) => {
     test('executes the AST according to the passed options', ({test}) => {
@@ -170,14 +172,14 @@ tape('createTemplate => ::execute', ({test}) => {
             index: '{{ block("foo") }}, {{ block("aliased-bar") }}',
             blocks: `{% block foo %}foo block content{% endblock %}{% block bar %}bar block content{% endblock %}`
         }));
-        
+
         const template = await environment.loadTemplate('index');
         const outputBuffer = createOutputBuffer();
 
         outputBuffer.start();
 
         const blockTemplate = await environment.loadTemplate('blocks');
-        
+
         return template.execute(
             environment,
             createContext(),
@@ -189,5 +191,79 @@ tape('createTemplate => ::execute', ({test}) => {
         ).then(() => {
             same(outputBuffer.getContents(), 'foo block content, bar block content');
         }).finally(end);
+    });
+});
+
+tape('createSynchronousTemplate => ::execute', ({test}) => {
+    test('supports being passed a map as context', ({same, end}) => {
+        const environment = createSynchronousEnvironment(createSynchronousArrayLoader({}));
+        const ast = createTemplateNode(
+            createBaseNode(null, {}, {
+                content: createBaseNode(null, {}, {
+                    0: createPrintNode(createNameNode("foo", 1, 1), 1, 1),
+                    1: createVerbatimNode("5", 1, 1, "verbatim")
+                }, 1, 1)
+            }, 1, 1),
+            null,
+            createBaseNode(null),
+            createBaseNode(null),
+            createBaseNode(null),
+            [],
+            createSource('', ''),
+            1, 1
+        );
+
+        const template = createSynchronousTemplate(ast);
+        const outputBuffer = createOutputBuffer();
+
+        outputBuffer.start();
+
+        template.execute(
+            environment,
+            new Map([['foo', 'foo']]),
+            new Map(),
+            outputBuffer
+        );
+
+        same(outputBuffer.getContents(), 'foo5');
+
+        end();
+    });
+
+    test('supports being passed a record as context', ({same, end}) => {
+        const environment = createSynchronousEnvironment(createSynchronousArrayLoader({}));
+        const ast = createTemplateNode(
+            createBaseNode(null, {}, {
+                content: createBaseNode(null, {}, {
+                    0: createPrintNode(createNameNode("foo", 1, 1), 1, 1),
+                    1: createVerbatimNode("5", 1, 1, "verbatim")
+                }, 1, 1)
+            }, 1, 1),
+            null,
+            createBaseNode(null),
+            createBaseNode(null),
+            createBaseNode(null),
+            [],
+            createSource('', ''),
+            1, 1
+        );
+
+        const template = createSynchronousTemplate(ast);
+        const outputBuffer = createOutputBuffer();
+        
+        outputBuffer.start();
+
+        template.execute(
+            environment,
+            {
+                foo: 'foo'
+            },
+            new Map(),
+            outputBuffer
+        );
+
+        same(outputBuffer.getContents(), 'foo5');
+
+        end();
     });
 });

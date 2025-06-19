@@ -2,7 +2,7 @@ import {isTraversable} from "../../../helpers/is-traversable";
 import {isPlainObject} from "../../../helpers/is-plain-object";
 import {createContext} from "../../../context";
 import {createMarkup, TwingMarkup} from "../../../markup";
-import type {TwingSynchronousTemplate, TwingTemplate} from "../../../template";
+import {executeSynchronousTemplate, type TwingSynchronousTemplate, type TwingTemplate} from "../../../template";
 import type {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 import {iterableToMap, iteratorToMap} from "../../../helpers/iterator-to-map";
 import {mergeIterables} from "../../../helpers/merge-iterables";
@@ -163,7 +163,8 @@ export const includeSynchronously: TwingSynchronousCallable<[
     outputBuffer.start();
 
     if (resolvedTemplate) {
-        resolvedTemplate.execute(
+        executeSynchronousTemplate(
+            resolvedTemplate,
             environment,
             variables,
             new Map(),
