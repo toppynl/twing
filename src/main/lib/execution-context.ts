@@ -8,6 +8,7 @@ import type {TwingTemplateLoader} from "./template-loader";
 import {TwingSynchronousNodeExecutor} from "./node-executor";
 import {TwingSynchronousTemplate, TwingSynchronousTemplateAliases, TwingSynchronousTemplateBlockMap} from "./template";
 import {TwingSynchronousTemplateLoader} from "./template-loader";
+import type {MapLike} from "./helpers/map-like";
 
 export type TwingExecutionContext = {
     aliases: TwingTemplateAliases;
@@ -26,7 +27,7 @@ export type TwingExecutionContext = {
 export type TwingSynchronousExecutionContext = {
     aliases: TwingSynchronousTemplateAliases;
     blocks: TwingSynchronousTemplateBlockMap;
-    context: Map<string, any>;
+    context: MapLike<string, any>;
     environment: TwingSynchronousEnvironment;
     nodeExecutor: TwingSynchronousNodeExecutor;
     outputBuffer: TwingOutputBuffer;

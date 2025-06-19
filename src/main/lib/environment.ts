@@ -20,7 +20,7 @@ import {TwingTemplateNode} from "./node/template";
 import {RawSourceMap} from "source-map";
 import {createSourceMapRuntime} from "./source-map-runtime";
 import {createSandboxSecurityPolicy, TwingSandboxSecurityPolicy} from "./sandbox/security-policy";
-import {TwingSynchronousTemplate, TwingTemplate} from "./template";
+import {renderSynchronousTemplate, TwingSynchronousTemplate, TwingTemplate} from "./template";
 import {Settings as DateTimeSettings} from "luxon";
 import {createLexer, type TwingLexer} from "./lexer";
 import {TwingCache, TwingSynchronousCache} from "./cache";
@@ -569,14 +569,14 @@ export const createSynchronousEnvironment = (
             const template = environment.loadTemplate(name);
             const context: Map<string, any> = new Map(Object.entries(data));
 
-            return template.render(environment, context, options);
+            return renderSynchronousTemplate(template, environment, context, options);
         },
         renderWithSourceMap: (name, data, options) => {
             const sourceMapRuntime = createSourceMapRuntime();
 
             const context: Map<string, any> = new Map(Object.entries(data));
             const template = environment.loadTemplate(name);
-            const output = template.render(environment, context, {
+            const output = renderSynchronousTemplate(template, environment, context, {
                 ...options,
                 sourceMapRuntime
             });
