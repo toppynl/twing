@@ -14,7 +14,21 @@ export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = as
 
     switch (node.type) {
         case "add": {
-            return await execute(left, executionContext) + await execute(right, executionContext);
+            const leftValue = await execute(left, executionContext);
+            const leftValueType = typeof leftValue;
+            
+            if (leftValueType === "string") {
+                return Promise.reject(createRuntimeError(`Unsupported operand type "${leftValueType}"`, left, template.source));
+            }
+
+            const rightValue = await execute(right, executionContext);
+            const rightValueType = typeof rightValue;
+
+            if (rightValueType === "string") {
+                return Promise.reject(createRuntimeError(`Unsupported operand type "${rightValueType}"`, right, template.source));
+            }
+            
+            return leftValue + rightValue;
         }
         case "and": {
             return !!(await execute(left, executionContext) && await execute(right, executionContext));
@@ -170,7 +184,21 @@ export const executeBinaryNodeSynchronously: TwingSynchronousNodeExecutor<TwingB
 
     switch (node.type) {
         case "add": {
-            return execute(left, executionContext) + execute(right, executionContext);
+            const leftValue = execute(left, executionContext);
+            const leftValueType = typeof leftValue;
+
+            if (leftValueType === "string") {
+                throw(createRuntimeError(`Unsupported operand type "${leftValueType}"`, left, template.source));
+            }
+
+            const rightValue = execute(right, executionContext);
+            const rightValueType = typeof rightValue;
+
+            if (rightValueType === "string") {
+                throw(createRuntimeError(`Unsupported operand type "${rightValueType}"`, right, template.source));
+            }
+            
+            return leftValue + rightValue;
         }
         case "and": {
             return !!(execute(left, executionContext) && execute(right, executionContext));
