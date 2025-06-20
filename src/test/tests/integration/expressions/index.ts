@@ -4,6 +4,7 @@ import "./array-call";
 import "./arrow";
 import "./attribute-call";
 import "./binary";
+import "./binary/add";
 import "./bitwise";
 import "./comparison";
 import "./concatenation";

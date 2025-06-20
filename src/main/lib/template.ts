@@ -26,7 +26,8 @@ import {
     type TwingTemplateLoader
 } from "./template-loader";
 import type {TwingExecutionContext, TwingSynchronousExecutionContext} from "./execution-context";
-import {iteratorToMap} from "./helpers/iterator-to-map";
+import {iterableToMap, iteratorToMap} from "./helpers/iterator-to-map";
+import {isAMapLike, type MapLike} from "./helpers/map-like";
 
 export type TwingTemplateBlockMap = Map<string, [template: TwingTemplate, name: string]>;
 export type TwingSynchronousTemplateBlockMap = Map<string, [template: TwingSynchronousTemplate, name: string]>;
@@ -184,7 +185,7 @@ export interface TwingSynchronousTemplate {
      */
     execute(
         environment: TwingSynchronousEnvironment,
-        context: Map<string, any>,
+        context: MapLike<string, any> | Record<string, any>,
         blocks: TwingSynchronousTemplateBlockMap,
         outputBuffer: TwingOutputBuffer,
         options?: {
@@ -225,7 +226,7 @@ export interface TwingSynchronousTemplate {
 
     render(
         environment: TwingSynchronousEnvironment,
-        context: Map<string, any>,
+        context: MapLike<string, any> | Record<string, any>,
         options?: {
             nodeExecutor?: TwingSynchronousNodeExecutor;
             outputBuffer?: TwingOutputBuffer;
@@ -241,6 +242,94 @@ export interface TwingSynchronousTemplate {
         }
     ): string;
 }
+
+export const executeSynchronousTemplate = (
+    template: TwingSynchronousTemplate,
+    runtime: TwingSynchronousEnvironment,
+    context: MapLike<string, any>,
+    blocks: TwingSynchronousTemplateBlockMap,
+    outputBuffer: TwingOutputBuffer,
+    options?: {
+        nodeExecutor?: TwingSynchronousNodeExecutor;
+        sandboxed?: boolean;
+        sourceMapRuntime?: TwingSourceMapRuntime;
+        /**
+         * Controls whether accessing invalid variables (variables and or attributes/methods that do not exist) triggers an error.
+         *
+         * When set to `true`, accessing invalid variables triggers an error.
+         */
+        strict?: boolean;
+        templateLoader?: TwingSynchronousTemplateLoader;
+    }
+): void => {
+    const aliases = {...template.aliases};
+    const nodeExecutor = options?.nodeExecutor || executeNodeSynchronously;
+    const sandboxed = options?.sandboxed || false;
+    const sourceMapRuntime = options?.sourceMapRuntime;
+    const templateLoader = options?.templateLoader || createSynchronousTemplateLoader(runtime);
+
+    const executionContext: TwingSynchronousExecutionContext = {
+        aliases,
+        blocks: new Map(),
+        context,
+        environment: runtime,
+        nodeExecutor,
+        outputBuffer,
+        sandboxed,
+        sourceMapRuntime,
+        strict: options?.strict || false,
+        template,
+        templateLoader
+    };
+
+    const parent = template.getParent(executionContext);
+    const ownBlocks = template.getBlocks(executionContext);
+
+    blocks = mergeIterables(ownBlocks, blocks);
+
+    nodeExecutor(template.ast, {
+        ...executionContext,
+        blocks
+    });
+
+    if (parent) {
+        return executeSynchronousTemplate(parent, runtime, context, blocks, outputBuffer, options);
+    }
+};
+
+export const renderSynchronousTemplate = (
+    template: TwingSynchronousTemplate,
+    runtime: TwingSynchronousEnvironment,
+    context: MapLike<string, any>,
+    options?: {
+        nodeExecutor?: TwingSynchronousNodeExecutor;
+        outputBuffer?: TwingOutputBuffer;
+        sandboxed?: boolean;
+        sourceMapRuntime?: TwingSourceMapRuntime;
+        /**
+         * Controls whether accessing invalid variables (variables and or attributes/methods that do not exist) triggers an error.
+         *
+         * When set to `true`, accessing invalid variables triggers an error.
+         */
+        strict?: boolean;
+        templateLoader?: TwingSynchronousTemplateLoader;
+    }
+) => {
+    const outputBuffer = options?.outputBuffer || createOutputBuffer();
+
+    outputBuffer.start();
+
+    executeSynchronousTemplate(
+        template,
+        runtime,
+        context,
+        new Map(),
+        outputBuffer,
+        options
+    );
+
+    return outputBuffer.getAndFlush();
+};
 
 export const createTemplate = (
     ast: TwingTemplateNode
@@ -972,39 +1061,14 @@ export const createSynchronousTemplate = (
             }
         },
         execute: (environment, context, blocks, outputBuffer, options) => {
-            const aliases = {...template.aliases};
-            const nodeExecutor = options?.nodeExecutor || executeNodeSynchronously;
-            const sandboxed = options?.sandboxed || false;
-            const sourceMapRuntime = options?.sourceMapRuntime;
-            const templateLoader = options?.templateLoader || createSynchronousTemplateLoader(environment);
-
-            const executionContext: TwingSynchronousExecutionContext = {
-                aliases,
-                blocks: new Map(),
-                context,
-                environment,
-                nodeExecutor,
-                outputBuffer,
-                sandboxed,
-                sourceMapRuntime,
-                strict: options?.strict || false,
-                template,
-                templateLoader
-            };
-
-            const parent = template.getParent(executionContext);
-            const ownBlocks = template.getBlocks(executionContext);
-
-            blocks = mergeIterables(ownBlocks, blocks);
-
-            nodeExecutor(ast, {
-                ...executionContext,
-                blocks
-            });
-
-            if (parent) {
-                return parent.execute(environment, context, blocks, outputBuffer, options);
-            }
+            return executeSynchronousTemplate(
+                template, 
+                environment, 
+                isAMapLike(context) ? context : iterableToMap(context), 
+                blocks, 
+                outputBuffer, 
+                options
+            );
         },
         getBlocks: (executionContext) => {
             if (blocks !== null) {
@@ -1141,19 +1205,12 @@ export const createSynchronousTemplate = (
             }
         },
         render: (environment, context, options) => {
-            const outputBuffer = options?.outputBuffer || createOutputBuffer();
-
-            outputBuffer.start();
-            
-            template.execute(
+            return renderSynchronousTemplate(
+                template,
                 environment,
-                context,
-                new Map(),
-                outputBuffer,
+                isAMapLike(context) ? context : iterableToMap(context),
                 options
             );
-
-            return outputBuffer.getAndFlush();
         }
     };
 

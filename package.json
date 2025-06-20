@@ -9,7 +9,7 @@
     "build:cjs": "rimraf dist/cjs && tsc --project src/main --module commonjs --outDir dist/cjs",
     "build:test": "rimraf dist && tsc --project src/test --outDir dist",
     "build:types": "rimraf dist/types && tsc --project src/main --declaration true --emitDeclarationOnly true --outDir dist/types",
-    "bundle": "browserify dist/cjs/lib.js -g uglifyify -s Twing -o dist/lib.min.js"
+    "bundle": "browserify dist/cjs/lib.js -g uglifyify -s Twing -o bundle/lib.min.js"
   },
   "dependencies": {
     "@sinonjs/fake-timers": "11.2.2",

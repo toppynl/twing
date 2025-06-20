@@ -3,7 +3,6 @@ author = "Eric MORAND <eric.morand@gmail.com>"
 bugs = "https://gitlab.com/nightlycommit/twing/-/issues"
 description = "First-class Twig engine for the JavaScript ecosystem"
 homepage = "http://twing.nightlycommit.com"
-jsdelivr = "lib.min.js"
 keywords = [
     "browser",
     "compiler",

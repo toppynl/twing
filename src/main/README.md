@@ -37,9 +37,7 @@ environment.render('index.twig', {name: 'Twing'}).then((output) => {
 
 ## Script tag
 
-Use [jsdelivr](https://www.jsdelivr.com/) CDN to include Twing in your HTML document:
-
-`<script src="https://cdn.jsdelivr.net/npm/twing/dist/lib.min.js"></script>`
+Use [cdnjs](https://cdnjs.com/libraries/twing) to include Twing in your HTML document.
 
 Once loaded by the browser, Twing is available under the global `Twing` variable.
 
