@@ -19,14 +19,19 @@ class Test extends TestBase {
             'index.twig': `
 {{ constant('DATE_W3C') == expect ? 'true' : 'false' }}
 {{ constant('ARRAY_AS_PROPS', object) }}
-{# named arguments #}
+{# named arguments with equals #}
 {{ constant(name = 'DATE_W3C') == expect ? 'true' : 'false' }}
-{{ constant(object = object, name = 'ARRAY_AS_PROPS') }}`
+{{ constant(object = object, name = 'ARRAY_AS_PROPS') }}
+{# named arguments with colon #}
+{{ constant(name: 'DATE_W3C') == expect ? 'true' : 'false' }}
+{{ constant(object: object, name: 'ARRAY_AS_PROPS') }}`
         };
     }
 
     getExpected() {
         return `
+true
+2
 true
 2
 true

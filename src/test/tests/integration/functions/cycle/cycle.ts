@@ -12,15 +12,26 @@ class Test extends TestBase {
 {% for i in 0..6 %}
 {{ cycle(array1, i) }}-{{ cycle(array2, i) }}
 {% endfor %}
-{# named arguments #}
+{# named arguments with equals #}
 {% for i in 0..6 %}
 {{ cycle(values = array1, position = i) }}-{{ cycle(position = i, values = array2) }}
+{% endfor %}
+{# named arguments with colon #}
+{% for i in 0..6 %}
+{{ cycle(values: array1, position: i) }}-{{ cycle(position: i, values: array2) }}
 {% endfor %}`
         };
     }
 
     getExpected() {
         return `
+odd-apple
+even-orange
+odd-citrus
+even-apple
+odd-orange
+even-citrus
+odd-apple
 odd-apple
 even-orange
 odd-citrus
