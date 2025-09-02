@@ -12,12 +12,18 @@ class Test extends TestBase {
 {% set date=date('2010-10-04T13:45:00', "UTC") %}
 {{ date|date(format='d/m/Y H:i:s P', timezone='America/Chicago') }}
 {{ date|date(timezone='America/Chicago', format='d/m/Y H:i:s P') }}
-{{ date|date('d/m/Y H:i:s P', timezone='America/Chicago') }}`
+{{ date|date('d/m/Y H:i:s P', timezone='America/Chicago') }}
+{{ date|date(format: 'd/m/Y H:i:s P', timezone: 'America/Chicago') }}
+{{ date|date(timezone: 'America/Chicago', format: 'd/m/Y H:i:s P') }}
+{{ date|date('d/m/Y H:i:s P', timezone: 'America/Chicago') }}`
         };
     }
 
     getExpected() {
         return `
+04/10/2010 06:45:00 -05:00
+04/10/2010 06:45:00 -05:00
+04/10/2010 06:45:00 -05:00
 04/10/2010 06:45:00 -05:00
 04/10/2010 06:45:00 -05:00
 04/10/2010 06:45:00 -05:00

@@ -11,9 +11,12 @@ class Test extends TestBase {
             'index.twig': `
 FOO
 {{ source("foo.twig") }}
-{# named arguments #}
+{# named arguments with equals #}
 {{ source(name = "foo.twig") }}
 {{ source(ignore_missing = true, name = "missing.twig") }}
+{# named arguments with colon #}
+{{ source(name: "foo.twig") }}
+{{ source(ignore_missing: true, name: "missing.twig") }}
 
 BAR`,
             'foo.twig': `
@@ -26,6 +29,9 @@ BAR`,
 FOO
 
 {{ foo }}<br />
+
+{{ foo }}<br />
+
 
 {{ foo }}<br />
 

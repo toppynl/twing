@@ -22,9 +22,11 @@ class Test extends TestBase {
 {{ date(date4) == date('2010-10-04 15:45') ? 'OK' : 'KO' }}
 {{ date(date5) == date('1964-01-02 04:04') ? 'OK' : 'KO' }}
 {{ date() > date('-1day') ? 'OK' : 'KO' }}
-{# named arguments #}
 {{ date(date, "America/New_York")|date('d/m/Y H:i:s P', false) }}
-{{ date(timezone="America/New_York", date=date)|date('d/m/Y H:i:s P', false) }}`
+{# named arguments with equals #}
+{{ date(timezone="America/New_York", date=date)|date('d/m/Y H:i:s P', false) }}
+{# named arguments with colon #}
+{{ date(timezone="America/New_York", date: date)|date('d/m/Y H:i:s P', false) }}`
         };
     }
 
@@ -37,6 +39,7 @@ OK
 OK
 OK
 OK
+04/10/2010 07:45:00 -04:00
 04/10/2010 07:45:00 -04:00
 04/10/2010 07:45:00 -04:00
 `;

@@ -792,7 +792,7 @@ export const createParser = (
 
             let key: TwingConstantNode | undefined = undefined;
 
-            if (namedArguments && (token = stream.nextIf("OPERATOR", '='))) {
+            if (namedArguments && (token = (stream.nextIf("OPERATOR", '=') ?? stream.nextIf("PUNCTUATION", ':')))) {
                 if (value.type !== "name") {
                     throw createParsingError(`A parameter name must be a string, "${value.type.toString()}" given.`, value, stream.source);
                 }

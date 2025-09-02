@@ -13,9 +13,14 @@ class Test extends TestBase {
 
 {% include template_from_string("Hello {{ name }}") %}
 {% include template_from_string('{% extends "parent.twig" %}{% block content %}Hello {{ name }}{% endblock %}') %}
-{# named arguments #}
+
+{# named arguments with equals #}
 {% include template_from_string(template = "Hello {{ name }}", name = "index") %}
 {% include template_from_string(name = "index", template = "Hello {{ name }}") %}
+
+{# named arguments with colon #}
+{% include template_from_string(template: "Hello {{ name }}", name: "index") %}
+{% include template_from_string(name: "index", template: "Hello {{ name }}") %}
 `,
             'parent.twig': `
 {% block content %}{% endblock %}`
@@ -26,7 +31,9 @@ class Test extends TestBase {
         return `
 Hello Fabien
 Hello Fabien
-Hello FabienHello FabienHello Fabien
+Hello Fabien
+Hello FabienHello Fabien
+Hello FabienHello Fabien
 `;
     }
 
