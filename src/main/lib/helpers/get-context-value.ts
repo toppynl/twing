@@ -26,7 +26,7 @@ export const getContextValue = (
         if (isSpecial()) {
             result = true;
         } else {
-            result = context.has(name);
+            result = context.get(name) !== undefined;
         }
     } else if (isSpecial()) {
         result = specialNames.get(name);
@@ -74,7 +74,7 @@ export const getContextValueSynchronously = (
         if (isSpecial()) {
             result = true;
         } else {
-            result = context.has(name) || globals.has(name);
+            result = context.get(name) !== undefined || globals.get(name) !== undefined;
         }
     } else if (isSpecial()) {
         result = specialNames.get(name);
