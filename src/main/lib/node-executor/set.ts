@@ -2,12 +2,14 @@ import {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "../node-executor"
 import {TwingSetNode} from "../node/set";
 
 export const executeSetNode: TwingNodeExecutor<TwingSetNode> = async (node, executionContext) => {
-    const {context, nodeExecutor: execute, outputBuffer} = executionContext;
+    const {context, nodeExecutor: execute, outputBuffer, sourceMapRuntime} = executionContext;
     const {names: namesNode, values: valuesNode} = node.children;
     const {captures} = node.attributes;
 
     const names: Array<string> = await execute(namesNode, executionContext);
 
+    executionContext.sourceMapRuntime = undefined;
+    
     if (captures) {
         outputBuffer.start();
 
@@ -31,15 +33,19 @@ export const executeSetNode: TwingNodeExecutor<TwingSetNode> = async (node, exec
             index++;
         }
     }
+    
+    executionContext.sourceMapRuntime = sourceMapRuntime;
 };
 
 export const executeSetNodeSynchronously: TwingSynchronousNodeExecutor<TwingSetNode> = (node, executionContext) => {
-    const {context, nodeExecutor: execute, outputBuffer} = executionContext;
+    const {context, nodeExecutor: execute, outputBuffer, sourceMapRuntime} = executionContext;
     const {names: namesNode, values: valuesNode} = node.children;
     const {captures} = node.attributes;
 
     const names: Array<string> = execute(namesNode, executionContext);
 
+    executionContext.sourceMapRuntime = undefined;
+    
     if (captures) {
         outputBuffer.start();
 
@@ -63,4 +69,6 @@ export const executeSetNodeSynchronously: TwingSynchronousNodeExecutor<TwingSetN
             index++;
         }
     }
+
+    executionContext.sourceMapRuntime = sourceMapRuntime;
 };
