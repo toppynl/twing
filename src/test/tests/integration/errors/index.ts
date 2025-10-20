@@ -1,5 +1,6 @@
 import "./child_contents_outside_blocks";
 import "./default_value_is_not_a_constant";
+import "./include-function-with-parse-error";
 import "./malformed_arguments";
 import "./multiline_array_with_undefined_variable";
 import "./multiline_array_with_undefined_variable_again";

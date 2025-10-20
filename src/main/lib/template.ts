@@ -28,6 +28,7 @@ import {
 import type {TwingExecutionContext, TwingSynchronousExecutionContext} from "./execution-context";
 import {iterableToMap, iteratorToMap} from "./helpers/iterator-to-map";
 import {isAMapLike, type MapLike} from "./helpers/map-like";
+import type {TwingError} from "./error";
 
 export type TwingTemplateBlockMap = Map<string, [template: TwingTemplate, name: string]>;
 export type TwingSynchronousTemplateBlockMap = Map<string, [template: TwingSynchronousTemplate, name: string]>;
@@ -482,7 +483,11 @@ export const createTemplate = (
                 }
                 else {
                     return template.loadTemplate(executionContext, name)
-                        .catch(() => {
+                        .catch((error) => {
+                            if ((error as TwingError).name === "TwingParsingError") {
+                                return Promise.reject(error);
+                            }
+                            
                             return loadTemplateAtIndex(index + 1);
                         });
                 }
@@ -954,6 +959,10 @@ export const createSynchronousTemplate = (
                     try {
                         return template.loadTemplate(executionContext, name);
                     } catch (error) {
+                        if ((error as TwingError).name === "TwingParsingError") {
+                            throw error;
+                        }
+                        
                         return loadTemplateAtIndex(index + 1);
                     }
                 }
