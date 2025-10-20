@@ -6,6 +6,7 @@ import {executeSynchronousTemplate, type TwingSynchronousTemplate, type TwingTem
 import type {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 import {iterableToMap, iteratorToMap} from "../../../helpers/iterator-to-map";
 import {mergeIterables} from "../../../helpers/merge-iterables";
+import type {TwingError} from "../../../error";
 
 /**
  * Renders a template.
@@ -62,6 +63,10 @@ export const include: TwingCallable<[
     const resolveTemplate = (templates: Array<string | TwingTemplate | null>): Promise<TwingTemplate | null> => {
         return template.loadTemplate(executionContext, templates)
             .catch((error) => {
+                if ((error as TwingError).name === "TwingParsingError") {
+                    throw error;
+                }
+                
                 if (!ignoreMissing) {
                     throw error;
                 }
@@ -149,6 +154,10 @@ export const includeSynchronously: TwingSynchronousCallable<[
         try {
             return template.loadTemplate(executionContext, templates);
         } catch (error) {
+            if ((error as TwingError).name === "TwingParsingError") {
+                throw error;
+            }
+            
             if (!ignoreMissing) {
                 throw error;
             }
