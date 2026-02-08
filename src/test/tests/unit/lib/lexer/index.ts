@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {createLexer, typeToEnglish} from "../../../../../main/lib/lexer";
 import {createOperator} from "../../../../../main/lib/operator";
 

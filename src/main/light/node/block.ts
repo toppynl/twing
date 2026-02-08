@@ -1,0 +1,20 @@
+import {TwingBaseNode, TwingBaseNodeAttributes, createBaseNode} from "../node";
+
+export type TwingBlockNodeAttributes = TwingBaseNodeAttributes & {
+    name: string;
+};
+
+export interface TwingBlockNode extends TwingBaseNode<"block", TwingBlockNodeAttributes, {
+    body: TwingBaseNode;
+}> {
+}
+
+export const createBlockNode = (
+    name: string,
+    body: TwingBaseNode,
+    line: number,
+    column: number,
+    tag: string | null = null
+): TwingBlockNode => {
+    return createBaseNode("block", {name}, {body}, line, column, tag);
+};

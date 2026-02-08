@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {createChainLoader, createSynchronousChainLoader} from "../../../../../../main/lib/loader/chain";
 import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../../main/lib/loader/array";
 import {spy, stub} from "sinon";

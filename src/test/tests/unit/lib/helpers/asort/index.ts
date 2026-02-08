@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {asort} from "../../../../../../main/lib/helpers/asort";
 
 tape('asort', (test) => {

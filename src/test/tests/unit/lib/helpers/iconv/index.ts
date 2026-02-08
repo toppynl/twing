@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {iconv} from "../../../../../../main/lib/helpers/iconv";
 
 tape('iconv', ({test}) => {

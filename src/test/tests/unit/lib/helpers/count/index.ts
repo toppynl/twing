@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {count} from "../../../../../../main/lib/helpers/count";
 
 tape('count', (test) => {

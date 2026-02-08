@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {createArrayLoader, createSynchronousArrayLoader} from "../../../../../../main/lib/loader/array";
 
 tape('createArrayLoader', ({test}) => {

@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {createTemplate} from "../../../../../main/lib/template";
 import {createTemplateNode} from "../../../../../main/lib/node/template";
 import {createBaseNode} from "../../../../../main/lib/node";

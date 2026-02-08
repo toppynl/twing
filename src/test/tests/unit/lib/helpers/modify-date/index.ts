@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {modifyDate} from "../../../../../../main/lib/helpers/modify-date";
 
 const sinon = require('sinon');

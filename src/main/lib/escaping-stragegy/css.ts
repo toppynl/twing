@@ -1,5 +1,5 @@
 import type {TwingEscapingStrategyHandler} from "../escaping-strategy";
-const phpSprintf = require('locutus/php/strings/sprintf');
+import phpSprintf from "locutus/php/strings/sprintf";
 
 export const createCssEscapingStrategyHandler = (): TwingEscapingStrategyHandler => {
     return (value) => {

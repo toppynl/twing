@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {createRuntimeError} from "../../../../../../main/lib/error/runtime";
 
 tape('createRuntimeError', ({test}) => {

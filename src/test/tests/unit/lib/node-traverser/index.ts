@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {createNodeTraverser} from "../../../../../main/lib/node-traverser";
 import {TwingBaseNode, createBaseNode} from "../../../../../main/lib/node";
 import {createNodeVisitor, TwingNodeVisitor} from "../../../../../main/lib/node-visitor";

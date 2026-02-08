@@ -2,10 +2,9 @@ import {iconv} from "../../../helpers/iconv";
 import {isTraversable} from "../../../helpers/is-traversable";
 import {iteratorToArray} from "../../../helpers/iterator-to-array";
 import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
-
-const runes = require('runes');
-const mt_rand = require('locutus/php/math/mt_rand');
-const array_rand = require('locutus/php/array/array_rand');
+import runes from 'runes';
+import mt_rand from "locutus/php/math/mt_rand";
+import array_rand from "locutus/php/array/array_rand";
 
 /**
  * Returns a random value depending on the supplied parameter type:

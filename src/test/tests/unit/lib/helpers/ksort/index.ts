@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {ksort} from "../../../../../../main/lib/helpers/ksort";
 
 tape('ksort', (test) => {

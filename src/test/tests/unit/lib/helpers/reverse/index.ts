@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {reverse} from "../../../../../../main/lib/helpers/reverse";
 
 tape('reverse', (test) => {

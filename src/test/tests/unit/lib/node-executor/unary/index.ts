@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {createConstantNode} from "../../../../../../main/lib/node/expression/constant";
 import {TwingRuntimeError} from "../../../../../../main/lib/error/runtime";
 import {

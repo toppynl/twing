@@ -11,8 +11,8 @@ runTest({
 `
     },
     context: {
-        buffer: Buffer.from('Äé'),
-        emptyBuffer: Buffer.from('')
+        buffer: Buffer.from('Äé').toString(),
+        emptyBuffer: Buffer.from('').toString()
     },
     trimmedExpectation: `
 1
@@ -29,7 +29,7 @@ runTest({
 `
     },
     context: {
-        buffer: iconv('UTF-8', 'ISO-8859-1', Buffer.from('Äé')),
+        buffer: iconv('UTF-8', 'ISO-8859-1', Buffer.from('Äé')).toString(),
     },
     environmentOptions: {
         charset: 'ISO-8859-1'

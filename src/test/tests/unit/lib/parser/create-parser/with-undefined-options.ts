@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {createParser} from "../../../../../../main/lib/parser";
 import {createSource} from "../../../../../../main/lib/source";
 import {createLexer} from "../../../../../../main/lib/lexer";

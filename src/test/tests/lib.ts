@@ -1,5 +1,5 @@
-import * as tape from 'tape';
-import * as index from "../../../main/lib";
+import tape from "tape";
+import * as index from "../../main/lib.js";
 
 tape('library index', ({same, end}) => {
     const expected: Array<string> = [

@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {isIn} from "../../../../../../main/lib/helpers/is-in";
 
 tape('is-in', ({same, end}) => {

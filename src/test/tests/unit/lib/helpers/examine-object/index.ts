@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {examineObject} from "../../../../../../main/lib/helpers/examine-object";
 
 class Foo {
