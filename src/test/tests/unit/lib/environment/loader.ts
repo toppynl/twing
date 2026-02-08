@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {createEnvironment} from "../../../../../main/lib/environment";
 import {createArrayLoader} from "../../../../../main/lib/loader/array";
 

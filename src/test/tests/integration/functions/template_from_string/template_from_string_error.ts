@@ -15,8 +15,16 @@ class Test extends TestBase {
     }
 
     getExpectedErrorMessage() {
-        return 'TwingParsingError: Unclosed variable opened at {1:1} in "foo.twig (string template 4900163d56b1af4b704c6b0afee7f98ba53418ce7a93d37a3af1882735baf9cd)" at line 1, column 24.'
+        return 'TwingParsingError: Unclosed variable opened at {1:1} in "foo.twig" at line 1, column 24.'
     }
 }
 
 runTest(createIntegrationTest(new Test()));
+runTest({
+    description: '"template_from_string" function error with no name',
+    templates: {
+        'index.twig': `
+{% include template_from_string("{{ not a Twig template ") %}`
+    },
+    expectedErrorMessage: 'TwingParsingError: Unclosed variable opened at {1:1} in "{{ not a Twig template " at line 1, column 24.'
+});

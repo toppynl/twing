@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {fillMap} from "../../../../../../main/lib/helpers/fill-map";
 
 tape('fillMap', (test) => {

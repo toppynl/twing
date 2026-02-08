@@ -3,7 +3,7 @@ import type {TwingSource} from "../source";
 import * as Path from "path";
 import {createSource} from "../source";
 
-const rtrim = require('locutus/php/strings/rtrim');
+import rtrim from "locutus/php/strings/rtrim";
 const {join, dirname, normalize} = Path.posix;
 
 export interface TwingFilesystemLoaderFilesystemStats {

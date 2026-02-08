@@ -5,5 +5,9 @@
   ],
   "sources": [
     "src/main/**/*.ts"
+  ],
+  "excludedSources": [
+    "src/main/target/**",
+    "src/main/light/**"
   ]
 }

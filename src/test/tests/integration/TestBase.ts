@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {SinonStub, stub} from 'sinon';
 import {
     createEnvironment,

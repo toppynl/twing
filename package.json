@@ -1,28 +1,29 @@
 {
   "scripts": {
-    "prebuild": "rimraf dist",
-    "prebuild:test": "npm run prebuild",
     "prebuild:test:browser": "npm run prebuild:test",
-    "test": "node dist/test",
-    "test:browser": "browserify dist/test/index.js | tape-run --sandbox=false",
-    "build": "npm run build:cjs && npm run build:types && npm run bundle",
-    "build:cjs": "rimraf dist/cjs && tsc --project src/main --module commonjs --outDir dist/cjs",
-    "build:test": "rimraf dist && tsc --project src/test --outDir dist",
-    "build:types": "rimraf dist/types && tsc --project src/main --declaration true --emitDeclarationOnly true --outDir dist/types",
-    "bundle": "browserify dist/cjs/lib.js -g uglifyify -s Twing -o bundle/lib.min.js"
+    "test": "node src/test/target/index.cjs && node src/test/target/entry.cjs",
+    "test:browser": "browserify src/test/target/index.cjs | tape-run --sandbox=false",
+    "build:main": "(cd src/main && rollup -c) && npm run bundle",
+    "build:test": "(cd src/test && rollup -c)",
+    "bundle": "browserify src/main/target/index.cjs -g uglifyify -s Twing -o bundle/lib.min.js"
   },
   "dependencies": {
+    "@nightlycommit/rollup-plugin-package-manifest": "^1.0.0-alpha.2",
     "@sinonjs/fake-timers": "11.2.2",
+    "@types/capitalize": "^2.0.2",
     "@types/create-hash": "^1.2.5",
+    "@types/esrever": "^0.2.3",
+    "@types/levenshtein": "^1.0.4",
     "@types/locutus": "^0.0.8",
     "@types/luxon": "^1.4.0",
     "@types/node": "^16.18.126",
+    "@types/runes": "^0.4.3",
     "@types/sinon": "^17.0.2",
-    "@types/tape": "^4.2.33",
+    "@types/tape": "^5.8.1",
+    "@vitrail/rollup-plugin-typescript": "^1.0.4-beta.0",
     "browserify": "^17.0.0",
     "capitalize": "^1.0.0",
     "common-shakeify": "^1.1.2",
-    "create-hash": "^1.2.0",
     "esrever": "^0.2.0",
     "htmlspecialchars": "^1.0.5",
     "iconv-lite": "^0.6.3",
@@ -33,7 +34,6 @@
     "luxon": "^1.19.3",
     "pad": "^2.0.3",
     "regex-parser": "^2.2.8",
-    "rimraf": "^2.6.2",
     "runes": "^0.4.3",
     "sinon": "^17.0.1",
     "snake-case": "^2.1.0",
@@ -41,7 +41,6 @@
     "tape": "^5.6.1",
     "tape-run": "^11.0.0",
     "twig-lexer": "^0.9.0",
-    "typescript": "^5.2.2",
-    "uglifyify": "^5.0.1"
+    "uglifyify": "^5.0.2"
   }
 }

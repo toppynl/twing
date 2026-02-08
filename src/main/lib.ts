@@ -1,5 +1,3 @@
-/* istanbul ignore file */
-
 // cache
 export type {TwingCache, TwingSynchronousCache} from "./lib/cache";
 

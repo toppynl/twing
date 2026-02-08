@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {iteratorToHash} from "../../../../../../main/lib/helpers/iterator-to-hash";
 
 class Foo {

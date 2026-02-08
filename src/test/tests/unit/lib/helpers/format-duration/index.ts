@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {Duration} from "luxon";
 import {formatDuration} from "../../../../../../main/lib/helpers/format-duration";
 

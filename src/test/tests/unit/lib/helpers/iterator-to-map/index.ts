@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {iteratorToMap} from "../../../../../../main/lib/helpers/iterator-to-map";
 
 const createIterator = () => {

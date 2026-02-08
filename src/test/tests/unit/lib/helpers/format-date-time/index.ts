@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {formatDateTime} from "../../../../../../main/lib/helpers/format-date-time";
 
 const {DateTime, Settings} = require('luxon');

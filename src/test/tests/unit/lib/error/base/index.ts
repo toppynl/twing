@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {createBaseError} from "../../../../../../main/lib/error/base";
 
 tape('createBaseError', ({test}) => {

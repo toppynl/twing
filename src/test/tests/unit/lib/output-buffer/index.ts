@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {createOutputBuffer} from "../../../../../main/lib/output-buffer";
 import {spy} from "sinon";
 import {Writable} from "stream";

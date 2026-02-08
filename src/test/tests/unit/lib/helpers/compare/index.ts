@@ -2,7 +2,7 @@ import {compare} from "../../../../../../main/lib/helpers/compare";
 
 const {DateTime} = require('luxon');
 
-import * as tape from 'tape';
+import tape from "tape";
 
 let booleanTrue = ['true', true];
 let booleanFalse = ['false', false];

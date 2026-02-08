@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {sliceMap} from "../../../../../../main/lib/helpers/slice-map";
 
 tape('slice', (test) => {

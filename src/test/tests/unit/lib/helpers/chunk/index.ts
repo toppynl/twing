@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {chunk} from "../../../../../../main/lib/helpers/chunk";
 
 tape('chunk', (test) => {

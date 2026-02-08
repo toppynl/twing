@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {sortAsynchronously} from '../../../../../../main/lib/helpers/sort';
 
 tape('sort helpers', ({test}) => {

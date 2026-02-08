@@ -1,4 +1,4 @@
-import * as tape from 'tape';
+import tape from "tape";
 import {iterate} from "../../../../../../main/lib/helpers/iterate";
 
 class TestIterator {

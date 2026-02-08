@@ -1,4 +1,4 @@
-import * as tape from "tape";
+import tape from "tape";
 import {TwingRuntimeError} from "../../../../../../main/lib/error/runtime";
 import {createBaseNode} from "../../../../../../main/lib/node";
 import {executeNode, executeNodeSynchronously} from "../../../../../../main/lib/node-executor";
