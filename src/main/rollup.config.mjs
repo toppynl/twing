@@ -53,8 +53,8 @@ const program = (commandLineArgs) => {
         ],
         output: [
             {
-                format: "module",
-                file: join('target', moduleTargetName),
+                format: "commonjs",
+                file: join('target', commonjsTargetName),
                 plugins: [
                     createPackageManifestPlugin({
                         name: 'twing',
@@ -80,12 +80,12 @@ const program = (commandLineArgs) => {
                         types: "lib.d.ts",
                         exports: {
                             ".": {
-                                import: "./index.mjs",
+                                import: "./index.cjs",
                                 require: "./index.cjs",
                                 types: "./lib.d.ts"
                             },
                             "./light": {
-                                import: "./light/index.mjs",
+                                import: "./light/index.cjs",
                                 require: "./light/index.cjs",
                                 types: "./light/light.d.ts"
                             }
@@ -93,10 +93,6 @@ const program = (commandLineArgs) => {
                         node: ">=16.0.0"
                     })
                 ]
-            },
-            {
-                format: "commonjs",
-                file: join('target', commonjsTargetName)
             }
         ]
     }, {
@@ -113,10 +109,6 @@ const program = (commandLineArgs) => {
             })
         ],
         output: [
-            {
-                format: "module",
-                file: join('target/light', moduleTargetName)
-            },
             {
                 format: "commonjs",
                 file: join('target/light', commonjsTargetName)
