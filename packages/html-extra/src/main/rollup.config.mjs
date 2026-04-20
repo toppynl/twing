@@ -63,6 +63,9 @@ const program = () => {
                                 types: "./light/light.d.ts"
                             }
                         },
+                        dependencies: {
+                            locutus: "^2.0.31"
+                        },
                         peerDependencies: {
                             twing: "*"
                         },

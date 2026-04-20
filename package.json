@@ -3,6 +3,20 @@
   "version": "0.0.0-workspace-local",
   "private": true,
   "packageManager": "pnpm@10.30.0",
+  "main": "src/main/target/index.cjs",
+  "types": "src/main/target/lib.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/main/target/index.cjs",
+      "require": "./src/main/target/index.cjs",
+      "types": "./src/main/target/lib.d.ts"
+    },
+    "./light": {
+      "import": "./src/main/target/light/index.cjs",
+      "require": "./src/main/target/light/index.cjs",
+      "types": "./src/main/target/light/light.d.ts"
+    }
+  },
   "scripts": {
     "prebuild:test:browser": "npm run prebuild:test",
     "test": "node src/test/target/index.cjs && node src/test/target/entry.cjs",

@@ -164,6 +164,9 @@ importers:
       browserify:
         specifier: ^17.0.0
         version: 17.0.1
+      locutus:
+        specifier: ^2.0.31
+        version: 2.0.39
       rollup:
         specifier: ^4.0.0
         version: 4.60.2
