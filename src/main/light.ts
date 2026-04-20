@@ -303,3 +303,8 @@ export {createSource} from "./light/source";
 export {type TwingTemplate, createTemplate, type TwingSynchronousTemplate, createSynchronousTemplate} from "./light/template";
 export {type TwingTemplateLoader, type TwingSynchronousTemplateLoader, createTemplateLoader, createSynchronousTemplateLoader} from "./light/template-loader";
 export {createTest, createSynchronousTest} from "./light/test";
+
+export {include, includeSynchronously} from "./light/extension/core/functions/include";
+export {getTraceableMethod, getSynchronousTraceableMethod} from "./light/helpers/traceable-method";
+export {iteratorToMap, iterableToMap} from "./light/helpers/iterator-to-map";
+export {mergeIterables} from "./light/helpers/merge-iterables";

@@ -209,6 +209,12 @@ export const executeNode: TwingNodeExecutor = (node, executionContext) => {
         executor = executeWithNode;
     }
     else {
+        const customExecute = (node as any).customExecute as TwingNodeExecutor | undefined;
+
+        if (typeof customExecute === "function") {
+            return customExecute(node, executionContext);
+        }
+
         return Promise.reject(createRuntimeError(`Unrecognized node of type "${node.type}"`, node, executionContext.template.source));
     }
 
@@ -342,6 +348,12 @@ export const executeNodeSynchronously: TwingSynchronousNodeExecutor = (node, exe
         executor = executeWithNodeSynchronously;
     }
     else {
+        const customExecute = (node as any).customExecuteSynchronously as TwingSynchronousNodeExecutor | undefined;
+
+        if (typeof customExecute === "function") {
+            return customExecute(node, executionContext);
+        }
+
         throw createRuntimeError(`Unrecognized node of type "${node.type}"`, node, executionContext.template.source);
     }
 

@@ -309,3 +309,8 @@ export {createSourceMapRuntime} from "./lib/source-map-runtime";
 export {type TwingTemplate, createTemplate, type TwingSynchronousTemplate, createSynchronousTemplate} from "./lib/template";
 export {type TwingTemplateLoader, type TwingSynchronousTemplateLoader, createTemplateLoader, createSynchronousTemplateLoader} from "./lib/template-loader";
 export {createTest, createSynchronousTest} from "./lib/test";
+
+export {include, includeSynchronously} from "./lib/extension/core/functions/include";
+export {getTraceableMethod, getSynchronousTraceableMethod} from "./lib/helpers/traceable-method";
+export {iteratorToMap, iterableToMap} from "./lib/helpers/iterator-to-map";
+export {mergeIterables} from "./lib/helpers/merge-iterables";

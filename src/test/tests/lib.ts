@@ -129,7 +129,11 @@ tape('library index', ({same, end}) => {
         'executeNode', 'executeNodeSynchronously',
         'createTemplateLoader', 'createSynchronousTemplateLoader',
         'createContext',
-        'createOutputBuffer'
+        'createOutputBuffer',
+        'include', 'includeSynchronously',
+        'getTraceableMethod', 'getSynchronousTraceableMethod',
+        'iteratorToMap', 'iterableToMap',
+        'mergeIterables'
     ];
 
     const propertyNames = Object.getOwnPropertyNames(index).filter((name) => name !== '__esModule');

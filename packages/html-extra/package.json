@@ -2,6 +2,20 @@
   "name": "@toppynl/twing-html-extra",
   "version": "0.0.0-workspace-local",
   "private": true,
+  "main": "src/main/target/index.cjs",
+  "types": "src/main/target/lib.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/main/target/index.cjs",
+      "require": "./src/main/target/index.cjs",
+      "types": "./src/main/target/lib.d.ts"
+    },
+    "./light": {
+      "import": "./src/main/target/light/index.cjs",
+      "require": "./src/main/target/light/index.cjs",
+      "types": "./src/main/target/light/light.d.ts"
+    }
+  },
   "scripts": {
     "prebuild:test": "pnpm run build:main",
     "prebuild:test:browser": "pnpm run build:test",

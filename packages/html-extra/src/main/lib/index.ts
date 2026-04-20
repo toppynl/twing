@@ -11,7 +11,10 @@ export const packageName = "@toppynl/twing-html-extra";
 export {Cva} from "./cva";
 export {SeparatedTokenList} from "./html-attr/separated-token-list";
 export {InlineStyle} from "./html-attr/inline-style";
+export {isAttributeValue, isIterable, isMergeable} from "./html-attr/interfaces";
 export type {AttributeValueInterface, MergeableInterface} from "./html-attr/interfaces";
+export {escapeHtml, escapeHtmlAttrRelaxed} from "./html-attr/escape";
+export {htmlAttrMerge} from "./html-attr/merge";
 
 const cvaArguments = [
     {name: "base", defaultValue: []},
