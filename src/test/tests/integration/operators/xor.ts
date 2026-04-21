@@ -1,5 +1,6 @@
 import TestBase, {runTest} from "../TestBase";
 import {createIntegrationTest} from "../test";
+import {TwingEnvironmentOptions, TwingSynchronousEnvironmentOptions} from "../../../../main/lib/environment";
 
 class Test extends TestBase {
     getDescription() {
@@ -20,6 +21,22 @@ class Test extends TestBase {
 ok
 ok
 ok`;
+    }
+
+    getEnvironmentOptions(): TwingEnvironmentOptions {
+        return {
+            parserOptions: {
+                level: 3
+            }
+        };
+    }
+
+    getSynchronousEnvironmentOptions(): TwingSynchronousEnvironmentOptions {
+        return {
+            parserOptions: {
+                level: 3
+            }
+        };
     }
 }
 

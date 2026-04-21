@@ -117,7 +117,7 @@ const getOperators = (): Array<TwingOperator> => {
         }),
         createOperator('xor', "BINARY", 12, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createXorNode(operands, line, column);
-        }),
+        }, null, 3),
         createOperator('and', "BINARY", 15, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createAndNode(operands, line, column);
         }),
@@ -551,7 +551,7 @@ export const createCoreExtension = (): TwingExtension => {
                 }),
                 createOperator('xor', "BINARY", 12, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createXorNode(operands, line, column);
-                }),
+                }, null, 3),
                 createOperator('and', "BINARY", 15, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createAndNode(operands, line, column);
                 }),

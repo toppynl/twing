@@ -1,5 +1,6 @@
-import type {TwingBaseBinaryNode} from "../binary";
-import {createBinaryNodeFactory} from "../binary";
+import {TwingBaseBinaryNode, createBinaryNodeFactory} from "../binary";
 
-export interface TwingXorNode extends TwingBaseBinaryNode<"xor"> {}
+export interface TwingXorNode extends TwingBaseBinaryNode<"xor"> {
+}
+
 export const createXorNode = createBinaryNodeFactory<TwingXorNode>("xor");
