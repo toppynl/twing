@@ -137,7 +137,7 @@ const getOperators = (): Array<TwingOperator> => {
         }, null, 3),
         createOperator('!==', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createIsNotStrictlyEqualToNode(operands, line, column);
-        }),
+        }, null, 3),
         createOperator('<=>', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createSpaceshipNode(operands, line, column);
         }),
@@ -568,7 +568,7 @@ export const createCoreExtension = (): TwingExtension => {
                 }, null, 3),
                 createOperator('!==', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createIsNotStrictlyEqualToNode(operands, line, column);
-                }),
+                }, null, 3),
                 createOperator('<=>', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createSpaceshipNode(operands, line, column);
                 }),
