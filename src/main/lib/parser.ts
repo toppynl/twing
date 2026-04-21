@@ -1248,6 +1248,10 @@ export const createParser = (
                 if (token.value === '.' || token.value === '[') {
                     node = parseSubscriptExpression(stream, node, prefixToken);
                 }
+                else if (token.value === '?' && stream.look(1).value === '.') {
+                    stream.next(); // consume the '?'
+                    node = parseSubscriptExpression(stream, node, prefixToken, true);
+                }
                 else if (token.value === '|') {
                     node = parseFilterExpression(stream, node);
                 }
@@ -1382,7 +1386,7 @@ export const createParser = (
         return expression;
     };
 
-    const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingExpressionNode, prefixToken: Token) => {
+    const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingExpressionNode, prefixToken: Token, isNullSafe: boolean = false) => {
         let token = stream.next();
         let attribute: TwingBaseExpressionNode;
         let type: TwingAttributeAccessorCallType = "any";
@@ -1477,7 +1481,7 @@ export const createParser = (
             stream.expect("PUNCTUATION", ']');
         }
 
-        return createAttributeAccessorNode(node, attribute, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn);
+        return createAttributeAccessorNode(node, attribute, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn, isNullSafe);
     };
 
     const parseTestExpression = (stream: TwingTokenStream, node: TwingExpressionNode): TwingBaseExpressionNode => {

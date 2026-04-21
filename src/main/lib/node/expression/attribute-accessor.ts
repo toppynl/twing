@@ -11,6 +11,7 @@ export type TwingAttributeAccessorNodeAttributes = TwingBaseExpressionNodeAttrib
     type: TwingAttributeAccessorCallType;
     shouldIgnoreStrictCheck?: boolean;
     shouldTestExistence: boolean;
+    isNullSafe: boolean;
 };
 
 export type TwingAttributeAccessorNodeChildren = {
@@ -28,12 +29,14 @@ export const createAttributeAccessorNode = (
     methodArguments: TwingExpressionNode,
     type: TwingAttributeAccessorCallType,
     line: number,
-    column: number
+    column: number,
+    isNullSafe: boolean = false
 ): TwingAttributeAccessorNode => {
     return createBaseExpressionNode("attribute_accessor", {
         isOptimizable: true,
         type,
-        shouldTestExistence: false
+        shouldTestExistence: false,
+        isNullSafe
     }, {
         target,
         attribute,
@@ -46,7 +49,7 @@ export const cloneGetAttributeNode = (
 ): TwingAttributeAccessorNode => {
     const {children, attributes, line, column} = attributeAccessorNode;
     const {arguments: methodArguments, attribute, target} = children;
-    const {type} = attributes;
+    const {type, isNullSafe} = attributes;
 
     return createAttributeAccessorNode(
         target,
@@ -54,6 +57,7 @@ export const cloneGetAttributeNode = (
         methodArguments,
         type,
         line,
-        column
+        column,
+        isNullSafe
     );
 };
