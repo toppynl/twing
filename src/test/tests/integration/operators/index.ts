@@ -1,3 +1,4 @@
+import "./assign";
 import "./equal";
 import "./has-every";
 import "./has-some";
