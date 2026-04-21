@@ -214,6 +214,19 @@ export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = as
                 return rightValue;
             }
 
+            if (left.type === "hash") {
+                const pairs = getKeyValuePairs(left as any);
+                const rhsMap = iteratorToMap(rightValue);
+                for (const {key: keyNode, value: patternNode} of pairs) {
+                    if (patternNode.type === "name") {
+                        const key = (keyNode as any).attributes.value;
+                        const name = (patternNode as any).attributes.name as string;
+                        context.set(name, rhsMap.has(key) ? rhsMap.get(key) : null);
+                    }
+                }
+                return rightValue;
+            }
+
             return Promise.reject(new Error(`Invalid assignment target "${left.type}"`));
         }
     }
@@ -421,6 +434,19 @@ export const executeBinaryNodeSynchronously: TwingSynchronousNodeExecutor<TwingB
                         context.set(name, rhsMap.has(i) ? rhsMap.get(i) : null);
                     }
                     // else: skip slot — don't assign
+                }
+                return rightValue;
+            }
+
+            if (left.type === "hash") {
+                const pairs = getKeyValuePairs(left as any);
+                const rhsMap = iteratorToMap(rightValue);
+                for (const {key: keyNode, value: patternNode} of pairs) {
+                    if (patternNode.type === "name") {
+                        const key = (keyNode as any).attributes.value;
+                        const name = (patternNode as any).attributes.name as string;
+                        context.set(name, rhsMap.has(key) ? rhsMap.get(key) : null);
+                    }
                 }
                 return rightValue;
             }
