@@ -29,6 +29,7 @@ import "./replace";
 import "./reverse";
 import "./round";
 import "./slice";
+import "./shuffle";
 import "./sort";
 import "./spaceless";
 import "./special_chars";
