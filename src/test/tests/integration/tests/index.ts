@@ -9,3 +9,4 @@ import "./even";
 import "./iterable";
 import "./null_coalesce";
 import "./odd";
+import "./sequence";
