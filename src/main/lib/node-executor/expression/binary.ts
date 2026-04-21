@@ -150,6 +150,11 @@ export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = as
         case "or": {
             return !!(await execute(left, executionContext) || await execute(right, executionContext));
         }
+        case "xor": {
+            const leftValue = !!(await execute(left, executionContext));
+            const rightValue = !!(await execute(right, executionContext));
+            return (leftValue || rightValue) && !(leftValue && rightValue);
+        }
         case "power": {
             return Math.pow(await execute(left, executionContext), await execute(right, executionContext));
         }
@@ -329,6 +334,11 @@ export const executeBinaryNodeSynchronously: TwingSynchronousNodeExecutor<TwingB
         }
         case "or": {
             return !!(execute(left, executionContext) || execute(right, executionContext));
+        }
+        case "xor": {
+            const leftValue = !!(execute(left, executionContext));
+            const rightValue = !!(execute(right, executionContext));
+            return (leftValue || rightValue) && !(leftValue && rightValue);
         }
         case "power": {
             return Math.pow(execute(left, executionContext), execute(right, executionContext));
