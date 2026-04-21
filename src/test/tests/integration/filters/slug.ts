@@ -14,6 +14,7 @@ class Test extends TestBase {
 {{ '  multiple   spaces  '|slug }}
 {{ 'Hello World'|slug('_') }}
 {{ 'already-a-slug'|slug }}
+{{ ('Héllo Wörld'|raw)|slug }}
 `
         };
     }
@@ -25,6 +26,7 @@ hello-world
 multiple-spaces
 hello_world
 already-a-slug
+hello-world
 `;
     }
 }
