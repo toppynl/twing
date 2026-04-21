@@ -12,6 +12,11 @@ class Test extends TestBase {
 {% set result = items|shuffle %}
 {{ result|length }}
 {{ result|sort|join(',') }}
+{% for k, v in result %}{{ k }}{% endfor %}
+
+{% set str = 'abc'|shuffle %}
+{{ str|length }}
+{{ str|split('')|sort|join('') }}
 `
         };
     }
@@ -20,6 +25,9 @@ class Test extends TestBase {
         return `
 3
 a,b,c
+012
+3
+abc
 `;
     }
 
