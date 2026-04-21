@@ -41,9 +41,9 @@ Each test is a standalone addition with no parser changes.
 
 Requires non-trivial parser changes. Destructuring variants share infrastructure and are best tackled together.
 
-- [ ] `=` assignment expression _(3.23+)_ — assign within expression context (`{% do x = 1 %}`, `{{ result = fn() }}`, chained `a = b = v`)
-- [ ] Sequence destructuring _(3.23+)_ — `{% do [a, b] = arr %}` with skip slots and null padding for short arrays
-- [ ] Object destructuring _(3.23+)_ — `{% do {name, email} = user %}` with key-based extraction
+- [x] `=` assignment expression _(3.23+)_ — assign within expression context (`{% do x = 1 %}`, `{{ result = fn() }}`, chained `a = b = v`)
+- [x] Sequence destructuring _(3.23+)_ — `{% do [a, b] = arr %}` with skip slots and null padding for short arrays
+- [x] Object destructuring _(3.23+)_ — `{% do {name, email} = user %}` with key-based extraction
 
 ---
 
