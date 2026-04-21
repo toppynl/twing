@@ -60,6 +60,7 @@ import {raw, rawSynchronously} from "./core/filters/raw";
 import {join, joinSynchronously} from "./core/filters/join";
 import {split, splitSynchronously} from "./core/filters/split";
 import {sort, sortSynchronously} from "./core/filters/sort";
+import {slug, slugSynchronously} from "./core/filters/slug";
 import {merge as mergeFilter, mergeSynchronously} from "./core/filters/merge";
 import {batch, batchSynchronously} from "./core/filters/batch";
 import {reverse as reverseFilter, reverseSynchronously} from "./core/filters/reverse";
@@ -367,6 +368,12 @@ export const createCoreExtension = (): TwingExtension => {
                     name: 'arrow',
                     defaultValue: null
                 }]),
+                createFilter('slug', slug, [
+                    {
+                        name: 'separator',
+                        defaultValue: '-'
+                    }
+                ]),
                 createFilter('spaceless', spaceless, []),
                 createFilter('split', split, [
                     {
@@ -806,6 +813,12 @@ export const createSynchronousCoreExtension = (): TwingSynchronousExtension => {
                     name: 'arrow',
                     defaultValue: null
                 }]),
+                createSynchronousFilter('slug', slugSynchronously, [
+                    {
+                        name: 'separator',
+                        defaultValue: '-'
+                    }
+                ]),
                 createSynchronousFilter('spaceless', spacelessSynchronously, []),
                 createSynchronousFilter('split', splitSynchronously, [
                     {

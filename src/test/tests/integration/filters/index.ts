@@ -30,6 +30,7 @@ import "./reverse";
 import "./round";
 import "./slice";
 import "./sort";
+import "./slug";
 import "./spaceless";
 import "./special_chars";
 import "./split";
