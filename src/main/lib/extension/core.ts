@@ -17,6 +17,7 @@ import {createAddNode} from "../node/expression/binary/add";
 import {createRangeNode} from "../node/expression/binary/range";
 import {createIsEqualNode} from "../node/expression/binary/is-equal-to";
 import {createIsNotEqualToNode} from "../node/expression/binary/is-not-equal-to";
+import {createIsNotStrictlyEqualToNode} from "../node/expression/binary/is-not-strictly-equal-to";
 import {createOrNode} from "../node/expression/binary/or";
 import {createBitwiseOrNode} from "../node/expression/binary/bitwise-or";
 import {createBitwiseXorNode} from "../node/expression/binary/bitwise-xor";
@@ -134,6 +135,9 @@ const getOperators = (): Array<TwingOperator> => {
         createOperator('===', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createIsStrictlyEqualToNode(operands, line, column);
         }, null, 3),
+        createOperator('!==', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+            return createIsNotStrictlyEqualToNode(operands, line, column);
+        }),
         createOperator('<=>', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createSpaceshipNode(operands, line, column);
         }),
@@ -562,6 +566,9 @@ export const createCoreExtension = (): TwingExtension => {
                 createOperator('===', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createIsStrictlyEqualToNode(operands, line, column);
                 }, null, 3),
+                createOperator('!==', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+                    return createIsNotStrictlyEqualToNode(operands, line, column);
+                }),
                 createOperator('<=>', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createSpaceshipNode(operands, line, column);
                 }),

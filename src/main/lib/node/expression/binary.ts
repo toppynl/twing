@@ -19,6 +19,7 @@ import type {TwingMatchesNode} from "./binary/matches";
 import type {TwingModuloNode} from "./binary/modulo";
 import type {TwingMultiplyNode} from "./binary/multiply";
 import type {TwingIsNotEqualToNode} from "./binary/is-not-equal-to";
+import type {TwingIsNotStrictlyEqualToNode} from "./binary/is-not-strictly-equal-to";
 import type {TwingIsNotInNode} from "./binary/is-not-in";
 import type {TwingIsStrictlyEqualToNode} from "./binary/is-strictly-equal-to";
 import type {TwingOrNode} from "./binary/or";
@@ -53,6 +54,7 @@ export type TwingBinaryNode =
     | TwingModuloNode
     | TwingMultiplyNode
     | TwingIsNotEqualToNode
+    | TwingIsNotStrictlyEqualToNode
     | TwingIsNotInNode
     | TwingIsStrictlyEqualToNode
     | TwingOrNode
