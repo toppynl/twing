@@ -31,6 +31,7 @@ import {createBaseExpressionNode} from "../expression";
 import type {TwingSpaceshipNode} from "./binary/spaceship";
 import type {TwingHasEveryNode} from "./binary/has-every";
 import type {TwingHasSomeNode} from "./binary/has-some";
+import type {TwingXorNode} from "./binary/xor";
 
 export type TwingBinaryNode =
     | TwingAddNode
@@ -63,6 +64,7 @@ export type TwingBinaryNode =
     | TwingSpaceshipNode
     | TwingStartsWithNode
     | TwingSubtractNode
+    | TwingXorNode
     ;
 
 export interface TwingBaseBinaryNode<Type extends string> extends TwingBaseExpressionNode<Type, TwingBaseExpressionNodeAttributes, {

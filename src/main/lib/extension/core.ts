@@ -19,6 +19,7 @@ import {createIsEqualNode} from "../node/expression/binary/is-equal-to";
 import {createIsNotEqualToNode} from "../node/expression/binary/is-not-equal-to";
 import {createIsNotStrictlyEqualToNode} from "../node/expression/binary/is-not-strictly-equal-to";
 import {createOrNode} from "../node/expression/binary/or";
+import {createXorNode} from "../node/expression/binary/xor";
 import {createBitwiseOrNode} from "../node/expression/binary/bitwise-or";
 import {createBitwiseXorNode} from "../node/expression/binary/bitwise-xor";
 import {createBitwiseAndNode} from "../node/expression/binary/bitwise-and";
@@ -113,6 +114,9 @@ const getOperators = (): Array<TwingOperator> => {
         }),
         createOperator('or', "BINARY", 10, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createOrNode(operands, line, column);
+        }),
+        createOperator('xor', "BINARY", 12, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+            return createXorNode(operands, line, column);
         }),
         createOperator('and', "BINARY", 15, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createAndNode(operands, line, column);
@@ -544,6 +548,9 @@ export const createCoreExtension = (): TwingExtension => {
                 }),
                 createOperator('or', "BINARY", 10, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createOrNode(operands, line, column);
+                }),
+                createOperator('xor', "BINARY", 12, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+                    return createXorNode(operands, line, column);
                 }),
                 createOperator('and', "BINARY", 15, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createAndNode(operands, line, column);
