@@ -188,6 +188,16 @@ export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = as
         case "subtract": {
             return await execute(left, executionContext) - await execute(right, executionContext);
         }
+        case "assign": {
+            const {context} = executionContext;
+            const rightValue = await execute(right, executionContext);
+            if (left.type === "name") {
+                const name = (left as any).attributes.name as string;
+                context.set(name, rightValue);
+                return rightValue;
+            }
+            return Promise.reject(new Error(`Invalid assignment target "${left.type}"`));
+        }
     }
 
     return Promise.reject(createRuntimeError(`Unrecognized binary node of type "${node.type}"`, node, template.source));
@@ -372,6 +382,16 @@ export const executeBinaryNodeSynchronously: TwingSynchronousNodeExecutor<TwingB
         }
         case "subtract": {
             return execute(left, executionContext) - execute(right, executionContext);
+        }
+        case "assign": {
+            const {context} = executionContext;
+            const rightValue = execute(right, executionContext);
+            if (left.type === "name") {
+                const name = (left as any).attributes.name as string;
+                context.set(name, rightValue);
+                return rightValue;
+            }
+            throw new Error(`Invalid assignment target "${left.type}"`);
         }
     }
 

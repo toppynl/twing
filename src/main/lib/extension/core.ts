@@ -103,9 +103,13 @@ import {createSpaceshipNode} from "../node/expression/binary/spaceship";
 import {createHasEveryNode} from "../node/expression/binary/has-every";
 import {createHasSomeNode} from "../node/expression/binary/has-some";
 import {createIsStrictlyEqualToNode} from "../node/expression/binary/is-strictly-equal-to";
+import {createAssignNode} from "../node/expression/binary/assign";
 
 const getOperators = (): Array<TwingOperator> => {
     return [
+        createOperator('=', "BINARY", 1, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+            return createAssignNode(operands, line, column);
+        }, "RIGHT", 3),
         createOperator('not', "UNARY", 50, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createNotNode(operands[0], line, column);
         }),
@@ -540,6 +544,9 @@ export const createCoreExtension = (): TwingExtension => {
         },
         get operators() {
             return [
+                createOperator('=', "BINARY", 1, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+                    return createAssignNode(operands, line, column);
+                }, "RIGHT", 3),
                 createOperator('not', "UNARY", 50, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createNotNode(operands[0], line, column);
                 }),
