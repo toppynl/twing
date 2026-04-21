@@ -12,12 +12,27 @@ const checkMapping = (value: any): boolean => {
                 return true;
             }
         }
+        // empty Map → not a mapping (matches PHP Twig: empty collection is always a sequence)
         return false;
     }
 
     return false;
 };
 
+/**
+ * Checks if a variable is a mapping (associative array / hash).
+ *
+ * <pre>
+ * {# evaluates to true if the foo variable is a mapping (non-sequential Map) #}
+ * {% if foo is mapping %}
+ *     {# ... #}
+ * {% endif %}
+ * </pre>
+ *
+ * @param value A variable
+ *
+ * @return {Promise<boolean>} true if the value is a mapping
+ */
 export const isMapping: TwingCallable<[value: any], boolean> = (_executionContext, value) => {
     return Promise.resolve(checkMapping(value));
 };
