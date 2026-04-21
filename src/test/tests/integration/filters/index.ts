@@ -12,6 +12,7 @@ import "./filter";
 import "./first";
 import "./force_escape";
 import "./format";
+import "./invoke";
 import "./join";
 import "./first";
 import "./json_encode";
