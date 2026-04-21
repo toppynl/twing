@@ -1248,9 +1248,14 @@ export const createParser = (
                 if (token.value === '.' || token.value === '[') {
                     node = parseSubscriptExpression(stream, node, prefixToken);
                 }
-                else if (token.value === '?' && stream.look(1).value === '.') {
-                    stream.next(); // consume the '?'
-                    node = parseSubscriptExpression(stream, node, prefixToken, true);
+                else if (token.value === '?') {
+                    const next = stream.look(1);
+                    if (next !== null && next.type === "PUNCTUATION" && next.value === '.') {
+                        stream.next(); // consume the '?'
+                        node = parseSubscriptExpression(stream, node, prefixToken, true);
+                    } else {
+                        break;
+                    }
                 }
                 else if (token.value === '|') {
                     node = parseFilterExpression(stream, node);
@@ -1426,6 +1431,10 @@ export const createParser = (
             }
 
             if ((node.type === "name") && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
+                if (isNullSafe) {
+                    throw createParsingError('The "?." operator cannot be used on "_self" or imported template macros.', {line, column}, stream.source);
+                }
+
                 const name = (attribute as TwingConstantNode<string>).attributes.value;
                 const methodCallNode = createMethodCallNode(node, name, createArrayNodeFromElements(), line, column);
 
