@@ -7,6 +7,8 @@ import {isIn} from "../../helpers/is-in";
 import {parseRegularExpression} from "../../helpers/parse-regular-expression";
 import {createRange} from "../../helpers/create-range";
 import {createRuntimeError} from "../../error/runtime";
+import {getKeyValuePairs} from "../../helpers/get-key-value-pairs";
+import {iteratorToMap} from "../../helpers/iterator-to-map";
 
 export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = async (node, executionContext) => {
     const {left, right} = node.children;
@@ -191,11 +193,27 @@ export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = as
         case "assign": {
             const {context} = executionContext;
             const rightValue = await execute(right, executionContext);
+
             if (left.type === "name") {
                 const name = (left as any).attributes.name as string;
                 context.set(name, rightValue);
                 return rightValue;
             }
+
+            if (left.type === "array") {
+                const pairs = getKeyValuePairs(left as any);
+                const rhsMap = iteratorToMap(rightValue);
+                for (let i = 0; i < pairs.length; i++) {
+                    const {value: patternNode} = pairs[i];
+                    if (patternNode.type === "name") {
+                        const name = (patternNode as any).attributes.name as string;
+                        context.set(name, rhsMap.has(i) ? rhsMap.get(i) : null);
+                    }
+                    // else: skip slot — don't assign
+                }
+                return rightValue;
+            }
+
             return Promise.reject(new Error(`Invalid assignment target "${left.type}"`));
         }
     }
@@ -386,11 +404,27 @@ export const executeBinaryNodeSynchronously: TwingSynchronousNodeExecutor<TwingB
         case "assign": {
             const {context} = executionContext;
             const rightValue = execute(right, executionContext);
+
             if (left.type === "name") {
                 const name = (left as any).attributes.name as string;
                 context.set(name, rightValue);
                 return rightValue;
             }
+
+            if (left.type === "array") {
+                const pairs = getKeyValuePairs(left as any);
+                const rhsMap = iteratorToMap(rightValue);
+                for (let i = 0; i < pairs.length; i++) {
+                    const {value: patternNode} = pairs[i];
+                    if (patternNode.type === "name") {
+                        const name = (patternNode as any).attributes.name as string;
+                        context.set(name, rhsMap.has(i) ? rhsMap.get(i) : null);
+                    }
+                    // else: skip slot — don't assign
+                }
+                return rightValue;
+            }
+
             throw new Error(`Invalid assignment target "${left.type}"`);
         }
     }
