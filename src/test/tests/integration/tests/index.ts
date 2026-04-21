@@ -7,6 +7,7 @@ import "./is-empty";
 import "./is-in";
 import "./even";
 import "./iterable";
+import "./mapping";
 import "./null_coalesce";
 import "./odd";
 import "./sequence";

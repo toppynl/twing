@@ -93,6 +93,7 @@ import {templateFromString, templateFromStringSynchronously} from "./core/functi
 import {dump, dumpSynchronously} from "./core/functions/dump";
 import {isEmpty, isEmptySynchronously} from "./core/tests/is-empty";
 import {isIterable, isIterableSynchronously} from "./core/tests/is-iterable";
+import {isMapping, isMappingSynchronously} from "./core/tests/is-mapping";
 import {isSequence, isSequenceSynchronously} from "./core/tests/is-sequence";
 import {date as dateFunction, dateSynchronously} from "./core/functions/date";
 import {isDefined, isDefinedSynchronously} from "./core/tests/is-defined";
@@ -668,6 +669,7 @@ export const createCoreExtension = (): TwingExtension => {
                 createTest('empty', isEmpty, []),
                 createTest('even', isEven, []),
                 createTest('iterable', isIterable, []),
+                createTest('mapping', isMapping, []),
                 createTest('sequence', isSequence, []),
                 createTest('none', isNull, []),
                 createTest('null', isNull, []),
@@ -1032,6 +1034,7 @@ export const createSynchronousCoreExtension = (): TwingSynchronousExtension => {
                 createSynchronousTest('empty', isEmptySynchronously, []),
                 createSynchronousTest('even', isEvenSynchronously, []),
                 createSynchronousTest('iterable', isIterableSynchronously, []),
+                createSynchronousTest('mapping', isMappingSynchronously, []),
                 createSynchronousTest('sequence', isSequenceSynchronously, []),
                 createSynchronousTest('none', isNullSynchronously, []),
                 createSynchronousTest('null', isNullSynchronously, []),
