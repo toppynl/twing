@@ -21,9 +21,9 @@ No parser work required. Each filter is independent and follows the existing fil
 
 Each is an independent parser + node + executor addition. Light touch — no existing behaviour changes.
 
-- [ ] `===` / `!==` strict equality _(3.23+)_ — reuse the comparison logic from the `same as` test
-- [ ] `xor` logical operator _(3.15+)_ — logical exclusive OR; bitwise `b-xor` already exists as a template
-- [ ] `?.` null-safe attribute access _(3.23+)_ — return `null` instead of throwing when the left-hand side is `null`
+- [x] `===` / `!==` strict equality _(3.23+)_ — reuse the comparison logic from the `same as` test
+- [x] `xor` logical operator _(3.15+)_ — logical exclusive OR; bitwise `b-xor` already exists as a template
+- [x] `?.` null-safe attribute access _(3.23+)_ — return `null` instead of throwing when the left-hand side is `null`
 
 ---
 
@@ -31,9 +31,9 @@ Each is an independent parser + node + executor addition. Light touch — no exi
 
 Each test is a standalone addition with no parser changes.
 
-- [ ] `sequence` test — is an indexed (non-associative) array
-- [ ] `mapping` test — is an associative array / object
-- [ ] `instanceof` test _(3.15+)_ — checks class inheritance; note sandbox implications
+- [x] `sequence` test — is an indexed (non-associative) array
+- [x] `mapping` test — is an associative array / object
+- [x] `instanceof` test _(3.15+)_ — checks class inheritance; note sandbox implications
 
 ---
 
