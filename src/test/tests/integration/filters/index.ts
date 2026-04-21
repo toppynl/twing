@@ -3,6 +3,7 @@ import "./batch";
 import "./capitalize";
 import "./column";
 import "./convert_encoding";
+import "./data_uri";
 import "./date";
 import "./date_modify";
 import "./default";
