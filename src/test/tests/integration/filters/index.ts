@@ -42,6 +42,7 @@ import "./url_encode";
 
 import "./dynamic_filter";
 import "./filter";
+import "./find";
 import "./force_escape";
 import "./map";
 import "./raw_on_undefined_variable";

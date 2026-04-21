@@ -75,6 +75,7 @@ import {keys, keysSynchronously} from "./core/filters/keys";
 import {spaceless, spacelessSynchronously} from "./core/filters/spaceless";
 import {column, columnSynchronously} from "./core/filters/column";
 import {filter, filterSynchronously} from "./core/filters/filter";
+import {find, findSynchronously} from "./core/filters/find";
 import {map, mapSynchronously} from "./core/filters/map";
 import {reduce, reduceSynchronously} from "./core/filters/reduce";
 import {range, rangeSynchronously} from "./core/functions/range";
@@ -268,6 +269,11 @@ export const createCoreExtension = (): TwingExtension => {
                     {
                         name: 'arrow',
                         defaultValue: null
+                    }
+                ]),
+                createFilter('find', find, [
+                    {
+                        name: 'arrow'
                     }
                 ]),
                 createFilter('first', firstFilter, []),
@@ -707,6 +713,11 @@ export const createSynchronousCoreExtension = (): TwingSynchronousExtension => {
                     {
                         name: 'arrow',
                         defaultValue: null
+                    }
+                ]),
+                createSynchronousFilter('find', findSynchronously, [
+                    {
+                        name: 'arrow'
                     }
                 ]),
                 createSynchronousFilter('first', firstSynchronously, []),
