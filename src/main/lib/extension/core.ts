@@ -43,6 +43,7 @@ import {max, maxSynchronously} from "./core/functions/max";
 import {date, dateFilterSynchronously} from "./core/filters/date";
 import {dateModify, dateModifySynchronously} from "./core/filters/date-modify";
 import {format, formatSynchronously} from "./core/filters/format";
+import {invoke, invokeSynchronously} from "./core/filters/invoke";
 import {replace, replaceSynchronously} from "./core/filters/replace";
 import {numberFormat, numberFormatSynchronously} from "./core/filters/number_format";
 import {abs, absSynchronously} from "./core/filters/abs";
@@ -279,6 +280,9 @@ export const createCoreExtension = (): TwingExtension => {
                 ]),
                 createFilter('first', firstFilter, []),
                 createFilter('format', format, [], {
+                    is_variadic: true
+                }),
+                createFilter('invoke', invoke, [], {
                     is_variadic: true
                 }),
                 createFilter('join', join, [
@@ -724,6 +728,9 @@ export const createSynchronousCoreExtension = (): TwingSynchronousExtension => {
                 ]),
                 createSynchronousFilter('first', firstSynchronously, []),
                 createSynchronousFilter('format', formatSynchronously, [], {
+                    is_variadic: true
+                }),
+                createSynchronousFilter('invoke', invokeSynchronously, [], {
                     is_variadic: true
                 }),
                 createSynchronousFilter('join', joinSynchronously, [
