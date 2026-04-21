@@ -1,7 +1,9 @@
 import {TwingCallable, TwingSynchronousCallable} from "../../../callable-wrapper";
 
 const encode = (data: string, mime: string): string => {
-    const base64 = btoa(unescape(encodeURIComponent(data)));
+    const base64 = btoa(
+        Array.from(new TextEncoder().encode(data), (b) => String.fromCharCode(b)).join('')
+    );
 
     return `data:${mime};base64,${base64}`;
 };
