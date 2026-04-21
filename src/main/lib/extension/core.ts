@@ -97,6 +97,7 @@ import {isConstant, isConstantSynchronously} from "./core/tests/is-constant";
 import {createSpaceshipNode} from "../node/expression/binary/spaceship";
 import {createHasEveryNode} from "../node/expression/binary/has-every";
 import {createHasSomeNode} from "../node/expression/binary/has-some";
+import {createIsStrictlyEqualToNode} from "../node/expression/binary/is-strictly-equal-to";
 
 const getOperators = (): Array<TwingOperator> => {
     return [
@@ -130,6 +131,9 @@ const getOperators = (): Array<TwingOperator> => {
         createOperator('!=', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createIsNotEqualToNode(operands, line, column);
         }),
+        createOperator('===', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+            return createIsStrictlyEqualToNode(operands, line, column);
+        }, null, 3),
         createOperator('<=>', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
             return createSpaceshipNode(operands, line, column);
         }),
@@ -555,6 +559,9 @@ export const createCoreExtension = (): TwingExtension => {
                 createOperator('!=', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createIsNotEqualToNode(operands, line, column);
                 }),
+                createOperator('===', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
+                    return createIsStrictlyEqualToNode(operands, line, column);
+                }, null, 3),
                 createOperator('<=>', "BINARY", 20, (operands: [TwingBaseExpressionNode, TwingBaseExpressionNode], line: number, column: number) => {
                     return createSpaceshipNode(operands, line, column);
                 }),

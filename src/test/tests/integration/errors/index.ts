@@ -8,7 +8,6 @@ import "./multiline_function_with_undefined_variable";
 import "./multiline_function_with_unknown_argument";
 import "./multiline_tag_with_undefined_variable";
 import "./parent-block-called-with-no-parent";
-import "./strict_comparison_operator_equal";
 import "./strict_comparison_operator_not_equal";
 import "./syntax_error_in_reused_template";
 import "./syntax_error_unknown_function";
