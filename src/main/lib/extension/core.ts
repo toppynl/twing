@@ -38,6 +38,7 @@ import {createOperator, TwingOperator} from "../operator";
 import {isEven, isEvenSynchronously} from "./core/tests/is-even";
 import {isOdd, isOddSynchronously} from "./core/tests/is-odd";
 import {isSameAs, isSameAsSynchronously} from "./core/tests/is-same-as";
+import {isInstanceOf, isInstanceOfSynchronously} from "./core/tests/is-instance-of";
 import {isNull, isNullSynchronously} from "./core/tests/is-null";
 import {isDivisibleBy, isDivisibleBySynchronously} from "./core/tests/is-divisible-by";
 import {min, minSynchronously} from "./core/functions/min";
@@ -679,6 +680,7 @@ export const createCoreExtension = (): TwingExtension => {
                         name: 'comparand'
                     }
                 ]),
+                createTest('instanceof', isInstanceOf, [{name: 'constructor'}]),
             ];
         }
     };
@@ -1044,6 +1046,7 @@ export const createSynchronousCoreExtension = (): TwingSynchronousExtension => {
                         name: 'comparand'
                     }
                 ]),
+                createSynchronousTest('instanceof', isInstanceOfSynchronously, [{name: 'constructor'}]),
             ];
         }
     };

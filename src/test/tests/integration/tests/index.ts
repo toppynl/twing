@@ -10,4 +10,5 @@ import "./iterable";
 import "./mapping";
 import "./null_coalesce";
 import "./odd";
+import "./instance-of";
 import "./sequence";
