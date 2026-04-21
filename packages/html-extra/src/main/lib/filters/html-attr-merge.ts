@@ -1,4 +1,4 @@
-import type {TwingCallable, TwingSynchronousCallable} from "twing";
+import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
 import {htmlAttrMerge} from "../html-attr/merge";
 
 export const htmlAttrMergeFilter: TwingCallable<unknown[], Map<string, unknown>> = async (_executionContext, ...arrays) => {

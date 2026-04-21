@@ -1,4 +1,4 @@
-import type {TwingCallable, TwingSynchronousCallable} from "twing";
+import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
 import {isAttributeValue, isIterable} from "../html-attr/interfaces";
 import {htmlAttrMerge} from "../html-attr/merge";
 import {InlineStyle} from "../html-attr/inline-style";

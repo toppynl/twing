@@ -1,5 +1,5 @@
-import type {TwingBaseExpressionNode, TwingTagHandler} from "twing";
-import {createArrayNode} from "twing";
+import type {TwingBaseExpressionNode, TwingTagHandler} from "@toppynl/twing";
+import {createArrayNode} from "@toppynl/twing";
 import {Token} from "twig-lexer";
 import {createComponentNode} from "../node/component";
 

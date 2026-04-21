@@ -1,5 +1,5 @@
-import {createFilter, createFunction, createSynchronousFilter, createSynchronousFunction} from "twing";
-import type {TwingExtension, TwingSynchronousExtension} from "twing";
+import {createFilter, createFunction, createSynchronousFilter, createSynchronousFunction} from "@toppynl/twing";
+import type {TwingExtension, TwingSynchronousExtension} from "@toppynl/twing";
 import {htmlClasses, htmlClassesSynchronously} from "./functions/html-classes";
 import {htmlCva, htmlCvaSynchronously} from "./functions/html-cva";
 import {htmlAttr, htmlAttrSynchronously} from "./functions/html-attr";

@@ -1,5 +1,5 @@
-import type {TwingBaseExpressionNode, TwingBaseNode} from "twing";
-import {createBaseNode} from "twing";
+import type {TwingBaseExpressionNode, TwingBaseNode} from "@toppynl/twing";
+import {createBaseNode} from "@toppynl/twing";
 import {executePropsNode, executePropsNodeSynchronously} from "../node-executor/props";
 
 export type PropDefaults = Record<string, TwingBaseExpressionNode>;

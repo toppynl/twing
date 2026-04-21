@@ -64,7 +64,7 @@ const program = () => {
                             }
                         },
                         peerDependencies: {
-                            twing: "*",
+                            "@toppynl/twing": "*",
                             "@toppynl/twing-html-extra": "*"
                         },
                         node: ">=16.0.0"

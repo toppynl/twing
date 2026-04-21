@@ -4,7 +4,7 @@ import {
     createEnvironment,
     createSynchronousArrayLoader,
     createSynchronousEnvironment
-} from "twing";
+} from "@toppynl/twing";
 import {createHtmlExtraExtension, createSynchronousHtmlExtraExtension} from "../../main/lib";
 
 export type HarnessCase = {

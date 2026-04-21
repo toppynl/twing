@@ -67,7 +67,7 @@ const program = () => {
                             locutus: "^2.0.31"
                         },
                         peerDependencies: {
-                            twing: "*"
+                            "@toppynl/twing": "*"
                         },
                         node: ">=16.0.0"
                     })

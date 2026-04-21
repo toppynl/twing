@@ -1,10 +1,10 @@
-import type {TwingFunction, TwingSynchronousFunction} from "twing";
+import type {TwingFunction, TwingSynchronousFunction} from "@toppynl/twing";
 import {
     createFunction,
     createMarkup,
     createSynchronousFunction,
     iteratorToMap
-} from "twing";
+} from "@toppynl/twing";
 import {ComponentAttributes} from "../component-attributes";
 import type {ComponentTemplateFinder} from "../tag-handler/component";
 

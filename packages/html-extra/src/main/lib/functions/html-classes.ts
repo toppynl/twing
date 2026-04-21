@@ -1,5 +1,5 @@
-import type {TwingCallable, TwingSynchronousCallable} from "twing";
-import {isAMarkup} from "twing";
+import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
+import {isAMarkup} from "@toppynl/twing";
 
 const describeType = (value: unknown): string => {
     if (value === null) return "null";

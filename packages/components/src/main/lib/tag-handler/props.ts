@@ -1,4 +1,4 @@
-import type {TwingTagHandler} from "twing";
+import type {TwingTagHandler} from "@toppynl/twing";
 import {createPropsNode, type PropDefaults} from "../node/props";
 
 export const createPropsTagHandler = (): TwingTagHandler => {

@@ -1,11 +1,11 @@
-import type {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "twing";
+import type {TwingNodeExecutor, TwingSynchronousNodeExecutor} from "@toppynl/twing";
 import {
     getSynchronousTraceableMethod,
     getTraceableMethod,
     include,
     includeSynchronously,
     iteratorToMap
-} from "twing";
+} from "@toppynl/twing";
 import type {ComponentNode} from "../node/component";
 import {ComponentAttributes} from "../component-attributes";
 

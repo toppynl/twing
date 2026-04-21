@@ -1,4 +1,4 @@
-import type {TwingCallable, TwingSynchronousCallable} from "twing";
+import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
 import {Cva} from "../cva";
 
 type CvaArgs = [

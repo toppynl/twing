@@ -1,4 +1,4 @@
-import type {TwingCallable, TwingSynchronousCallable} from "twing";
+import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
 import type {AttributeValueInterface} from "../html-attr/interfaces";
 import {SeparatedTokenList} from "../html-attr/separated-token-list";
 import {InlineStyle} from "../html-attr/inline-style";

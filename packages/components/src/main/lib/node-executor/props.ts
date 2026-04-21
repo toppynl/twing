@@ -1,5 +1,5 @@
-import type {TwingExecutionContext, TwingNodeExecutor, TwingSynchronousExecutionContext, TwingSynchronousNodeExecutor} from "twing";
-import {createRuntimeError} from "twing";
+import type {TwingExecutionContext, TwingNodeExecutor, TwingSynchronousExecutionContext, TwingSynchronousNodeExecutor} from "@toppynl/twing";
+import {createRuntimeError} from "@toppynl/twing";
 import type {PropsNode} from "../node/props";
 import {ComponentAttributes} from "../component-attributes";
 

@@ -4,7 +4,7 @@ import {
     createEnvironment,
     createSynchronousArrayLoader,
     createSynchronousEnvironment
-} from "twing";
+} from "@toppynl/twing";
 import {createHtmlExtraExtension, createSynchronousHtmlExtraExtension} from "@toppynl/twing-html-extra";
 import {
     createComponentsExtension,

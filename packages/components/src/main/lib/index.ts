@@ -1,5 +1,5 @@
-import type {TwingExtension, TwingLoader, TwingSynchronousExtension, TwingSynchronousLoader} from "twing";
-import {createSource} from "twing";
+import type {TwingExtension, TwingLoader, TwingSynchronousExtension, TwingSynchronousLoader} from "@toppynl/twing";
+import {createSource} from "@toppynl/twing";
 import {createPropsTagHandler} from "./tag-handler/props";
 import {createComponentTagHandler} from "./tag-handler/component";
 import {createComponentFunction, createSynchronousComponentFunction} from "./function/component";

@@ -119,6 +119,9 @@ importers:
       '@nightlycommit/rollup-plugin-package-manifest':
         specifier: ^1.0.0-alpha.2
         version: 1.0.0-alpha.2
+      '@toppynl/twing':
+        specifier: workspace:*
+        version: link:../..
       '@toppynl/twing-html-extra':
         specifier: workspace:*
         version: link:../html-extra
@@ -143,15 +146,15 @@ importers:
       tape-run:
         specifier: ^11.0.0
         version: 11.0.0
-      twing:
-        specifier: workspace:*
-        version: link:../..
 
   packages/html-extra:
     dependencies:
       '@nightlycommit/rollup-plugin-package-manifest':
         specifier: ^1.0.0-alpha.2
         version: 1.0.0-alpha.2
+      '@toppynl/twing':
+        specifier: workspace:*
+        version: link:../..
       '@types/node':
         specifier: ^16.18.126
         version: 16.18.126
@@ -176,9 +179,6 @@ importers:
       tape-run:
         specifier: ^11.0.0
         version: 11.0.0
-      twing:
-        specifier: workspace:*
-        version: link:../..
 
 packages:
 
