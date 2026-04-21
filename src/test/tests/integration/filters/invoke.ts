@@ -31,3 +31,14 @@ Hello, World!
 }
 
 runTest(createIntegrationTest(new Test()));
+
+runTest({
+    description: '"invoke" filter with non-callable value',
+    templates: {
+        'index.twig': `{{ value|invoke(1) }}`
+    },
+    context: {
+        value: 42
+    },
+    expectedErrorMessage: 'TwingRuntimeError: The "invoke" filter expects a callable, got "number" in "index.twig" at line 1, column 10.'
+});
