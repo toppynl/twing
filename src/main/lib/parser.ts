@@ -854,6 +854,12 @@ export const createParser = (
 
             first = false;
 
+            // skip slot: [a, , c] — emit null placeholder to preserve index
+            if (stream.test("PUNCTUATION", ',') || stream.test("PUNCTUATION", ']')) {
+                elements.push(createConstantNode(null, stream.current.line, stream.current.column));
+                continue;
+            }
+
             if (stream.test("SPREAD_OPERATOR")) {
                 const {current} = stream;
 

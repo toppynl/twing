@@ -3,6 +3,7 @@ import "./equal";
 import "./has-every";
 import "./has-some";
 import "./null-safe-access";
+import "./sequence-destructure";
 import "./spaceship";
 import "./strict-equal";
 import "./strict-not-equal";
