@@ -124,6 +124,11 @@ export const executeBinaryNode: TwingNodeExecutor<TwingBaseBinaryNode<any>> = as
         case "is_not_in": {
             return Promise.resolve(!isIn(await execute(left, executionContext), await execute(right, executionContext)))
         }
+        case "is_not_strictly_equal_to": {
+            const leftValue = await execute(left, executionContext);
+            const rightValue = await execute(right, executionContext);
+            return leftValue !== rightValue;
+        }
         case "is_strictly_equal_to": {
             const leftValue = await execute(left, executionContext);
             const rightValue = await execute(right, executionContext);
@@ -298,6 +303,11 @@ export const executeBinaryNodeSynchronously: TwingSynchronousNodeExecutor<TwingB
         }
         case "is_not_in": {
             return !isIn(execute(left, executionContext), execute(right, executionContext));
+        }
+        case "is_not_strictly_equal_to": {
+            const leftValue = execute(left, executionContext);
+            const rightValue = execute(right, executionContext);
+            return leftValue !== rightValue;
         }
         case "is_strictly_equal_to": {
             const leftValue = execute(left, executionContext);

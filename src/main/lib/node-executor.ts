@@ -58,7 +58,7 @@ export type TwingSynchronousNodeExecutor<Node extends TwingBaseNode = TwingBaseN
     executionContext: TwingSynchronousExecutionContext
 ) => any;
 
-const binaryNodeTypes = ["add", "and", "bitwise_and", "bitwise_or", "bitwise_xor", "concatenate", "divide", "divide_and_floor", "ends_with", "has_every", "has_some", "is_equal_to", "is_greater_than", "is_greater_than_or_equal_to", "is_in", "is_less_than", "is_less_than_or_equal_to", "is_not_equal_to", "is_not_in", "is_strictly_equal_to", "matches", "modulo", "multiply", "or", "power", "range", "spaceship", "starts_with", "subtract"];
+const binaryNodeTypes = ["add", "and", "bitwise_and", "bitwise_or", "bitwise_xor", "concatenate", "divide", "divide_and_floor", "ends_with", "has_every", "has_some", "is_equal_to", "is_greater_than", "is_greater_than_or_equal_to", "is_in", "is_less_than", "is_less_than_or_equal_to", "is_not_equal_to", "is_not_in", "is_not_strictly_equal_to", "is_strictly_equal_to", "matches", "modulo", "multiply", "or", "power", "range", "spaceship", "starts_with", "subtract"];
 
 const isABinaryNode = (node: TwingBaseNode): boolean => {
     return binaryNodeTypes.includes(node.type);

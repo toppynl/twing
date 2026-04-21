@@ -1341,7 +1341,7 @@ export const createParser = (
                     node = parseHashExpression(stream);
                 }
                 else if (token.test("OPERATOR", '=') && (stream.look(-1).value === '==' || stream.look(-1).value === '!=')) {
-                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" or "!==" for strict comparison? Use "is same as(value)" instead.`, token, stream.source);
+                    throw createParsingError(`Unexpected operator of value "${token.value}". Did you try to use "===" for strict comparison? Use "===" or "is same as(value)".`, token, stream.source);
                 }
                 else {
                     throw createParsingError(`Unexpected token "${typeToEnglish(token.type)}" of value "${token.value}".`, token, stream.source);
