@@ -32,6 +32,7 @@ import "./round";
 import "./slice";
 import "./shuffle";
 import "./sort";
+import "./slug";
 import "./spaceless";
 import "./special_chars";
 import "./split";
