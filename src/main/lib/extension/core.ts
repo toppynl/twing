@@ -49,6 +49,7 @@ import {abs, absSynchronously} from "./core/filters/abs";
 import {url_encode, urlEncodeSynchronously} from "./core/filters/url_encode";
 import {jsonEncode, jsonEncodeSynchronously} from "./core/filters/json-encode";
 import {convertEncoding, convertEncodingSynchronously} from "./core/filters/convert-encoding";
+import {dataUri, dataUriSynchronously} from "./core/filters/data-uri";
 import {title, titleSynchronously} from "./core/filters/title";
 import {capitalize, capitalizeSynchronously} from "./core/filters/capitalize";
 import {upper, upperSynchronously} from "./core/filters/upper";
@@ -238,6 +239,12 @@ export const createCoreExtension = (): TwingExtension => {
                     },
                     {
                         name: 'from'
+                    }
+                ]),
+                createFilter('data_uri', dataUri, [
+                    {
+                        name: 'mime',
+                        defaultValue: 'text/plain'
                     }
                 ]),
                 createFilter('date', date, [
@@ -677,6 +684,12 @@ export const createSynchronousCoreExtension = (): TwingSynchronousExtension => {
                     },
                     {
                         name: 'from'
+                    }
+                ]),
+                createSynchronousFilter('data_uri', dataUriSynchronously, [
+                    {
+                        name: 'mime',
+                        defaultValue: 'text/plain'
                     }
                 ]),
                 createSynchronousFilter('date', dateFilterSynchronously, [
