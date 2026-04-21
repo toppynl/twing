@@ -1,6 +1,7 @@
 import "./equal";
 import "./has-every";
 import "./has-some";
+import "./null-safe-access";
 import "./spaceship";
 import "./strict-equal";
 import "./strict-not-equal";

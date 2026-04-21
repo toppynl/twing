@@ -5,37 +5,46 @@ import {getAttribute, getAttributeSynchronously} from "../../helpers/get-attribu
 
 export const executeAttributeAccessorNode: TwingNodeExecutor<TwingAttributeAccessorNode> = (node, executionContext) => {
     const {template, sandboxed, environment, nodeExecutor: execute, strict} = executionContext;
-    const {target, attribute, arguments: methodArguments} = node.children;
-    const {type, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
+    const {target: targetNode, attribute: attributeNode, arguments: argumentsNode} = node.children;
+    const {type, shouldIgnoreStrictCheck, shouldTestExistence, isNullSafe} = node.attributes;
 
-    return Promise.all([
-        execute(target, executionContext),
-        execute(attribute, executionContext),
-        execute(methodArguments, executionContext)
-    ]).then(([target, attribute, methodArguments]) => {
-        const traceableGetAttribute = getTraceableMethod(getAttribute, node, template.source);
+    return execute(targetNode, executionContext).then((target) => {
+        if (isNullSafe && (target === null || target === undefined)) {
+            return null;
+        }
 
-        return traceableGetAttribute(
-            environment,
-            target,
-            attribute,
-            methodArguments,
-            type,
-            shouldTestExistence,
-            shouldIgnoreStrictCheck || null,
-            sandboxed,
-            strict
-        )
-    })
+        return Promise.all([
+            execute(attributeNode, executionContext),
+            execute(argumentsNode, executionContext)
+        ]).then(([attribute, methodArguments]) => {
+            const traceableGetAttribute = getTraceableMethod(getAttribute, node, template.source);
+
+            return traceableGetAttribute(
+                environment,
+                target,
+                attribute,
+                methodArguments,
+                type,
+                shouldTestExistence,
+                shouldIgnoreStrictCheck || null,
+                sandboxed,
+                strict
+            );
+        });
+    });
 };
 
 export const executeAttributeAccessorNodeSynchronously: TwingSynchronousNodeExecutor<TwingAttributeAccessorNode> = (node, executionContext) => {
     const {template, sandboxed, environment, nodeExecutor: execute, strict} = executionContext;
     const {target: targetNode, attribute: attributeNode, arguments: argumentsNode} = node.children;
-    const {type, shouldIgnoreStrictCheck, shouldTestExistence} = node.attributes;
-
+    const {type, shouldIgnoreStrictCheck, shouldTestExistence, isNullSafe} = node.attributes;
 
     const target = execute(targetNode, executionContext);
+
+    if (isNullSafe && (target === null || target === undefined)) {
+        return null;
+    }
+
     const attribute = execute(attributeNode, executionContext);
     const methodArguments = execute(argumentsNode, executionContext);
 

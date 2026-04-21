@@ -1248,6 +1248,15 @@ export const createParser = (
                 if (token.value === '.' || token.value === '[') {
                     node = parseSubscriptExpression(stream, node, prefixToken);
                 }
+                else if (token.value === '?') {
+                    const next = stream.look(1);
+                    if (next !== null && next.type === "PUNCTUATION" && next.value === '.') {
+                        stream.next(); // consume the '?'
+                        node = parseSubscriptExpression(stream, node, prefixToken, true);
+                    } else {
+                        break;
+                    }
+                }
                 else if (token.value === '|') {
                     node = parseFilterExpression(stream, node);
                 }
@@ -1382,7 +1391,7 @@ export const createParser = (
         return expression;
     };
 
-    const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingExpressionNode, prefixToken: Token) => {
+    const parseSubscriptExpression = (stream: TwingTokenStream, node: TwingExpressionNode, prefixToken: Token, isNullSafe: boolean = false) => {
         let token = stream.next();
         let attribute: TwingBaseExpressionNode;
         let type: TwingAttributeAccessorCallType = "any";
@@ -1422,6 +1431,10 @@ export const createParser = (
             }
 
             if ((node.type === "name") && (node.attributes.name === '_self' || getImportedTemplate(node.attributes.name))) {
+                if (isNullSafe) {
+                    throw createParsingError('The "?." operator cannot be used on "_self" or imported template macros.', {line, column}, stream.source);
+                }
+
                 const name = (attribute as TwingConstantNode<string>).attributes.value;
                 const methodCallNode = createMethodCallNode(node, name, createArrayNodeFromElements(), line, column);
 
@@ -1477,7 +1490,7 @@ export const createParser = (
             stream.expect("PUNCTUATION", ']');
         }
 
-        return createAttributeAccessorNode(node, attribute, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn);
+        return createAttributeAccessorNode(node, attribute, createArrayNodeFromElements(), type, prefixTokenLine, prefixTokenColumn, isNullSafe);
     };
 
     const parseTestExpression = (stream: TwingTokenStream, node: TwingExpressionNode): TwingBaseExpressionNode => {
