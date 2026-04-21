@@ -21,6 +21,22 @@ ok
 ok
 ok`;
     }
+
+    getEnvironmentOptions() {
+        return {
+            parserOptions: {
+                level: 3 as const
+            }
+        };
+    }
+
+    getSynchronousEnvironmentOptions() {
+        return {
+            parserOptions: {
+                level: 3 as const
+            }
+        };
+    }
 }
 
 runTest(createIntegrationTest(new Test));
