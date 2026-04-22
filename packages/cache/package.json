@@ -1,6 +1,6 @@
 {
   "name": "@toppynl/twing-cache-extra",
-  "version": "0.0.0-workspace-local",
+  "version": "0.1.0",
   "private": true,
   "main": "src/main/target/index.cjs",
   "types": "src/main/target/lib.d.ts",
