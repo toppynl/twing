@@ -1,0 +1,37 @@
+{
+  "name": "@toppynl/twing-intl-extra",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/main/target/index.cjs",
+  "types": "src/main/target/lib.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/main/target/index.cjs",
+      "require": "./src/main/target/index.cjs",
+      "types": "./src/main/target/lib.d.ts"
+    },
+    "./light": {
+      "import": "./src/main/target/light/index.cjs",
+      "require": "./src/main/target/light/index.cjs",
+      "types": "./src/main/target/light/light.d.ts"
+    }
+  },
+  "scripts": {
+    "prebuild:test": "pnpm run build:main",
+    "build:main": "(cd src/main && rollup -c) && cp LICENSE src/main/target/LICENSE",
+    "build:test": "(cd src/test && rollup -c)",
+    "test": "node src/test/target/index.cjs"
+  },
+  "dependencies": {
+    "countries-and-timezones": "^3.0.0"
+  },
+  "devDependencies": {
+    "@nightlycommit/rollup-plugin-package-manifest": "^1.0.0-alpha.2",
+    "@types/node": "^20.0.0",
+    "@types/tape": "^5.8.1",
+    "@vitrail/rollup-plugin-typescript": "^1.0.4-beta.0",
+    "rollup": "^4.0.0",
+    "tape": "^5.6.1",
+    "@toppynl/twing": "workspace:*"
+  }
+}
