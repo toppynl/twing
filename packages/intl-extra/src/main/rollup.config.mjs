@@ -58,7 +58,8 @@ const program = () => {
                         "countries-and-timezones": "^3.0.0"
                     },
                     peerDependencies: {
-                        "@toppynl/twing": "*"
+                        "@toppynl/twing": "*",
+                        "luxon": "*"
                     },
                     node: ">=20.0.0"
                 })

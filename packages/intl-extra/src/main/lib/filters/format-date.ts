@@ -1,5 +1,5 @@
 import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
-import {DateTime} from "luxon";
+import type {DateTime} from "luxon";
 
 type DateStyle = 'none' | 'short' | 'medium' | 'long' | 'full';
 const VALID_FORMATS: DateStyle[] = ['none', 'short', 'medium', 'long', 'full'];
