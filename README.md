@@ -1,70 +1,66 @@
-# Twing
-[![NPM version][npm-image]][npm-url] [![Build Status][build-image]][build-url] [![Coverage percentage][coveralls-image]][coveralls-url] [![Donate][donate-image]][donate-url]
+# @toppynl/twing
 
-First-class TypeScript and JavaScript Twig compiler
+First-class TypeScript and JavaScript [Twig](https://twig.symfony.com/) template engine.
 
-## Prerequisites
+A fork of [nightlycommit/twing](https://github.com/nightlycommit/twing) extended with Twig 3.x language features and additional extension packages.
 
-This projects needs at least **node.js 16.0.0** to run.
+## Installation
 
-It is also strongly recommended to have [ts-node](https://www.npmjs.com/package/ts-node) and [One Double Zero](https://www.npmjs.com/package/one-double-zero) installed globally to ease the writing of tests and the tracking of the code coverage.
-
-## Usage
-
-### Installation
-
-```shell
-npm install
+```sh
+npm install @toppynl/twing
 ```
 
-### Build the library
+Node.js 16 or later is required.
 
-```shell
-npm run build
+## Basic usage
+
+```ts
+import { createEnvironment, TwingLoaderArray } from '@toppynl/twing';
+
+const loader = new TwingLoaderArray({
+    'index.html': 'Hello {{ name }}!'
+});
+
+const env = createEnvironment(loader);
+
+const output = await env.render('index.html', { name: 'World' });
+// => 'Hello World!'
 ```
 
-### Build and run the test suite
+### Synchronous rendering
 
-```shell
-npm run build:test
-npm run test
+```ts
+import { createSynchronousEnvironment, TwingLoaderArray } from '@toppynl/twing';
+
+const env = createSynchronousEnvironment(loader);
+
+const output = env.renderSync('index.html', { name: 'World' });
 ```
 
-### Build and run the test suite in a browser
+### Browser / bundle (no filesystem)
 
-```shell
-npm run build:test
-npm run test:browser
+```ts
+import { createEnvironment } from '@toppynl/twing/light';
 ```
 
-### Writing and executing tests
+The `light` entry point excludes Node.js-only features (`convert_encoding`, filesystem loader, source maps).
 
-Assuming one want to execute the test located in `src/test/tests/integration/comparison/to-array.ts`, one would run:
+## Extension packages
 
-```shell
-ts-node src/test/tests/integration/comparison/to-array.ts
+| Package | Description |
+|---------|-------------|
+| [`@toppynl/twing-html-extra`](https://www.npmjs.com/package/@toppynl/twing-html-extra) | `html_classes`, `html_attr`, `html_attr_merge`, `html_cva` |
+| [`@toppynl/twing-components`](https://www.npmjs.com/package/@toppynl/twing-components) | `{% props %}`, `{% component %}`, `<twig:Name />` |
+
+```ts
+import { HtmlExtraExtension } from '@toppynl/twing-html-extra';
+
+const env = createEnvironment(loader, {
+    extensions: [new HtmlExtraExtension()]
+});
 ```
 
-It is even possible - and recommended - to track the coverage while writing tests:
-
-```shell
-odz ts-node src/test/tests/integration/comparison/to-array.ts
-```
-
-Of course, it is also perfectly possible to pipe the result of the test to your favorite tap formatter:
-
-```shell
-src/test/tests/integration/comparison$ ts-node . | tap-nyan
- 9   -_-_-_-_-_,------,
- 0   -_-_-_-_-_|   /\_/\ 
- 0   -_-_-_-_-^|__( ^ .^) 
-     -_-_-_-_-  ""  "" 
-  Pass!
-```
-
-## PHP Twig Parity
-
-This table tracks parity with the [official PHP Twig](https://twig.symfony.com/) implementation. The PHP Twig version column notes when a feature was introduced (features without a version have been present since Twig 3.0).
+## PHP Twig parity
 
 **Legend:** ✅ Implemented · ❌ Not yet implemented · 📦 Available via extension package
 
@@ -92,7 +88,7 @@ This table tracks parity with the [official PHP Twig](https://twig.symfony.com/)
 | `sandbox` | ✅ | | Sandboxed execution mode |
 | `set` | ✅ | | Variable assignment |
 | `spaceless` | ✅ | | Remove whitespace between HTML tags |
-| `types` | ✅ | 3.13+ | Parsed and discarded; no runtime effect (placeholder for tooling) |
+| `types` | ✅ | 3.13+ | Parsed and discarded; no runtime effect |
 | `use` | ✅ | | Horizontal template reuse |
 | `verbatim` | ✅ | | Raw output without parsing |
 | `with` | ✅ | | Scoped variable context |
@@ -170,7 +166,8 @@ This table tracks parity with the [official PHP Twig](https://twig.symfony.com/)
 | `template_from_string` | ✅ | | Create template from string |
 | `html_attr` | 📦 | — | `@toppynl/twing-html-extra` |
 | `html_classes` | 📦 | — | `@toppynl/twing-html-extra` |
-| `html_cva` | 📦 | 3.12+ | `@toppynl/twing-html-extra` |
+| `html_cva` | 📦 | — | `@toppynl/twing-html-extra` |
+| `component` | 📦 | — | `@toppynl/twing-components` |
 
 ### Tests
 
@@ -189,7 +186,7 @@ This table tracks parity with the [official PHP Twig](https://twig.symfony.com/)
 | `same as` | ✅ | | Strict equality |
 | `sequence` | ✅ | | Is indexed array |
 
-### Operators & Language Features
+### Operators & language features
 
 | Feature | Status | PHP Twig | Notes |
 |---------|--------|----------|-------|
@@ -197,7 +194,7 @@ This table tracks parity with the [official PHP Twig](https://twig.symfony.com/)
 | `b-and`, `b-or`, `b-xor` | ✅ | | Bitwise operators |
 | `xor` | ✅ | 3.15+ | Logical exclusive OR |
 | `==`, `!=` | ✅ | | Loose equality |
-| `===`, `!==` | ✅ | 3.23+ | Strict equality operators |
+| `===`, `!==` | ✅ | 3.23+ | Strict equality |
 | `<`, `<=`, `>`, `>=` | ✅ | | Comparison |
 | `<=>` | ✅ | | Spaceship (three-way comparison) |
 | `in`, `not in` | ✅ | | Containment check |
@@ -210,34 +207,18 @@ This table tracks parity with the [official PHP Twig](https://twig.symfony.com/)
 | `??` | ✅ | | Null coalescing |
 | `?:` | ✅ | | Ternary / Elvis |
 | `?.` | ✅ | 3.23+ | Null-safe attribute access |
-| `=` (assignment expression) | ✅ | 3.23+ | Assign within expression |
-| `=>` (arrow functions) | ✅ | 3.0+ | Single-expression lambdas |
-| `...` (spread) | ✅ | 3.7+ | Spread arrays/mappings |
-| `\|` (filter pipe) | ✅ | | Filter application |
+| `=` assignment expression | ✅ | 3.23+ | Assign within expression context |
+| `=>` arrow functions | ✅ | 3.0+ | Single-expression lambdas |
+| `...` spread | ✅ | 3.7+ | Spread arrays/mappings |
+| `\|` filter pipe | ✅ | | Filter application |
 | Sequence destructuring | ✅ | 3.23+ | `{% do [a, b] = arr %}` |
 | Object destructuring | ✅ | 3.23+ | `{% do {name} = obj %}` |
 | String interpolation `#{}` | ✅ | | In double-quoted strings |
 | Whitespace control `{%- -%}` | ✅ | | Trim surrounding whitespace |
-| Inline comments `# …` | ❌ | 3.15+ | Comment inside expressions |
 | Number literals with `_` | ✅ | 3.17+ | `1_000_000` readability |
+| Inline expression comments | ❌ | 3.15+ | `{{ value # comment }}` |
 | Enum support | ❌ | 3.12+ | `enum()`, `enum_cases()` |
-
-## Contributing
-
-* Fork this repository
-* Code
-* Implement tests using [tape](https://github.com/substack/tape)
-* Issue a pull request keeping in mind that all pull requests must reference an issue in the issue queue
 
 ## License
 
-Copyright © 2018-2023 [Eric MORAND](https://github.com/ericmorand). Released under the [2-Clause BSD License](https://github.com/ericmorand/twing/blob/master/LICENSE).
-
-[npm-image]: https://badge.fury.io/js/twing.svg
-[npm-url]: https://npmjs.org/package/twing
-[build-image]: https://gitlab.com/nightlycommit/twing/badges/main/pipeline.svg
-[build-url]: https://gitlab.com/nightlycommit/twing/-/pipelines
-[coveralls-image]: https://coveralls.io/repos/gitlab/nightlycommit/twing/badge.svg
-[coveralls-url]: https://coveralls.io/gitlab/nightlycommit/twing
-[donate-image]: https://img.shields.io/badge/Donate-PayPal-green.svg
-[donate-url]: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7YZU3L2JL2KJA
+BSD-2-Clause. Based on [nightlycommit/twing](https://github.com/nightlycommit/twing) by Eric MORAND.

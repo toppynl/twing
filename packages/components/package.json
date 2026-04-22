@@ -5,7 +5,7 @@
   "scripts": {
     "prebuild:test": "pnpm run build:main",
     "prebuild:test:browser": "pnpm run build:test",
-    "build:main": "(cd src/main && rollup -c)",
+    "build:main": "(cd src/main && rollup -c) && cp LICENSE src/main/target/LICENSE",
     "build:test": "(cd src/test && rollup -c)",
     "test": "node src/test/target/index.cjs",
     "test:browser": "browserify src/test/target/index.cjs | tape-run --sandbox=false"

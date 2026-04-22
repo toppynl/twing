@@ -24,7 +24,7 @@
     "prebuild:test:browser": "npm run prebuild:test",
     "test": "node src/test/target/index.cjs && node src/test/target/entry.cjs",
     "test:browser": "browserify src/test/target/index.cjs | tape-run --sandbox=false",
-    "build:main": "(cd src/main && rollup -c) && npm run bundle",
+    "build:main": "(cd src/main && rollup -c) && npm run bundle && cp README.md src/main/target/README.md && cp LICENSE src/main/target/LICENSE",
     "build:test": "(cd src/test && rollup -c)",
     "bundle": "browserify src/main/target/index.cjs -g uglifyify -s Twing -o bundle/lib.min.js",
     "build:workspaces": "pnpm -r --filter=\"./packages/*\" build:main",
