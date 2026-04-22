@@ -219,7 +219,7 @@ This table tracks parity with the [official PHP Twig](https://twig.symfony.com/)
 | String interpolation `#{}` | ✅ | | In double-quoted strings |
 | Whitespace control `{%- -%}` | ✅ | | Trim surrounding whitespace |
 | Inline comments `# …` | ❌ | 3.15+ | Comment inside expressions |
-| Number literals with `_` | ❌ | 3.17+ | `1_000_000` readability |
+| Number literals with `_` | ✅ | 3.17+ | `1_000_000` readability |
 | Enum support | ❌ | 3.12+ | `enum()`, `enum_cases()` |
 
 ## Contributing

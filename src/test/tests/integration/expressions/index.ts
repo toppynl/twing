@@ -18,6 +18,7 @@ import "./literals";
 import "./matches";
 import "./method-call";
 import "./negative_numbers";
+import "./number_separator";
 import "./nullish_coalescing";
 import "./operators_as_variables";
 import "./postfix";

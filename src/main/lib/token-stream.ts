@@ -84,6 +84,10 @@ export const createTokenStream = (
         },
         toAst: () => {
             return stream.traverse((token: Token, stream: TokenStream) => {
+                if (token.test("NUMBER") && typeof token.value === 'string' && token.value.includes('_')) {
+                    token = new Token("NUMBER", token.value.replace(/_/g, ''), token.line, token.column);
+                }
+
                 token = astVisitor(token, stream);
 
                 if (token && token.test("TEST_OPERATOR")) {
