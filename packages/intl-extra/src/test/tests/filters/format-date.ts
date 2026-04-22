@@ -48,7 +48,7 @@ runCase({
 runCase({
     description: 'format_date: timezone from dateFormatterPrototype',
     template: `{{ date|format_date('medium', '', null, 'gregorian', 'en') }}`,
-    context: {date: DateTime.fromISO('2024-01-15T13:37:00.000Z')},
+    context: {date: DateTime.fromISO('2024-01-15T03:00:00.000Z')},
     dateFormatterPrototype: new Intl.DateTimeFormat('en', {timeZone: 'America/New_York'}),
-    expectation: 'Jan 15, 2024'
+    expectation: 'Jan 14, 2024'
 });
