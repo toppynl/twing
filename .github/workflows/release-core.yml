@@ -91,3 +91,13 @@ jobs:
           git commit -m "chore: bump @toppynl/twing to ${{ inputs.version }} [skip ci]" || true
           git tag "twing-v${{ inputs.version }}" -m "Release @toppynl/twing@${{ inputs.version }}"
           git push origin main --follow-tags
+
+      - name: Create GitHub Release
+        if: inputs.dry_run == false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "twing-v${{ inputs.version }}" \
+            --title "@toppynl/twing@${{ inputs.version }}" \
+            --generate-notes \
+            --notes-start-tag "twing-v$(git tag --sort=-version:refname | grep '^twing-v' | sed -n '2p')"
