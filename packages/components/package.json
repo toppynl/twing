@@ -1,6 +1,6 @@
 {
   "name": "@toppynl/twing-components",
-  "version": "0.0.0-workspace-local",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "prebuild:test": "pnpm run build:main",
@@ -15,11 +15,13 @@
     "@types/node": "^16.18.126",
     "@types/tape": "^5.8.1",
     "@vitrail/rollup-plugin-typescript": "^1.0.4-beta.0",
-    "@toppynl/twing-html-extra": "workspace:*",
     "browserify": "^17.0.0",
     "rollup": "^4.0.0",
     "tape": "^5.6.1",
-    "tape-run": "^11.0.0",
-    "@toppynl/twing": "workspace:*"
+    "tape-run": "^11.0.0"
+  },
+  "devDependencies": {
+    "@toppynl/twing": "workspace:*",
+    "@toppynl/twing-html-extra": "workspace:*"
   }
 }
