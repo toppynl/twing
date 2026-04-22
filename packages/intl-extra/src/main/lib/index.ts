@@ -8,6 +8,7 @@ import {
     localeName, localeNameSynchronously,
     timezoneName, timezoneNameSynchronously
 } from "./filters/display-names";
+import {countryTimezones, countryTimezonesSynchronously} from "./filters/country-timezones";
 
 export const packageName = "@toppynl/twing-intl-extra";
 
@@ -24,6 +25,7 @@ export const createIntlExtension = (
         createFilter('language_name', languageName, [localeArg]),
         createFilter('locale_name', localeName, [localeArg]),
         createFilter('timezone_name', timezoneName, [localeArg]),
+        createFilter('country_timezones', countryTimezones, []),
     ],
     functions: [],
     nodeVisitors: [],
@@ -43,6 +45,7 @@ export const createSynchronousIntlExtension = (
         createSynchronousFilter('language_name', languageNameSynchronously, [localeArg]),
         createSynchronousFilter('locale_name', localeNameSynchronously, [localeArg]),
         createSynchronousFilter('timezone_name', timezoneNameSynchronously, [localeArg]),
+        createSynchronousFilter('country_timezones', countryTimezonesSynchronously, []),
     ],
     functions: [],
     nodeVisitors: [],
