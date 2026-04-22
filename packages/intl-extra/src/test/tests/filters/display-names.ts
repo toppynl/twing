@@ -59,3 +59,21 @@ runCase({
     template: `{{ 'Invalid/Zone'|timezone_name }}`,
     expectedErrorMessage: 'TwingRuntimeError: Unable to get the timezone name for "Invalid/Zone" in "index.twig" at line 1, column 19'
 });
+
+runCase({
+    description: 'currency_name filter: invalid code throws',
+    template: `{{ 'XXX_INVALID'|currency_name }}`,
+    expectedErrorMessage: 'TwingRuntimeError: Unable to get the currency name for "XXX_INVALID" in "index.twig" at line 1, column 18'
+});
+
+runCase({
+    description: 'language_name filter: invalid code throws',
+    template: `{{ 'xyz_INVALID'|language_name }}`,
+    expectedErrorMessage: 'TwingRuntimeError: Unable to get the language name for "xyz_INVALID" in "index.twig" at line 1, column 18'
+});
+
+runCase({
+    description: 'locale_name filter: underscore locale converted correctly',
+    template: `{{ 'zh_Hans_CN'|locale_name('en') }}`,
+    expectation: 'Simplified Chinese (China)'
+});

@@ -1,16 +1,20 @@
 import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
 
 const getLocale = (locale: string | null | undefined): string => {
-    if (locale) return locale.replace('_', '-');
+    if (locale) return locale.replaceAll('_', '-');
     return new Intl.DateTimeFormat().resolvedOptions().locale;
+};
+
+const resolveCountryName = (value: string, locale?: string): string => {
+    const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'region', fallback: 'none'});
+    const result = displayNames.of(value);
+    if (!result) throw new Error(`Unable to get the country name for "${value}"`);
+    return result;
 };
 
 export const countryName: TwingCallable = async (_ctx, value: string, locale?: string) => {
     try {
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'region'});
-        const result = displayNames.of(value);
-        if (!result || result === value) throw new Error();
-        return result;
+        return resolveCountryName(value, locale);
     } catch {
         throw new Error(`Unable to get the country name for "${value}"`);
     }
@@ -18,21 +22,22 @@ export const countryName: TwingCallable = async (_ctx, value: string, locale?: s
 
 export const countryNameSynchronously: TwingSynchronousCallable = (_ctx, value: string, locale?: string) => {
     try {
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'region'});
-        const result = displayNames.of(value);
-        if (!result || result === value) throw new Error();
-        return result;
+        return resolveCountryName(value, locale);
     } catch {
         throw new Error(`Unable to get the country name for "${value}"`);
     }
 };
 
+const resolveCurrencyName = (value: string, locale?: string): string => {
+    const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'currency', fallback: 'none'});
+    const result = displayNames.of(value);
+    if (!result) throw new Error(`Unable to get the currency name for "${value}"`);
+    return result;
+};
+
 export const currencyName: TwingCallable = async (_ctx, value: string, locale?: string) => {
     try {
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'currency'});
-        const result = displayNames.of(value);
-        if (!result || result === value) throw new Error();
-        return result;
+        return resolveCurrencyName(value, locale);
     } catch {
         throw new Error(`Unable to get the currency name for "${value}"`);
     }
@@ -40,25 +45,26 @@ export const currencyName: TwingCallable = async (_ctx, value: string, locale?: 
 
 export const currencyNameSynchronously: TwingSynchronousCallable = (_ctx, value: string, locale?: string) => {
     try {
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'currency'});
-        const result = displayNames.of(value);
-        if (!result || result === value) throw new Error();
-        return result;
+        return resolveCurrencyName(value, locale);
     } catch {
         throw new Error(`Unable to get the currency name for "${value}"`);
     }
 };
 
+const resolveCurrencySymbol = (value: string, locale?: string): string => {
+    const parts = new Intl.NumberFormat([getLocale(locale)], {
+        style: 'currency',
+        currency: value,
+        currencyDisplay: 'symbol'
+    }).formatToParts(0);
+    const symbol = parts.find(p => p.type === 'currency');
+    if (!symbol) throw new Error(`Unable to get the currency symbol for "${value}"`);
+    return symbol.value;
+};
+
 export const currencySymbol: TwingCallable = async (_ctx, value: string, locale?: string) => {
     try {
-        const parts = new Intl.NumberFormat([getLocale(locale)], {
-            style: 'currency',
-            currency: value,
-            currencyDisplay: 'symbol'
-        }).formatToParts(0);
-        const symbol = parts.find(p => p.type === 'currency');
-        if (!symbol) throw new Error();
-        return symbol.value;
+        return resolveCurrencySymbol(value, locale);
     } catch {
         throw new Error(`Unable to get the currency symbol for "${value}"`);
     }
@@ -66,25 +72,22 @@ export const currencySymbol: TwingCallable = async (_ctx, value: string, locale?
 
 export const currencySymbolSynchronously: TwingSynchronousCallable = (_ctx, value: string, locale?: string) => {
     try {
-        const parts = new Intl.NumberFormat([getLocale(locale)], {
-            style: 'currency',
-            currency: value,
-            currencyDisplay: 'symbol'
-        }).formatToParts(0);
-        const symbol = parts.find(p => p.type === 'currency');
-        if (!symbol) throw new Error();
-        return symbol.value;
+        return resolveCurrencySymbol(value, locale);
     } catch {
         throw new Error(`Unable to get the currency symbol for "${value}"`);
     }
 };
 
+const resolveLanguageName = (value: string, locale?: string): string => {
+    const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'language', fallback: 'none'});
+    const result = displayNames.of(value);
+    if (!result) throw new Error(`Unable to get the language name for "${value}"`);
+    return result;
+};
+
 export const languageName: TwingCallable = async (_ctx, value: string, locale?: string) => {
     try {
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'language'});
-        const result = displayNames.of(value);
-        if (!result || result === value) throw new Error();
-        return result;
+        return resolveLanguageName(value, locale);
     } catch {
         throw new Error(`Unable to get the language name for "${value}"`);
     }
@@ -92,22 +95,23 @@ export const languageName: TwingCallable = async (_ctx, value: string, locale?: 
 
 export const languageNameSynchronously: TwingSynchronousCallable = (_ctx, value: string, locale?: string) => {
     try {
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'language'});
-        const result = displayNames.of(value);
-        if (!result || result === value) throw new Error();
-        return result;
+        return resolveLanguageName(value, locale);
     } catch {
         throw new Error(`Unable to get the language name for "${value}"`);
     }
 };
 
+const resolveLocaleName = (value: string, locale?: string): string => {
+    const normalized = value.replaceAll('_', '-');
+    const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'language', fallback: 'none'});
+    const result = displayNames.of(normalized);
+    if (!result) throw new Error(`Unable to get the locale name for "${value}"`);
+    return result;
+};
+
 export const localeName: TwingCallable = async (_ctx, value: string, locale?: string) => {
     try {
-        const normalized = value.replace('_', '-');
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'language'});
-        const result = displayNames.of(normalized);
-        if (!result || result === normalized) throw new Error();
-        return result;
+        return resolveLocaleName(value, locale);
     } catch {
         throw new Error(`Unable to get the locale name for "${value}"`);
     }
@@ -115,11 +119,7 @@ export const localeName: TwingCallable = async (_ctx, value: string, locale?: st
 
 export const localeNameSynchronously: TwingSynchronousCallable = (_ctx, value: string, locale?: string) => {
     try {
-        const normalized = value.replace('_', '-');
-        const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'language'});
-        const result = displayNames.of(normalized);
-        if (!result || result === normalized) throw new Error();
-        return result;
+        return resolveLocaleName(value, locale);
     } catch {
         throw new Error(`Unable to get the locale name for "${value}"`);
     }
