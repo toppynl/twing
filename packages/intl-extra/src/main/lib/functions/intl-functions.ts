@@ -36,13 +36,7 @@ const ISO_15924_CODES: string[] = [
 const getLocale = (locale: string | null | undefined): string =>
     locale ? locale.replaceAll('_', '-') : new Intl.DateTimeFormat().resolvedOptions().locale;
 
-export const countryTimezonesFunction = (countryCode: string): string[] => {
-    const timezones = ct.getTimezonesForCountry(countryCode);
-    if (!timezones || timezones.length === 0) {
-        throw new Error(`No timezones found for country "${countryCode}"`);
-    }
-    return timezones.map(tz => tz.name);
-};
+export {resolveCountryTimezones as countryTimezonesFunction} from "../shared/country-timezones";
 
 export const countryNamesFunction = (locale?: string | null): Map<string, string> => {
     const displayNames = new Intl.DisplayNames([getLocale(locale)], {type: 'region', fallback: 'none'});
@@ -103,4 +97,6 @@ export const scriptNamesFunction = (locale?: string | null): Map<string, string>
     return result;
 };
 
+// locale_names returns ISO 639-1 codes only — same as language_names.
+// Full BCP-47 locale enumeration (fr_FR, zh_Hans_CN, etc.) is not available via built-in Intl APIs.
 export const localeNamesFunction = languageNamesFunction;
