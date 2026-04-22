@@ -5,6 +5,7 @@ import {Settings} from "luxon";
 
 // todo: unit test every property because this is the public API
 import "./loader";
+import "./runtime-registry";
 
 tape('createEnvironment ', ({test}) => {
     test('options', ({test}) => {

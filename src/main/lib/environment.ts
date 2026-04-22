@@ -104,6 +104,20 @@ export interface TwingEnvironment {
     addTest(test: TwingTest): void;
 
     /**
+     * Registers a runtime service instance. The instance is keyed by its constructor
+     * and retrievable via `getRuntime(Constructor)`. Typically called by extensions
+     * via their `runtimes` property, but may be called directly.
+     */
+    registerRuntime(runtime: object): void;
+
+    /**
+     * Returns a previously registered runtime instance by its constructor.
+     *
+     * @throws {Error} When no runtime is registered for the given constructor.
+     */
+    getRuntime<T>(ctor: abstract new (...args: any[]) => T): T;
+
+    /**
      * Loads a template by its name.
      *
      * @param name The name of the template to load
@@ -191,6 +205,20 @@ export interface TwingSynchronousEnvironment {
     addTest(test: TwingSynchronousTest): void;
 
     /**
+     * Registers a runtime service instance. The instance is keyed by its constructor
+     * and retrievable via `getRuntime(Constructor)`. Typically called by extensions
+     * via their `runtimes` property, but may be called directly.
+     */
+    registerRuntime(runtime: object): void;
+
+    /**
+     * Returns a previously registered runtime instance by its constructor.
+     *
+     * @throws {Error} When no runtime is registered for the given constructor.
+     */
+    getRuntime<T>(ctor: abstract new (...args: any[]) => T): T;
+
+    /**
      * Loads a template by its name.
      *
      * @param name The name of the template to load
@@ -267,6 +295,7 @@ export const createEnvironment = (
         url: urlEscapingStrategy
     };
     const extensionSet = createExtensionSet<TwingExtension>();
+    const runtimes = new Map<Function, object>();
 
     extensionSet.addExtension(createCoreExtension());
 
@@ -325,13 +354,31 @@ export const createEnvironment = (
         get timezone() {
             return options?.timezone || DateTimeSettings.defaultZoneName
         },
-        addExtension: extensionSet.addExtension,
+        addExtension: (extension) => {
+            extensionSet.addExtension(extension);
+
+            for (const runtime of extension.runtimes ?? []) {
+                environment.registerRuntime(runtime);
+            }
+        },
         addFilter: extensionSet.addFilter,
         addFunction: extensionSet.addFunction,
         addNodeVisitor: extensionSet.addNodeVisitor,
         addOperator: extensionSet.addOperator,
         addTagHandler: extensionSet.addTagHandler,
         addTest: extensionSet.addTest,
+        registerRuntime: (runtime: object) => {
+            runtimes.set(runtime.constructor, runtime);
+        },
+        getRuntime: <T>(ctor: abstract new (...args: any[]) => T): T => {
+            const runtime = runtimes.get(ctor as Function);
+
+            if (runtime === undefined) {
+                throw new Error(`No runtime registered for "${ctor.name}"`);
+            }
+
+            return runtime as T;
+        },
         loadTemplate: async (name, from = null) => {
             const templateLoader = createTemplateLoader(environment);
 
@@ -448,6 +495,7 @@ export const createSynchronousEnvironment = (
         url: urlEscapingStrategy
     };
     const extensionSet = createExtensionSet<TwingSynchronousExtension>();
+    const runtimes = new Map<Function, object>();
 
     extensionSet.addExtension(createSynchronousCoreExtension());
 
@@ -506,13 +554,31 @@ export const createSynchronousEnvironment = (
         get timezone() {
             return options?.timezone || DateTimeSettings.defaultZoneName
         },
-        addExtension: extensionSet.addExtension,
+        addExtension: (extension) => {
+            extensionSet.addExtension(extension);
+
+            for (const runtime of extension.runtimes ?? []) {
+                environment.registerRuntime(runtime);
+            }
+        },
         addFilter: extensionSet.addFilter,
         addFunction: extensionSet.addFunction,
         addNodeVisitor: extensionSet.addNodeVisitor,
         addOperator: extensionSet.addOperator,
         addTagHandler: extensionSet.addTagHandler,
         addTest: extensionSet.addTest,
+        registerRuntime: (runtime: object) => {
+            runtimes.set(runtime.constructor, runtime);
+        },
+        getRuntime: <T>(ctor: abstract new (...args: any[]) => T): T => {
+            const runtime = runtimes.get(ctor as Function);
+
+            if (runtime === undefined) {
+                throw new Error(`No runtime registered for "${ctor.name}"`);
+            }
+
+            return runtime as T;
+        },
         loadTemplate: (name, from = null) => {
             const templateLoader = createSynchronousTemplateLoader(environment);
 

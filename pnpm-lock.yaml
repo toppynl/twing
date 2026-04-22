@@ -114,17 +114,11 @@ importers:
         specifier: ^5.0.2
         version: 5.0.2
 
-  packages/components:
+  packages/cache:
     dependencies:
       '@nightlycommit/rollup-plugin-package-manifest':
         specifier: ^1.0.0-alpha.2
         version: 1.0.0-alpha.2
-      '@toppynl/twing':
-        specifier: workspace:*
-        version: link:../..
-      '@toppynl/twing-html-extra':
-        specifier: workspace:*
-        version: link:../html-extra
       '@types/node':
         specifier: ^16.18.126
         version: 16.18.126
@@ -146,15 +140,50 @@ importers:
       tape-run:
         specifier: ^11.0.0
         version: 11.0.0
+    devDependencies:
+      '@toppynl/twing':
+        specifier: workspace:*
+        version: link:../..
+
+  packages/components:
+    dependencies:
+      '@nightlycommit/rollup-plugin-package-manifest':
+        specifier: ^1.0.0-alpha.2
+        version: 1.0.0-alpha.2
+      '@types/node':
+        specifier: ^16.18.126
+        version: 16.18.126
+      '@types/tape':
+        specifier: ^5.8.1
+        version: 5.8.1
+      '@vitrail/rollup-plugin-typescript':
+        specifier: ^1.0.4-beta.0
+        version: 1.0.4-beta.0(rollup@4.60.2)(tslib@2.8.1)(typescript@5.5.4)
+      browserify:
+        specifier: ^17.0.0
+        version: 17.0.1
+      rollup:
+        specifier: ^4.0.0
+        version: 4.60.2
+      tape:
+        specifier: ^5.6.1
+        version: 5.9.0
+      tape-run:
+        specifier: ^11.0.0
+        version: 11.0.0
+    devDependencies:
+      '@toppynl/twing':
+        specifier: workspace:*
+        version: link:../..
+      '@toppynl/twing-html-extra':
+        specifier: workspace:*
+        version: link:../html-extra
 
   packages/html-extra:
     dependencies:
       '@nightlycommit/rollup-plugin-package-manifest':
         specifier: ^1.0.0-alpha.2
         version: 1.0.0-alpha.2
-      '@toppynl/twing':
-        specifier: workspace:*
-        version: link:../..
       '@types/node':
         specifier: ^16.18.126
         version: 16.18.126
@@ -179,6 +208,10 @@ importers:
       tape-run:
         specifier: ^11.0.0
         version: 11.0.0
+    devDependencies:
+      '@toppynl/twing':
+        specifier: workspace:*
+        version: link:../..
 
 packages:
 

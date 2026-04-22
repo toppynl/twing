@@ -28,7 +28,7 @@ const attrTypeArguments = [
     {name: "type", defaultValue: "sst"}
 ];
 
-export const createHtmlExtraExtension = (): TwingExtension => ({
+export const createHtmlExtension = (): TwingExtension => ({
     filters: [
         createFilter("html_attr_merge", htmlAttrMergeFilter, [], {is_variadic: true}),
         createFilter("html_attr_type", htmlAttrType, attrTypeArguments)
@@ -44,7 +44,7 @@ export const createHtmlExtraExtension = (): TwingExtension => ({
     tests: []
 });
 
-export const createSynchronousHtmlExtraExtension = (): TwingSynchronousExtension => ({
+export const createSynchronousHtmlExtension = (): TwingSynchronousExtension => ({
     filters: [
         createSynchronousFilter("html_attr_merge", htmlAttrMergeFilterSynchronously, [], {is_variadic: true}),
         createSynchronousFilter("html_attr_type", htmlAttrTypeSynchronously, attrTypeArguments)
