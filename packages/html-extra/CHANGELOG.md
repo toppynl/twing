@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/toppynl/twing/compare/twing-html-extra-v1.0.0...twing-html-extra-v1.0.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* **ci:** anchor tags now on correct commits — re-trigger release ([013805a](https://github.com/toppynl/twing/commit/013805aaf4d97c597a3f62c516c46d7c525ee94f))
+
 # 1.0.0 (2026-04-22)
 
 
