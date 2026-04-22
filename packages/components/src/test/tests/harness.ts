@@ -5,7 +5,7 @@ import {
     createSynchronousArrayLoader,
     createSynchronousEnvironment
 } from "@toppynl/twing";
-import {createHtmlExtraExtension, createSynchronousHtmlExtraExtension} from "@toppynl/twing-html-extra";
+import {createHtmlExtension, createSynchronousHtmlExtension} from "@toppynl/twing-html-extra";
 import {
     createComponentsExtension,
     createSynchronousComponentsExtension,
@@ -47,7 +47,7 @@ export const runCase = ({
             }
 
             const environment = createEnvironment(loader);
-            environment.addExtension(createHtmlExtraExtension());
+            environment.addExtension(createHtmlExtension());
             environment.addExtension(createComponentsExtension());
 
             try {
@@ -79,7 +79,7 @@ export const runCase = ({
             }
 
             const environment = createSynchronousEnvironment(loader);
-            environment.addExtension(createSynchronousHtmlExtraExtension());
+            environment.addExtension(createSynchronousHtmlExtension());
             environment.addExtension(createSynchronousComponentsExtension());
 
             try {

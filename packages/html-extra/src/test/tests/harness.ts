@@ -5,7 +5,7 @@ import {
     createSynchronousArrayLoader,
     createSynchronousEnvironment
 } from "@toppynl/twing";
-import {createHtmlExtraExtension, createSynchronousHtmlExtraExtension} from "../../main/lib";
+import {createHtmlExtension, createSynchronousHtmlExtension} from "../../main/lib";
 
 export type HarnessCase = {
     description: string;
@@ -28,7 +28,7 @@ export const runCase = ({
         test('asynchronously', async ({fail, equal, end}: Test) => {
             const loader = createArrayLoader({'index.twig': template});
             const environment = createEnvironment(loader);
-            environment.addExtension(createHtmlExtraExtension());
+            environment.addExtension(createHtmlExtension());
 
             try {
                 const actual = await environment.render('index.twig', context || {});
@@ -54,7 +54,7 @@ export const runCase = ({
         test('synchronously', ({fail, equal, end}: Test) => {
             const loader = createSynchronousArrayLoader({'index.twig': template});
             const environment = createSynchronousEnvironment(loader);
-            environment.addExtension(createSynchronousHtmlExtraExtension());
+            environment.addExtension(createSynchronousHtmlExtension());
 
             try {
                 const actual = environment.render('index.twig', context || {});
