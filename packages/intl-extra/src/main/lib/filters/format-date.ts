@@ -60,12 +60,15 @@ const resolveDatetime = (
     value: DateTime | string | null,
     dateFormat: string,
     timeFormat: string,
-    _pattern: string,
+    pattern: string,
     timezone: string | false | null,
     calendar: string,
     locale: string | null | undefined,
     dateFormatterPrototype?: Intl.DateTimeFormat
 ): string => {
+    if (pattern) {
+        throw new Error('ICU date patterns are not supported; use dateFormat/timeFormat style names instead');
+    }
     validateFormat(dateFormat);
     validateFormat(timeFormat);
 

@@ -46,6 +46,13 @@ runCase({
 });
 
 runCase({
+    description: 'format_date filter: non-empty pattern throws',
+    template: `{{ date|format_date('medium', 'dd/MM/y') }}`,
+    context: {date: DateTime.fromISO('2024-01-15T13:37:00.000Z')},
+    expectedErrorMessage: 'TwingRuntimeError: ICU date patterns are not supported; use dateFormat/timeFormat style names instead in "index.twig" at line 1, column 9'
+});
+
+runCase({
     description: 'format_date: timezone from dateFormatterPrototype',
     template: `{{ date|format_date('medium', '', null, 'gregorian', 'en') }}`,
     context: {date: DateTime.fromISO('2024-01-15T03:00:00.000Z')},

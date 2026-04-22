@@ -253,6 +253,9 @@ importers:
       '@toppynl/twing':
         specifier: workspace:*
         version: link:../..
+      '@types/luxon':
+        specifier: ^1.4.0
+        version: 1.27.1
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.39
@@ -266,7 +269,7 @@ importers:
         specifier: ^17.0.0
         version: 17.0.1
       luxon:
-        specifier: ^1.0.0
+        specifier: ^1.19.3
         version: 1.28.1
       rollup:
         specifier: ^4.0.0
