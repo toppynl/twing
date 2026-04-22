@@ -63,33 +63,33 @@ export type CacheCase = {
     context?: Record<string, unknown>;
     expectation: string;
     prePopulated?: Record<string, string>;
-    assertCalls?: (calls: CacheCall[], mode: "async" | "sync") => void;
+    assertCalls?: (t: Test, calls: CacheCall[]) => void;
 };
 
 export const runCase = ({description, template, context, expectation, prePopulated, assertCalls}: CacheCase) => {
     tape(description, ({test}) => {
-        test("asynchronously", async ({equal, end}: Test) => {
+        test("asynchronously", async (t: Test) => {
             const {adapter, calls} = createMockAdapter(prePopulated ?? {});
             const environment = createEnvironment(createArrayLoader({"index.twig": template}));
             environment.addExtension(createCacheExtension(adapter));
 
             const actual = await environment.render("index.twig", context ?? {});
 
-            equal(actual, expectation, `${description}: renders as expected (async)`);
-            assertCalls?.(calls, "async");
-            end();
+            t.equal(actual, expectation, `${description}: renders as expected (async)`);
+            assertCalls?.(t, calls);
+            t.end();
         });
 
-        test("synchronously", ({equal, end}: Test) => {
+        test("synchronously", (t: Test) => {
             const {syncAdapter, calls} = createMockAdapter(prePopulated ?? {});
             const environment = createSynchronousEnvironment(createSynchronousArrayLoader({"index.twig": template}));
             environment.addExtension(createSynchronousCacheExtension(syncAdapter));
 
             const actual = environment.render("index.twig", context ?? {});
 
-            equal(actual, expectation, `${description}: renders as expected (sync)`);
-            assertCalls?.(calls, "sync");
-            end();
+            t.equal(actual, expectation, `${description}: renders as expected (sync)`);
+            assertCalls?.(t, calls);
+            t.end();
         });
     });
 };

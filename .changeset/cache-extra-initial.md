@@ -1,6 +1,6 @@
 ---
 "@toppynl/twing-cache-extra": minor
-"@toppynl/twing-html-extra": patch
+"@toppynl/twing-html-extra": minor
 "@toppynl/twing-components": patch
 ---
 
