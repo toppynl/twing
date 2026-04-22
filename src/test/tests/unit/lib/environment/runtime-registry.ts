@@ -40,4 +40,16 @@ tape("environment.registerRuntime + getRuntime", ({test}) => {
         equal(environment.getRuntime(FakeRuntime), instance);
         end();
     });
+
+    test("sync: extension runtimes are auto-registered on addExtension", ({equal, end}) => {
+        const environment = createSynchronousEnvironment(createSynchronousArrayLoader({}));
+        const instance = new FakeRuntime();
+        environment.addExtension({
+            filters: [], functions: [], tests: [], operators: [],
+            nodeVisitors: [], tagHandlers: [],
+            runtimes: [instance]
+        });
+        equal(environment.getRuntime(FakeRuntime), instance);
+        end();
+    });
 });
