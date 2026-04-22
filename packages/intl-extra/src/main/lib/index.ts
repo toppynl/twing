@@ -1,4 +1,4 @@
-import {createFilter, createSynchronousFilter} from "@toppynl/twing";
+import {createFilter, createSynchronousFilter, createFunction, createSynchronousFunction} from "@toppynl/twing";
 import type {TwingExtension, TwingSynchronousExtension} from "@toppynl/twing";
 import {
     countryName, countryNameSynchronously,
@@ -9,6 +9,15 @@ import {
     timezoneName, timezoneNameSynchronously
 } from "./filters/display-names";
 import {countryTimezones, countryTimezonesSynchronously} from "./filters/country-timezones";
+import {
+    countryTimezonesFunction,
+    countryNamesFunction,
+    currencyNamesFunction,
+    timezoneNamesFunction,
+    languageNamesFunction,
+    scriptNamesFunction,
+    localeNamesFunction
+} from "./functions/intl-functions";
 import {
     makeFormatCurrencyFilter, makeFormatCurrencyFilterSynchronously,
     makeFormatNumberFilter, makeFormatNumberFilterSynchronously,
@@ -79,7 +88,15 @@ export const createIntlExtension = (
         createFilter('format_date', makeFormatDateFilter(dateFormatterPrototype), dateArgs),
         createFilter('format_time', makeFormatTimeFilter(dateFormatterPrototype), timeArgs),
     ],
-    functions: [],
+    functions: [
+        createFunction('country_timezones', async (_ctx, code: string) => countryTimezonesFunction(code), [{name: 'countryCode'}]),
+        createFunction('country_names', async (_ctx, locale?: string) => countryNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createFunction('currency_names', async (_ctx, locale?: string) => currencyNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createFunction('timezone_names', async (_ctx, locale?: string) => timezoneNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createFunction('language_names', async (_ctx, locale?: string) => languageNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createFunction('script_names', async (_ctx, locale?: string) => scriptNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createFunction('locale_names', async (_ctx, locale?: string) => localeNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+    ],
     nodeVisitors: [],
     operators: [],
     tagHandlers: [],
@@ -118,7 +135,15 @@ export const createSynchronousIntlExtension = (
         createSynchronousFilter('format_date', makeFormatDateFilterSynchronously(dateFormatterPrototype), dateArgs),
         createSynchronousFilter('format_time', makeFormatTimeFilterSynchronously(dateFormatterPrototype), timeArgs),
     ],
-    functions: [],
+    functions: [
+        createSynchronousFunction('country_timezones', (_ctx, code: string) => countryTimezonesFunction(code), [{name: 'countryCode'}]),
+        createSynchronousFunction('country_names', (_ctx, locale?: string) => countryNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createSynchronousFunction('currency_names', (_ctx, locale?: string) => currencyNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createSynchronousFunction('timezone_names', (_ctx, locale?: string) => timezoneNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createSynchronousFunction('language_names', (_ctx, locale?: string) => languageNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createSynchronousFunction('script_names', (_ctx, locale?: string) => scriptNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+        createSynchronousFunction('locale_names', (_ctx, locale?: string) => localeNamesFunction(locale), [{name: 'locale', defaultValue: null}]),
+    ],
     nodeVisitors: [],
     operators: [],
     tagHandlers: [],
