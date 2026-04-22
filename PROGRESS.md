@@ -64,4 +64,4 @@ Higher effort, external dependencies, or JS adaptation not yet scoped.
 - [ ] `enum` function + `enum_cases` function _(3.12+)_ — PHP enum access; JS has no native enums, so an adapter/registry approach is needed
 - [ ] `cache` tag _(3.2+)_ — fragment caching with TTL and tag-based invalidation; needs a cache adapter interface
 - [ ] Inline expression comments `# …` _(3.15+)_ — lexer change to allow `{{ value # comment }}`
-- [ ] Number literals with `_` separator _(3.17+)_ — `1_000_000`, `3.141_592`; lexer change only
+- [x] Number literals with `_` separator _(3.17+)_ — `1_000_000`, `3.141_592`; lexer change only

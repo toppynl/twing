@@ -67,6 +67,16 @@ export class TwingLexer extends Lexer {
         }
     }
 
+    // Override numberRegExp to support _ as a digit separator (Twig 3.17+).
+    // The getter/setter pair prevents the parent's tokenize() from overwriting it.
+    get numberRegExp(): RegExp {
+        return /^[0-9]+(?:_[0-9]+)*(?:\.[0-9]+(?:_[0-9]+)*)*/;
+    }
+
+    set numberRegExp(_: RegExp) {
+        // intentionally ignore — parent would replace with pattern lacking _ support
+    }
+
     tokenizeSource(source: TwingSource): TwingTokenStream {
         try {
             const tokens = this.tokenize(source.code);
