@@ -241,6 +241,40 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  packages/intl-extra:
+    dependencies:
+      countries-and-timezones:
+        specifier: ^3.0.0
+        version: 3.9.0
+    devDependencies:
+      '@nightlycommit/rollup-plugin-package-manifest':
+        specifier: ^1.0.0-alpha.2
+        version: 1.0.0-alpha.2
+      '@toppynl/twing':
+        specifier: workspace:*
+        version: link:../..
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.39
+      '@types/tape':
+        specifier: ^5.8.1
+        version: 5.8.1
+      '@vitrail/rollup-plugin-typescript':
+        specifier: ^1.0.4-beta.0
+        version: 1.0.4-beta.0(rollup@4.60.2)(tslib@2.8.1)(typescript@5.5.4)
+      browserify:
+        specifier: ^17.0.0
+        version: 17.0.1
+      rollup:
+        specifier: ^4.0.0
+        version: 4.60.2
+      tape:
+        specifier: ^5.6.1
+        version: 5.9.0
+      tape-run:
+        specifier: ^11.0.0
+        version: 11.0.0
+
 packages:
 
   '@babel/code-frame@7.29.0':
@@ -745,6 +779,9 @@ packages:
   '@types/node@18.19.130':
     resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
 
+  '@types/node@20.19.39':
+    resolution: {integrity: sha512-orrrD74MBUyK8jOAD/r0+lfa1I2MO6I+vAkmAWzMYbCcgrN4lCrmK52gRFQq/JRxfYPfonkr4b0jcY7Olqdqbw==}
+
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
@@ -1170,6 +1207,10 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  countries-and-timezones@3.9.0:
+    resolution: {integrity: sha512-3upkVtUfZgdp5xOQI/Deg1ye73ae6bygJMO4UvtUi6wLjwcj7cBqx2PzSZ1VL8i5iveBbjhsQp2Judx7kPKivA==}
+    engines: {node: '>=8.x', npm: '>=5.x'}
 
   create-ecdh@4.0.4:
     resolution: {integrity: sha512-mf+TCx8wWc9VpuxfP2ht0iSISLZnt0JgWlrOKZiNqyUZWnjIaCIVNQArMHnCZKfEYRg6IM7A+NeJoN8gf/Ws0A==}
@@ -3445,6 +3486,9 @@ packages:
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
   unicode-emoji-modifier-base@1.0.0:
     resolution: {integrity: sha512-yLSH4py7oFH3oG/9K+XWrz1pSi3dfUrWEnInbxMfArOfc1+33BlGPQtLsOYwvdMy11AwUBetYuaRxSPqgkq+8g==}
     engines: {node: '>=4'}
@@ -4129,6 +4173,10 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
+  '@types/node@20.19.39':
+    dependencies:
+      undici-types: 6.21.0
+
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/responselike@1.0.3':
@@ -4655,6 +4703,8 @@ snapshots:
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 5.5.4
+
+  countries-and-timezones@3.9.0: {}
 
   create-ecdh@4.0.4:
     dependencies:
@@ -7264,6 +7314,8 @@ snapshots:
       xtend: 4.0.2
 
   undici-types@5.26.5: {}
+
+  undici-types@6.21.0: {}
 
   unicode-emoji-modifier-base@1.0.0: {}
 

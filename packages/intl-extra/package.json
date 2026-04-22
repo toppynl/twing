@@ -20,7 +20,9 @@
     "prebuild:test": "pnpm run build:main",
     "build:main": "(cd src/main && rollup -c) && cp LICENSE src/main/target/LICENSE",
     "build:test": "(cd src/test && rollup -c)",
-    "test": "node src/test/target/index.cjs"
+    "test": "node src/test/target/index.cjs",
+    "prebuild:test:browser": "pnpm run build:test",
+    "test:browser": "browserify src/test/target/index.cjs | tape-run --sandbox=false"
   },
   "dependencies": {
     "countries-and-timezones": "^3.0.0"
@@ -30,8 +32,10 @@
     "@types/node": "^20.0.0",
     "@types/tape": "^5.8.1",
     "@vitrail/rollup-plugin-typescript": "^1.0.4-beta.0",
+    "browserify": "^17.0.0",
     "rollup": "^4.0.0",
     "tape": "^5.6.1",
+    "tape-run": "^11.0.0",
     "@toppynl/twing": "workspace:*"
   }
 }
