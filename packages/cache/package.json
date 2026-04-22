@@ -1,0 +1,24 @@
+{
+  "name": "@toppynl/twing-cache-extra",
+  "version": "0.0.0-workspace-local",
+  "private": true,
+  "scripts": {
+    "prebuild:test": "pnpm run build:main",
+    "prebuild:test:browser": "pnpm run build:test",
+    "build:main": "(cd src/main && rollup -c)",
+    "build:test": "(cd src/test && rollup -c)",
+    "test": "node src/test/target/index.cjs",
+    "test:browser": "browserify src/test/target/index.cjs | tape-run --sandbox=false"
+  },
+  "dependencies": {
+    "@nightlycommit/rollup-plugin-package-manifest": "^1.0.0-alpha.2",
+    "@types/node": "^16.18.126",
+    "@types/tape": "^5.8.1",
+    "@vitrail/rollup-plugin-typescript": "^1.0.4-beta.0",
+    "browserify": "^17.0.0",
+    "rollup": "^4.0.0",
+    "tape": "^5.6.1",
+    "tape-run": "^11.0.0",
+    "@toppynl/twing": "workspace:*"
+  }
+}
