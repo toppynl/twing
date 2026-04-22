@@ -1,0 +1,103 @@
+name: Release @toppynl/twing
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 8.0.0)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run — build and verify without publishing'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  release-core:
+    name: Publish @toppynl/twing@${{ inputs.version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate version
+        run: |
+          if ! echo "${{ inputs.version }}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "ERROR: '${{ inputs.version }}' is not a valid semver string" >&2
+            exit 1
+          fi
+
+      - name: Update package.json version
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${{ inputs.version }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Build @toppynl/twing
+        env:
+          VERSION: ${{ inputs.version }}
+        run: npm run build:main
+
+      - name: Verify target version
+        run: |
+          TARGET_VERSION=$(node -e "console.log(require('./src/main/target/package.json').version)")
+          if [[ "${TARGET_VERSION}" != "${{ inputs.version }}" ]]; then
+            echo "ERROR: target version ${TARGET_VERSION} != input ${{ inputs.version }}" >&2
+            exit 1
+          fi
+          echo "Verified: src/main/target/package.json@${TARGET_VERSION}"
+
+      - name: Dry run publish
+        if: inputs.dry_run == true
+        run: |
+          cd src/main/target
+          npm publish --access public --dry-run
+          echo "DRY RUN complete — nothing published"
+
+      - name: Publish @toppynl/twing
+        if: inputs.dry_run == false
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_TOPPYNL_ORG }}
+        run: |
+          cd src/main/target
+          npm publish --access public
+
+      - name: Tag and commit
+        if: inputs.dry_run == false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump @toppynl/twing to ${{ inputs.version }} [skip ci]" || true
+          git tag "twing-v${{ inputs.version }}" -m "Release @toppynl/twing@${{ inputs.version }}"
+          git push origin main --follow-tags
+
+      - name: Create GitHub Release
+        if: inputs.dry_run == false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "twing-v${{ inputs.version }}" \
+            --title "@toppynl/twing@${{ inputs.version }}" \
+            --generate-notes \
+            --notes-start-tag "twing-v$(git tag --sort=-version:refname | grep '^twing-v' | sed -n '2p')"

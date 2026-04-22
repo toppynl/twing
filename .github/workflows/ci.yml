@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-root:
+    name: Test @toppynl/twing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build library
+        run: npm run build:lib
+
+      - name: Build test suite
+        run: npm run build:test
+
+      - name: Run tests
+        run: npm test
+
+  test-workspaces:
+    name: Test ${{ matrix.package.filter }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - filter: '@toppynl/twing-html-extra'
+            path: packages/html-extra
+          - filter: '@toppynl/twing-components'
+            path: packages/components
+          - filter: '@toppynl/twing-cache-extra'
+            path: packages/cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build root (workspace dependency)
+        run: npm run build:lib
+
+      - name: Build and test ${{ matrix.package.filter }}
+        run: |
+          pnpm --filter="${{ matrix.package.filter }}" run build:test
+          pnpm --filter="${{ matrix.package.filter }}" run test
