@@ -75,7 +75,7 @@ jobs:
       - name: Publish @toppynl/twing
         if: inputs.dry_run == false
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_TOPPYNL_ORG }}
         run: |
           cd src/main/target
           npm publish --access public
