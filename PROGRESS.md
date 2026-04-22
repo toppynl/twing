@@ -51,7 +51,7 @@ Requires non-trivial parser changes. Destructuring variants share infrastructure
 
 Each tag is independent. `types` is simpler (no runtime effect); `guard` requires a feature-registry concept.
 
-- [ ] `types` tag _(3.13+)_ — static type declarations; no runtime effect, compile-time / IDE metadata only
+- [x] `types` tag _(3.13+)_ — static type declarations; no runtime effect, compile-time / IDE metadata only
 - [ ] `guard` tag _(3.15+)_ — compile-time feature detection (`{% guard filter markdown_to_html %}…{% else %}…{% endguard %}`)
 
 ---

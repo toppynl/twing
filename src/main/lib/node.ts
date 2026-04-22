@@ -27,6 +27,7 @@ import type {TwingWithNode} from "./node/with";
 import type {TwingIfNode} from "./node/if";
 import type {TwingMethodCallNode} from "./node/expression/method-call";
 import type {TwingEscapeNode} from "./node/expression/escape";
+import type {TwingTypesNode} from "./node/types";
 import type {TwingApplyNode} from "./node/apply";
 
 export type TwingNode =
@@ -57,6 +58,7 @@ export type TwingNode =
     | TwingSetNode
     | TwingSpacelessNode
     | TwingTextNode
+    | TwingTypesNode
     | TwingTraitNode
     | TwingVerbatimNode
     | TwingWithNode

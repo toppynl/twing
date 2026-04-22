@@ -41,6 +41,7 @@ import {executeDeprecatedNode, executeDeprecatedNodeSynchronously} from "./node-
 import {executeSpreadNode, executeSpreadNodeSynchronously} from "./node-executor/expression/spread";
 import {executeCheckSecurityNode, executeCheckSecurityNodeSynchronously} from "./node-executor/check-security";
 import {executeFlushNode, executeFlushNodeSynchronously} from "./node-executor/flush";
+import {executeTypesNode, executeTypesNodeSynchronously} from "./node-executor/types";
 import {createRuntimeError} from "./error/runtime";
 import {executeConstantNode, executeConstantNodeSynchronously} from "./node-executor/constant";
 import {executeLineNode, executeLineNodeSynchronously} from "./node-executor/line";
@@ -202,6 +203,9 @@ export const executeNode: TwingNodeExecutor = (node, executionContext) => {
     else if (node.type === "text") {
         executor = executeTextNode;
     }
+    else if (node.type === "types") {
+        executor = executeTypesNode;
+    }
     else if (node.type === "verbatim") {
         executor = executeTextNode;
     }
@@ -340,6 +344,9 @@ export const executeNodeSynchronously: TwingSynchronousNodeExecutor = (node, exe
     }
     else if (node.type === "text") {
         executor = executeTextNodeSynchronously;
+    }
+    else if (node.type === "types") {
+        executor = executeTypesNodeSynchronously;
     }
     else if (node.type === "verbatim") {
         executor = executeTextNodeSynchronously;

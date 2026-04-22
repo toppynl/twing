@@ -92,7 +92,7 @@ This table tracks parity with the [official PHP Twig](https://twig.symfony.com/)
 | `sandbox` | ✅ | | Sandboxed execution mode |
 | `set` | ✅ | | Variable assignment |
 | `spaceless` | ✅ | | Remove whitespace between HTML tags |
-| `types` | ❌ | 3.13+ | Type declarations for tooling |
+| `types` | ✅ | 3.13+ | Parsed and discarded; no runtime effect (placeholder for tooling) |
 | `use` | ✅ | | Horizontal template reuse |
 | `verbatim` | ✅ | | Raw output without parsing |
 | `with` | ✅ | | Scoped variable context |

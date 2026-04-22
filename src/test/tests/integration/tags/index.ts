@@ -17,6 +17,7 @@ import "./sandbox";
 import "./set";
 import "./spaceless";
 import "./special_chars";
+import "./types";
 import "./use";
 import "./verbatim";
 import "./with";
