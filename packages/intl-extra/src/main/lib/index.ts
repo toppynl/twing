@@ -14,13 +14,41 @@ import {
     makeFormatNumberFilter, makeFormatNumberFilterSynchronously,
     makeFormatNumberStyleFilter, makeFormatNumberStyleFilterSynchronously
 } from "./filters/format-number";
+import {
+    makeFormatDatetimeFilter, makeFormatDatetimeFilterSynchronously,
+    makeFormatDateFilter, makeFormatDateFilterSynchronously,
+    makeFormatTimeFilter, makeFormatTimeFilterSynchronously
+} from "./filters/format-date";
 
 export const packageName = "@toppynl/twing-intl-extra";
 
 const localeArg = {name: 'locale', defaultValue: null};
 
+const datetimeArgs = [
+    {name: 'dateFormat', defaultValue: 'medium'},
+    {name: 'timeFormat', defaultValue: 'medium'},
+    {name: 'pattern', defaultValue: ''},
+    {name: 'timezone', defaultValue: null},
+    {name: 'calendar', defaultValue: 'gregorian'},
+    {name: 'locale', defaultValue: null}
+];
+const dateArgs = [
+    {name: 'dateFormat', defaultValue: 'medium'},
+    {name: 'pattern', defaultValue: ''},
+    {name: 'timezone', defaultValue: null},
+    {name: 'calendar', defaultValue: 'gregorian'},
+    {name: 'locale', defaultValue: null}
+];
+const timeArgs = [
+    {name: 'timeFormat', defaultValue: 'medium'},
+    {name: 'pattern', defaultValue: ''},
+    {name: 'timezone', defaultValue: null},
+    {name: 'calendar', defaultValue: 'gregorian'},
+    {name: 'locale', defaultValue: null}
+];
+
 export const createIntlExtension = (
-    _dateFormatterPrototype?: Intl.DateTimeFormat,
+    dateFormatterPrototype?: Intl.DateTimeFormat,
     numberFormatterPrototype?: Intl.NumberFormat
 ): TwingExtension => ({
     filters: [
@@ -47,6 +75,9 @@ export const createIntlExtension = (
             {name: 'type', defaultValue: 'default'},
             {name: 'locale', defaultValue: null}
         ]),
+        createFilter('format_datetime', makeFormatDatetimeFilter(dateFormatterPrototype), datetimeArgs),
+        createFilter('format_date', makeFormatDateFilter(dateFormatterPrototype), dateArgs),
+        createFilter('format_time', makeFormatTimeFilter(dateFormatterPrototype), timeArgs),
     ],
     functions: [],
     nodeVisitors: [],
@@ -56,7 +87,7 @@ export const createIntlExtension = (
 });
 
 export const createSynchronousIntlExtension = (
-    _dateFormatterPrototype?: Intl.DateTimeFormat,
+    dateFormatterPrototype?: Intl.DateTimeFormat,
     numberFormatterPrototype?: Intl.NumberFormat
 ): TwingSynchronousExtension => ({
     filters: [
@@ -83,6 +114,9 @@ export const createSynchronousIntlExtension = (
             {name: 'type', defaultValue: 'default'},
             {name: 'locale', defaultValue: null}
         ]),
+        createSynchronousFilter('format_datetime', makeFormatDatetimeFilterSynchronously(dateFormatterPrototype), datetimeArgs),
+        createSynchronousFilter('format_date', makeFormatDateFilterSynchronously(dateFormatterPrototype), dateArgs),
+        createSynchronousFilter('format_time', makeFormatTimeFilterSynchronously(dateFormatterPrototype), timeArgs),
     ],
     functions: [],
     nodeVisitors: [],
