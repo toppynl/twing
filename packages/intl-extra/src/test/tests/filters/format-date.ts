@@ -44,3 +44,11 @@ runCase({
     context: {date},
     expectedErrorMessage: 'TwingRuntimeError: "invalid" is not a valid date format, known formats are: "none", "short", "medium", "long", "full" in "index.twig" at line 1, column 9'
 });
+
+runCase({
+    description: 'format_date: timezone from dateFormatterPrototype',
+    template: `{{ date|format_date('medium', '', null, 'gregorian', 'en') }}`,
+    context: {date: DateTime.fromISO('2024-01-15T13:37:00.000Z')},
+    dateFormatterPrototype: new Intl.DateTimeFormat('en', {timeZone: 'America/New_York'}),
+    expectation: 'Jan 15, 2024'
+});

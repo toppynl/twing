@@ -59,3 +59,10 @@ runCase({
     template: `{{ 42|format_currency_number }}`,
     expectedErrorMessage: 'TwingRuntimeError: The "currency" number style is not supported by the built-in Intl API in "index.twig" at line 1, column 7'
 });
+
+runCase({
+    description: 'format_number: locale from numberFormatterPrototype',
+    template: `{{ 1234.5|format_number }}`,
+    numberFormatterPrototype: new Intl.NumberFormat('de'),
+    expectation: '1.234,5'
+});
