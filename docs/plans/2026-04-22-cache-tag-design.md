@@ -38,7 +38,8 @@ Two minimal additions:
    - `getRuntime<T>(ctor: abstract new (...args: any[]) => T): T`
    - Backed by a `Map<Function, object>` keyed by constructor.
 2. **`runtimes` property** added to `TwingExtension` / `TwingSynchronousExtension` interfaces. When `addExtension` is called, each declared runtime is auto-registered. This keeps extension registration as a single user-facing call.
-3. **`cache` dispatch** wired into the `if/else` chain in `src/main/lib/node-executor.ts` for both async and sync executors, mirrored in `src/main/light/` where applicable.
+
+**No core dispatcher change.** The existing `customExecute` / `customExecuteSynchronously` fallback in `src/main/lib/node-executor.ts` (used by `packages/components/`) handles new node types from extension packages. The cache node carries these closures as properties, following the same convention as `ComponentNode`.
 
 ### New package (`packages/cache/`)
 
@@ -149,8 +150,11 @@ type TwingCacheNodeChildren = {
     body: TwingBaseNode;
 };
 
-export interface TwingCacheNode
-    extends TwingBaseNode<"cache", TwingCacheNodeAttributes, TwingCacheNodeChildren> {}
+export type TwingCacheNode =
+    TwingBaseNode<"__twing_cache_cache__", TwingCacheNodeAttributes, TwingCacheNodeChildren> & {
+        customExecute: typeof executeCacheNode;
+        customExecuteSynchronously: typeof executeCacheNodeSynchronously;
+    };
 ```
 
 ## Node executor
