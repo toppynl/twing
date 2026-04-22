@@ -65,6 +65,7 @@ import {createMacroTagHandler} from "./tag-handler/macro";
 import {createSandboxTagHandler} from "./tag-handler/sandbox";
 import {createSetTagHandler} from "./tag-handler/set";
 import {createSpacelessTagHandler} from "./tag-handler/spaceless";
+import {createTypesTagHandler} from "./tag-handler/types";
 import {createUseTagHandler} from "./tag-handler/use";
 import {createVerbatimTagHandler} from "./tag-handler/verbatim";
 import {createWithTagHandler} from "./tag-handler/with";
@@ -206,6 +207,7 @@ export const createParser = (
         createMacroTagHandler(),
         createSandboxTagHandler(),
         createSetTagHandler(),
+        createTypesTagHandler(),
         createUseTagHandler(),
         createVerbatimTagHandler(),
         createWithTagHandler()
