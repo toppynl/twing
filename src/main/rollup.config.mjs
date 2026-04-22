@@ -57,7 +57,7 @@ const program = (commandLineArgs) => {
                 file: join('target', commonjsTargetName),
                 plugins: [
                     createPackageManifestPlugin({
-                        name: 'twing',
+                        name: '@toppynl/twing',
                         version,
                         description: "First-class Twig engine for the JavaScript ecosystem",
                         keywords: [
@@ -68,13 +68,12 @@ const program = (commandLineArgs) => {
                             "twig-engine",
                             "typescript"
                         ],
-                        author: "Eric MORAND <eric.morand@gmail.com>",
                         license: "BSD-2-Clause",
-                        homepage: "http://twing.nightlycommit.com",
-                        bugs: "https://gitlab.com/nightlycommit/twing/-/issues",
+                        homepage: "https://github.com/toppynl/twing",
+                        bugs: "https://github.com/toppynl/twing/issues",
                         repository: {
                             type: "git",
-                            url: "https://gitlab.com/nightlycommit/twing"
+                            url: "https://github.com/toppynl/twing"
                         },
                         main: "index.cjs",
                         types: "lib.d.ts",
