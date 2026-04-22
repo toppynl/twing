@@ -47,6 +47,14 @@ export interface TwingExtension {
      * @returns Array<TwingTest>
      */
     readonly tests: Array<TwingTest>;
+
+    /**
+     * Returns a list of runtime service instances to register with the environment.
+     * Runtimes can be retrieved at execution time via `environment.getRuntime(Constructor)`.
+     *
+     * @return Array<object>
+     */
+    readonly runtimes?: ReadonlyArray<object>;
 }
 
 export interface TwingSynchronousExtension {
@@ -91,4 +99,12 @@ export interface TwingSynchronousExtension {
      * @returns Array<TwingTest>
      */
     readonly tests: Array<TwingSynchronousTest>;
+
+    /**
+     * Returns a list of runtime service instances to register with the environment.
+     * Runtimes can be retrieved at execution time via `environment.getRuntime(Constructor)`.
+     *
+     * @return Array<object>
+     */
+    readonly runtimes?: ReadonlyArray<object>;
 }
