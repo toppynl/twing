@@ -1,0 +1,40 @@
+{
+  "extends": "semantic-release-monorepo",
+  "pkgRoot": "packages/html-extra",
+  "tagFormat": "twing-html-extra-v${version}",
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "packages/html-extra/CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false,
+        "pkgRoot": "packages/html-extra"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "publishCmd": "NEXT_VERSION=${nextRelease.version} bash scripts/publish-workspaces.sh @toppynl/twing-html-extra packages/html-extra"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "packages/html-extra/package.json",
+          "packages/html-extra/CHANGELOG.md"
+        ],
+        "message": "chore(release): @toppynl/twing-html-extra@${nextRelease.version} [skip ci]"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}
