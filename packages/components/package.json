@@ -1,6 +1,6 @@
 {
   "name": "@toppynl/twing-components",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "prebuild:test": "pnpm run build:main",
