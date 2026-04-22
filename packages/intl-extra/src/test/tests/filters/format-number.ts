@@ -47,3 +47,15 @@ runCase({
     template: `{{ 42|format_spellout_number }}`,
     expectedErrorMessage: 'TwingRuntimeError: The "spellout" number style is not supported by the built-in Intl API in "index.twig" at line 1, column 7'
 });
+
+runCase({
+    description: 'format_ordinal_number wildcard filter: degrades to decimal',
+    template: `{{ 1|format_ordinal_number({}, 'default', 'en') }}`,
+    expectation: '1'
+});
+
+runCase({
+    description: 'format_currency_number wildcard filter: throws (use format_currency instead)',
+    template: `{{ 42|format_currency_number }}`,
+    expectedErrorMessage: 'TwingRuntimeError: The "currency" number style is not supported by the built-in Intl API in "index.twig" at line 1, column 7'
+});

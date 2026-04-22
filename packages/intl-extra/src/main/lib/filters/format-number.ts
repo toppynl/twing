@@ -2,7 +2,7 @@ import type {TwingCallable, TwingSynchronousCallable} from "@toppynl/twing";
 
 type NumberAttrs = Map<string, number | boolean> | Record<string, number | boolean>;
 
-const UNSUPPORTED_STYLES = new Set(['spellout', 'duration']);
+const UNSUPPORTED_STYLES = new Set(['spellout', 'duration', 'currency']);
 
 const mapAttrs = (attrs: NumberAttrs): Intl.NumberFormatOptions => {
     const options: Intl.NumberFormatOptions = {};
@@ -43,7 +43,6 @@ const mapStyle = (style: string): Intl.NumberFormatOptions => {
     }
     switch (style) {
         case 'decimal': return {style: 'decimal'};
-        case 'currency': return {style: 'currency'};
         case 'percent': return {style: 'percent'};
         case 'scientific': return {notation: 'scientific'};
         case 'ordinal': return {style: 'decimal'};
