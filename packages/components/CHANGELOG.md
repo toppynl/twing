@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/toppynl/twing/compare/twing-components-v0.4.1...twing-components-v0.4.2) (2026-04-23)
+
+
+### Bug Fixes
+
+* **ci:** handle missing previous tag in release-core GitHub Release step ([d6530da](https://github.com/toppynl/twing/commit/d6530da0cb39c652dc330050be6fe02fe6ba2bbc))
+
 ## [0.4.1](https://github.com/toppynl/twing/compare/twing-components-v0.4.0...twing-components-v0.4.1) (2026-04-23)
 
 
