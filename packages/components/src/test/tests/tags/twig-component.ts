@@ -49,3 +49,13 @@ runCase({
     expectation: '<h1>yo</h1>',
     preLex: true
 });
+
+runCase({
+    description: '<twig:ns:Name /> resolves colon-namespaced components to subdirectory paths',
+    templates: {
+        'index.twig': `<twig:button:button label="ok" />`,
+        'components/button/button.html.twig': `{% props label %}<button>{{ label }}</button>`
+    },
+    expectation: '<button>ok</button>',
+    preLex: true
+});

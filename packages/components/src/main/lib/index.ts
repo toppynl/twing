@@ -16,8 +16,13 @@ export type ComponentsExtensionOptions = {
 
 export const defaultTemplateFinder = (name: string): string => `components/${name}.html.twig`;
 
+const normalizeComponentName = (name: string): string => name.replace(/:/g, '/');
+
+const wrapTemplateFinder = (finder: (name: string) => string): (name: string) => string =>
+    (name) => finder(normalizeComponentName(name));
+
 export const createComponentsExtension = (options: ComponentsExtensionOptions = {}): TwingExtension => {
-    const templateFinder = options.templateFinder ?? defaultTemplateFinder;
+    const templateFinder = wrapTemplateFinder(options.templateFinder ?? defaultTemplateFinder);
 
     return {
         filters: [],
@@ -33,7 +38,7 @@ export const createComponentsExtension = (options: ComponentsExtensionOptions = 
 };
 
 export const createSynchronousComponentsExtension = (options: ComponentsExtensionOptions = {}): TwingSynchronousExtension => {
-    const templateFinder = options.templateFinder ?? defaultTemplateFinder;
+    const templateFinder = wrapTemplateFinder(options.templateFinder ?? defaultTemplateFinder);
 
     return {
         filters: [],
