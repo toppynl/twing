@@ -779,6 +779,11 @@ export const createParser = (
         while (!stream.test("PUNCTUATION", ')')) {
             if (elements.length > 0) {
                 stream.expect("PUNCTUATION", ',');
+
+                // trailing ,?
+                if (stream.test("PUNCTUATION", ')')) {
+                    break;
+                }
             }
 
             if (definition) {

@@ -30,6 +30,7 @@ import "./string_operator_as_var_assignment";
 import "./strings";
 import "./subscript";
 import "./ternary";
+import "./trailing_comma";
 import "./two_words_operators_as_variables";
 import "./unary";
 import "./unary_macro_arguments";
