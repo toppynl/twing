@@ -1,3 +1,10 @@
+## [0.2.2](https://github.com/toppynl/twing/compare/twing-html-extra-v0.2.1...twing-html-extra-v0.2.2) (2026-04-23)
+
+
+### Bug Fixes
+
+* **ci:** handle missing previous tag in release-core GitHub Release step ([d6530da](https://github.com/toppynl/twing/commit/d6530da0cb39c652dc330050be6fe02fe6ba2bbc))
+
 ## [0.2.1](https://github.com/toppynl/twing/compare/twing-html-extra-v0.2.0...twing-html-extra-v0.2.1) (2026-04-23)
 
 
