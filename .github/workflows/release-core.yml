@@ -97,7 +97,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          PREV_TAG=$(git tag --sort=-version:refname | grep '^twing-v' | sed -n '2p')
+          NOTES_FLAG=""
+          if [[ -n "${PREV_TAG}" ]]; then
+            NOTES_FLAG="--notes-start-tag ${PREV_TAG}"
+          fi
           gh release create "twing-v${{ inputs.version }}" \
             --title "@toppynl/twing@${{ inputs.version }}" \
             --generate-notes \
-            --notes-start-tag "twing-v$(git tag --sort=-version:refname | grep '^twing-v' | sed -n '2p')"
+            ${NOTES_FLAG}
