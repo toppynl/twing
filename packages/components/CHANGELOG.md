@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/toppynl/twing/compare/twing-components-v0.4.0...twing-components-v0.4.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* **parser:** allow trailing comma in function, method, and filter argument lists ([3ad0d3f](https://github.com/toppynl/twing/commit/3ad0d3ff08e2efbf56a5d8724675c12a4900acfe))
+
 # [0.4.0](https://github.com/toppynl/twing/compare/twing-components-v0.3.0...twing-components-v0.4.0) (2026-04-23)
 
 
